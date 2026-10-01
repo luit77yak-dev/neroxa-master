@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -7,14 +7,51 @@ import { supabase } from "@/integrations/supabase/client";
 export function MasterLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [recoveryMode, setRecoveryMode] = useState(false);
   const [mode, setMode] = useState<"login" | "reset">("login");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setRecoveryMode(true);
+        setMode("login");
+        clearFeedback();
+      }
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   const clearFeedback = () => {
     setMessage(null);
     setError(null);
+  };
+
+  const handleUpdatePassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setLoading(true);
+    clearFeedback();
+
+    if (newPassword.length < 8) {
+      setError("A nova senha deve ter pelo menos 8 caracteres.");
+      setLoading(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    if (updateError) {
+      setError("Não foi possível atualizar a senha. Solicite um novo link e tente novamente.");
+    } else {
+      setMessage("Senha atualizada com sucesso. Agora você pode entrar no Neroxa Master.");
+      setRecoveryMode(false);
+      setPassword("");
+      setNewPassword("");
+    }
+    setLoading(false);
   };
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -83,7 +120,31 @@ export function MasterLogin() {
           </p>
         </div>
 
-        {mode === "login" ? (
+        {recoveryMode ? (
+          <form onSubmit={handleUpdatePassword} className="space-y-4">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-slate-300">Nova senha</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                required
+                minLength={8}
+                autoFocus
+                className="h-11 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-white/30"
+                placeholder="Mínimo de 8 caracteres"
+              />
+            </label>
+
+            {error && <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">{error}</p>}
+            {message && <p className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">{message}</p>}
+
+            <Button type="submit" disabled={loading} className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100">
+              {loading ? "Atualizando..." : "Salvar nova senha"}
+            </Button>
+          </form>
+        ) : {mode === "login" ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-slate-300">E-mail</span>
