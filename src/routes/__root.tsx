@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Pizza Perfect Plate" },
-      { name: "description", content: "Peça sua pizza de forma simples, rápida e personalizada." },
-      { name: "author", content: "Pizza Perfect Plate" },
-      { property: "og:title", content: "Pizza Perfect Plate" },
-      { property: "og:description", content: "Peça sua pizza de forma simples, rápida e personalizada." },
+      { title: "Neroxa Master" },
+      { name: "description", content: "Panel interno de la plataforma Neroxa: clientes, comercial, assinaturas y financeiro." },
+      { name: "author", content: "Neroxa" },
+      { property: "og:title", content: "Neroxa Master" },
+      { property: "og:description", content: "Panel interno de la plataforma Neroxa: clientes, comercial, assinaturas y financeiro." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#f5f1e8" },
+      { name: "theme-color", content: "#102a2e" },
     ],
     links: [
       {
@@ -95,7 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],

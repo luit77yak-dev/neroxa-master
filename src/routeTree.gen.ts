@@ -15,8 +15,6 @@ import { Route as MasterAssinaturasRouteImport } from './routes/master-assinatur
 import { Route as MasterClientesRouteImport } from './routes/master-clientes'
 import { Route as MasterComercialRouteImport } from './routes/master-comercial'
 import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro'
-import { Route as PainelRouteImport } from './routes/painel'
-import { Route as LojaSlugRouteImport } from './routes/loja/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -48,16 +46,6 @@ const MasterFinanceiroRoute = MasterFinanceiroRouteImport.update({
   path: '/master-financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PainelRoute = PainelRouteImport.update({
-  id: '/painel',
-  path: '/painel',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LojaSlugRoute = LojaSlugRouteImport.update({
-  id: '/loja/$slug',
-  path: '/loja/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,8 +54,6 @@ export interface FileRoutesByFullPath {
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
-  '/painel': typeof PainelRoute
-  '/loja/$slug': typeof LojaSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,8 +62,6 @@ export interface FileRoutesByTo {
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
-  '/painel': typeof PainelRoute
-  '/loja/$slug': typeof LojaSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,8 +71,6 @@ export interface FileRoutesById {
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
-  '/painel': typeof PainelRoute
-  '/loja/$slug': typeof LojaSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,8 +81,6 @@ export interface FileRouteTypes {
     | '/master-clientes'
     | '/master-comercial'
     | '/master-financeiro'
-    | '/painel'
-    | '/loja/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,8 +89,6 @@ export interface FileRouteTypes {
     | '/master-clientes'
     | '/master-comercial'
     | '/master-financeiro'
-    | '/painel'
-    | '/loja/$slug'
   id:
     | '__root__'
     | '/'
@@ -119,8 +97,6 @@ export interface FileRouteTypes {
     | '/master-clientes'
     | '/master-comercial'
     | '/master-financeiro'
-    | '/painel'
-    | '/loja/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -130,8 +106,6 @@ export interface RootRouteChildren {
   MasterClientesRoute: typeof MasterClientesRoute
   MasterComercialRoute: typeof MasterComercialRoute
   MasterFinanceiroRoute: typeof MasterFinanceiroRoute
-  PainelRoute: typeof PainelRoute
-  LojaSlugRoute: typeof LojaSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,20 +152,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MasterFinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/painel': {
-      id: '/painel'
-      path: '/painel'
-      fullPath: '/painel'
-      preLoaderRoute: typeof PainelRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/loja/$slug': {
-      id: '/loja/$slug'
-      path: '/loja/$slug'
-      fullPath: '/loja/$slug'
-      preLoaderRoute: typeof LojaSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -202,8 +162,6 @@ const rootRouteChildren: RootRouteChildren = {
   MasterClientesRoute: MasterClientesRoute,
   MasterComercialRoute: MasterComercialRoute,
   MasterFinanceiroRoute: MasterFinanceiroRoute,
-  PainelRoute: PainelRoute,
-  LojaSlugRoute: LojaSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
