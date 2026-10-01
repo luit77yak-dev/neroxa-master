@@ -1,13 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Activity, ArrowRight, Building2, ShieldCheck, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { MasterShell } from "@/features/master/shell/MasterShell";
+import { MasterLogin } from "@/features/master/shell/MasterLogin";
+import { isNeroxaStaff } from "@/features/master/clients/services";
 
 export const Route = createFileRoute("/master")({
   component: MasterOverviewPage,
 });
 
 function MasterOverviewPage() {
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    void isNeroxaStaff().then(setAuthorized).catch(() => setAuthorized(false));
+  }, []);
+
+  if (authorized === false) return <MasterLogin />;
+  if (authorized === null) return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-white" /></main>;
+
   return (
     <MasterShell>
       <div className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6">
