@@ -10,9 +10,7 @@ export async function isNeroxaStaff() {
   if (userError) throw new Error(userError.message);
   if (!user) return false;
 
-  const { data, error } = await supabase.rpc("is_neroxa_staff" as never, {
-    p_user_id: user.id,
-  } as never);
+  const { data, error } = await supabase.rpc("neroxa_is_platform_member" as never);
 
   if (error) throw new Error(error.message);
   return Boolean(data);
