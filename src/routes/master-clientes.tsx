@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MasterShell } from "@/features/master/shell/MasterShell";
+import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import {
   Building2,
   Check,
@@ -181,20 +182,7 @@ function MasterClientsPage() {
     }
   };
 
-  if (authorized === false) {
-    return (
-      <main className="min-h-screen bg-slate-950 px-5 py-10 text-slate-100">
-        <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-white/5 p-8">
-          <CircleAlert className="mb-4 h-8 w-8 text-amber-300" />
-          <h1 className="text-2xl font-semibold">Neroxa Master</h1>
-          <p className="mt-2 text-sm text-slate-300">
-            Esta área é exclusiva da equipe interna da Neroxa.
-          </p>
-          {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
-        </div>
-      </main>
-    );
-  }
+ if(authorized===false)return <MasterLogin />;
 
   if (authorized === null || loading) {
     return (
