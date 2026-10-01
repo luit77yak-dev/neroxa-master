@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { isNeroxaStaff } from "@/features/master/clients/services";
 import { MasterShell } from "@/features/master/shell/MasterShell";
+import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import {
   CONTRACT_STATUS_LABELS,
   PROPOSAL_STATUS_LABELS,
@@ -95,20 +96,7 @@ function MasterCommercialPage() {
   const recentProposals = proposals.slice(0, 5);
   const recentContracts = contracts.slice(0, 5);
 
-  if (authorized === false) {
-    return (
-      <main className="min-h-screen bg-slate-950 px-5 py-10 text-slate-100">
-        <div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-white/5 p-8">
-          <ShieldCheck className="mb-4 h-8 w-8 text-slate-300" />
-          <h1 className="text-2xl font-semibold">Acesso restrito</h1>
-          <p className="mt-2 text-sm text-slate-300">
-            O Comercial do Neroxa Master é exclusivo para a equipe interna.
-          </p>
-          {error && <p className="mt-4 text-sm text-red-300">{error}</p>}
-        </div>
-      </main>
-    );
-  }
+  if (authorized === false) return <MasterLogin />;
 
   if (authorized === null || loading) {
     return (
