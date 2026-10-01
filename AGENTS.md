@@ -9,4 +9,5 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- Scope customer-store visual themes under `.ppp-customer-shell`; this preserves white-label styling without leaking into the administrative panel.
+- This project is exclusively NEROXA Master (internal platform panel); never reintroduce Pizza Perfect Plate MVP code (storefront, cart, checkout, pizzeria admin) or edit the original project from here.
+- Master authorization uses the `is_neroxa_staff` RPC; preserve it as-is and make no database changes during structural cleanup.

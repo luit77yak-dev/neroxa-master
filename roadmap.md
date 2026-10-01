@@ -1,33 +1,22 @@
-# Roadmap — Sistema white-label de delivery para pizzarias
+# Roadmap — NEROXA Master
 
-## Fase 1 — Fundação (em andamento)
-- [x] Ativar backend (Lovable Cloud)
-- [ ] Migration: schema multi-tenant completo + GRANTs + RLS + índices
-- [ ] Seed da pizzaria demo (categorias, produtos, tamanhos, bordas, adicionais, cupons, zonas, horários, pedidos demo)
-- [ ] Design system (tokens, tipografia, cores) em src/styles.css
-- [ ] Regras de negócio centralizadas (src/lib/pricing.ts, store-hours.ts, order-status.ts) + Zod schemas
+Este proyecto es exclusivamente el panel interno NEROXA Master (copia separada; el MVP Pizza Perfect Plate vive en su propio proyecto).
 
-## Fase 2 — Loja pública
-- [x] Layout da loja (/loja/:slug e / redirecionando para a demo)
-- [x] Header, hero, status da loja, categorias, grid de produtos
-- [x] Modal de produto (tamanho, meio a meio, borda, adicionais, observações)
-- [x] Carrinho persistente
-- [ ] Checkout (entrega/retirada, zona, cupom, pagamento) com idempotência
-- [ ] Criação do pedido via server function (validação server-side)
-- [ ] Confirmação + mensagem WhatsApp + acompanhamento /pedido/:id
+## Fase 0 — Separación del MVP (completada)
+- [x] Escaneo de archivos, rutas e imports: inventario Master vs MVP
+- [x] Eliminación del código MVP (storefront, carrito, checkout, configurador, panel de la pizzaría, rutas)
+- [x] Eliminación de dependencias huérfanas
+- [x] README / arquitectura / roadmap actualizados para NEROXA Master
+- [x] Validación: build, lint y rutas Master sin errores
 
-## Fase 3 — Contas
-- [ ] /login, /cadastro (email/senha + Google)
-- [ ] /minha-conta, /minha-conta/pedidos
+## Fase 1 — Conexión de datos
+- [ ] Conectar la base de datos original de Neroxa (tablas neroxa_* + RPC is_neroxa_staff) según lo acordado
+- [ ] Verificar gate de autorización de las páginas: Clientes, Comercial, Assinaturas, Financeiro
 
-## Fase 4 — Painel administrativo
-- [ ] Layout admin + guarda de rota e permissões
-- [ ] Dashboard, pedidos, produtos, categorias, adicionais, cupons, entregas
-- [ ] Clientes, entregadores, fidelidade, usuários, aparência, configurações, relatórios, auditoria
-- [ ] Pedidos manuais usando o mesmo motor de cálculo
-- [ ] Upload de imagens (storage)
+## Fase 2 — Nuevos módulos Master
+- [ ] Produtos, Implantação, Domínios, Suporte, Configurações (secciones marcadas "Em breve" en el shell)
+- [ ] Métricas reales en la Visión general (clientes, MRR, implantaciones)
 
-## Fase 5 — Qualidade
-- [ ] Testes de cálculo, cupom, horários, transição de status
-- [ ] Fluxo E2E cliente + admin
-- [ ] Auditoria final (responsividade, acessibilidade, erros, hardcode)
+## Fase 3 — Calidad
+- [ ] Responsive y accesibilidad de los módulos Master
+- [ ] Auditoría final (errores, hardcode, consistencia visual)
