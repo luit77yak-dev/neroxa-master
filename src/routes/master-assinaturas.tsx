@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { isNeroxaStaff } from "@/features/master/clients/services";
 import { MasterShell } from "@/features/master/shell/MasterShell";
+import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { BILLING_INTERVAL_LABELS,SUBSCRIPTION_STATUS_LABELS,type Subscription,type SubscriptionPlan } from "@/features/master/subscriptions/types";
 import { loadSubscriptionOverview } from "@/features/master/subscriptions/services";
 
@@ -19,7 +20,7 @@ function MasterSubscriptionsPage(){
  useEffect(()=>{void load(true)},[]);
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]),planMap=useMemo(()=>new Map(plans.map(p=>[p.id,p])),[plans]);
  const metrics=useMemo(()=>({total:subscriptions.length,active:subscriptions.filter(s=>s.status==="ACTIVE").length,pending:subscriptions.filter(s=>s.status==="PENDING").length,recurring:subscriptions.filter(s=>["ACTIVE","PAUSED","DELINQUENT"].includes(s.status)).reduce((sum,s)=>sum+s.contracted_recurring_value,0)}),[subscriptions]);
- if(authorized===false)return <main className="min-h-screen bg-slate-950 px-5 py-10 text-slate-100"><div className="mx-auto max-w-xl rounded-2xl border border-white/10 bg-white/5 p-8"><ShieldCheck className="mb-4 h-8 w-8 text-slate-300"/><h1 className="text-2xl font-semibold">Acesso restrito</h1><p className="mt-2 text-sm text-slate-300">Assinaturas é uma área interna do Neroxa Master.</p>{error&&<p className="mt-4 text-sm text-red-300">{error}</p>}</div></main>;
+ if(authorized===false)return <MasterLogin />;
  if(authorized===null||loading)return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin"/></main>;
  return <MasterShell><div className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6">
   <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Gestão · Assinaturas</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Assinaturas</h1><p className="mt-1 max-w-2xl text-sm text-slate-500">Controle planos, valores contratados e recorrência sem antecipar regras do Financeiro.</p></div><Button variant="outline" onClick={()=>void load()} disabled={refreshing}><RefreshCw className={refreshing?"h-4 w-4 animate-spin":"h-4 w-4"}/>Atualizar</Button></section>
