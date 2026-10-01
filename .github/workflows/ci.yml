@@ -6,7 +6,7 @@ on:
       - main
   push:
     branches:
-      - fix/reconnect-storefront-components
+      - main
   workflow_dispatch:
 
 jobs:
@@ -21,16 +21,13 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "22.x"
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Format refactored storefront
-        run: npx prettier --write src/components/storefront/Storefront.tsx src/features/storefront/components/ProductConfigurator.tsx src/features/storefront/components/CheckoutPanel.tsx src/features/cart/components/CartPanel.tsx
-
-
-      - name: Lint refactored storefront
-        run: npx eslint src/components/storefront/Storefront.tsx src/features/storefront/components/ProductConfigurator.tsx src/features/storefront/components/CheckoutPanel.tsx src/features/cart/components/CartPanel.tsx
+      - name: Lint
+        run: npm run lint
 
       - name: Build
         run: npm run build
