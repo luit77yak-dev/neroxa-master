@@ -6,5 +6,5 @@ export const Route = createFileRoute("/master-recovery")({
 });
 
 function MasterRecoveryPage() {
-  return <MasterLogin />;
+  return <MasterLogin recoveryPage />;
 }
