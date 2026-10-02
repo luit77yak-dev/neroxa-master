@@ -24,7 +24,7 @@ export const Route=createFileRoute("/master-financeiro")({
 });
 const tone:Record<keyof typeof INVOICE_STATUS_LABELS,string>={PENDING:"bg-blue-50 text-blue-700",PAID:"bg-emerald-50 text-emerald-700",OVERDUE:"bg-red-50 text-red-700",CANCELLED:"bg-slate-100 text-slate-500",REFUNDED:"bg-violet-50 text-violet-700",NEGOTIATION:"bg-amber-50 text-amber-700"};
 const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
-const date=(v:string|null)=>v?new Intl.DateTimeFormat("pt-BR").format(new Date(v+"T12:00:00")):"—";
+const date=(v:string|null)=>{if(!v)return "—";const raw=String(v).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
 
 function MasterFinancePage(){
  const [authorized,setAuthorized]=useState<boolean|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[error,setError]=useState<string|null>(null);
