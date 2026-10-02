@@ -59,7 +59,11 @@ function MasterCommercialPage() {
 
   const load = async (initial = false) => {
     setError(null);
-    if (initial) {\n      setLoading(true);\n    } else {\n      setRefreshing(true);\n    }
+    if (initial) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
     try {
       const staff = await isNeroxaStaff();
       setAuthorized(staff);
