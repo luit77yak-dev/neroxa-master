@@ -27,3 +27,25 @@ export async function loadCommercialOverview(): Promise<CommercialOverview> {
     clients: (clientsResult.data ?? []) as unknown as CommercialOverview["clients"],
   };
 }
+
+
+export async function updateProposalStatus(id: string, status: "DRAFT" | "SENT" | "NEGOTIATION" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED") {
+  const patch: Record<string, unknown> = { status };
+  if (status === "SENT") patch.sent_at = new Date().toISOString();
+  if (status === "ACCEPTED") patch.accepted_at = new Date().toISOString();
+  if (status === "REJECTED") patch.rejected_at = new Date().toISOString();
+  const { data, error } = await supabase.from("neroxa_proposals" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Proposta não encontrada ou sem permissão para alterar.");
+  return true;
+}
+
+export async function updateContractStatus(id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") {
+  const patch: Record<string, unknown> = { status };
+  if (status === "ACTIVE") patch.signed_at = new Date().toISOString();
+  if (status === "TERMINATED" || status === "EXPIRED") patch.ended_at = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase.from("neroxa_contracts" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Contrato não encontrado ou sem permissão para alterar.");
+  return true;
+}
