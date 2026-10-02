@@ -86,7 +86,7 @@ export function MasterLogin() {
       return;
     }
 
-    const redirectTo = `${window.location.origin}/master`;
+    const redirectTo = "https://master.neroxa.ia.br/master";
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo,
     });
