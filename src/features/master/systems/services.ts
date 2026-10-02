@@ -111,6 +111,58 @@ export async function updateNeroxaSystem(input: {
   return data as unknown as NeroxaSystem;
 }
 
+export async function createNeroxaSystemInstance(input: {
+  organizationId: string;
+  systemId: string;
+  systemType: SystemType;
+  planId: string;
+  subscriptionId?: string | null;
+  name: string;
+  slug: string;
+}) {
+  const name = input.name.trim();
+  const slug = input.slug.trim().toLowerCase();
+
+  if (!input.organizationId || !input.systemId || !input.planId || !name || !slug) {
+    throw new Error("Informe sistema, plano, nome e slug da instância.");
+  }
+
+  const { data: subscription, error: subscriptionError } = input.subscriptionId
+    ? await supabase
+        .from("neroxa_subscriptions" as never)
+        .select("id, organization_id, plan_id, status")
+        .eq("id", input.subscriptionId)
+        .eq("organization_id", input.organizationId)
+        .maybeSingle()
+    : { data: null, error: null };
+
+  if (subscriptionError) throw new Error(subscriptionError.message);
+  if (input.subscriptionId && !subscription) {
+    throw new Error("A assinatura selecionada não pertence a este cliente.");
+  }
+  if (subscription && String((subscription as { plan_id: string }).plan_id) !== input.planId) {
+    throw new Error("A assinatura selecionada não corresponde ao plano.");
+  }
+
+  const { data, error } = await supabase
+    .from("neroxa_system_instances" as never)
+    .insert({
+      organization_id: input.organizationId,
+      system_id: input.systemId,
+      plan_id: input.planId,
+      subscription_id: input.subscriptionId || null,
+      name,
+      slug,
+      system_type: input.systemType,
+      status: "PROVISIONING",
+    } as never)
+    .select("id, organization_id, system_id, plan_id, subscription_id, name, slug, status, system_type")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data as unknown as NeroxaSystemInstance;
+}
+
 export async function listSystemInstances(systemId?: string) {
   let query = supabase
     .from("neroxa_system_instances" as never)
