@@ -55,7 +55,7 @@ function MasterFinancePage(){
   </div>
  ));
  if(authorized===false)return <MasterLogin />;
- if(authorized===null||loading)return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin"/></main>;
+ if(authorized===null||loading)return <main data-route="master-financeiro" className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin"/></main>;
  return <MasterShell><div className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6">
  <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Gestão · Financeiro</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Financeiro</h1><p className="mt-1 max-w-2xl text-sm text-slate-500">Acompanhe faturas, recebimentos e valores em aberto sem misturar cobrança com a operação comercial.</p></div><Button variant="outline" onClick={()=>void load()} disabled={refreshing}><RefreshCw className={refreshing?"h-4 w-4 animate-spin":"h-4 w-4"}/>Atualizar</Button></section>
  {error&&<Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
