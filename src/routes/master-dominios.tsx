@@ -7,7 +7,6 @@ import {
   listNeroxaClientInstances,
   listNeroxaInstanceDomains,
   type NeroxaSystemDomain,
-  type NeroxaSystemInstance,
 } from "@/features/master/clients/services";
 import { Button } from "@/components/ui/button";
 
