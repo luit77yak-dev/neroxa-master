@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Plus, RefreshCw, Save, X } from "lucide-react";
 import {
   createNeroxaSystem,
@@ -80,7 +80,7 @@ function MasterSistemas() {
     setForm(EMPTY_FORM);
   }
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError("");
@@ -200,7 +200,7 @@ function MasterSistemas() {
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
               <Field label="Nome">
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="field" placeholder="Neroxa Delivery" />
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none focus:border-slate-400" placeholder="Neroxa Delivery" />
               </Field>
               <Field label="Slug">
                 <input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required className="field" placeholder="neroxa-delivery" />
@@ -214,7 +214,7 @@ function MasterSistemas() {
                 <input value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} className="field" placeholder="1.0.0" />
               </Field>
               <Field label="Descrição">
-                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="field min-h-24 resize-y" />
+                <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full min-h-24 resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-normal text-slate-900 outline-none focus:border-slate-400" />
               </Field>
               {editing && (
                 <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -234,7 +234,7 @@ function MasterSistemas() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block space-y-1.5 text-sm font-medium text-slate-700">
       <span>{label}</span>
