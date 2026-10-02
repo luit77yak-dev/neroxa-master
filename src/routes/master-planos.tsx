@@ -77,7 +77,7 @@ function MasterPlansPage() {
         <div className="grid grid-cols-2 gap-3"><Field label="Recorrência"><input type="number" min="0" step="0.01" value={form.priceMonthly} onChange={e => setForm({...form,priceMonthly:e.target.value})} /></Field><Field label="Implantação"><input type="number" min="0" step="0.01" value={form.setupPrice} onChange={e => setForm({...form,setupPrice:e.target.value})} /></Field></div>
         <Field label="Periodicidade"><select value={form.billingPeriod} onChange={e => setForm({...form,billingPeriod:e.target.value as Form["billingPeriod"]})}><option value="MONTHLY">Mensal</option><option value="YEARLY">Anual</option><option value="ONE_TIME">Avulso</option></select></Field>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={e => setForm({...form,active:e.target.checked})} /> Disponível para contratação</label>
-        {canPerform(role,"managePlans") && <Button className="w-full" onClick={() => void save()} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{saving ? "Salvando..." : editing ? "Salvar alterações" : "Criar plano"}</Button>
+        {canPerform(role,"managePlans") && <Button className="w-full" onClick={() => void save()} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{saving ? "Salvando..." : editing ? "Salvar alterações" : "Criar plano"}</Button>}
       </div></Card>
     </div>
   </div></MasterShell>;
