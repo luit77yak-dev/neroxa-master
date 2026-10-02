@@ -17,7 +17,7 @@ export function MasterLogin() {
   useEffect(() => {
     const enterRecoveryMode = () => {
       setRecoveryMode(true);
-      setMode("login");
+      setMode("reset");
       clearFeedback();
     };
 
@@ -65,6 +65,7 @@ export function MasterLogin() {
       setRecoveryMode(false);
       setPassword("");
       setNewPassword("");
+      window.location.assign("/master");
     }
     setLoading(false);
   };
@@ -101,7 +102,7 @@ export function MasterLogin() {
       return;
     }
 
-    const redirectTo = "https://master.neroxa.ia.br/master";
+    const redirectTo = "https://master.neroxa.ia.br/master-recovery";
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo,
     });
@@ -129,7 +130,9 @@ export function MasterLogin() {
             {mode === "login" ? "Neroxa Master" : "Redefinir senha"}
           </h1>
           <p className="mt-2 text-sm leading-6 text-slate-400">
-            {mode === "login"
+            {recoveryMode
+              ? "Crie uma nova senha segura para recuperar o acesso ao Neroxa Master."
+              : mode === "login"
               ? "Entre com a conta autorizada da plataforma Neroxa."
               : "Informe seu e-mail e enviaremos um link seguro para criar uma nova senha."}
           </p>
