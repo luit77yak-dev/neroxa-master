@@ -15,13 +15,28 @@ export function MasterLogin() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const enterRecoveryMode = () => {
+      setRecoveryMode(true);
+      setMode("login");
+      clearFeedback();
+    };
+
+    const hasRecoveryHash = () => {
+      const hash = window.location.hash.startsWith("#")
+        ? window.location.hash.slice(1)
+        : window.location.hash;
+      return new URLSearchParams(hash).get("type") === "recovery";
+    };
+
     const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setRecoveryMode(true);
-        setMode("login");
-        clearFeedback();
+      if (event === "PASSWORD_RECOVERY" || (event === "INITIAL_SESSION" && hasRecoveryHash())) {
+        enterRecoveryMode();
       }
     });
+
+    if (hasRecoveryHash()) {
+      enterRecoveryMode();
+    }
 
     return () => data.subscription.unsubscribe();
   }, []);
