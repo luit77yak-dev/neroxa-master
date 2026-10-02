@@ -15,7 +15,7 @@ const date=(v:string|null)=>v?new Intl.DateTimeFormat("pt-BR").format(new Date(v
 
 function MasterFinancePage(){
  const [authorized,setAuthorized]=useState<boolean|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[error,setError]=useState<string|null>(null);
- const load=async(initial=false)=>{setError(null);initial?setLoading(true):setRefreshing(true);try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
+ const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
  useEffect(()=>{void load(true)},[]);
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]);
  const metrics=useMemo(
