@@ -16,6 +16,17 @@ import { Route as MasterClientesRouteImport } from './routes/master-clientes'
 import { Route as MasterComercialRouteImport } from './routes/master-comercial'
 import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro'
 import { Route as MasterRecoveryRouteImport } from './routes/master-recovery'
+import { Route as MasterAssinaturasRouteImport } from './routes/master-assinaturas'
+import { Route as MasterClientesRouteImport } from './routes/master-clientes'
+import { Route as MasterComercialRouteImport } from './routes/master-comercial'
+import { Route as MasterConfiguracoesRouteImport } from './routes/master-configuracoes'
+import { Route as MasterDominiosRouteImport } from './routes/master-dominios'
+import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro'
+import { Route as MasterImplantacaoRouteImport } from './routes/master-implantacao'
+import { Route as MasterPlanosRouteImport } from './routes/master-planos'
+import { Route as MasterProdutosRouteImport } from './routes/master-produtos'
+import { Route as MasterRecoveryRouteImport } from './routes/master-recovery'
+import { Route as MasterSuporteRouteImport } from './routes/master-suporte'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +63,61 @@ const MasterRecoveryRoute = MasterRecoveryRouteImport.update({
   path: '/master-recovery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MasterAssinaturasRoute = MasterAssinaturasRouteImport.update({
+  id: '/master-assinaturas',
+  path: '/master-assinaturas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterClientesRoute = MasterClientesRouteImport.update({
+  id: '/master-clientes',
+  path: '/master-clientes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterComercialRoute = MasterComercialRouteImport.update({
+  id: '/master-comercial',
+  path: '/master-comercial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterConfiguracoesRoute = MasterConfiguracoesRouteImport.update({
+  id: '/master-configuracoes',
+  path: '/master-configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterDominiosRoute = MasterDominiosRouteImport.update({
+  id: '/master-dominios',
+  path: '/master-dominios',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterFinanceiroRoute = MasterFinanceiroRouteImport.update({
+  id: '/master-financeiro',
+  path: '/master-financeiro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterImplantacaoRoute = MasterImplantacaoRouteImport.update({
+  id: '/master-implantacao',
+  path: '/master-implantacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterPlanosRoute = MasterPlanosRouteImport.update({
+  id: '/master-planos',
+  path: '/master-planos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterProdutosRoute = MasterProdutosRouteImport.update({
+  id: '/master-produtos',
+  path: '/master-produtos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterRecoveryRoute = MasterRecoveryRouteImport.update({
+  id: '/master-recovery',
+  path: '/master-recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterSuporteRoute = MasterSuporteRouteImport.update({
+  id: '/master-suporte',
+  path: '/master-suporte',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +127,17 @@ export interface FileRoutesByFullPath {
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
   '/master-recovery': typeof MasterRecoveryRoute
+  '/master-assinaturas': typeof MasterAssinaturasRoute
+  '/master-clientes': typeof MasterClientesRoute
+  '/master-comercial': typeof MasterComercialRoute
+  '/master-configuracoes': typeof MasterConfiguracoesRoute
+  '/master-dominios': typeof MasterDominiosRoute
+  '/master-financeiro': typeof MasterFinanceiroRoute
+  '/master-implantacao': typeof MasterImplantacaoRoute
+  '/master-planos': typeof MasterPlanosRoute
+  '/master-produtos': typeof MasterProdutosRoute
+  '/master-recovery': typeof MasterRecoveryRoute
+  '/master-suporte': typeof MasterSuporteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +147,17 @@ export interface FileRoutesByTo {
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
   '/master-recovery': typeof MasterRecoveryRoute
+  '/master-assinaturas': typeof MasterAssinaturasRoute
+  '/master-clientes': typeof MasterClientesRoute
+  '/master-comercial': typeof MasterComercialRoute
+  '/master-configuracoes': typeof MasterConfiguracoesRoute
+  '/master-dominios': typeof MasterDominiosRoute
+  '/master-financeiro': typeof MasterFinanceiroRoute
+  '/master-implantacao': typeof MasterImplantacaoRoute
+  '/master-planos': typeof MasterPlanosRoute
+  '/master-produtos': typeof MasterProdutosRoute
+  '/master-recovery': typeof MasterRecoveryRoute
+  '/master-suporte': typeof MasterSuporteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -90,6 +178,17 @@ export interface FileRouteTypes {
     | '/master-comercial'
     | '/master-financeiro'
     | '/master-recovery'
+    | '/master-assinaturas'
+    | '/master-clientes'
+    | '/master-comercial'
+    | '/master-configuracoes'
+    | '/master-dominios'
+    | '/master-financeiro'
+    | '/master-implantacao'
+    | '/master-planos'
+    | '/master-produtos'
+    | '/master-recovery'
+    | '/master-suporte'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -99,6 +198,17 @@ export interface FileRouteTypes {
     | '/master-comercial'
     | '/master-financeiro'
     | '/master-recovery'
+    | '/master-assinaturas'
+    | '/master-clientes'
+    | '/master-comercial'
+    | '/master-configuracoes'
+    | '/master-dominios'
+    | '/master-financeiro'
+    | '/master-implantacao'
+    | '/master-planos'
+    | '/master-produtos'
+    | '/master-recovery'
+    | '/master-suporte'
   id:
     | '__root__'
     | '/'
@@ -108,6 +218,17 @@ export interface FileRouteTypes {
     | '/master-comercial'
     | '/master-financeiro'
     | '/master-recovery'
+    | '/master-assinaturas'
+    | '/master-clientes'
+    | '/master-comercial'
+    | '/master-configuracoes'
+    | '/master-dominios'
+    | '/master-financeiro'
+    | '/master-implantacao'
+    | '/master-planos'
+    | '/master-produtos'
+    | '/master-recovery'
+    | '/master-suporte'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -170,6 +291,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MasterRecoveryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/master-assinaturas': {
+      id: '/master-assinaturas'
+      path: '/master-assinaturas'
+      fullPath: '/master-assinaturas'
+      preLoaderRoute: typeof MasterAssinaturasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-clientes': {
+      id: '/master-clientes'
+      path: '/master-clientes'
+      fullPath: '/master-clientes'
+      preLoaderRoute: typeof MasterClientesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-comercial': {
+      id: '/master-comercial'
+      path: '/master-comercial'
+      fullPath: '/master-comercial'
+      preLoaderRoute: typeof MasterComercialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-configuracoes': {
+      id: '/master-configuracoes'
+      path: '/master-configuracoes'
+      fullPath: '/master-configuracoes'
+      preLoaderRoute: typeof MasterConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-dominios': {
+      id: '/master-dominios'
+      path: '/master-dominios'
+      fullPath: '/master-dominios'
+      preLoaderRoute: typeof MasterDominiosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-financeiro': {
+      id: '/master-financeiro'
+      path: '/master-financeiro'
+      fullPath: '/master-financeiro'
+      preLoaderRoute: typeof MasterFinanceiroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-implantacao': {
+      id: '/master-implantacao'
+      path: '/master-implantacao'
+      fullPath: '/master-implantacao'
+      preLoaderRoute: typeof MasterImplantacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-planos': {
+      id: '/master-planos'
+      path: '/master-planos'
+      fullPath: '/master-planos'
+      preLoaderRoute: typeof MasterPlanosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-produtos': {
+      id: '/master-produtos'
+      path: '/master-produtos'
+      fullPath: '/master-produtos'
+      preLoaderRoute: typeof MasterProdutosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-recovery': {
+      id: '/master-recovery'
+      path: '/master-recovery'
+      fullPath: '/master-recovery'
+      preLoaderRoute: typeof MasterRecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/master-suporte': {
+      id: '/master-suporte'
+      path: '/master-suporte'
+      fullPath: '/master-suporte'
+      preLoaderRoute: typeof MasterSuporteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -181,6 +379,17 @@ const rootRouteChildren: RootRouteChildren = {
   MasterComercialRoute: MasterComercialRoute,
   MasterFinanceiroRoute: MasterFinanceiroRoute,
   MasterRecoveryRoute: MasterRecoveryRoute,
+  MasterAssinaturasRoute: MasterAssinaturasRoute,
+  MasterClientesRoute: MasterClientesRoute,
+  MasterComercialRoute: MasterComercialRoute,
+  MasterConfiguracoesRoute: MasterConfiguracoesRoute,
+  MasterDominiosRoute: MasterDominiosRoute,
+  MasterFinanceiroRoute: MasterFinanceiroRoute,
+  MasterImplantacaoRoute: MasterImplantacaoRoute,
+  MasterPlanosRoute: MasterPlanosRoute,
+  MasterProdutosRoute: MasterProdutosRoute,
+  MasterRecoveryRoute: MasterRecoveryRoute,
+  MasterSuporteRoute: MasterSuporteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
