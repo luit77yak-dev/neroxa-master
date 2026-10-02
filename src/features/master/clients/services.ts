@@ -10,10 +10,14 @@ export async function isNeroxaStaff() {
   if (userError) throw new Error(userError.message);
   if (!user) return false;
 
-  const { data, error } = await supabase.rpc("neroxa_is_platform_member" as never);
+  const { data, error } = await supabase
+    .from("neroxa_platform_members" as never)
+    .select("active")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
-  return Boolean(data);
+  return Boolean((data as { active?: boolean } | null)?.active);
 }
 
 export async function listNeroxaClients() {
