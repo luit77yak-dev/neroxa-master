@@ -124,3 +124,42 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
   if (!data) throw new Error("Assinatura não encontrada ou sem permissão para alterar.");
   return true;
 }
+
+
+export async function createPlan(input: { name: string; slug: string; description?: string; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; active?: boolean }) {
+  const { data, error } = await supabase
+    .from("neroxa_plans" as never)
+    .insert({
+      name: input.name.trim(),
+      slug: input.slug.trim().toLowerCase(),
+      description: input.description?.trim() || null,
+      price_monthly: input.priceMonthly,
+      setup_price: input.setupPrice,
+      billing_period: input.billingPeriod,
+      active: input.active ?? true,
+    } as never)
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updatePlan(input: { id: string; name: string; slug: string; description?: string; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; active: boolean }) {
+  const { data, error } = await supabase
+    .from("neroxa_plans" as never)
+    .update({
+      name: input.name.trim(),
+      slug: input.slug.trim().toLowerCase(),
+      description: input.description?.trim() || null,
+      price_monthly: input.priceMonthly,
+      setup_price: input.setupPrice,
+      billing_period: input.billingPeriod,
+      active: input.active,
+    } as never)
+    .eq("id", input.id)
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Plano não encontrado ou sem permissão para alterar.");
+  return true;
+}
