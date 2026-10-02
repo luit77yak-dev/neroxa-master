@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Pause,
   Play,
-  XCircle,
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -169,7 +168,7 @@ function MasterCommercialPage() {
                       {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"SENT")}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Cancelar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"CANCELLED")}><XCircle className="h-3.5 w-3.5"/></Button>}</div>
+                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"SENT")}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>{if(window.confirm("Cancelar esta proposta?"))void handleProposalStatus(proposal.id,"CANCELLED")}}>Cancelar</Button>}</div>
                 </div>
               );
             })}
@@ -194,7 +193,7 @@ function MasterCommercialPage() {
                       {contract.contract_number || "Sem número"} · {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${contractTone[contract.status]}`}>{CONTRACT_STATUS_LABELS[contract.status]}</span>{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Ativar" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"ACTIVE")}><Play className="h-3.5 w-3.5"/></Button>}{contract.status==="ACTIVE"&&<Button variant="ghost" size="icon" title="Suspender" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"SUSPENDED")}><Pause className="h-3.5 w-3.5"/></Button>}{["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status)&&<Button variant="ghost" size="icon" title="Encerrar" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"TERMINATED")}><XCircle className="h-3.5 w-3.5"/></Button>}</div>
+                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${contractTone[contract.status]}`}>{CONTRACT_STATUS_LABELS[contract.status]}</span>{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Ativar" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"ACTIVE")}><Play className="h-3.5 w-3.5"/></Button>}{contract.status==="ACTIVE"&&<Button variant="ghost" size="icon" title="Suspender" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"SUSPENDED")}><Pause className="h-3.5 w-3.5"/></Button>}{["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status)&&<Button variant="outline" size="sm" disabled={saving===contract.id} onClick={()=>{if(window.confirm("Encerrar este contrato? Essa ação altera o status para encerrado."))void handleContractStatus(contract.id,"TERMINATED")}}>Encerrar</Button>}</div>
                 </div>
               );
             })}
