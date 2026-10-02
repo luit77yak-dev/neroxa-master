@@ -4,6 +4,7 @@ import {AlertTriangle,CalendarClock,CheckCircle2,CircleDollarSign,CreditCard,Loa
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {isNeroxaStaff} from "@/features/master/clients/services";
+import {MasterLogin} from "@/features/master/shell/MasterLogin";
 import {MasterShell} from "@/features/master/shell/MasterShell";
 import {INVOICE_STATUS_LABELS,type Invoice, type Payment} from "@/features/master/finance/types";
 import {loadFinanceOverview} from "@/features/master/finance/services";
