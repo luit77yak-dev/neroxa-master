@@ -32,7 +32,7 @@ function MasterConfiguracoes() {
 
   const loadAudit = async (initial = false) => {
     setError(null);
-    initial ? setLoading(true) : setRefreshing(true);
+    if (initial) setLoading(true); else setRefreshing(true);
     try {
       const access = await getNeroxaPlatformAccess();
       setRole(access?.active ? access.role : null);
