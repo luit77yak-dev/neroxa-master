@@ -1,6 +1,6 @@
 import {useEffect,useMemo,useState} from "react";
 import {createFileRoute} from "@tanstack/react-router";
-import {AlertTriangle,CalendarClock,CheckCircle2,CircleDollarSign,CreditCard,Loader2,RefreshCw,ShieldCheck,WalletCards,Check,Undo2,XCircle} from "lucide-react";
+import {AlertTriangle,CalendarClock,CheckCircle2,CircleDollarSign,CreditCard,Loader2,RefreshCw,ShieldCheck,WalletCards,Check,Undo2} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {isNeroxaStaff} from "@/features/master/clients/services";
@@ -40,7 +40,7 @@ function MasterFinancePage(){
     </div>
     <div className="flex items-center justify-between gap-3 sm:justify-end">
      <p className="text-sm font-semibold">{money(i.total_amount)}</p>
-     <div className="flex items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Marcar como paga" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"PAID")}><Check className="h-3.5 w-3.5"/></Button>}{i.status==="PAID"&&<Button variant="ghost" size="icon" title="Reembolsar" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"REFUNDED")}><Undo2 className="h-3.5 w-3.5"/></Button>}{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Cancelar" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"CANCELLED")}><XCircle className="h-3.5 w-3.5"/></Button>}</div>
+     <div className="flex items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Marcar como paga" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"PAID")}><Check className="h-3.5 w-3.5"/></Button>}{i.status==="PAID"&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Reembolsar esta fatura? Essa ação altera o status para reembolsada."))void handleBillingStatus(i.id,"REFUNDED")}}><Undo2 className="h-3.5 w-3.5"/>Reembolsar</Button>}{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Cancelar esta fatura?"))void handleBillingStatus(i.id,"CANCELLED")}}>Cancelar</Button>}</div>
     </div>
    </div>
   );
