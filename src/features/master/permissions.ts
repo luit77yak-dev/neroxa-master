@@ -3,6 +3,7 @@ import type { NeroxaPlatformRole } from "@/features/master/clients/services";
 export type MasterModule =
   | "overview"
   | "clients"
+  | "systems"
   | "commercial"
   | "plans"
   | "subscriptions"
@@ -16,6 +17,7 @@ export type MasterModule =
 const MODULE_ROLES: Record<MasterModule, NeroxaPlatformRole[]> = {
   overview: ["SUPER_ADMIN", "ADMIN", "FINANCE", "SUPPORT"],
   clients: ["SUPER_ADMIN", "ADMIN", "FINANCE", "SUPPORT"],
+  systems: ["SUPER_ADMIN", "ADMIN", "SUPPORT"],
   commercial: ["SUPER_ADMIN", "ADMIN"],
   plans: ["SUPER_ADMIN", "ADMIN"],
   subscriptions: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
@@ -59,6 +61,7 @@ export const ROLE_LABELS: Record<NeroxaPlatformRole, string> = {
 export function moduleForPath(pathname: string): MasterModule {
   if (pathname === "/master") return "overview";
   if (pathname === "/master-clientes") return "clients";
+  if (pathname === "/master-sistemas") return "systems";
   if (pathname === "/master-comercial") return "commercial";
   if (pathname === "/master-planos") return "plans";
   if (pathname === "/master-assinaturas") return "subscriptions";
