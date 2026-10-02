@@ -57,17 +57,41 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
       return;
     }
 
+    const { data: sessionData } = await supabase.auth.getSession();
+    const recoveryEmail = sessionData.session?.user?.email;
+
+    if (!recoveryEmail) {
+      setError("A sessão de recuperação não está mais disponível. Solicite um novo link.");
+      setLoading(false);
+      return;
+    }
+
     const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
     if (updateError) {
       setError("Não foi possível atualizar a senha. Solicite um novo link e tente novamente.");
-    } else {
-      setMessage("Senha atualizada com sucesso. Agora você pode entrar no Neroxa Master.");
+      setLoading(false);
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: recoveryEmail,
+      password: newPassword,
+    });
+
+    if (signInError) {
+      setError("A senha foi atualizada, mas não foi possível iniciar sua sessão automaticamente. Entre novamente com a nova senha.");
       setRecoveryMode(false);
+      setMode("login");
       setPassword("");
       setNewPassword("");
-      window.location.assign("/master");
+      setEmail(recoveryEmail);
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    setMessage("Senha atualizada com sucesso. Entrando no Neroxa Master...");
+    setNewPassword("");
+    window.location.assign("/master");
   };
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
