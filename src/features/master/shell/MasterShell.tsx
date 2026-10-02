@@ -37,11 +37,11 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Planos", to: "/master-planos", icon: Package },
   { label: "Assinaturas", to: "/master-assinaturas", icon: CreditCard },
   { label: "Financeiro", to: "/master-financeiro", icon: BarChart3 },
-  { label: "Produtos", to: "/master/produtos", icon: Package, enabled: false },
-  { label: "Implantação", to: "/master/implantacao", icon: FolderKanban, enabled: false },
+  { label: "Produtos", to: "/master-produtos", icon: Package },
+  { label: "Implantação", to: "/master-implantacao", icon: FolderKanban },
   { label: "Domínios", to: "/master-dominios", icon: Globe2 },
-  { label: "Suporte", to: "/master/suporte", icon: CircleHelp, enabled: false },
-  { label: "Configurações", to: "/master/configuracoes", icon: Settings, enabled: false },
+  { label: "Suporte", to: "/master-suporte", icon: CircleHelp },
+  { label: "Configurações", to: "/master-configuracoes", icon: Settings },
 ];
 
 export function MasterShell({ children }: MasterShellProps) {
