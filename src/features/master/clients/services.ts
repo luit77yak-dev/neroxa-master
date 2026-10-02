@@ -113,3 +113,72 @@ export async function createNeroxaClientContact(input: {
   if (error) throw new Error(error.message);
   return data as unknown as string;
 }
+
+
+export type NeroxaSystemInstance = {
+  id: string;
+  organization_id: string;
+  plan_id: string | null;
+  subscription_id: string | null;
+  name: string;
+  system_type: string;
+  slug: string;
+  status: "PROVISIONING" | "ACTIVE" | "SUSPENDED" | "ARCHIVED";
+};
+
+export type NeroxaSystemDomain = {
+  id: string;
+  system_instance_id: string;
+  domain: string;
+  is_primary: boolean;
+  status: "PENDING" | "VERIFYING" | "VERIFIED" | "FAILED" | "DISABLED";
+  verified_at: string | null;
+};
+
+export async function listNeroxaClientInstances(organizationId: string) {
+  const { data, error } = await supabase
+    .from("neroxa_system_instances" as never)
+    .select("id, organization_id, plan_id, subscription_id, name, system_type, slug, status")
+    .eq("organization_id", organizationId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as NeroxaSystemInstance[];
+}
+
+export async function listNeroxaInstanceDomains(instanceId: string) {
+  const { data, error } = await supabase
+    .from("neroxa_system_domains" as never)
+    .select("id, system_instance_id, domain, is_primary, status, verified_at")
+    .eq("system_instance_id", instanceId)
+    .order("is_primary", { ascending: false })
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as NeroxaSystemDomain[];
+}
+
+export async function createNeroxaSystemDomain(input: {
+  instanceId: string;
+  domain: string;
+  isPrimary?: boolean;
+}) {
+  const normalized = input.domain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+  if (!normalized || normalized.includes("/") || normalized.includes(" ")) {
+    throw new Error("Informe um domínio válido, sem https:// ou caminhos.");
+  }
+
+  const { data, error } = await supabase
+    .from("neroxa_system_domains" as never)
+    .insert({
+      system_instance_id: input.instanceId,
+      domain: normalized,
+      is_primary: Boolean(input.isPrimary),
+      status: "PENDING",
+    } as never)
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return (data as { id: string }).id;
+}
