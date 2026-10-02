@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 
-export function MasterLogin() {
+export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [recoveryMode, setRecoveryMode] = useState(false);
-  const [mode, setMode] = useState<"login" | "reset">("login");
+  const [recoveryMode, setRecoveryMode] = useState(recoveryPage);
+  const [mode, setMode] = useState<"login" | "reset">(recoveryPage ? "reset" : "login");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export function MasterLogin() {
       }
     });
 
-    if (hasRecoveryHash()) {
+    if (recoveryPage || hasRecoveryHash()) {
       enterRecoveryMode();
     }
 
