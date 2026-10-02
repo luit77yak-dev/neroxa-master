@@ -9,7 +9,19 @@ import {MasterShell} from "@/features/master/shell/MasterShell";
 import {INVOICE_STATUS_LABELS,type Invoice, type Payment} from "@/features/master/finance/types";
 import {loadFinanceOverview} from "@/features/master/finance/services";
 
-export const Route=createFileRoute("/master-financeiro")({component:MasterFinancePage});
+export const Route=createFileRoute("/master-financeiro")({
+ component:MasterFinancePage,
+ errorComponent:({error,reset})=>(
+  <main className="grid min-h-screen place-items-center bg-slate-950 px-5 text-slate-100">
+   <div className="w-full max-w-xl rounded-2xl border border-red-400/20 bg-white/5 p-6 shadow-xl">
+    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-red-300">Diagnóstico · Financeiro</p>
+    <h1 className="mt-2 text-xl font-semibold">A rota encontrou um erro inesperado.</h1>
+    <pre className="mt-4 max-h-64 overflow-auto whitespace-pre-wrap rounded-xl bg-black/20 p-4 text-xs text-red-200">{error instanceof Error?error.message:String(error)}</pre>
+    <button type="button" onClick={reset} className="mt-4 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-900">Tentar novamente</button>
+   </div>
+  </main>
+ ),
+});
 const tone:Record<keyof typeof INVOICE_STATUS_LABELS,string>={PENDING:"bg-blue-50 text-blue-700",PAID:"bg-emerald-50 text-emerald-700",OVERDUE:"bg-red-50 text-red-700",CANCELLED:"bg-slate-100 text-slate-500",REFUNDED:"bg-violet-50 text-violet-700",NEGOTIATION:"bg-amber-50 text-amber-700"};
 const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
 const date=(v:string|null)=>v?new Intl.DateTimeFormat("pt-BR").format(new Date(v+"T12:00:00")):"—";
