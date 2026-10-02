@@ -12,7 +12,7 @@ import { loadSubscriptionOverview } from "@/features/master/subscriptions/servic
 export const Route=createFileRoute("/master-assinaturas")({component:MasterSubscriptionsPage});
 const statusTone:Record<keyof typeof SUBSCRIPTION_STATUS_LABELS,string>={PENDING:"bg-blue-50 text-blue-700",ACTIVE:"bg-emerald-50 text-emerald-700",PAUSED:"bg-amber-50 text-amber-700",DELINQUENT:"bg-red-50 text-red-700",CANCELLED:"bg-slate-100 text-slate-500",EXPIRED:"bg-slate-100 text-slate-500"};
 const formatCurrency=(value:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(value);
-const formatDate=(value:string|null)=>value?new Intl.DateTimeFormat("pt-BR").format(new Date(value+"T12:00:00")):"—";
+const formatDate=(value:string|null)=>{if(!value)return "—";const raw=String(value).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
 
 function MasterSubscriptionsPage(){
  const [authorized,setAuthorized]=useState<boolean|null>(null),[plans,setPlans]=useState<SubscriptionPlan[]>([]),[subscriptions,setSubscriptions]=useState<Subscription[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[error,setError]=useState<string|null>(null);
