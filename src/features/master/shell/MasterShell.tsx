@@ -39,7 +39,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Financeiro", to: "/master-financeiro", icon: BarChart3 },
   { label: "Produtos", to: "/master/produtos", icon: Package, enabled: false },
   { label: "Implantação", to: "/master/implantacao", icon: FolderKanban, enabled: false },
-  { label: "Domínios", to: "/master/dominios", icon: Globe2, enabled: false },
+  { label: "Domínios", to: "/master-dominios", icon: Globe2 },
   { label: "Suporte", to: "/master/suporte", icon: CircleHelp, enabled: false },
   { label: "Configurações", to: "/master/configuracoes", icon: Settings, enabled: false },
 ];
