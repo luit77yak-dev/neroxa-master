@@ -3,7 +3,8 @@ import {createFileRoute} from "@tanstack/react-router";
 import {AlertTriangle,CalendarClock,CheckCircle2,CircleDollarSign,CreditCard,Loader2,RefreshCw,ShieldCheck,WalletCards,Check,Undo2} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
-import {isNeroxaStaff} from "@/features/master/clients/services";
+import {getNeroxaPlatformAccess,isNeroxaStaff} from "@/features/master/clients/services";
+import {canPerform} from "@/features/master/permissions";
 import {MasterLogin} from "@/features/master/shell/MasterLogin";
 import {MasterShell} from "@/features/master/shell/MasterShell";
 import {INVOICE_STATUS_LABELS,type Invoice, type Payment} from "@/features/master/finance/types";
@@ -15,8 +16,8 @@ const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency
 const date=(v:string|null)=>{if(!v)return "—";const raw=String(v).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
 
 function MasterFinancePage(){
- const [authorized,setAuthorized]=useState<boolean|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
- const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
+ const [authorized,setAuthorized]=useState<boolean|null>(null),[role,setRole]=useState<import("@/features/master/clients/services").NeroxaPlatformRole|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
+ const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const access=await getNeroxaPlatformAccess();setRole(access?.active?access.role:null);const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
  useEffect(()=>{void load(true)},[]);
  const handleBillingStatus=async(id:string,status:"PENDING"|"PAID"|"OVERDUE"|"CANCELLED"|"REFUNDED")=>{setSaving(id);setError(null);try{await updateBillingStatus(id,status);await load()}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível alterar a fatura.")}finally{setSaving(null)}};
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]);
@@ -40,7 +41,7 @@ function MasterFinancePage(){
     </div>
     <div className="flex items-center justify-between gap-3 sm:justify-end">
      <p className="text-sm font-semibold">{money(i.total_amount)}</p>
-     <div className="flex items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Marcar como paga" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"PAID")}><Check className="h-3.5 w-3.5"/></Button>}{i.status==="PAID"&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Reembolsar esta fatura? Essa ação altera o status para reembolsada."))void handleBillingStatus(i.id,"REFUNDED")}}><Undo2 className="h-3.5 w-3.5"/>Reembolsar</Button>}{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Cancelar esta fatura?"))void handleBillingStatus(i.id,"CANCELLED")}}>Cancelar</Button>}</div>
+     <div className="flex items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>{canPerform(role,"manageFinance")&&["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Marcar como paga" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"PAID")}><Check className="h-3.5 w-3.5"/></Button>}{canPerform(role,"manageFinance")&&i.status==="PAID"&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Reembolsar esta fatura? Essa ação altera o status para reembolsada."))void handleBillingStatus(i.id,"REFUNDED")}}><Undo2 className="h-3.5 w-3.5"/>Reembolsar</Button>}{canPerform(role,"manageFinance")&&["PENDING","OVERDUE"].includes(i.status)&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Cancelar esta fatura?"))void handleBillingStatus(i.id,"CANCELLED")}}>Cancelar</Button>}</div>
     </div>
    </div>
   );

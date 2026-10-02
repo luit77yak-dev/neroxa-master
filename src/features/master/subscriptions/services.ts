@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { recordNeroxaAudit } from "@/features/master/clients/services";
 import type { BillingInterval, SubscriptionOverview, SubscriptionStatus } from "./types";
 
 type PlanRow = {
@@ -122,6 +123,12 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Assinatura não encontrada ou sem permissão para alterar.");
+  await recordNeroxaAudit({
+    action: "SUBSCRIPTION_STATUS_CHANGED",
+    resourceType: "SUBSCRIPTION",
+    resourceId: subscriptionId,
+    details: { status },
+  });
   return true;
 }
 
@@ -141,6 +148,13 @@ export async function createPlan(input: { name: string; slug: string; descriptio
     .select("id")
     .single();
   if (error) throw new Error(error.message);
+  const planId = (data as { id: string }).id;
+  await recordNeroxaAudit({
+    action: "PLAN_CREATED",
+    resourceType: "PLAN",
+    resourceId: planId,
+    details: { name: input.name, slug: input.slug, active: input.active ?? true },
+  });
   return data;
 }
 
@@ -161,5 +175,11 @@ export async function updatePlan(input: { id: string; name: string; slug: string
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Plano não encontrado ou sem permissão para alterar.");
+  await recordNeroxaAudit({
+    action: "PLAN_UPDATED",
+    resourceType: "PLAN",
+    resourceId: input.id,
+    details: { name: input.name, slug: input.slug, active: input.active },
+  });
   return true;
 }

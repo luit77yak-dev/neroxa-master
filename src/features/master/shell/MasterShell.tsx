@@ -16,7 +16,9 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { getNeroxaPlatformAccess } from "@/features/master/clients/services";
+import { canAccessModule, moduleForPath, ROLE_LABELS } from "@/features/master/permissions";
 
 type MasterShellProps = {
   children: ReactNode;
@@ -38,16 +40,34 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Planos", to: "/master-planos", icon: Package },
   { label: "Assinaturas", to: "/master-assinaturas", icon: CreditCard },
   { label: "Financeiro", to: "/master-financeiro", icon: BarChart3 },
-  { label: "Produtos", to: "/master/produtos", icon: Package, enabled: false },
-  { label: "Implantação", to: "/master/implantacao", icon: FolderKanban, enabled: false },
-  { label: "Domínios", to: "/master/dominios", icon: Globe2, enabled: false },
-  { label: "Suporte", to: "/master/suporte", icon: CircleHelp, enabled: false },
-  { label: "Configurações", to: "/master/configuracoes", icon: Settings, enabled: false },
+  { label: "Produtos", to: "/master-produtos", icon: Package },
+  { label: "Implantação", to: "/master-implantacao", icon: FolderKanban },
+  { label: "Domínios", to: "/master-dominios", icon: Globe2 },
+  { label: "Suporte", to: "/master-suporte", icon: CircleHelp },
+  { label: "Configurações", to: "/master-configuracoes", icon: Settings },
 ];
 
 export function MasterShell({ children }: MasterShellProps) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
+  const [accessLoading, setAccessLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    void getNeroxaPlatformAccess().then((access) => {
+      if (!mounted) return;
+      setRole(access?.active ? access.role : null);
+    }).catch(() => {
+      if (mounted) setRole(null);
+    }).finally(() => {
+      if (mounted) setAccessLoading(false);
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  const currentModule = moduleForPath(location.pathname);
+  const allowed = canAccessModule(role, currentModule);
 
   const isActive = (item: NavItem) =>
     item.active?.(location.pathname) ??
@@ -86,21 +106,21 @@ export function MasterShell({ children }: MasterShellProps) {
           <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Operação
           </p>
-          {NAV_ITEMS.slice(0, 3).map((item) => (
+          {NAV_ITEMS.slice(0, 3).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
             <MasterNavItem key={item.to} item={item} active={isActive(item)} onNavigate={() => setMobileOpen(false)} />
           ))}
 
           <p className="px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Gestão
           </p>
-          {NAV_ITEMS.slice(3, 9).map((item) => (
+          {NAV_ITEMS.slice(3, 9).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
             <MasterNavItem key={item.to} item={item} active={isActive(item)} onNavigate={() => setMobileOpen(false)} />
           ))}
 
           <p className="px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Sistema
           </p>
-          {NAV_ITEMS.slice(9).map((item) => (
+          {NAV_ITEMS.slice(9).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
             <MasterNavItem key={item.to} item={item} active={isActive(item)} onNavigate={() => setMobileOpen(false)} />
           ))}
         </nav>
@@ -112,7 +132,7 @@ export function MasterShell({ children }: MasterShellProps) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-xs font-semibold">Equipe Neroxa</p>
-              <p className="truncate text-[11px] text-slate-400">Acesso interno</p>
+              <p className="truncate text-[11px] text-slate-400">{role ? ROLE_LABELS[role] : "Acesso interno"}</p>
             </div>
           </div>
         </div>

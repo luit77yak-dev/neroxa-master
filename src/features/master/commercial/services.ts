@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { recordNeroxaAudit } from "@/features/master/clients/services";
 import type { CommercialContract, CommercialOverview, CommercialProposal } from "./types";
 
 export async function loadCommercialOverview(): Promise<CommercialOverview> {
@@ -37,6 +38,7 @@ export async function updateProposalStatus(id: string, status: "DRAFT" | "SENT" 
   const { data, error } = await supabase.from("neroxa_proposals" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Proposta não encontrada ou sem permissão para alterar.");
+  await recordNeroxaAudit({ action: "PROPOSAL_STATUS_CHANGED", resourceType: "PROPOSAL", resourceId: id, details: { status } });
   return true;
 }
 
@@ -47,5 +49,6 @@ export async function updateContractStatus(id: string, status: "DRAFT" | "ACTIVE
   const { data, error } = await supabase.from("neroxa_contracts" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Contrato não encontrado ou sem permissão para alterar.");
+  await recordNeroxaAudit({ action: "CONTRACT_STATUS_CHANGED", resourceType: "CONTRACT", resourceId: id, details: { status } });
   return true;
 }

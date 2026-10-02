@@ -52,6 +52,7 @@ const contractTone: Record<keyof typeof CONTRACT_STATUS_LABELS, string> = {
 
 function MasterCommercialPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
   const [proposals, setProposals] = useState<CommercialProposal[]>([]);
   const [contracts, setContracts] = useState<CommercialContract[]>([]);
   const [clients, setClients] = useState<{ id: string; legal_name: string | null; trade_name: string | null }[]>([]);
@@ -87,8 +88,8 @@ function MasterCommercialPage() {
   useEffect(() => {
     void load(true);
   }, []);
-  const handleProposalStatus = async (id: string, status: "DRAFT" | "SENT" | "NEGOTIATION" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED") => { setSaving(id); setError(null); try { await updateProposalStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar a proposta."); } finally { setSaving(null); } };
-  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };
+  const handleProposalStatus = async (id: string, status: "DRAFT" | "SENT" | "NEGOTIATION" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateProposalStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar a proposta."); } finally { setSaving(null); } };
+  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };
 
 
   const clientMap = useMemo(
