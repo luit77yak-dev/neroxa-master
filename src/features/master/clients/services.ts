@@ -1,6 +1,42 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ClientStatus, NeroxaClient, NeroxaClientContact } from "./types";
 
+export type NeroxaPlatformRole = "SUPER_ADMIN" | "ADMIN" | "FINANCE" | "SUPPORT";
+
+export type NeroxaPlatformAccess = {
+  role: NeroxaPlatformRole;
+  active: boolean;
+};
+
+export async function getNeroxaPlatformAccess(): Promise<NeroxaPlatformAccess | null> {
+  const { data, error } = await supabase.rpc("get_neroxa_platform_access" as never);
+  if (error) throw new Error(error.message);
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  return {
+    role: String((row as { role: string }).role) as NeroxaPlatformRole,
+    active: Boolean((row as { active: boolean }).active),
+  };
+}
+
+export async function recordNeroxaAudit(input: {
+  action: string;
+  resourceType: string;
+  resourceId?: string | null;
+  organizationId?: string | null;
+  details?: Record<string, unknown>;
+}) {
+  const { data, error } = await supabase.rpc("record_neroxa_audit" as never, {
+    p_action: input.action,
+    p_resource_type: input.resourceType,
+    p_resource_id: input.resourceId ?? null,
+    p_organization_id: input.organizationId ?? null,
+    p_details: input.details ?? {},
+  } as never);
+  if (error) throw new Error(error.message);
+  return String(data);
+}
+
 export async function isNeroxaStaff() {
   const {
     data: { user },
