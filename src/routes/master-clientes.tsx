@@ -35,6 +35,11 @@ import {
   listNeroxaClients,
   transitionNeroxaClient,
   updateNeroxaClient,
+  createNeroxaSystemDomain,
+  listNeroxaClientInstances,
+  listNeroxaInstanceDomains,
+  type NeroxaSystemDomain,
+  type NeroxaSystemInstance,
 } from "@/features/master/clients/services";
 
 export const Route = createFileRoute("/master-clientes")({
@@ -57,6 +62,11 @@ function MasterClientsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
+  const [instances, setInstances] = useState<NeroxaSystemInstance[]>([]);
+  const [domains, setDomains] = useState<Record<string, NeroxaSystemDomain[]>>({});
+  const [domainDraft, setDomainDraft] = useState("");
+  const [domainInstanceId, setDomainInstanceId] = useState("");
+  const [savingDomain, setSavingDomain] = useState(false);
 
   const selected = clients.find((client) => client.id === selectedId) ?? null;
 
@@ -84,13 +94,26 @@ function MasterClientsPage() {
   }, []);
 
   useEffect(() => {
-    if (!selected) {
+    if (!selected?.organization_id) {
       setContacts([]);
+      setInstances([]);
+      setDomains({});
+      setDomainInstanceId("");
       return;
     }
+
     void listNeroxaClientContacts(selected.id)
       .then(setContacts)
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar o contato."));
+
+    void listNeroxaClientInstances(selected.organization_id)
+      .then((rows) => {
+        setInstances(rows);
+        setDomainInstanceId((current) => current && rows.some((row) => row.id === current) ? current : rows[0]?.id ?? "");
+        return Promise.all(rows.map(async (instance) => [instance.id, await listNeroxaInstanceDomains(instance.id)] as const));
+      })
+      .then((entries) => setDomains(Object.fromEntries(entries)))
+      .catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar as instâncias."));
   }, [selectedId]);
 
   useEffect(() => {
@@ -165,6 +188,35 @@ function MasterClientsPage() {
       setError(cause instanceof Error ? cause.message : "Não foi possível atualizar o cliente.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAddDomain = async () => {
+    if (!domainInstanceId) {
+      setError("Selecione uma instância para vincular o domínio.");
+      return;
+    }
+    if (!domainDraft.trim()) {
+      setError("Informe o domínio.");
+      return;
+    }
+
+    setSavingDomain(true);
+    try {
+      const domainId = await createNeroxaSystemDomain({
+        instanceId: domainInstanceId,
+        domain: domainDraft,
+        isPrimary: (domains[domainInstanceId] ?? []).length === 0,
+      });
+      const refreshed = await listNeroxaInstanceDomains(domainInstanceId);
+      setDomains((current) => ({ ...current, [domainInstanceId]: refreshed }));
+      setDomainDraft("");
+      notify("Domínio cadastrado como pendente de verificação.");
+      void domainId;
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível cadastrar o domínio.");
+    } finally {
+      setSavingDomain(false);
     }
   };
 
@@ -335,6 +387,82 @@ function MasterClientsPage() {
                       <p className="text-xs text-slate-500">Este estado não possui novas transições.</p>
                     )}
                   </div>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">Instâncias e domínios</p>
+                      <p className="mt-1 text-xs text-slate-500">Cadastre o endereço que será usado pelo sistema do cliente.</p>
+                    </div>
+                  </div>
+
+                  {!selected.organization_id ? (
+                    <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                      Este cliente ainda não está vinculado a uma organização. Vincule a organização antes de cadastrar um domínio.
+                    </div>
+                  ) : instances.length === 0 ? (
+                    <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-xs text-slate-500">
+                      Nenhuma instância foi provisionada para este cliente ainda.
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mt-4 space-y-3">
+                        {instances.map((instance) => (
+                          <div key={instance.id} className="rounded-lg border border-slate-200 p-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium">{instance.name}</p>
+                                <p className="truncate text-xs text-slate-500">{instance.slug} · {instance.status}</p>
+                              </div>
+                              <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600">
+                                {instance.system_type}
+                              </span>
+                            </div>
+                            <div className="mt-3 space-y-2">
+                              {(domains[instance.id] ?? []).map((domain) => (
+                                <div key={domain.id} className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-3 py-2">
+                                  <div className="min-w-0">
+                                    <p className="truncate text-xs font-medium text-slate-800">{domain.domain}</p>
+                                    <p className="text-[10px] text-slate-500">{domain.is_primary ? "Principal · " : ""}{domain.status}</p>
+                                  </div>
+                                </div>
+                              ))}
+                              {!domains[instance.id]?.length && (
+                                <p className="text-[11px] text-slate-500">Nenhum domínio cadastrado.</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 border-t border-slate-100 pt-4">
+                        <p className="text-xs font-semibold text-slate-700">Adicionar domínio</p>
+                        <div className="mt-2 space-y-2">
+                          <select
+                            value={domainInstanceId}
+                            onChange={(event) => setDomainInstanceId(event.target.value)}
+                            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+                          >
+                            {instances.map((instance) => (
+                              <option key={instance.id} value={instance.id}>{instance.name}</option>
+                            ))}
+                          </select>
+                          <input
+                            value={domainDraft}
+                            onChange={(event) => setDomainDraft(event.target.value)}
+                            onKeyDown={(event) => { if (event.key === "Enter") void handleAddDomain(); }}
+                            placeholder="Ex.: cliente.neroxa.ia.br"
+                            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+                          />
+                          <Button className="w-full" onClick={() => void handleAddDomain()} disabled={savingDomain}>
+                            {savingDomain ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                            {savingDomain ? "Cadastrando..." : "Cadastrar domínio"}
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
