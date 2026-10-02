@@ -15,6 +15,7 @@ import { Route as MasterAssinaturasRouteImport } from './routes/master-assinatur
 import { Route as MasterClientesRouteImport } from './routes/master-clientes'
 import { Route as MasterComercialRouteImport } from './routes/master-comercial'
 import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro'
+import { Route as MasterRecoveryRouteImport } from './routes/master-recovery'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const MasterFinanceiroRoute = MasterFinanceiroRouteImport.update({
   path: '/master-financeiro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MasterRecoveryRoute = MasterRecoveryRouteImport.update({
+  id: '/master-recovery',
+  path: '/master-recovery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
+  '/master-recovery': typeof MasterRecoveryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
+  '/master-recovery': typeof MasterRecoveryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -81,6 +89,7 @@ export interface FileRouteTypes {
     | '/master-clientes'
     | '/master-comercial'
     | '/master-financeiro'
+    | '/master-recovery'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/master-clientes'
     | '/master-comercial'
     | '/master-financeiro'
+    | '/master-recovery'
   id:
     | '__root__'
     | '/'
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/master-clientes'
     | '/master-comercial'
     | '/master-financeiro'
+    | '/master-recovery'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -152,6 +163,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MasterFinanceiroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/master-recovery': {
+      id: '/master-recovery'
+      path: '/master-recovery'
+      fullPath: '/master-recovery'
+      preLoaderRoute: typeof MasterRecoveryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -162,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   MasterClientesRoute: MasterClientesRoute,
   MasterComercialRoute: MasterComercialRoute,
   MasterFinanceiroRoute: MasterFinanceiroRoute,
+  MasterRecoveryRoute: MasterRecoveryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
