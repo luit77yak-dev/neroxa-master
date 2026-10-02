@@ -91,3 +91,14 @@ export async function loadFinanceOverview(): Promise<FinanceOverview> {
     clients: (clientsResult.data ?? []) as unknown as FinanceOverview["clients"],
   };
 }
+
+
+export async function updateBillingStatus(id: string, status: "PENDING" | "PAID" | "OVERDUE" | "CANCELLED" | "REFUNDED") {
+  const patch: Record<string, unknown> = { status };
+  if (status === "PAID") patch.paid_at = new Date().toISOString();
+  if (status !== "PAID") patch.paid_at = null;
+  const { data, error } = await supabase.from("neroxa_billing_records" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Fatura não encontrada ou sem permissão para alterar.");
+  return true;
+}
