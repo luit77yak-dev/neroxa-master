@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { isNeroxaStaff } from "@/features/master/clients/services";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/master")({
   component: MasterOverviewPage,
@@ -14,7 +15,44 @@ function MasterOverviewPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
 
   useEffect(() => {
-    void isNeroxaStaff().then(setAuthorized).catch(() => setAuthorized(false));
+    let active = true;
+
+    const checkAuthorization = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!active) return;
+
+        if (!session) {
+          setAuthorized(false);
+          return;
+        }
+
+        const staff = await isNeroxaStaff();
+        if (active) setAuthorized(staff);
+      } catch {
+        if (active) setAuthorized(false);
+      }
+    };
+
+    void checkAuthorization();
+
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") {
+        window.setTimeout(() => {
+          if (active) void checkAuthorization();
+        }, 0);
+      }
+
+      if (event === "SIGNED_OUT" && active) setAuthorized(false);
+    });
+
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, []);
 
   if (authorized === false) return <MasterLogin />;
