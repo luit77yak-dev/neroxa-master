@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Globe2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Globe2, RefreshCw } from "lucide-react";
 import {
   isNeroxaStaff,
   listNeroxaClients,
