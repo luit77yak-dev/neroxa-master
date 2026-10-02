@@ -38,7 +38,7 @@ export function canPerform(
   if (!role) return false;
   if (role === "SUPER_ADMIN") return true;
   const map = {
-    manageClients: ["ADMIN", "SUPPORT"],
+    manageClients: ["ADMIN"],
     manageCommercial: ["ADMIN"],
     managePlans: ["ADMIN"],
     manageSubscriptions: ["ADMIN", "FINANCE"],
