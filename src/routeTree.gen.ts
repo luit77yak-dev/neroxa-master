@@ -16,6 +16,7 @@ import { Route as MasterClientesRouteImport } from './routes/master-clientes'
 import { Route as MasterComercialRouteImport } from './routes/master-comercial'
 import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro'
 import { Route as MasterRecoveryRouteImport } from './routes/master-recovery'
+import { Route as MasterSistemasRouteImport } from './routes/master-sistemas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -52,6 +53,11 @@ const MasterRecoveryRoute = MasterRecoveryRouteImport.update({
   path: '/master-recovery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MasterSistemasRoute = MasterSistemasRouteImport.update({
+  id: '/master-sistemas',
+  path: '/master-sistemas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +67,7 @@ export interface FileRoutesByFullPath {
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
   '/master-recovery': typeof MasterRecoveryRoute
+  '/master-sistemas': typeof MasterSistemasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
   '/master-recovery': typeof MasterRecoveryRoute
+  '/master-sistemas': typeof MasterSistemasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
+  '/master-sistemas': typeof MasterSistemasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/master-comercial'
     | '/master-financeiro'
     | '/master-recovery'
+    | '/master-sistemas'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/master-comercial'
     | '/master-financeiro'
     | '/master-recovery'
+    | '/master-sistemas'
   id:
     | '__root__'
     | '/'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/master-comercial'
     | '/master-financeiro'
     | '/master-recovery'
+    | '/master-sistemas'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -170,6 +182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MasterRecoveryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/master-sistemas': {
+      id: '/master-sistemas'
+      path: '/master-sistemas'
+      fullPath: '/master-sistemas'
+      preLoaderRoute: typeof MasterSistemasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -181,6 +200,7 @@ const rootRouteChildren: RootRouteChildren = {
   MasterComercialRoute: MasterComercialRoute,
   MasterFinanceiroRoute: MasterFinanceiroRoute,
   MasterRecoveryRoute: MasterRecoveryRoute,
+  MasterSistemasRoute: MasterSistemasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
