@@ -3,6 +3,16 @@ import { ArrowLeft, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { isNeroxaStaff } from "@/features/master/clients/services";
+
+async function isNeroxaStaffWithRetry() {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const authorized = await isNeroxaStaff();
+    if (authorized) return true;
+    if (attempt < 2) await new Promise((resolve) => window.setTimeout(resolve, 300));
+  }
+  return false;
+}
 
 export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }) {
   const [email, setEmail] = useState("");
@@ -110,7 +120,27 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
       return;
     }
 
-    window.location.reload();
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setError("Login realizado, mas a sessão não foi persistida. Tente novamente.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const authorized = await isNeroxaStaffWithRetry();
+      if (!authorized) {
+        setError("Sua conta entrou no Supabase, mas não está autorizada no Neroxa Master.");
+        setLoading(false);
+        return;
+      }
+    } catch {
+      setError("A sessão foi criada, mas não foi possível validar a permissão do Master. Tente novamente.");
+      setLoading(false);
+      return;
+    }
+
+    window.location.assign("/master");
   };
 
   const handleReset = async (event: React.FormEvent<HTMLFormElement>) => {
