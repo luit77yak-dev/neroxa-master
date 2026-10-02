@@ -8,14 +8,8 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MasterRouteImport } from './routes/master'
-import { Route as MasterAssinaturasRouteImport } from './routes/master-assinaturas'
-import { Route as MasterClientesRouteImport } from './routes/master-clientes'
-import { Route as MasterComercialRouteImport } from './routes/master-comercial'
-import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro'
-import { Route as MasterRecoveryRouteImport } from './routes/master-recovery'
 import { Route as MasterAssinaturasRouteImport } from './routes/master-assinaturas'
 import { Route as MasterClientesRouteImport } from './routes/master-clientes'
 import { Route as MasterComercialRouteImport } from './routes/master-comercial'
@@ -36,31 +30,6 @@ const IndexRoute = IndexRouteImport.update({
 const MasterRoute = MasterRouteImport.update({
   id: '/master',
   path: '/master',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MasterAssinaturasRoute = MasterAssinaturasRouteImport.update({
-  id: '/master-assinaturas',
-  path: '/master-assinaturas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MasterClientesRoute = MasterClientesRouteImport.update({
-  id: '/master-clientes',
-  path: '/master-clientes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MasterComercialRoute = MasterComercialRouteImport.update({
-  id: '/master-comercial',
-  path: '/master-comercial',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MasterFinanceiroRoute = MasterFinanceiroRouteImport.update({
-  id: '/master-financeiro',
-  path: '/master-financeiro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MasterRecoveryRoute = MasterRecoveryRouteImport.update({
-  id: '/master-recovery',
-  path: '/master-recovery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MasterAssinaturasRoute = MasterAssinaturasRouteImport.update({
@@ -125,11 +94,6 @@ export interface FileRoutesByFullPath {
   '/master-assinaturas': typeof MasterAssinaturasRoute
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
-  '/master-financeiro': typeof MasterFinanceiroRoute
-  '/master-recovery': typeof MasterRecoveryRoute
-  '/master-assinaturas': typeof MasterAssinaturasRoute
-  '/master-clientes': typeof MasterClientesRoute
-  '/master-comercial': typeof MasterComercialRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -142,11 +106,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/master': typeof MasterRoute
-  '/master-assinaturas': typeof MasterAssinaturasRoute
-  '/master-clientes': typeof MasterClientesRoute
-  '/master-comercial': typeof MasterComercialRoute
-  '/master-financeiro': typeof MasterFinanceiroRoute
-  '/master-recovery': typeof MasterRecoveryRoute
   '/master-assinaturas': typeof MasterAssinaturasRoute
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
@@ -166,18 +125,20 @@ export interface FileRoutesById {
   '/master-assinaturas': typeof MasterAssinaturasRoute
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
+  '/master-configuracoes': typeof MasterConfiguracoesRoute
+  '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
+  '/master-implantacao': typeof MasterImplantacaoRoute
+  '/master-planos': typeof MasterPlanosRoute
+  '/master-produtos': typeof MasterProdutosRoute
+  '/master-recovery': typeof MasterRecoveryRoute
+  '/master-suporte': typeof MasterSuporteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/master'
-    | '/master-assinaturas'
-    | '/master-clientes'
-    | '/master-comercial'
-    | '/master-financeiro'
-    | '/master-recovery'
     | '/master-assinaturas'
     | '/master-clientes'
     | '/master-comercial'
@@ -196,11 +157,6 @@ export interface FileRouteTypes {
     | '/master-assinaturas'
     | '/master-clientes'
     | '/master-comercial'
-    | '/master-financeiro'
-    | '/master-recovery'
-    | '/master-assinaturas'
-    | '/master-clientes'
-    | '/master-comercial'
     | '/master-configuracoes'
     | '/master-dominios'
     | '/master-financeiro'
@@ -213,11 +169,6 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/master'
-    | '/master-assinaturas'
-    | '/master-clientes'
-    | '/master-comercial'
-    | '/master-financeiro'
-    | '/master-recovery'
     | '/master-assinaturas'
     | '/master-clientes'
     | '/master-comercial'
@@ -237,7 +188,14 @@ export interface RootRouteChildren {
   MasterAssinaturasRoute: typeof MasterAssinaturasRoute
   MasterClientesRoute: typeof MasterClientesRoute
   MasterComercialRoute: typeof MasterComercialRoute
+  MasterConfiguracoesRoute: typeof MasterConfiguracoesRoute
+  MasterDominiosRoute: typeof MasterDominiosRoute
   MasterFinanceiroRoute: typeof MasterFinanceiroRoute
+  MasterImplantacaoRoute: typeof MasterImplantacaoRoute
+  MasterPlanosRoute: typeof MasterPlanosRoute
+  MasterProdutosRoute: typeof MasterProdutosRoute
+  MasterRecoveryRoute: typeof MasterRecoveryRoute
+  MasterSuporteRoute: typeof MasterSuporteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -254,41 +212,6 @@ declare module '@tanstack/react-router' {
       path: '/master'
       fullPath: '/master'
       preLoaderRoute: typeof MasterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/master-assinaturas': {
-      id: '/master-assinaturas'
-      path: '/master-assinaturas'
-      fullPath: '/master-assinaturas'
-      preLoaderRoute: typeof MasterAssinaturasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/master-clientes': {
-      id: '/master-clientes'
-      path: '/master-clientes'
-      fullPath: '/master-clientes'
-      preLoaderRoute: typeof MasterClientesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/master-comercial': {
-      id: '/master-comercial'
-      path: '/master-comercial'
-      fullPath: '/master-comercial'
-      preLoaderRoute: typeof MasterComercialRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/master-financeiro': {
-      id: '/master-financeiro'
-      path: '/master-financeiro'
-      fullPath: '/master-financeiro'
-      preLoaderRoute: typeof MasterFinanceiroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/master-recovery': {
-      id: '/master-recovery'
-      path: '/master-recovery'
-      fullPath: '/master-recovery'
-      preLoaderRoute: typeof MasterRecoveryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/master-assinaturas': {
@@ -374,11 +297,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MasterRoute: MasterRoute,
-  MasterAssinaturasRoute: MasterAssinaturasRoute,
-  MasterClientesRoute: MasterClientesRoute,
-  MasterComercialRoute: MasterComercialRoute,
-  MasterFinanceiroRoute: MasterFinanceiroRoute,
-  MasterRecoveryRoute: MasterRecoveryRoute,
   MasterAssinaturasRoute: MasterAssinaturasRoute,
   MasterClientesRoute: MasterClientesRoute,
   MasterComercialRoute: MasterComercialRoute,
