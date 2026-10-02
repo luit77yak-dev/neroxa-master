@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { recordNeroxaAudit } from "@/features/master/clients/services";
 import type { FinanceOverview, InvoiceStatus, Payment } from "./types";
 
 type BillingRow = {
@@ -100,5 +101,6 @@ export async function updateBillingStatus(id: string, status: "PENDING" | "PAID"
   const { data, error } = await supabase.from("neroxa_billing_records" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Fatura não encontrada ou sem permissão para alterar.");
+  await recordNeroxaAudit({ action: "BILLING_STATUS_CHANGED", resourceType: "BILLING_RECORD", resourceId: id, details: { status } });
   return true;
 }
