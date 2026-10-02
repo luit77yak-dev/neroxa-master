@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowLeft, Globe2, RefreshCw } from "lucide-react";
+import { Globe2, RefreshCw } from "lucide-react";
 import {
   isNeroxaStaff,
   listNeroxaClients,
@@ -64,7 +64,8 @@ function MasterDominios() {
   }, []);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <MasterShell>
+      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Sistema</p>
@@ -120,6 +121,7 @@ function MasterDominios() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </MasterShell>
   );
 }
