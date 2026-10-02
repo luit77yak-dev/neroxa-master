@@ -111,3 +111,16 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     clients: (clientsResult.data ?? []) as unknown as SubscriptionOverview["clients"],
   };
 }
+
+
+export async function updateSubscriptionStatus(subscriptionId: string, status: "ACTIVE" | "PAUSED" | "CANCELLED") {
+  const { data, error } = await supabase
+    .from("neroxa_subscriptions" as never)
+    .update({ status } as never)
+    .eq("id", subscriptionId)
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Assinatura não encontrada ou sem permissão para alterar.");
+  return true;
+}
