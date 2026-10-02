@@ -20,6 +20,7 @@ import { Route as MasterImplantacaoRouteImport } from './routes/master-implantac
 import { Route as MasterPlanosRouteImport } from './routes/master-planos'
 import { Route as MasterProdutosRouteImport } from './routes/master-produtos'
 import { Route as MasterRecoveryRouteImport } from './routes/master-recovery'
+import { Route as MasterSistemasRouteImport } from './routes/master-sistemas'
 import { Route as MasterSuporteRouteImport } from './routes/master-suporte'
 
 const IndexRoute = IndexRouteImport.update({
@@ -82,6 +83,11 @@ const MasterRecoveryRoute = MasterRecoveryRouteImport.update({
   path: '/master-recovery',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MasterSistemasRoute = MasterSistemasRouteImport.update({
+  id: '/master-sistemas',
+  path: '/master-sistemas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MasterSuporteRoute = MasterSuporteRouteImport.update({
   id: '/master-suporte',
   path: '/master-suporte',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/master-planos': typeof MasterPlanosRoute
   '/master-produtos': typeof MasterProdutosRoute
   '/master-recovery': typeof MasterRecoveryRoute
+  '/master-sistemas': typeof MasterSistemasRoute
   '/master-suporte': typeof MasterSuporteRoute
 }
 export interface FileRoutesByTo {
@@ -149,6 +156,7 @@ export interface FileRouteTypes {
     | '/master-planos'
     | '/master-produtos'
     | '/master-recovery'
+    | '/master-sistemas'
     | '/master-suporte'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -195,6 +203,7 @@ export interface RootRouteChildren {
   MasterPlanosRoute: typeof MasterPlanosRoute
   MasterProdutosRoute: typeof MasterProdutosRoute
   MasterRecoveryRoute: typeof MasterRecoveryRoute
+  MasterSistemasRoute: typeof MasterSistemasRoute
   MasterSuporteRoute: typeof MasterSuporteRoute
 }
 
@@ -284,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MasterRecoveryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/master-sistemas': {
+      id: '/master-sistemas'
+      path: '/master-sistemas'
+      fullPath: '/master-sistemas'
+      preLoaderRoute: typeof MasterSistemasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/master-suporte': {
       id: '/master-suporte'
       path: '/master-suporte'
@@ -307,6 +323,7 @@ const rootRouteChildren: RootRouteChildren = {
   MasterPlanosRoute: MasterPlanosRoute,
   MasterProdutosRoute: MasterProdutosRoute,
   MasterRecoveryRoute: MasterRecoveryRoute,
+  MasterSistemasRoute: MasterSistemasRoute,
   MasterSuporteRoute: MasterSuporteRoute,
 }
 export const routeTree = rootRouteImport

@@ -35,6 +35,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { label: "Visão geral", to: "/master", icon: LayoutDashboard },
   { label: "Clientes", to: "/master-clientes", icon: Users },
+  { label: "Sistemas", to: "/master-sistemas", icon: Package },
   { label: "Comercial", to: "/master-comercial", icon: BriefcaseBusiness },
   { label: "Planos", to: "/master-planos", icon: Package },
   { label: "Assinaturas", to: "/master-assinaturas", icon: CreditCard },
@@ -105,21 +106,21 @@ export function MasterShell({ children }: MasterShellProps) {
           <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Operação
           </p>
-          {NAV_ITEMS.slice(0, 2).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
+          {NAV_ITEMS.slice(0, 3).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
             <MasterNavItem key={item.to} item={item} active={isActive(item)} onNavigate={() => setMobileOpen(false)} />
           ))}
 
           <p className="px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Gestão
           </p>
-          {NAV_ITEMS.slice(2, 8).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
+          {NAV_ITEMS.slice(3, 9).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
             <MasterNavItem key={item.to} item={item} active={isActive(item)} onNavigate={() => setMobileOpen(false)} />
           ))}
 
           <p className="px-3 pb-2 pt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Sistema
           </p>
-          {NAV_ITEMS.slice(8).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
+          {NAV_ITEMS.slice(9).filter((item) => canAccessModule(role, moduleForPath(item.to))).map((item) => (
             <MasterNavItem key={item.to} item={item} active={isActive(item)} onNavigate={() => setMobileOpen(false)} />
           ))}
         </nav>

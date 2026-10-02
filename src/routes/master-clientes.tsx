@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MasterShell } from "@/features/master/shell/MasterShell";
+import { createNeroxaSystemInstance, listNeroxaSystems, type NeroxaSystem } from "@/features/master/systems/services";
+import { loadSubscriptionOverview } from "@/features/master/subscriptions/services";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import {
   Building2,
@@ -67,6 +69,12 @@ function MasterClientsPage() {
   const [domainDraft, setDomainDraft] = useState("");
   const [domainInstanceId, setDomainInstanceId] = useState("");
   const [savingDomain, setSavingDomain] = useState(false);
+  const [showInstanceCreate, setShowInstanceCreate] = useState(false);
+  const [systems, setSystems] = useState<NeroxaSystem[]>([]);
+  const [plans, setPlans] = useState<Array<{ id: string; name: string; active: boolean }>>([]);
+  const [clientSubscriptions, setClientSubscriptions] = useState<Array<{ id: string; plan_id: string; status: string }>>([]);
+  const [instanceDraft, setInstanceDraft] = useState({ systemId: "", planId: "", subscriptionId: "", name: "", slug: "" });
+  const [savingInstance, setSavingInstance] = useState(false);
 
   const selected = clients.find((client) => client.id === selectedId) ?? null;
 
@@ -94,6 +102,8 @@ function MasterClientsPage() {
   }, []);
 
   useEffect(() => {
+    void listNeroxaSystems().then(setSystems).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar os sistemas."));
+    void loadSubscriptionOverview().then((overview) => setPlans(overview.plans.map((plan) => ({ id: plan.id, name: plan.name, active: plan.active })))).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar os planos."));
     if (!selected?.organization_id) {
       setContacts([]);
       setInstances([]);
@@ -101,6 +111,8 @@ function MasterClientsPage() {
       setDomainInstanceId("");
       return;
     }
+
+    void loadSubscriptionOverview().then((overview) => setClientSubscriptions(overview.subscriptions.filter((subscription) => subscription.client_id === selected.organization_id).map((subscription) => ({ id: subscription.id, plan_id: subscription.plan_id, status: subscription.status })))).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar as assinaturas."));
 
     void listNeroxaClientContacts(selected.id)
       .then(setContacts)
@@ -188,6 +200,39 @@ function MasterClientsPage() {
       setError(cause instanceof Error ? cause.message : "Não foi possível atualizar o cliente.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleCreateInstance = async () => {
+    if (!selected?.organization_id) {
+      setError("Este cliente ainda não possui uma organização vinculada.");
+      return;
+    }
+    const system = systems.find((row) => row.id === instanceDraft.systemId);
+    if (!system || !instanceDraft.planId || !instanceDraft.name.trim() || !instanceDraft.slug.trim()) {
+      setError("Informe sistema, plano, nome e slug da instância.");
+      return;
+    }
+    setSavingInstance(true);
+    try {
+      const created = await createNeroxaSystemInstance({
+        organizationId: selected.organization_id,
+        systemId: system.id,
+        systemType: system.system_type,
+        planId: instanceDraft.planId,
+        subscriptionId: instanceDraft.subscriptionId || null,
+        name: instanceDraft.name,
+        slug: instanceDraft.slug,
+      });
+      setInstances(await listNeroxaClientInstances(selected.organization_id));
+      setDomainInstanceId(created.id);
+      setShowInstanceCreate(false);
+      setInstanceDraft({ systemId: "", planId: "", subscriptionId: "", name: "", slug: "" });
+      notify("Instância criada em provisionamento.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível criar a instância.");
+    } finally {
+      setSavingInstance(false);
     }
   };
 
@@ -397,6 +442,8 @@ function MasterClientsPage() {
                     </div>
                   </div>
 
+                  {selected.organization_id && <Button className="mt-4 w-full" variant="outline" onClick={() => setShowInstanceCreate(true)}><Plus className="h-4 w-4" /> Adicionar sistema</Button>}
+
                   {!selected.organization_id ? (
                     <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                       Este cliente ainda não está vinculado a uma organização. Vincule a organização antes de cadastrar um domínio.
@@ -491,6 +538,26 @@ function MasterClientsPage() {
           )}
         </aside>
       </div>
+
+      {showInstanceCreate && selected && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
+          <Card className="max-h-[90vh] w-full max-w-lg overflow-auto border-slate-200 bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 p-5">
+              <div><p className="text-xs font-medium uppercase tracking-wider text-slate-500">Neroxa Master</p><h2 className="mt-1 text-lg font-semibold">Adicionar sistema ao cliente</h2></div>
+              <Button variant="ghost" size="icon" onClick={() => setShowInstanceCreate(false)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="space-y-4 p-5">
+              <Field label="Sistema"><select value={instanceDraft.systemId} onChange={(event) => { const system = systems.find((row) => row.id === event.target.value); setInstanceDraft((current) => ({ ...current, systemId: event.target.value, name: system ? `${selected.trade_name || selected.legal_name} · ${system.name}` : current.name, slug: system ? `${(selected.trade_name || selected.legal_name || "cliente").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${system.slug}` : current.slug })); }} className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm"><option value="">Selecione o sistema</option>{systems.filter((system) => system.active).map((system) => <option key={system.id} value={system.id}>{system.name} · {system.version}</option>)}</select></Field>
+              <Field label="Plano"><select value={instanceDraft.planId} onChange={(event) => setInstanceDraft((current) => ({ ...current, planId: event.target.value, subscriptionId: "" }))} className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm"><option value="">Selecione o plano</option>{plans.filter((plan) => plan.active).map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</select></Field>
+              <Field label="Assinatura (opcional)"><select value={instanceDraft.subscriptionId} onChange={(event) => setInstanceDraft((current) => ({ ...current, subscriptionId: event.target.value }))} className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm"><option value="">Vincular depois</option>{clientSubscriptions.filter((subscription) => subscription.plan_id === instanceDraft.planId).map((subscription) => <option key={subscription.id} value={subscription.id}>{subscription.status} · {subscription.id.slice(0, 8)}</option>)}</select><p className="mt-1 text-[11px] text-slate-500">Não cria nem altera a assinatura.</p></Field>
+              <Field label="Nome da instância"><input value={instanceDraft.name} onChange={(event) => setInstanceDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Ex.: Pizzaria Aurora · Pizza Perfect Plate" /></Field>
+              <Field label="Slug"><input value={instanceDraft.slug} onChange={(event) => setInstanceDraft((current) => ({ ...current, slug: event.target.value }))} placeholder="pizzaria-aurora-pizza-perfect-plate" /></Field>
+              <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800">A instância será criada como <strong>PROVISIONING</strong>. Nenhum projeto Vercel ou domínio será criado automaticamente.</div>
+              <Button className="w-full" onClick={() => void handleCreateInstance()} disabled={savingInstance}>{savingInstance ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{savingInstance ? "Criando..." : "Criar instância"}</Button>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {showCreate && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
