@@ -3,7 +3,6 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Plus, RefreshCw, Save, X } from "lucide-react";
 import {
   createNeroxaSystem,
-  isNeroxaStaff,
   listNeroxaSystems,
   SYSTEM_TYPE_LABELS,
   SYSTEM_TYPES,
@@ -11,6 +10,7 @@ import {
   type SystemType,
   updateNeroxaSystem,
 } from "@/features/master/systems/services";
+import { isNeroxaStaff } from "@/features/master/clients/services";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 
 export const Route = createFileRoute("/master-sistemas")({
