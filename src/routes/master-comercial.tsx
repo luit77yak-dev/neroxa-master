@@ -52,6 +52,7 @@ const contractTone: Record<keyof typeof CONTRACT_STATUS_LABELS, string> = {
 
 function MasterCommercialPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
   const [proposals, setProposals] = useState<CommercialProposal[]>([]);
   const [contracts, setContracts] = useState<CommercialContract[]>([]);
   const [clients, setClients] = useState<{ id: string; legal_name: string | null; trade_name: string | null }[]>([]);
