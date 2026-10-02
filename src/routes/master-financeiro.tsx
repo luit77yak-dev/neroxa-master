@@ -1,13 +1,13 @@
 import {useEffect,useMemo,useState} from "react";
 import {createFileRoute} from "@tanstack/react-router";
-import {AlertTriangle,CalendarClock,CheckCircle2,CircleDollarSign,CreditCard,Loader2,RefreshCw,ShieldCheck,WalletCards} from "lucide-react";
+import {AlertTriangle,CalendarClock,CheckCircle2,CircleDollarSign,CreditCard,Loader2,RefreshCw,ShieldCheck,WalletCards,Check,Undo2,XCircle} from "lucide-react";
 import {Button} from "@/components/ui/button";
 import {Card} from "@/components/ui/card";
 import {isNeroxaStaff} from "@/features/master/clients/services";
 import {MasterLogin} from "@/features/master/shell/MasterLogin";
 import {MasterShell} from "@/features/master/shell/MasterShell";
 import {INVOICE_STATUS_LABELS,type Invoice, type Payment} from "@/features/master/finance/types";
-import {loadFinanceOverview} from "@/features/master/finance/services";
+import {loadFinanceOverview,updateBillingStatus} from "@/features/master/finance/services";
 
 export const Route=createFileRoute("/master-financeiro")({component:MasterFinancePage});
 const tone:Record<keyof typeof INVOICE_STATUS_LABELS,string>={PENDING:"bg-blue-50 text-blue-700",PAID:"bg-emerald-50 text-emerald-700",OVERDUE:"bg-red-50 text-red-700",CANCELLED:"bg-slate-100 text-slate-500",REFUNDED:"bg-violet-50 text-violet-700",NEGOTIATION:"bg-amber-50 text-amber-700"};
@@ -15,9 +15,10 @@ const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency
 const date=(v:string|null)=>{if(!v)return "—";const raw=String(v).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
 
 function MasterFinancePage(){
- const [authorized,setAuthorized]=useState<boolean|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[error,setError]=useState<string|null>(null);
+ const [authorized,setAuthorized]=useState<boolean|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
  const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
  useEffect(()=>{void load(true)},[]);
+ const handleBillingStatus=async(id:string,status:"PENDING"|"PAID"|"OVERDUE"|"CANCELLED"|"REFUNDED")=>{setSaving(id);setError(null);try{await updateBillingStatus(id,status);await load()}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível alterar a fatura.")}finally{setSaving(null)}};
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]);
  const metrics=useMemo(
   () => ({
@@ -39,7 +40,7 @@ function MasterFinancePage(){
     </div>
     <div className="flex items-center justify-between gap-3 sm:justify-end">
      <p className="text-sm font-semibold">{money(i.total_amount)}</p>
-     <span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>
+     <div className="flex items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Marcar como paga" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"PAID")}><Check className="h-3.5 w-3.5"/></Button>}{i.status==="PAID"&&<Button variant="ghost" size="icon" title="Reembolsar" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"REFUNDED")}><Undo2 className="h-3.5 w-3.5"/></Button>}{["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Cancelar" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"CANCELLED")}><XCircle className="h-3.5 w-3.5"/></Button>}</div>
     </div>
    </div>
   );
