@@ -9,6 +9,7 @@ import {
   type NeroxaSystemDomain,
 } from "@/features/master/clients/services";
 import { Button } from "@/components/ui/button";
+import { MasterShell } from "@/features/master/shell/MasterShell";
 
 export const Route = createFileRoute("/master-dominios")({
   component: MasterDominios,
