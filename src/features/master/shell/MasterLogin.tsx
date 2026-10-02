@@ -144,7 +144,7 @@ export function MasterLogin() {
               {loading ? "Atualizando..." : "Salvar nova senha"}
             </Button>
           </form>
-        ) : {mode === "login" ? (
+        ) : mode === "login" ? (
           <form onSubmit={handleLogin} className="space-y-4">
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-slate-300">E-mail</span>
