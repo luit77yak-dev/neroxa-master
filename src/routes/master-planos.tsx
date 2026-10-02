@@ -6,7 +6,8 @@ import { Card } from "@/components/ui/card";
 import { isNeroxaStaff } from "@/features/master/clients/services";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { MasterShell } from "@/features/master/shell/MasterShell";
-import { BILLING_INTERVAL_LABELS, type SubscriptionPlan, createPlan, loadSubscriptionOverview, updatePlan } from "@/features/master/subscriptions/services";
+import { BILLING_INTERVAL_LABELS, type SubscriptionPlan } from "@/features/master/subscriptions/types";
+import { createPlan, loadSubscriptionOverview, updatePlan } from "@/features/master/subscriptions/services";
 
 export const Route = createFileRoute("/master-planos")({ component: MasterPlansPage });
 
