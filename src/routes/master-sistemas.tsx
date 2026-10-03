@@ -109,7 +109,7 @@ function MasterSistemas() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Catálogo</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Sistemas</h1>
             <p className="mt-1 max-w-2xl text-sm text-slate-500">
-              Produtos-base da Neroxa. Cada cliente terá uma instância própria do sistema contratado.
+              Sistemas-base da Neroxa. Cada produto pode usar um sistema-base, e cada cliente terá uma instância própria do sistema contratado.
             </p>
           </div>
           <button
@@ -189,7 +189,7 @@ function MasterSistemas() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-semibold text-slate-900">{editing ? "Editar sistema" : "Novo sistema"}</h2>
-                <p className="mt-1 text-xs text-slate-500">Cadastre somente o produto-base.</p>
+                <p className="mt-1 text-xs text-slate-500">Cadastre somente o sistema-base técnico.</p>
               </div>
               {editing && (
                 <button type="button" onClick={resetForm} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100" aria-label="Cancelar edição">
