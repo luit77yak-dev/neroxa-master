@@ -797,8 +797,7 @@ export async function setPlanFeature(input: { planId: string; featureKey: string
 }
 
 export async function removePlanFeature(planId: string, featureKey: string) {
-  const { error } = await supabase
-    .from("neroxa_plan_features" as never)
+  const { error } = await supabase.from("neroxa_plan_features" as never)
     .delete()
     .eq("plan_id", planId)
     .eq("feature_key", featureKey);
