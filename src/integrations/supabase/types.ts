@@ -14,669 +14,638 @@ export type Database = {
   }
   public: {
     Tables: {
-      audit_logs: {
+      neroxa_audit_logs: {
         Row: {
           action: string
           actor_id: string | null
-          actor_label: string | null
           created_at: string
           details: Json
-          entity: string
-          entity_id: string | null
           id: string
-          organization_id: string
+          organization_id: string | null
+          resource_id: string | null
+          resource_type: string
         }
         Insert: {
           action: string
           actor_id?: string | null
-          actor_label?: string | null
           created_at?: string
           details?: Json
-          entity: string
-          entity_id?: string | null
           id?: string
-          organization_id: string
+          organization_id?: string | null
+          resource_id?: string | null
+          resource_type: string
         }
         Update: {
           action?: string
           actor_id?: string | null
-          actor_label?: string | null
           created_at?: string
           details?: Json
-          entity?: string
-          entity_id?: string | null
+          id?: string
+          organization_id?: string | null
+          resource_id?: string | null
+          resource_type?: string
+        }
+        Relationships: []
+      }
+      neroxa_billing_records: {
+        Row: {
+          amount: number
+          created_at: string
+          due_date: string
+          external_id: string | null
+          gateway_event_id: string | null
+          gateway_payment_id: string | null
+          gateway_provider: string | null
+          gateway_status: string | null
+          id: string
+          organization_id: string
+          paid_at: string | null
+          payment_method: string | null
+          reference_month: string
+          status: Database["public"]["Enums"]["neroxa_billing_status"]
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          external_id?: string | null
+          gateway_event_id?: string | null
+          gateway_payment_id?: string | null
+          gateway_provider?: string | null
+          gateway_status?: string | null
+          id?: string
+          organization_id: string
+          paid_at?: string | null
+          payment_method?: string | null
+          reference_month: string
+          status?: Database["public"]["Enums"]["neroxa_billing_status"]
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          external_id?: string | null
+          gateway_event_id?: string | null
+          gateway_payment_id?: string | null
+          gateway_provider?: string | null
+          gateway_status?: string | null
           id?: string
           organization_id?: string
+          paid_at?: string | null
+          payment_method?: string | null
+          reference_month?: string
+          status?: Database["public"]["Enums"]["neroxa_billing_status"]
+          subscription_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "audit_logs_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "neroxa_billing_records_subscription_id_fkey"
+            columns: ["subscription_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "neroxa_subscriptions"
             referencedColumns: ["id"]
           },
         ]
       }
-      categories: {
+      neroxa_checkout_sessions: {
+        Row: {
+          amount: number
+          checkout_url: string | null
+          client_id: string | null
+          completed_at: string | null
+          created_at: string
+          customer_document: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          gateway_payment_id: string | null
+          gateway_preference_id: string | null
+          gateway_provider: string
+          gateway_status: string | null
+          id: string
+          organization_id: string | null
+          plan_id: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          checkout_url?: string | null
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_document?: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          gateway_payment_id?: string | null
+          gateway_preference_id?: string | null
+          gateway_provider?: string
+          gateway_status?: string | null
+          id?: string
+          organization_id?: string | null
+          plan_id: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          checkout_url?: string | null
+          client_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          customer_document?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          gateway_payment_id?: string | null
+          gateway_preference_id?: string | null
+          gateway_provider?: string
+          gateway_status?: string | null
+          id?: string
+          organization_id?: string | null
+          plan_id?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_checkout_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_checkout_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "neroxa_checkout_sessions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_checkout_sessions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_checkout_sessions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_client_contacts: {
         Row: {
           active: boolean
+          client_id: string
           created_at: string
-          deleted_at: string | null
-          description: string | null
+          email: string | null
           id: string
-          image_url: string | null
+          is_primary: boolean
           name: string
-          organization_id: string
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          deleted_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name: string
-          organization_id: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          deleted_at?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          name?: string
-          organization_id?: string
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "categories_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      coupons: {
-        Row: {
-          active: boolean
-          code: string
-          created_at: string
-          description: string | null
-          ends_at: string | null
-          id: string
-          min_order_amount: number
-          organization_id: string
-          starts_at: string | null
-          type: Database["public"]["Enums"]["coupon_type"]
-          updated_at: string
-          usage_count: number
-          usage_limit: number | null
-          value: number
-        }
-        Insert: {
-          active?: boolean
-          code: string
-          created_at?: string
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          min_order_amount?: number
-          organization_id: string
-          starts_at?: string | null
-          type: Database["public"]["Enums"]["coupon_type"]
-          updated_at?: string
-          usage_count?: number
-          usage_limit?: number | null
-          value?: number
-        }
-        Update: {
-          active?: boolean
-          code?: string
-          created_at?: string
-          description?: string | null
-          ends_at?: string | null
-          id?: string
-          min_order_amount?: number
-          organization_id?: string
-          starts_at?: string | null
-          type?: Database["public"]["Enums"]["coupon_type"]
-          updated_at?: string
-          usage_count?: number
-          usage_limit?: number | null
-          value?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "coupons_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      delivery_zones: {
-        Row: {
-          active: boolean
-          created_at: string
-          delivery_fee: number
-          estimated_minutes: number | null
-          id: string
-          minimum_order: number
-          name: string
-          neighborhoods: string[]
-          organization_id: string
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          delivery_fee?: number
-          estimated_minutes?: number | null
-          id?: string
-          minimum_order?: number
-          name: string
-          neighborhoods?: string[]
-          organization_id: string
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          delivery_fee?: number
-          estimated_minutes?: number | null
-          id?: string
-          minimum_order?: number
-          name?: string
-          neighborhoods?: string[]
-          organization_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "delivery_zones_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      drivers: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          name: string
-          organization_id: string
-          phone: string | null
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name: string
-          organization_id: string
-          phone?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name?: string
-          organization_id?: string
-          phone?: string | null
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "drivers_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      loyalty_accounts: {
-        Row: {
-          created_at: string
-          id: string
-          organization_id: string
-          phone: string | null
-          points_balance: number
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          organization_id: string
-          phone?: string | null
-          points_balance?: number
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          organization_id?: string
-          phone?: string | null
-          points_balance?: number
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "loyalty_accounts_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      loyalty_transactions: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          loyalty_account_id: string
-          order_id: string | null
-          organization_id: string
-          points: number
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          loyalty_account_id: string
-          order_id?: string | null
-          organization_id: string
-          points: number
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          loyalty_account_id?: string
-          order_id?: string | null
-          organization_id?: string
-          points?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "loyalty_transactions_loyalty_account_id_fkey"
-            columns: ["loyalty_account_id"]
-            isOneToOne: false
-            referencedRelation: "loyalty_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "loyalty_transactions_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "loyalty_transactions_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      order_item_addons: {
-        Row: {
-          addon_id: string | null
-          created_at: string
-          id: string
-          name: string
-          order_item_id: string
-          organization_id: string
-          price: number
-          quantity: number
-        }
-        Insert: {
-          addon_id?: string | null
-          created_at?: string
-          id?: string
-          name: string
-          order_item_id: string
-          organization_id: string
-          price?: number
-          quantity?: number
-        }
-        Update: {
-          addon_id?: string | null
-          created_at?: string
-          id?: string
-          name?: string
-          order_item_id?: string
-          organization_id?: string
-          price?: number
-          quantity?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_item_addons_addon_id_fkey"
-            columns: ["addon_id"]
-            isOneToOne: false
-            referencedRelation: "product_addons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_item_addons_order_item_id_fkey"
-            columns: ["order_item_id"]
-            isOneToOne: false
-            referencedRelation: "order_items"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_item_addons_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      order_items: {
-        Row: {
-          created_at: string
-          crust_id: string | null
-          crust_name: string | null
-          crust_price: number
-          id: string
-          is_half: boolean
           notes: string | null
-          order_id: string
-          organization_id: string
-          product_id: string | null
-          product_name: string
-          quantity: number
-          second_product_id: string | null
-          second_product_name: string | null
-          size_id: string | null
-          size_name: string | null
-          total_price: number
-          unit_price: number
+          phone: string | null
+          role_title: string | null
+          updated_at: string
+          whatsapp: string | null
         }
         Insert: {
+          active?: boolean
+          client_id: string
           created_at?: string
-          crust_id?: string | null
-          crust_name?: string | null
-          crust_price?: number
+          email?: string | null
           id?: string
-          is_half?: boolean
+          is_primary?: boolean
+          name: string
           notes?: string | null
-          order_id: string
-          organization_id: string
-          product_id?: string | null
-          product_name: string
-          quantity?: number
-          second_product_id?: string | null
-          second_product_name?: string | null
-          size_id?: string | null
-          size_name?: string | null
-          total_price?: number
-          unit_price?: number
+          phone?: string | null
+          role_title?: string | null
+          updated_at?: string
+          whatsapp?: string | null
         }
         Update: {
+          active?: boolean
+          client_id?: string
           created_at?: string
-          crust_id?: string | null
-          crust_name?: string | null
-          crust_price?: number
+          email?: string | null
           id?: string
-          is_half?: boolean
+          is_primary?: boolean
+          name?: string
           notes?: string | null
-          order_id?: string
-          organization_id?: string
-          product_id?: string | null
-          product_name?: string
-          quantity?: number
-          second_product_id?: string | null
-          second_product_name?: string | null
-          size_id?: string | null
-          size_name?: string | null
-          total_price?: number
-          unit_price?: number
+          phone?: string | null
+          role_title?: string | null
+          updated_at?: string
+          whatsapp?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "order_items_crust_id_fkey"
-            columns: ["crust_id"]
+            foreignKeyName: "neroxa_client_contacts_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "product_crusts"
+            referencedRelation: "neroxa_clients"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
+            foreignKeyName: "neroxa_client_contacts_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "orders"
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "neroxa_client_contacts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_contracts: {
+        Row: {
+          billing_period: string | null
+          client_id: string
+          commercial_model: string
+          contract_number: string | null
+          created_at: string
+          currency: string
+          ended_at: string | null
+          id: string
+          maintenance_value: number | null
+          plan_id: string | null
+          proposal_id: string | null
+          recurring_value: number | null
+          setup_value: number
+          signed_at: string | null
+          started_at: string | null
+          status: string
+          system_id: string | null
+          title: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          billing_period?: string | null
+          client_id: string
+          commercial_model?: string
+          contract_number?: string | null
+          created_at?: string
+          currency?: string
+          ended_at?: string | null
+          id?: string
+          maintenance_value?: number | null
+          plan_id?: string | null
+          proposal_id?: string | null
+          recurring_value?: number | null
+          setup_value?: number
+          signed_at?: string | null
+          started_at?: string | null
+          status?: string
+          system_id?: string | null
+          title: string
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          billing_period?: string | null
+          client_id?: string
+          commercial_model?: string
+          contract_number?: string | null
+          created_at?: string
+          currency?: string
+          ended_at?: string | null
+          id?: string
+          maintenance_value?: number | null
+          plan_id?: string | null
+          proposal_id?: string | null
+          recurring_value?: number | null
+          setup_value?: number
+          signed_at?: string | null
+          started_at?: string | null
+          status?: string
+          system_id?: string | null
+          title?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_contracts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_clients"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "neroxa_contracts_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "neroxa_contracts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_organizations"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
+            foreignKeyName: "neroxa_contracts_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_contracts_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_proposals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_contracts_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_organizations: {
+        Row: {
+          acquired_at: string | null
+          activated_at: string | null
+          active: boolean
+          cancelled_at: string | null
+          contact_name: string | null
+          contracted_at: string | null
+          created_at: string
+          document: string | null
+          email: string | null
+          id: string
+          legal_name: string
+          notes: string | null
+          paused_at: string | null
+          phone: string | null
+          status: string
+          trade_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          acquired_at?: string | null
+          activated_at?: string | null
+          active?: boolean
+          cancelled_at?: string | null
+          contact_name?: string | null
+          contracted_at?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          legal_name: string
+          notes?: string | null
+          paused_at?: string | null
+          phone?: string | null
+          status?: string
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acquired_at?: string | null
+          activated_at?: string | null
+          active?: boolean
+          cancelled_at?: string | null
+          contact_name?: string | null
+          contracted_at?: string | null
+          created_at?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          legal_name?: string
+          notes?: string | null
+          paused_at?: string | null
+          phone?: string | null
+          status?: string
+          trade_name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      neroxa_payment_events: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_id: string
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          provider: string
+          received_at: string
+          resource_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider: string
+          received_at?: string
+          resource_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          resource_id?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      neroxa_plan_features: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          feature_key: string
+          id: string
+          limit_value: number | null
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          feature_key: string
+          id?: string
+          limit_value?: number | null
+          plan_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          feature_key?: string
+          id?: string
+          limit_value?: number | null
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_plan_features_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_plan_products: {
+        Row: {
+          created_at: string
+          id: string
+          included: boolean
+          plan_id: string
+          product_id: string
+          quantity: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          included?: boolean
+          plan_id: string
+          product_id: string
+          quantity?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          included?: boolean
+          plan_id?: string
+          product_id?: string
+          quantity?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_plan_products_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_plan_products_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_second_product_id_fkey"
-            columns: ["second_product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_size_id_fkey"
-            columns: ["size_id"]
-            isOneToOne: false
-            referencedRelation: "product_sizes"
+            referencedRelation: "neroxa_products"
             referencedColumns: ["id"]
           },
         ]
       }
-      order_status_history: {
+      neroxa_plans: {
         Row: {
-          changed_by: string | null
+          active: boolean
+          billing_period: Database["public"]["Enums"]["neroxa_billing_period"]
+          commercial_model: string
           created_at: string
+          description: string | null
+          gateway_plan_id: string | null
+          gateway_provider: string | null
+          gateway_status: string
+          gateway_synced_at: string | null
           id: string
-          note: string | null
-          order_id: string
-          organization_id: string
-          status: Database["public"]["Enums"]["order_status"]
-        }
-        Insert: {
-          changed_by?: string | null
-          created_at?: string
-          id?: string
-          note?: string | null
-          order_id: string
-          organization_id: string
-          status: Database["public"]["Enums"]["order_status"]
-        }
-        Update: {
-          changed_by?: string | null
-          created_at?: string
-          id?: string
-          note?: string | null
-          order_id?: string
-          organization_id?: string
-          status?: Database["public"]["Enums"]["order_status"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_status_history_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_status_history_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      orders: {
-        Row: {
-          address_complement: string | null
-          address_neighborhood: string | null
-          address_number: string | null
-          address_reference: string | null
-          address_street: string | null
-          coupon_code: string | null
-          coupon_id: string | null
-          created_at: string
-          customer_name: string
-          customer_phone: string
-          customer_user_id: string | null
-          delivery_fee: number
-          delivery_zone_id: string | null
-          discount: number
-          driver_id: string | null
-          fulfillment: Database["public"]["Enums"]["fulfillment_type"]
-          id: string
-          idempotency_key: string | null
-          is_demo: boolean
-          notes: string | null
-          order_number: number
-          organization_id: string
-          payment_method: Database["public"]["Enums"]["payment_method"]
-          source: string
-          status: Database["public"]["Enums"]["order_status"]
-          subtotal: number
-          total: number
+          maintenance_price: number | null
+          name: string
+          price_monthly: number
+          setup_price: number
+          slug: string
+          system_id: string | null
           updated_at: string
         }
         Insert: {
-          address_complement?: string | null
-          address_neighborhood?: string | null
-          address_number?: string | null
-          address_reference?: string | null
-          address_street?: string | null
-          coupon_code?: string | null
-          coupon_id?: string | null
+          active?: boolean
+          billing_period?: Database["public"]["Enums"]["neroxa_billing_period"]
+          commercial_model?: string
           created_at?: string
-          customer_name: string
-          customer_phone: string
-          customer_user_id?: string | null
-          delivery_fee?: number
-          delivery_zone_id?: string | null
-          discount?: number
-          driver_id?: string | null
-          fulfillment?: Database["public"]["Enums"]["fulfillment_type"]
+          description?: string | null
+          gateway_plan_id?: string | null
+          gateway_provider?: string | null
+          gateway_status?: string
+          gateway_synced_at?: string | null
           id?: string
-          idempotency_key?: string | null
-          is_demo?: boolean
-          notes?: string | null
-          order_number: number
-          organization_id: string
-          payment_method?: Database["public"]["Enums"]["payment_method"]
-          source?: string
-          status?: Database["public"]["Enums"]["order_status"]
-          subtotal?: number
-          total?: number
+          maintenance_price?: number | null
+          name: string
+          price_monthly?: number
+          setup_price?: number
+          slug: string
+          system_id?: string | null
           updated_at?: string
         }
         Update: {
-          address_complement?: string | null
-          address_neighborhood?: string | null
-          address_number?: string | null
-          address_reference?: string | null
-          address_street?: string | null
-          coupon_code?: string | null
-          coupon_id?: string | null
+          active?: boolean
+          billing_period?: Database["public"]["Enums"]["neroxa_billing_period"]
+          commercial_model?: string
           created_at?: string
-          customer_name?: string
-          customer_phone?: string
-          customer_user_id?: string | null
-          delivery_fee?: number
-          delivery_zone_id?: string | null
-          discount?: number
-          driver_id?: string | null
-          fulfillment?: Database["public"]["Enums"]["fulfillment_type"]
+          description?: string | null
+          gateway_plan_id?: string | null
+          gateway_provider?: string | null
+          gateway_status?: string
+          gateway_synced_at?: string | null
           id?: string
-          idempotency_key?: string | null
-          is_demo?: boolean
-          notes?: string | null
-          order_number?: number
-          organization_id?: string
-          payment_method?: Database["public"]["Enums"]["payment_method"]
-          source?: string
-          status?: Database["public"]["Enums"]["order_status"]
-          subtotal?: number
-          total?: number
+          maintenance_price?: number | null
+          name?: string
+          price_monthly?: number
+          setup_price?: number
+          slug?: string
+          system_id?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "orders_coupon_id_fkey"
-            columns: ["coupon_id"]
+            foreignKeyName: "neroxa_plans_system_id_fkey"
+            columns: ["system_id"]
             isOneToOne: false
-            referencedRelation: "coupons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_delivery_zone_id_fkey"
-            columns: ["delivery_zone_id"]
-            isOneToOne: false
-            referencedRelation: "delivery_zones"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "neroxa_systems"
             referencedColumns: ["id"]
           },
         ]
       }
-      organization_members: {
+      neroxa_platform_members: {
         Row: {
           active: boolean
           created_at: string
           id: string
-          organization_id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: Database["public"]["Enums"]["neroxa_platform_role"]
           updated_at: string
           user_id: string
         }
@@ -684,8 +653,7 @@ export type Database = {
           active?: boolean
           created_at?: string
           id?: string
-          organization_id: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: Database["public"]["Enums"]["neroxa_platform_role"]
           updated_at?: string
           user_id: string
         }
@@ -693,672 +661,733 @@ export type Database = {
           active?: boolean
           created_at?: string
           id?: string
-          organization_id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: Database["public"]["Enums"]["neroxa_platform_role"]
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "organization_members_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      organization_settings: {
+      neroxa_platform_settings: {
         Row: {
-          address_city: string | null
-          address_neighborhood: string | null
-          address_number: string | null
-          address_state: string | null
-          address_street: string | null
-          address_zip: string | null
-          created_at: string
-          delivery_enabled: boolean
-          description: string | null
-          estimated_delivery_minutes: number
-          estimated_pickup_minutes: number
-          favicon_url: string | null
-          font_family: string
-          half_pizza_fixed_price: number | null
-          half_pizza_pricing_rule: Database["public"]["Enums"]["half_pizza_rule"]
-          hero_cta_label: string | null
-          hero_image_url: string | null
-          hero_subtitle: string | null
-          hero_title: string | null
-          logo_url: string | null
-          loyalty_points_per_currency: number
-          min_order_amount: number
-          organization_id: string
-          payment_methods: Database["public"]["Enums"]["payment_method"][]
-          pickup_enabled: boolean
-          pickup_instructions: string | null
-          primary_color: string
-          scheduling_enabled: boolean
-          secondary_color: string
-          social_links: Json
+          key: string
           updated_at: string
-          whatsapp_phone: string | null
+          updated_by_user_id: string | null
+          value: Json
         }
         Insert: {
-          address_city?: string | null
-          address_neighborhood?: string | null
-          address_number?: string | null
-          address_state?: string | null
-          address_street?: string | null
-          address_zip?: string | null
-          created_at?: string
-          delivery_enabled?: boolean
-          description?: string | null
-          estimated_delivery_minutes?: number
-          estimated_pickup_minutes?: number
-          favicon_url?: string | null
-          font_family?: string
-          half_pizza_fixed_price?: number | null
-          half_pizza_pricing_rule?: Database["public"]["Enums"]["half_pizza_rule"]
-          hero_cta_label?: string | null
-          hero_image_url?: string | null
-          hero_subtitle?: string | null
-          hero_title?: string | null
-          logo_url?: string | null
-          loyalty_points_per_currency?: number
-          min_order_amount?: number
-          organization_id: string
-          payment_methods?: Database["public"]["Enums"]["payment_method"][]
-          pickup_enabled?: boolean
-          pickup_instructions?: string | null
-          primary_color?: string
-          scheduling_enabled?: boolean
-          secondary_color?: string
-          social_links?: Json
+          key: string
           updated_at?: string
-          whatsapp_phone?: string | null
+          updated_by_user_id?: string | null
+          value?: Json
         }
         Update: {
-          address_city?: string | null
-          address_neighborhood?: string | null
-          address_number?: string | null
-          address_state?: string | null
-          address_street?: string | null
-          address_zip?: string | null
-          created_at?: string
-          delivery_enabled?: boolean
-          description?: string | null
-          estimated_delivery_minutes?: number
-          estimated_pickup_minutes?: number
-          favicon_url?: string | null
-          font_family?: string
-          half_pizza_fixed_price?: number | null
-          half_pizza_pricing_rule?: Database["public"]["Enums"]["half_pizza_rule"]
-          hero_cta_label?: string | null
-          hero_image_url?: string | null
-          hero_subtitle?: string | null
-          hero_title?: string | null
-          logo_url?: string | null
-          loyalty_points_per_currency?: number
-          min_order_amount?: number
-          organization_id?: string
-          payment_methods?: Database["public"]["Enums"]["payment_method"][]
-          pickup_enabled?: boolean
-          pickup_instructions?: string | null
-          primary_color?: string
-          scheduling_enabled?: boolean
-          secondary_color?: string
-          social_links?: Json
+          key?: string
           updated_at?: string
-          whatsapp_phone?: string | null
+          updated_by_user_id?: string | null
+          value?: Json
         }
-        Relationships: [
-          {
-            foreignKeyName: "organization_settings_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: true
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      organizations: {
+      neroxa_products: {
         Row: {
           active: boolean
+          category: string
           created_at: string
-          deleted_at: string | null
-          demo_mode: boolean
+          description: string | null
           id: string
           name: string
-          order_counter: number
+          price_monthly: number
+          setup_price: number
           slug: string
+          system_id: string | null
           updated_at: string
         }
         Insert: {
           active?: boolean
+          category?: string
           created_at?: string
-          deleted_at?: string | null
-          demo_mode?: boolean
+          description?: string | null
           id?: string
           name: string
-          order_counter?: number
+          price_monthly?: number
+          setup_price?: number
           slug: string
+          system_id?: string | null
           updated_at?: string
         }
         Update: {
           active?: boolean
+          category?: string
           created_at?: string
-          deleted_at?: string | null
-          demo_mode?: boolean
+          description?: string | null
           id?: string
           name?: string
-          order_counter?: number
+          price_monthly?: number
+          setup_price?: number
           slug?: string
+          system_id?: string | null
           updated_at?: string
-        }
-        Relationships: []
-      }
-      product_addon_links: {
-        Row: {
-          addon_id: string
-          created_at: string
-          id: string
-          organization_id: string
-          product_id: string
-          sort_order: number
-        }
-        Insert: {
-          addon_id: string
-          created_at?: string
-          id?: string
-          organization_id: string
-          product_id: string
-          sort_order?: number
-        }
-        Update: {
-          addon_id?: string
-          created_at?: string
-          id?: string
-          organization_id?: string
-          product_id?: string
-          sort_order?: number
         }
         Relationships: [
           {
-            foreignKeyName: "product_addon_links_addon_id_fkey"
-            columns: ["addon_id"]
+            foreignKeyName: "neroxa_products_system_id_fkey"
+            columns: ["system_id"]
             isOneToOne: false
-            referencedRelation: "product_addons"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_addon_links_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_addon_links_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "neroxa_systems"
             referencedColumns: ["id"]
           },
         ]
       }
-      product_addons: {
+      neroxa_proposals: {
         Row: {
-          active: boolean
+          accepted_at: string | null
+          billing_period: string | null
+          client_id: string
+          commercial_model: string
+          created_at: string
+          currency: string
+          id: string
+          maintenance_value: number | null
+          notes: string | null
+          plan_id: string | null
+          recurring_value: number | null
+          rejected_at: string | null
+          sent_at: string | null
+          setup_value: number
+          status: string
+          system_id: string | null
+          title: string
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          billing_period?: string | null
+          client_id: string
+          commercial_model?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          maintenance_value?: number | null
+          notes?: string | null
+          plan_id?: string | null
+          recurring_value?: number | null
+          rejected_at?: string | null
+          sent_at?: string | null
+          setup_value?: number
+          status?: string
+          system_id?: string | null
+          title: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          billing_period?: string | null
+          client_id?: string
+          commercial_model?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          maintenance_value?: number | null
+          notes?: string | null
+          plan_id?: string | null
+          recurring_value?: number | null
+          rejected_at?: string | null
+          sent_at?: string | null
+          setup_value?: number
+          status?: string
+          system_id?: string | null
+          title?: string
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_proposals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_proposals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "neroxa_proposals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_proposals_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_proposals_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_systems"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_provisioning_jobs: {
+        Row: {
+          action: string
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          organization_id: string
+          payload: Json
+          started_at: string | null
+          status: Database["public"]["Enums"]["neroxa_provisioning_status"]
+          system_instance_id: string | null
+        }
+        Insert: {
+          action: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          organization_id: string
+          payload?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["neroxa_provisioning_status"]
+          system_instance_id?: string | null
+        }
+        Update: {
+          action?: string
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          organization_id?: string
+          payload?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["neroxa_provisioning_status"]
+          system_instance_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_provisioning_jobs_system_instance_id_fkey"
+            columns: ["system_instance_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_system_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_subscriptions: {
+        Row: {
+          cancelled_at: string | null
+          checkout_url: string | null
+          contract_id: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          gateway_provider: string | null
+          gateway_status: string | null
+          gateway_subscription_id: string | null
+          gateway_synced_at: string | null
+          id: string
+          organization_id: string
+          plan_id: string
+          price: number
+          started_at: string
+          status: Database["public"]["Enums"]["neroxa_subscription_status"]
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          checkout_url?: string | null
+          contract_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          gateway_provider?: string | null
+          gateway_status?: string | null
+          gateway_subscription_id?: string | null
+          gateway_synced_at?: string | null
+          id?: string
+          organization_id: string
+          plan_id: string
+          price?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["neroxa_subscription_status"]
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          checkout_url?: string | null
+          contract_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          gateway_provider?: string | null
+          gateway_status?: string | null
+          gateway_subscription_id?: string | null
+          gateway_synced_at?: string | null
+          id?: string
+          organization_id?: string
+          plan_id?: string
+          price?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["neroxa_subscription_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_subscriptions_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_support_messages: {
+        Row: {
+          author_user_id: string | null
+          body: string
+          created_at: string
+          id: string
+          internal: boolean
+          ticket_id: string
+        }
+        Insert: {
+          author_user_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          ticket_id: string
+        }
+        Update: {
+          author_user_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_support_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_support_tickets: {
+        Row: {
+          assignee_user_id: string | null
+          category: string
+          closed_at: string | null
+          created_at: string
+          created_by_user_id: string | null
+          description: string
+          id: string
+          last_response_at: string | null
+          organization_id: string
+          priority: Database["public"]["Enums"]["neroxa_support_ticket_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["neroxa_support_ticket_status"]
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_user_id?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          description: string
+          id?: string
+          last_response_at?: string | null
+          organization_id: string
+          priority?: Database["public"]["Enums"]["neroxa_support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["neroxa_support_ticket_status"]
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_user_id?: string | null
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          created_by_user_id?: string | null
+          description?: string
+          id?: string
+          last_response_at?: string | null
+          organization_id?: string
+          priority?: Database["public"]["Enums"]["neroxa_support_ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["neroxa_support_ticket_status"]
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_support_tickets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_support_tickets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_clients"
+            referencedColumns: ["organization_id"]
+          },
+          {
+            foreignKeyName: "neroxa_support_tickets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_system_domains: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          is_primary: boolean
+          status: Database["public"]["Enums"]["neroxa_domain_status"]
+          system_instance_id: string
+          updated_at: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          is_primary?: boolean
+          status?: Database["public"]["Enums"]["neroxa_domain_status"]
+          system_instance_id: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          is_primary?: boolean
+          status?: Database["public"]["Enums"]["neroxa_domain_status"]
+          system_instance_id?: string
+          updated_at?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_system_domains_system_instance_id_fkey"
+            columns: ["system_instance_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_system_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neroxa_system_instances: {
+        Row: {
           created_at: string
           id: string
           name: string
           organization_id: string
-          price: number
-          sort_order: number
+          plan_id: string | null
+          slug: string
+          status: Database["public"]["Enums"]["neroxa_instance_status"]
+          subscription_id: string | null
+          system_id: string | null
+          system_type: string
           updated_at: string
         }
         Insert: {
-          active?: boolean
           created_at?: string
           id?: string
           name: string
           organization_id: string
-          price?: number
-          sort_order?: number
+          plan_id?: string | null
+          slug: string
+          status?: Database["public"]["Enums"]["neroxa_instance_status"]
+          subscription_id?: string | null
+          system_id?: string | null
+          system_type: string
           updated_at?: string
         }
         Update: {
-          active?: boolean
           created_at?: string
           id?: string
           name?: string
           organization_id?: string
-          price?: number
-          sort_order?: number
+          plan_id?: string | null
+          slug?: string
+          status?: Database["public"]["Enums"]["neroxa_instance_status"]
+          subscription_id?: string | null
+          system_id?: string | null
+          system_type?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "product_addons_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "neroxa_system_instances_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "neroxa_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_system_instances_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "neroxa_system_instances_system_id_fkey"
+            columns: ["system_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_systems"
             referencedColumns: ["id"]
           },
         ]
       }
-      product_crusts: {
+      neroxa_systems: {
         Row: {
           active: boolean
           created_at: string
-          id: string
-          name: string
-          organization_id: string
-          price: number
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name: string
-          organization_id: string
-          price?: number
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name?: string
-          organization_id?: string
-          price?: number
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_crusts_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_prices: {
-        Row: {
-          created_at: string
-          id: string
-          organization_id: string
-          price: number
-          product_id: string
-          size_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          organization_id: string
-          price: number
-          product_id: string
-          size_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          organization_id?: string
-          price?: number
-          product_id?: string
-          size_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_prices_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_prices_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_prices_size_id_fkey"
-            columns: ["size_id"]
-            isOneToOne: false
-            referencedRelation: "product_sizes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_sizes: {
-        Row: {
-          active: boolean
-          created_at: string
-          id: string
-          name: string
-          organization_id: string
-          slices: number | null
-          sort_order: number
-          updated_at: string
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name: string
-          organization_id: string
-          slices?: number | null
-          sort_order?: number
-          updated_at?: string
-        }
-        Update: {
-          active?: boolean
-          created_at?: string
-          id?: string
-          name?: string
-          organization_id?: string
-          slices?: number | null
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_sizes_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      products: {
-        Row: {
-          active: boolean
-          allow_half: boolean
-          available: boolean
-          base_price: number
-          category_id: string | null
-          created_at: string
-          deleted_at: string | null
           description: string | null
-          featured: boolean
           id: string
-          image_url: string | null
-          kind: Database["public"]["Enums"]["product_kind"]
           name: string
-          organization_id: string
-          sort_order: number
+          slug: string
+          system_type: string
           updated_at: string
+          version: string
         }
         Insert: {
           active?: boolean
-          allow_half?: boolean
-          available?: boolean
-          base_price?: number
-          category_id?: string | null
           created_at?: string
-          deleted_at?: string | null
           description?: string | null
-          featured?: boolean
           id?: string
-          image_url?: string | null
-          kind?: Database["public"]["Enums"]["product_kind"]
           name: string
-          organization_id: string
-          sort_order?: number
+          slug: string
+          system_type: string
           updated_at?: string
+          version?: string
         }
         Update: {
           active?: boolean
-          allow_half?: boolean
-          available?: boolean
-          base_price?: number
-          category_id?: string | null
           created_at?: string
-          deleted_at?: string | null
           description?: string | null
-          featured?: boolean
           id?: string
-          image_url?: string | null
-          kind?: Database["public"]["Enums"]["product_kind"]
           name?: string
-          organization_id?: string
-          sort_order?: number
+          slug?: string
+          system_type?: string
           updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          created_at: string
-          email: string | null
-          full_name: string | null
-          id: string
-          phone: string | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          phone?: string | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id?: string
-          phone?: string | null
-          updated_at?: string
+          version?: string
         }
         Relationships: []
-      }
-      special_hours: {
-        Row: {
-          closed: boolean
-          closes_at: string | null
-          created_at: string
-          date: string
-          id: string
-          note: string | null
-          opens_at: string | null
-          organization_id: string
-          updated_at: string
-        }
-        Insert: {
-          closed?: boolean
-          closes_at?: string | null
-          created_at?: string
-          date: string
-          id?: string
-          note?: string | null
-          opens_at?: string | null
-          organization_id: string
-          updated_at?: string
-        }
-        Update: {
-          closed?: boolean
-          closes_at?: string | null
-          created_at?: string
-          date?: string
-          id?: string
-          note?: string | null
-          opens_at?: string | null
-          organization_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "special_hours_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      store_hours: {
-        Row: {
-          closed: boolean
-          closes_at: string | null
-          created_at: string
-          id: string
-          opens_at: string | null
-          organization_id: string
-          updated_at: string
-          weekday: number
-        }
-        Insert: {
-          closed?: boolean
-          closes_at?: string | null
-          created_at?: string
-          id?: string
-          opens_at?: string | null
-          organization_id: string
-          updated_at?: string
-          weekday: number
-        }
-        Update: {
-          closed?: boolean
-          closes_at?: string | null
-          created_at?: string
-          id?: string
-          opens_at?: string | null
-          organization_id?: string
-          updated_at?: string
-          weekday?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "store_hours_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
-      [_ in never]: never
+      neroxa_clients: {
+        Row: {
+          acquired_at: string | null
+          activated_at: string | null
+          cancelled_at: string | null
+          contracted_at: string | null
+          created_at: string | null
+          id: string | null
+          legal_name: string | null
+          notes: string | null
+          organization_id: string | null
+          paused_at: string | null
+          status: string | null
+          tax_id: string | null
+          trade_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          acquired_at?: string | null
+          activated_at?: string | null
+          cancelled_at?: string | null
+          contracted_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          legal_name?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          paused_at?: string | null
+          status?: string | null
+          tax_id?: string | null
+          trade_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          acquired_at?: string | null
+          activated_at?: string | null
+          cancelled_at?: string | null
+          contracted_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          legal_name?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          paused_at?: string | null
+          status?: string | null
+          tax_id?: string | null
+          trade_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      append_public_order_items: {
-        Args: { p_customer_phone: string; p_items: Json; p_order_id: string }
-        Returns: {
-          order_id: string
-          order_number: number
-          status: Database["public"]["Enums"]["order_status"]
-          subtotal: number
-          total: number
-        }[]
+      activate_neroxa_contract_and_subscription: {
+        Args: { p_contract_id: string }
+        Returns: string
       }
-      append_public_order_items_with_payment: {
+      create_neroxa_client: {
         Args: {
-          p_customer_phone: string
-          p_items: Json
-          p_order_id: string
-          p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_legal_name: string
+          p_notes: string
+          p_tax_id: string
+          p_trade_name: string
         }
-        Returns: {
-          delivery_fee: number
-          order_id: string
-          order_number: number
-          status: Database["public"]["Enums"]["order_status"]
-          subtotal: number
-          total: number
-        }[]
+        Returns: string
       }
-      claim_first_owner: { Args: never; Returns: boolean }
-      create_public_order: {
-        Args: { p_order: Json }
-        Returns: {
-          order_id: string
-          order_number: number
-        }[]
-      }
-      get_public_order_status: {
-        Args: { p_customer_phone: string; p_order_id: string }
-        Returns: {
-          created_at: string
-          fulfillment: Database["public"]["Enums"]["fulfillment_type"]
-          order_id: string
-          order_number: number
-          status: Database["public"]["Enums"]["order_status"]
-          updated_at: string
-        }[]
-      }
-      get_public_storefront_settings: { Args: { p_org: string }; Returns: Json }
-      has_org_role: {
+      create_neroxa_client_contact: {
         Args: {
-          _org: string
-          _roles: Database["public"]["Enums"]["app_role"][]
+          p_client_id: string
+          p_email: string
+          p_is_primary: boolean
+          p_name: string
+          p_notes: string
+          p_phone: string
+          p_role_title: string
+          p_whatsapp: string
+        }
+        Returns: string
+      }
+      get_neroxa_platform_access: {
+        Args: never
+        Returns: {
+          active: boolean
+          role: Database["public"]["Enums"]["neroxa_platform_role"]
+        }[]
+      }
+      neroxa_has_platform_role: {
+        Args: { p_roles: Database["public"]["Enums"]["neroxa_platform_role"][] }
+        Returns: boolean
+      }
+      neroxa_is_platform_member: { Args: never; Returns: boolean }
+      prepare_neroxa_implementation_from_subscription: {
+        Args: { p_name: string; p_slug: string; p_subscription_id: string }
+        Returns: string
+      }
+      record_neroxa_audit: {
+        Args: {
+          p_action: string
+          p_details?: Json
+          p_organization_id?: string
+          p_resource_id?: string
+          p_resource_type: string
+        }
+        Returns: string
+      }
+      transition_neroxa_client_status: {
+        Args: { p_client_id: string; p_new_status: string }
+        Returns: boolean
+      }
+      transition_neroxa_domain_status: {
+        Args: {
+          p_domain_id: string
+          p_new_status: Database["public"]["Enums"]["neroxa_domain_status"]
+        }
+        Returns: Database["public"]["Enums"]["neroxa_domain_status"]
+      }
+      update_neroxa_client: {
+        Args: {
+          p_client_id: string
+          p_legal_name: string
+          p_notes: string
+          p_tax_id: string
+          p_trade_name: string
         }
         Returns: boolean
       }
-      is_org_manager: { Args: { _org: string }; Returns: boolean }
-      is_org_staff: { Args: { _org: string }; Returns: boolean }
-      activate_neroxa_contract_and_subscription: { Args: { p_contract_id: string }; Returns: string | null }
-      prepare_neroxa_implementation_from_subscription: { Args: { p_subscription_id: string; p_name: string; p_slug: string }; Returns: string }
-      next_order_number: { Args: { _org: string }; Returns: number }
-      update_order_status: {
+      update_neroxa_provisioning_job_status: {
         Args: {
-          p_note?: string
-          p_order_id: string
-          p_organization_id: string
-          p_status: Database["public"]["Enums"]["order_status"]
+          p_error_message?: string
+          p_job_id: string
+          p_status: Database["public"]["Enums"]["neroxa_provisioning_status"]
         }
-        Returns: boolean
+        Returns: undefined
       }
     }
     Enums: {
-      app_role:
-        | "OWNER"
-        | "ADMIN"
-        | "ATTENDANT"
-        | "KITCHEN"
-        | "DRIVER"
-        | "CUSTOMER"
-      coupon_type: "PERCENTAGE" | "FIXED" | "FREE_DELIVERY"
-      fulfillment_type: "DELIVERY" | "PICKUP"
-      half_pizza_rule: "highest_half" | "average_halves" | "fixed_price"
-      order_status:
-        | "RECEIVED"
-        | "CONFIRMED"
-        | "PREPARING"
-        | "READY"
-        | "OUT_FOR_DELIVERY"
-        | "DELIVERED"
+      neroxa_billing_period: "MONTHLY" | "YEARLY" | "ONE_TIME"
+      neroxa_billing_status:
+        | "PENDING"
+        | "PAID"
+        | "OVERDUE"
         | "CANCELLED"
-      payment_method: "CASH" | "PIX" | "CARD_ON_DELIVERY" | "CARD_ON_SITE"
-      product_kind: "PIZZA" | "SIMPLE"
+        | "REFUNDED"
+      neroxa_domain_status:
+        | "PENDING"
+        | "VERIFYING"
+        | "VERIFIED"
+        | "FAILED"
+        | "DISABLED"
+      neroxa_instance_status:
+        | "PROVISIONING"
+        | "ACTIVE"
+        | "SUSPENDED"
+        | "ARCHIVED"
+      neroxa_platform_role: "SUPER_ADMIN" | "ADMIN" | "SUPPORT" | "FINANCE"
+      neroxa_provisioning_status:
+        | "PENDING"
+        | "RUNNING"
+        | "COMPLETED"
+        | "FAILED"
+        | "CANCELLED"
+      neroxa_subscription_status:
+        | "TRIAL"
+        | "ACTIVE"
+        | "PAST_DUE"
+        | "PAUSED"
+        | "CANCELLED"
+        | "EXPIRED"
+      neroxa_support_ticket_priority: "LOW" | "NORMAL" | "HIGH" | "URGENT"
+      neroxa_support_ticket_status:
+        | "OPEN"
+        | "IN_PROGRESS"
+        | "WAITING_CLIENT"
+        | "RESOLVED"
+        | "CLOSED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1486,28 +1515,51 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: [
-        "OWNER",
-        "ADMIN",
-        "ATTENDANT",
-        "KITCHEN",
-        "DRIVER",
-        "CUSTOMER",
+      neroxa_billing_period: ["MONTHLY", "YEARLY", "ONE_TIME"],
+      neroxa_billing_status: [
+        "PENDING",
+        "PAID",
+        "OVERDUE",
+        "CANCELLED",
+        "REFUNDED",
       ],
-      coupon_type: ["PERCENTAGE", "FIXED", "FREE_DELIVERY"],
-      fulfillment_type: ["DELIVERY", "PICKUP"],
-      half_pizza_rule: ["highest_half", "average_halves", "fixed_price"],
-      order_status: [
-        "RECEIVED",
-        "CONFIRMED",
-        "PREPARING",
-        "READY",
-        "OUT_FOR_DELIVERY",
-        "DELIVERED",
+      neroxa_domain_status: [
+        "PENDING",
+        "VERIFYING",
+        "VERIFIED",
+        "FAILED",
+        "DISABLED",
+      ],
+      neroxa_instance_status: [
+        "PROVISIONING",
+        "ACTIVE",
+        "SUSPENDED",
+        "ARCHIVED",
+      ],
+      neroxa_platform_role: ["SUPER_ADMIN", "ADMIN", "SUPPORT", "FINANCE"],
+      neroxa_provisioning_status: [
+        "PENDING",
+        "RUNNING",
+        "COMPLETED",
+        "FAILED",
         "CANCELLED",
       ],
-      payment_method: ["CASH", "PIX", "CARD_ON_DELIVERY", "CARD_ON_SITE"],
-      product_kind: ["PIZZA", "SIMPLE"],
+      neroxa_subscription_status: [
+        "TRIAL",
+        "ACTIVE",
+        "PAST_DUE",
+        "PAUSED",
+        "CANCELLED",
+        "EXPIRED",
+      ],
+      neroxa_support_ticket_priority: ["LOW", "NORMAL", "HIGH", "URGENT"],
+      neroxa_support_ticket_status: [
+        "OPEN",
+        "IN_PROGRESS",
+        "WAITING_CLIENT",
+        "RESOLVED",
+        "CLOSED",
+      ],
     },
   },
 } as const
