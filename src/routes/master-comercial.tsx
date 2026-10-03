@@ -51,7 +51,9 @@ const contractTone: Record<keyof typeof CONTRACT_STATUS_LABELS, string> = {
 };
 
 function MasterCommercialPage() {
-  const contextClientId = typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("clientId");
+  const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
+  const contextClientId=params?.get("clientId") ?? null;
+  const contextOrganizationId=params?.get("organizationId") ?? null;
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
   const [proposals, setProposals] = useState<CommercialProposal[]>([]);
@@ -105,7 +107,7 @@ function MasterCommercialPage() {
     activeContracts: scopedContracts.filter((item) => item.status === "ACTIVE").length,
   }), [proposals, contracts]);
 
-  const scopedProposals = contextClientId ? proposals.filter((item) => item.client_id === contextClientId) : proposals;
+  const scopedProposals = contextOrganizationId ? proposals.filter((item) => item.client_id === contextOrganizationId) : contextClientId ? proposals.filter((item) => item.client_id === contextClientId) : proposals;
   const scopedContracts = contextClientId ? contracts.filter((item) => item.client_id === contextClientId) : contracts;
   const recentProposals = scopedProposals.slice(0, 5);
   const recentContracts = scopedContracts.slice(0, 5);
