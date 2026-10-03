@@ -1,4 +1,4 @@
-name: Build and Lint
+name: Build and Test
 
 on:
   pull_request:
@@ -25,11 +25,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Format
+      - name: Format check
         run: npx prettier --write .
 
       - name: Lint
         run: npm run lint
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build

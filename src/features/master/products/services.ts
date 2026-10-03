@@ -87,6 +87,30 @@ export async function setPlanProduct(input: {
   included: boolean;
   quantity?: number | null;
 }) {
+  const [{ data: plan, error: planError }, { data: product, error: productError }] = await Promise.all([
+    supabase.from("neroxa_plans" as never).select("id,name,system_id,active").eq("id", input.planId).maybeSingle(),
+    supabase.from("neroxa_products" as never).select("id,name,system_id,active").eq("id", input.productId).maybeSingle(),
+  ]);
+
+  if (planError) throw new Error(planError.message);
+  if (productError) throw new Error(productError.message);
+  if (!plan || !product) throw new Error("Plano ou produto não encontrado.");
+
+  const planRow = plan as { id: string; name: string; system_id: string | null; active: boolean };
+  const productRow = product as { id: string; name: string; system_id: string | null; active: boolean };
+
+  if (input.included && !planRow.active) {
+    throw new Error("Não é possível incluir produtos em um plano inativo.");
+  }
+
+  if (input.included && !productRow.active) {
+    throw new Error("Não é possível incluir um produto inativo em um plano.");
+  }
+
+  if (input.included && planRow.system_id && productRow.system_id && planRow.system_id !== productRow.system_id) {
+    throw new Error(`O produto "${productRow.name}" pertence a outro sistema-base e não pode ser vinculado ao plano "${planRow.name}".`);
+  }
+
   const { error } = await supabase
     .from("neroxa_plan_products" as never)
     .upsert({
