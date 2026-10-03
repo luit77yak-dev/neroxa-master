@@ -10,7 +10,7 @@ import {
   type NeroxaSystemDomain,
 } from "@/features/master/clients/services";
 import { canPerform } from "@/features/master/permissions";
-import { transitionDomainStatus, type DomainStatus } from "@/features/master/domains/services";
+import { validateDomainDns, type DomainStatus } from "@/features/master/domains/services";
 import { Button } from "@/components/ui/button";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 
@@ -48,6 +48,7 @@ function MasterDominios() {
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
+  const [dnsResult, setDnsResult] = useState<Record<string, { ok: boolean; message: string; records: { a: string[]; cname: string[]; nameservers: string[] } }>>({});
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
@@ -93,6 +94,27 @@ function MasterDominios() {
   useEffect(() => {
     void load();
   }, []);
+
+  async function validateDns(domain: DomainRow) {
+    setWorking(domain.id);
+    setError(null);
+    try {
+      const result = await validateDomainDns(domain.id, domain.domain);
+      setDnsResult((current) => ({
+        ...current,
+        [domain.id]: {
+          ok: result.ok,
+          message: result.message,
+          records: result.records,
+        },
+      }));
+      await load();
+    } catch (changeError) {
+      setError(changeError instanceof Error ? changeError.message : "Não foi possível validar o DNS.");
+    } finally {
+      setWorking(null);
+    }
+  }
 
   async function changeStatus(domain: DomainRow, nextStatus: DomainStatus) {
     setWorking(domain.id);
@@ -180,9 +202,9 @@ function MasterDominios() {
                       </span>
 
                       {canStart && (
-                        <Button size="sm" variant="outline" disabled={disabled} onClick={() => void changeStatus(domain, "VERIFYING")}>
+                        <Button size="sm" variant="outline" disabled={disabled} onClick={() => void validateDns(domain)}>
                           <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                          {domain.status === "FAILED" ? "Tentar novamente" : "Iniciar validação"}
+                          {domain.status === "FAILED" ? "Validar novamente" : "Validar DNS"}
                         </Button>
                       )}
 
@@ -203,6 +225,14 @@ function MasterDominios() {
                         <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void changeStatus(domain, "DISABLED")}>
                           Desativar
                         </Button>
+                      )}
+
+                      {dnsResult[domain.id] && (
+                        <div className={`w-full rounded-lg border p-3 text-xs lg:w-auto lg:max-w-md ${dnsResult[domain.id].ok ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>
+                          <p className="font-medium">{dnsResult[domain.id].message}</p>
+                          <p className="mt-1">A: {dnsResult[domain.id].records.a.join(", ") || "—"}</p>
+                          <p>CNAME: {dnsResult[domain.id].records.cname.join(", ") || "—"}</p>
+                        </div>
                       )}
                     </div>
                   </div>
