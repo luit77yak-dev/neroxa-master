@@ -262,6 +262,58 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
   if (!subscription) throw new Error("Assinatura não encontrada ou sem permissão para alterar.");
 
   const row = subscription as { id: string; plan_id: string; status: string };
+  const currentStatus = row.status;
+
+  if (currentStatus === "CANCELLED" || currentStatus === "EXPIRED") {
+    throw new Error("Esta assinatura já foi encerrada e não pode receber novas transições.");
+  }
+
+  if (currentStatus === "TRIAL" && status !== "ACTIVE" && status !== "CANCELLED") {
+    throw new Error("Uma assinatura pendente só pode ser ativada após o primeiro pagamento ou cancelada.");
+  }
+
+  if (currentStatus === "ACTIVE" && status !== "PAUSED" && status !== "CANCELLED") {
+    throw new Error("Uma assinatura ativa só pode ser pausada ou cancelada.");
+  }
+
+  if (currentStatus === "PAUSED" && status !== "ACTIVE" && status !== "CANCELLED") {
+    throw new Error("Uma assinatura pausada só pode ser reativada ou cancelada.");
+  }
+
+  if (currentStatus === "PAST_DUE" && status !== "CANCELLED" && status !== "ACTIVE") {
+    throw new Error("Uma assinatura inadimplente só pode ser regularizada após pagamento ou cancelada.");
+  }
+
+  if (currentStatus === "TRIAL" && status === "ACTIVE") {
+    const { data: firstBilling, error: billingError } = await supabase
+      .from("neroxa_billing_records" as never)
+      .select("id,status,paid_at,due_date")
+      .eq("subscription_id", subscriptionId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (billingError) throw new Error(billingError.message);
+    if (!firstBilling || (firstBilling as { status: string }).status !== "PAID" || !(firstBilling as { paid_at: string | null }).paid_at) {
+      throw new Error("A primeira cobrança precisa estar paga antes de ativar a assinatura.");
+    }
+  }
+
+  if (currentStatus === "PAST_DUE" && status === "ACTIVE") {
+    const { data: billing, error: billingError } = await supabase
+      .from("neroxa_billing_records" as never)
+      .select("id,status,paid_at")
+      .eq("subscription_id", subscriptionId)
+      .order("due_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (billingError) throw new Error(billingError.message);
+    if (!billing || (billing as { status: string }).status !== "PAID" || !(billing as { paid_at: string | null }).paid_at) {
+      throw new Error("A cobrança em atraso precisa estar paga antes de regularizar a assinatura.");
+    }
+  }
+
   const { data: plan, error: planError } = await supabase
     .from("neroxa_plans" as never)
     .select("id,name,active,commercial_model")
@@ -281,6 +333,10 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
     throw new Error("Planos de compra permanente não devem operar como assinatura recorrente. Use o fluxo de compra permanente.");
   }
 
+  if (currentStatus === status) {
+    return true;
+  }
+
   const { data, error } = await supabase
     .from("neroxa_subscriptions" as never)
     .update({ status } as never)
@@ -295,8 +351,13 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
     action: "SUBSCRIPTION_STATUS_CHANGED",
     resourceType: "SUBSCRIPTION",
     resourceId: subscriptionId,
-    details: { status, planId: row.plan_id },
+    details: {
+      previousStatus: currentStatus,
+      status,
+      planId: row.plan_id,
+    },
   });
+
   return true;
 }
 
