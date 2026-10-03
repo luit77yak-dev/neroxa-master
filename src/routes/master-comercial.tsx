@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { canPerform, isNeroxaStaff } from "@/features/master/clients/services";
+import { isNeroxaStaff } from "@/features/master/clients/services";
+import { canPerform } from "@/features/master/permissions";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import {
