@@ -172,13 +172,17 @@ export async function createSubscription(input: { organizationId: string; planId
   }
 
   const now = new Date();
-  const periodStart = now.toISOString();
-  const periodEnd = new Date(now);
+  const periodStartTimestamp = now.toISOString();
+  const periodStartDate = periodStartTimestamp.slice(0, 10);
+  const periodEndDate = new Date(`${periodStartDate}T00:00:00.000Z`);
   if (planRow.billing_period === "YEARLY") {
-    periodEnd.setUTCFullYear(periodEnd.getUTCFullYear() + 1);
+    periodEndDate.setUTCFullYear(periodEndDate.getUTCFullYear() + 1);
   } else {
-    periodEnd.setUTCMonth(periodEnd.getUTCMonth() + 1);
+    periodEndDate.setUTCMonth(periodEndDate.getUTCMonth() + 1);
   }
+  const periodEnd = periodEndDate.toISOString().slice(0, 10);
+  const recurringPrice = Number(planRow.price_monthly ?? 0);
+  const referenceMonth = `${periodStartDate.slice(0, 7)}-01`;
 
   const { data, error } = await supabase
     .from("neroxa_subscriptions" as never)
@@ -186,10 +190,10 @@ export async function createSubscription(input: { organizationId: string; planId
       organization_id: input.organizationId,
       plan_id: input.planId,
       status: "TRIAL",
-      price: Number(planRow.price_monthly ?? 0),
-      started_at: periodStart,
-      current_period_start: periodStart,
-      current_period_end: periodEnd.toISOString(),
+      price: recurringPrice,
+      started_at: periodStartTimestamp,
+      current_period_start: periodStartDate,
+      current_period_end: periodEnd,
       gateway_provider: null,
       gateway_status: "NOT_CONFIGURED",
     } as never)
@@ -199,6 +203,31 @@ export async function createSubscription(input: { organizationId: string; planId
   if (error) throw new Error(error.message);
   const subscriptionId = (data as { id: string }).id;
 
+  const { error: billingError } = await supabase
+    .from("neroxa_billing_records" as never)
+    .insert({
+      organization_id: input.organizationId,
+      subscription_id: subscriptionId,
+      reference_month: referenceMonth,
+      amount: recurringPrice,
+      due_date: periodStartDate,
+      status: "PENDING",
+      payment_method: null,
+      external_id: null,
+      gateway_provider: null,
+      gateway_payment_id: null,
+      gateway_status: "PENDING",
+      gateway_event_id: null,
+    } as never);
+
+  if (billingError) {
+    await supabase
+      .from("neroxa_subscriptions" as never)
+      .delete()
+      .eq("id", subscriptionId);
+    throw new Error(`A assinatura não foi criada porque a primeira cobrança não pôde ser registrada: ${billingError.message}`);
+  }
+
   await recordNeroxaAudit({
     action: "SUBSCRIPTION_CREATED",
     resourceType: "SUBSCRIPTION",
@@ -207,12 +236,13 @@ export async function createSubscription(input: { organizationId: string; planId
     details: {
       planId: input.planId,
       planName: planRow.name,
-      price: Number(planRow.price_monthly ?? 0),
+      price: recurringPrice,
       setupPrice: Number(planRow.setup_price ?? 0),
       billingPeriod: planRow.billing_period,
-      periodStart: periodStart,
-      periodEnd: periodEnd.toISOString(),
-      firstChargeTiming: "NOW_WITH_EXTERNAL_PAYMENT_CONFIRMATION",
+      periodStart: periodStartDate,
+      periodEnd,
+      firstChargeTiming: "CREATED_AS_PENDING_DUE_ON_PERIOD_START",
+      firstBillingReferenceMonth: referenceMonth,
       systemId: planRow.system_id,
       status: "TRIAL",
     },
