@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   calculateNextPeriodEnd,
   shouldMarkBillingOverdue,
@@ -7,7 +7,14 @@ import {
   isFinalSubscriptionStatus,
 } from "@/features/master/subscriptions/services";
 
-describe("billing engine pure rules", () => {
+
+
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    rpc,
+  },
+}));
+\ndescribe("billing engine pure rules", () => {
   it("calculates monthly renewal periods", () => {
     expect(calculateNextPeriodEnd("2026-10-02", "MONTHLY")).toBe("2026-11-02");
   });
@@ -46,5 +53,61 @@ describe("billing engine pure rules", () => {
     expect(isFinalSubscriptionStatus("EXPIRED")).toBe(true);
     expect(isFinalSubscriptionStatus("ACTIVE")).toBe(false);
     expect(isFinalSubscriptionStatus("PAUSED")).toBe(false);
+  });
+});
+
+
+describe("contract activation flow", () => {
+  const rpc = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    rpc.mockReset();
+  });
+
+  it("rejects an empty contract id before touching Supabase", async () => {
+    const { createSubscription } = await import("@/features/master/subscriptions/services");
+
+    await expect(createSubscription({ contractId: "" })).rejects.toThrow(
+      "Contrato não informado.",
+    );
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("activates the contract through the transactional RPC", async () => {
+    rpc.mockResolvedValue({ data: "subscription-123", error: null });
+
+    const { createSubscription } = await import("@/features/master/subscriptions/services");
+
+    await expect(createSubscription({ contractId: "contract-123" })).resolves.toBe(
+      "subscription-123",
+    );
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith("activate_neroxa_contract_and_subscription", {
+      p_contract_id: "contract-123",
+    });
+  });
+
+  it("propagates an activation error without masking the database reason", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "O contrato só pode ser ativado após a aceitação da proposta vinculada" },
+    });
+
+    const { createSubscription } = await import("@/features/master/subscriptions/services");
+
+    await expect(createSubscription({ contractId: "contract-123" })).rejects.toThrow(
+      "O contrato só pode ser ativado após a aceitação da proposta vinculada",
+    );
+  });
+
+  it("rejects a successful RPC that does not return a subscription id", async () => {
+    rpc.mockResolvedValue({ data: null, error: null });
+
+    const { createSubscription } = await import("@/features/master/subscriptions/services");
+
+    await expect(createSubscription({ contractId: "contract-123" })).rejects.toThrow(
+      "O contrato foi ativado sem gerar uma assinatura recorrente.",
+    );
   });
 });
