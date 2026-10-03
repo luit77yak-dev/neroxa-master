@@ -20,7 +20,15 @@ const CONTRACT_TRANSITIONS: Record<ContractStatus, ContractStatus[]> = {
   EXPIRED: [],
 };
 
-export function isAllowedProposalTransition(current: ProposalStatus, next: ProposalStatus) {\n  return current === next || PROPOSAL_TRANSITIONS[current].includes(next);\n}\n\nexport function isAllowedContractTransition(current: ContractStatus, next: ContractStatus) {\n  return current === next || CONTRACT_TRANSITIONS[current].includes(next);\n}\n\nfunction assertTransition<T extends string>(transitions: Record<T, T[]>, current: T, next: T, entity: string) {
+export function isAllowedProposalTransition(current: ProposalStatus, next: ProposalStatus) {
+  return current === next || PROPOSAL_TRANSITIONS[current].includes(next);
+}
+
+export function isAllowedContractTransition(current: ContractStatus, next: ContractStatus) {
+  return current === next || CONTRACT_TRANSITIONS[current].includes(next);
+}
+
+function assertTransition<T extends string>(transitions: Record<T, T[]>, current: T, next: T, entity: string) {
   if (current === next) return;
   if (!transitions[current].includes(next)) {
     throw new Error(`Transição inválida para ${entity}: ${current} → ${next}.`);
@@ -131,6 +139,45 @@ export async function createContractFromProposal(proposalId: string) {
   const contractId = (data as { id: string }).id;
   await recordNeroxaAudit({ action: "CONTRACT_CREATED_FROM_PROPOSAL", resourceType: "CONTRACT", resourceId: contractId, organizationId: row.client_id, details: { proposalId, version: 1 } });
   return contractId;
+}
+
+export async function updateContractDraft(input: { id: string; title: string; contractNumber: string | null }) {
+  const title = input.title.trim();
+  const contractNumber = input.contractNumber?.trim() || null;
+  if (!title) throw new Error("Informe o título do contrato.");
+
+  const { data: contract, error: contractError } = await supabase
+    .from("neroxa_contracts" as never)
+    .select("id,client_id,status")
+    .eq("id", input.id)
+    .maybeSingle();
+
+  if (contractError) throw new Error(contractError.message);
+  if (!contract) throw new Error("Contrato não encontrado ou sem permissão.");
+  const row = contract as { id: string; client_id: string; status: ContractStatus };
+  if (row.status !== "DRAFT") {
+    throw new Error("Somente contratos em rascunho podem ser editados.");
+  }
+
+  const { data, error } = await supabase
+    .from("neroxa_contracts" as never)
+    .update({ title, contract_number: contractNumber } as never)
+    .eq("id", input.id)
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Contrato não encontrado ou sem permissão para alterar.");
+
+  await recordNeroxaAudit({
+    action: "CONTRACT_DRAFT_UPDATED",
+    resourceType: "CONTRACT",
+    resourceId: input.id,
+    organizationId: row.client_id,
+    details: { title, contractNumber },
+  });
+
+  return true;
 }
 
 export async function updateContractStatus(id: string, status: ContractStatus) {
