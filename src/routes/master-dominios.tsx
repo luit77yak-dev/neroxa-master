@@ -10,7 +10,7 @@ import {
   type NeroxaSystemDomain,
 } from "@/features/master/clients/services";
 import { canPerform } from "@/features/master/permissions";
-import { validateDomainDns, type DomainStatus } from "@/features/master/domains/services";
+import { validateDomainDns, transitionDomainStatus, type DomainStatus } from "@/features/master/domains/services";
 import { Button } from "@/components/ui/button";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 
@@ -178,7 +178,6 @@ function MasterDominios() {
               {domains.map((domain) => {
                 const disabled = working === domain.id || domain.instanceStatus === "ARCHIVED";
                 const canStart = canManage && !disabled && ["PENDING", "FAILED", "DISABLED"].includes(domain.status);
-                const canConfirm = canManage && !disabled && domain.status === "VERIFYING";
                 const canDisable = canManage && !disabled && domain.status === "VERIFIED";
 
                 return (
@@ -206,19 +205,6 @@ function MasterDominios() {
                           <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
                           {domain.status === "FAILED" ? "Validar novamente" : "Validar DNS"}
                         </Button>
-                      )}
-
-                      {canConfirm && (
-                        <>
-                          <Button size="sm" variant="outline" disabled={disabled} onClick={() => void changeStatus(domain, "VERIFIED")}>
-                            <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                            Confirmar validação
-                          </Button>
-                          <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void changeStatus(domain, "FAILED")}>
-                            <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                            Falhou
-                          </Button>
-                        </>
                       )}
 
                       {canDisable && (
