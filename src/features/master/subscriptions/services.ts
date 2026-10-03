@@ -121,19 +121,50 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
 
 
 export async function updateSubscriptionStatus(subscriptionId: string, status: "ACTIVE" | "PAUSED" | "CANCELLED") {
+  const { data: subscription, error: subscriptionError } = await supabase
+    .from("neroxa_subscriptions" as never)
+    .select("id,plan_id,status")
+    .eq("id", subscriptionId)
+    .maybeSingle();
+
+  if (subscriptionError) throw new Error(subscriptionError.message);
+  if (!subscription) throw new Error("Assinatura não encontrada ou sem permissão para alterar.");
+
+  const row = subscription as { id: string; plan_id: string; status: string };
+  const { data: plan, error: planError } = await supabase
+    .from("neroxa_plans" as never)
+    .select("id,name,active,commercial_model")
+    .eq("id", row.plan_id)
+    .maybeSingle();
+
+  if (planError) throw new Error(planError.message);
+  if (!plan) throw new Error("O plano da assinatura não foi encontrado.");
+
+  const planRow = plan as { id: string; name: string; active: boolean; commercial_model: string };
+
+  if (!planRow.active && status !== "CANCELLED") {
+    throw new Error("Não é possível ativar ou reativar uma assinatura vinculada a um plano inativo. Reative o plano antes.");
+  }
+
+  if (planRow.commercial_model === "PERMANENT" && status !== "CANCELLED") {
+    throw new Error("Planos de compra permanente não devem operar como assinatura recorrente. Use o fluxo de compra permanente.");
+  }
+
   const { data, error } = await supabase
     .from("neroxa_subscriptions" as never)
     .update({ status } as never)
     .eq("id", subscriptionId)
     .select("id")
     .maybeSingle();
+
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Assinatura não encontrada ou sem permissão para alterar.");
+
   await recordNeroxaAudit({
     action: "SUBSCRIPTION_STATUS_CHANGED",
     resourceType: "SUBSCRIPTION",
     resourceId: subscriptionId,
-    details: { status },
+    details: { status, planId: row.plan_id },
   });
   return true;
 }
