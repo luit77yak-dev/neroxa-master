@@ -192,12 +192,13 @@ function MasterOverviewPage() {
                 ["Financeiro", `${data?.openInvoices ?? 0} cobranças em aberto`],
                 ["Implantação", `${data?.implementations ?? 0} instâncias cadastradas`],
               ].map(([title, description]) => {
-                const route = {
+                const routeMap: Record<string, "/master-comercial" | "/master-assinaturas" | "/master-financeiro" | "/master-implantacao"> = {
                   Comercial: "/master-comercial",
                   Assinaturas: "/master-assinaturas",
                   Financeiro: "/master-financeiro",
                   Implantação: "/master-implantacao",
-                }[title];
+                };
+                const route = routeMap[title];
                 return (
                 <Link key={title} to={route} className="flex items-center gap-3 py-3.5 transition hover:bg-slate-50">
                   <div className="min-w-0 flex-1">
