@@ -16,12 +16,14 @@ const formatCurrency=(value:number)=>new Intl.NumberFormat("pt-BR",{style:"curre
 const formatDate=(value:string|null)=>{if(!value)return "—";const raw=String(value).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
 
 function MasterSubscriptionsPage(){
- const contextClientId=typeof window==="undefined"?null:new URLSearchParams(window.location.search).get("clientId");
+ const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
+  const contextClientId=params?.get("clientId") ?? null;
+  const contextOrganizationId=params?.get("organizationId") ?? null;
  const [authorized,setAuthorized]=useState<boolean|null>(null),[role,setRole]=useState<import("@/features/master/clients/services").NeroxaPlatformRole|null>(null),[plans,setPlans]=useState<SubscriptionPlan[]>([]),[subscriptions,setSubscriptions]=useState<Subscription[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
  const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const access=await getNeroxaPlatformAccess();setRole(access?.active?access.role:null);const overview=await loadSubscriptionOverview();setPlans(overview.plans);setSubscriptions(overview.subscriptions);setClients(overview.clients)}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível carregar as assinaturas.")}finally{setLoading(false);setRefreshing(false)}};
  useEffect(()=>{void load(true)},[]);
  const handleStatus=async(id:string,status:"ACTIVE"|"PAUSED"|"CANCELLED")=>{setSaving(id);setError(null);try{await updateSubscriptionStatus(id,status);await load();}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível alterar a assinatura.")}finally{setSaving(null)}};
- const scopedSubscriptions=contextClientId?subscriptions.filter(s=>s.client_id===contextClientId):subscriptions;
+ const scopedSubscriptions=contextOrganizationId?subscriptions.filter(s=>s.client_id===contextOrganizationId):contextClientId?subscriptions.filter(s=>s.client_id===contextClientId):subscriptions;
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]),planMap=useMemo(()=>new Map(plans.map(p=>[p.id,p])),[plans]);
  const metrics=useMemo(()=>({total:scopedSubscriptions.length,active:scopedSubscriptions.filter(s=>s.status==="ACTIVE").length,pending:scopedSubscriptions.filter(s=>s.status==="PENDING").length,recurring:scopedSubscriptions.filter(s=>["ACTIVE","PAUSED","DELINQUENT"].includes(s.status)).reduce((sum,s)=>sum+s.contracted_recurring_value,0)}),[scopedSubscriptions]);
  if(authorized===false)return <MasterLogin />;
