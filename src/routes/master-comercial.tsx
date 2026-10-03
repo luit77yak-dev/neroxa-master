@@ -8,6 +8,9 @@ import {
   FileCheck2,
   FileText,
   Loader2,
+  Edit3,
+  Save,
+  X,
   RefreshCw,
   Send,
   Pause,
@@ -25,7 +28,7 @@ import {
   type CommercialContract,
   type CommercialProposal,
 } from "@/features/master/commercial/types";
-import { createContractFromProposal, loadCommercialOverview, updateContractStatus, updateProposalStatus } from "@/features/master/commercial/services";
+import { createContractFromProposal, loadCommercialOverview, updateContractDraft, updateContractStatus, updateProposalStatus } from "@/features/master/commercial/services";
 
 export const Route = createFileRoute("/master-comercial")({
   component: MasterCommercialPage,
@@ -62,6 +65,8 @@ function MasterCommercialPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [editingContractId, setEditingContractId] = useState<string | null>(null);
+  const [contractDraft, setContractDraft] = useState({ title: "", contractNumber: "" });
 
   const load = async (initial = false) => {
     setError(null);
@@ -91,8 +96,29 @@ function MasterCommercialPage() {
     void load(true);
   }, []);
   const handleProposalStatus = async (id: string, status: "DRAFT" | "SENT" | "NEGOTIATION" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateProposalStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar a proposta."); } finally { setSaving(null); } };
-  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };\n  const handleCreateContract = async (proposalId: string) => { if (!canPerform(role, "manageCommercial")) return; setSaving(proposalId); setError(null); try { await createContractFromProposal(proposalId); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível gerar o contrato."); } finally { setSaving(null); } };
+  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };\n  const handleCreateContract = async (proposalId: string) => { if (!canPerform(role, "manageCommercial")) return; setSaving(proposalId); setError(null); try { const contractId = await createContractFromProposal(proposalId); await load(); const created = contracts.find((contract) => contract.id === contractId); if (created) { setEditingContractId(created.id); setContractDraft({ title: created.title, contractNumber: created.contract_number ?? "" }); } } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível gerar o contrato."); } finally { setSaving(null); } };
 
+  const startEditContract = (contract: CommercialContract) => {
+    if (contract.status !== "DRAFT" || !canPerform(role, "manageCommercial")) return;
+    setEditingContractId(contract.id);
+    setContractDraft({ title: contract.title, contractNumber: contract.contract_number ?? "" });
+    setError(null);
+  };
+
+  const saveContractDraft = async () => {
+    if (!editingContractId || !canPerform(role, "manageCommercial")) return;
+    setSaving(editingContractId);
+    setError(null);
+    try {
+      await updateContractDraft({ id: editingContractId, title: contractDraft.title, contractNumber: contractDraft.contractNumber || null });
+      setEditingContractId(null);
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível salvar o contrato.");
+    } finally {
+      setSaving(null);
+    }
+  };
 
   const clientMap = useMemo(
     () => new Map(clients.map((client) => [client.id, client])),
@@ -204,12 +230,55 @@ function MasterCommercialPage() {
                       {contract.contract_number || "Sem número"} · {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${contractTone[contract.status]}`}>{CONTRACT_STATUS_LABELS[contract.status]}</span>{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Ativar" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"ACTIVE")}><Play className="h-3.5 w-3.5"/></Button>}{contract.status==="ACTIVE"&&<Button variant="ghost" size="icon" title="Suspender" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"SUSPENDED")}><Pause className="h-3.5 w-3.5"/></Button>}{["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status)&&<Button variant="outline" size="sm" disabled={saving===contract.id} onClick={()=>{if(window.confirm("Encerrar este contrato? Essa ação altera o status para encerrado."))void handleContractStatus(contract.id,"TERMINATED")}}>Encerrar</Button>}</div>
+                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${contractTone[contract.status]}`}>{CONTRACT_STATUS_LABELS[contract.status]}</span>{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Editar rascunho" disabled={saving===contract.id} onClick={()=>startEditContract(contract)}><Edit3 className="h-3.5 w-3.5"/></Button>}{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Ativar" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"ACTIVE")}><Play className="h-3.5 w-3.5"/></Button>}{contract.status==="ACTIVE"&&<Button variant="ghost" size="icon" title="Suspender" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"SUSPENDED")}><Pause className="h-3.5 w-3.5"/></Button>}{["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status)&&<Button variant="outline" size="sm" disabled={saving===contract.id} onClick={()=>{if(window.confirm("Encerrar este contrato? Essa ação altera o status para encerrado."))void handleContractStatus(contract.id,"TERMINATED")}}>Encerrar</Button>}</div>
                 </div>
               );
             })}
           </CommercialList>
         </div>
+
+        {editingContractId && (
+          <Card className="border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Contrato · Edição</p>
+                <h2 className="mt-1 text-base font-semibold text-slate-900">Editar rascunho</h2>
+                <p className="mt-1 text-xs text-slate-500">Os valores comerciais permanecem vinculados à proposta aceita e não podem ser alterados aqui.</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setEditingContractId(null)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-slate-600">Título</span>
+                <input className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm" value={contractDraft.title} onChange={(event) => setContractDraft((current) => ({ ...current, title: event.target.value }))} />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-medium text-slate-600">Número do contrato</span>
+                <input className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm" value={contractDraft.contractNumber} onChange={(event) => setContractDraft((current) => ({ ...current, contractNumber: event.target.value }))} placeholder="Ex.: NRX-2026-001" />
+              </label>
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+              {[
+                ["Modelo", editingContractId ? contracts.find((item) => item.id === editingContractId)?.commercial_model === "PERMANENT" ? "Compra permanente" : "Assinatura" : "—"],
+                ["Recorrência", editingContractId ? (() => { const item = contracts.find((row) => row.id === editingContractId); return item?.recurring_value == null ? "—" : `R$ ${item.recurring_value.toFixed(2).replace(".", ",")}`; })() : "—"],
+                ["Implantação", editingContractId ? (() => { const item = contracts.find((row) => row.id === editingContractId); return item ? `R$ ${item.setup_value.toFixed(2).replace(".", ",")}` : "—"; })() : "—"],
+                ["Versão", editingContractId ? String(contracts.find((item) => item.id === editingContractId)?.version ?? 1) : "—"],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-xl bg-slate-50 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button variant="outline" onClick={() => setEditingContractId(null)}>Cancelar</Button>
+              <Button onClick={() => void saveContractDraft()} disabled={saving === editingContractId}>
+                {saving === editingContractId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar rascunho
+              </Button>
+            </div>
+          </Card>
+        )}
 
         <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
           <Card className="border-slate-200 bg-white p-5 shadow-sm">
