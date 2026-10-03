@@ -18,6 +18,7 @@ type PlanRow = {
   gateway_plan_id: string | null;
   gateway_status: string | null;
   gateway_synced_at: string | null;
+  contract_id: string | null;
 };
 
 type SubscriptionRow = {
@@ -48,7 +49,7 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     supabase
       .from("neroxa_subscriptions" as never)
       .select(
-        "id,organization_id,plan_id,status,price,started_at,current_period_end,updated_at,gateway_provider,gateway_subscription_id,gateway_status,checkout_url,gateway_synced_at",
+        "id,organization_id,contract_id,plan_id,status,price,started_at,current_period_end,updated_at,gateway_provider,gateway_subscription_id,gateway_status,checkout_url,gateway_synced_at",
       )
       .order("updated_at", { ascending: false }),
     supabase
@@ -94,7 +95,7 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     return {
       id: String(s.id),
       client_id: String(s.organization_id),
-      contract_id: null,
+      contract_id: s.contract_id ?? null,
       contract_version_id: null,
       plan_id: String(s.plan_id),
       status: statusMap[s.status] ?? "PENDING",

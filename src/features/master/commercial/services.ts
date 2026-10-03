@@ -181,16 +181,47 @@ export async function updateContractDraft(input: { id: string; title: string; co
 }
 
 export async function updateContractStatus(id: string, status: ContractStatus) {
-  const { data: contract, error: contractError } = await supabase.from("neroxa_contracts" as never).select("id,client_id,status,proposal_id").eq("id", id).maybeSingle();
+  const { data: contract, error: contractError } = await supabase
+    .from("neroxa_contracts" as never)
+    .select("id,client_id,status,proposal_id,commercial_model")
+    .eq("id", id)
+    .maybeSingle();
+
   if (contractError) throw new Error(contractError.message);
   if (!contract) throw new Error("Contrato não encontrado ou sem permissão para alterar.");
-  const row = contract as { id: string; client_id: string; status: ContractStatus; proposal_id: string | null };
+
+  const row = contract as {
+    id: string;
+    client_id: string;
+    status: ContractStatus;
+    proposal_id: string | null;
+    commercial_model: "SUBSCRIPTION" | "PERMANENT";
+  };
+
   assertTransition(CONTRACT_TRANSITIONS, row.status, status, "contrato");
 
-  if (row.status === "DRAFT" && status === "ACTIVE" && row.proposal_id) {
-    const { data: proposal, error: proposalError } = await supabase.from("neroxa_proposals" as never).select("id,status").eq("id", row.proposal_id).maybeSingle();
-    if (proposalError) throw new Error(proposalError.message);
-    if (!proposal || (proposal as { status: ProposalStatus }).status !== "ACCEPTED") throw new Error("O contrato só pode ser ativado após a aceitação da proposta vinculada.");
+  if (row.status === "DRAFT" && status === "ACTIVE") {
+    const { data: subscriptionId, error: activationError } = await supabase.rpc(
+      "activate_neroxa_contract_and_subscription",
+      { p_contract_id: id },
+    );
+
+    if (activationError) throw new Error(activationError.message);
+
+    await recordNeroxaAudit({
+      action: "CONTRACT_STATUS_CHANGED",
+      resourceType: "CONTRACT",
+      resourceId: id,
+      organizationId: row.client_id,
+      details: {
+        previousStatus: row.status,
+        status,
+        commercialModel: row.commercial_model,
+        subscriptionId: subscriptionId ?? null,
+      },
+    });
+
+    return true;
   }
 
   const patch: Record<string, unknown> = { status };
@@ -198,11 +229,27 @@ export async function updateContractStatus(id: string, status: ContractStatus) {
     patch.started_at = new Date().toISOString().slice(0, 10);
     patch.signed_at = new Date().toISOString();
   }
-  if (status === "TERMINATED" || status === "EXPIRED") patch.ended_at = new Date().toISOString().slice(0, 10);
+  if (status === "TERMINATED" || status === "EXPIRED") {
+    patch.ended_at = new Date().toISOString().slice(0, 10);
+  }
 
-  const { data, error } = await supabase.from("neroxa_contracts" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
+  const { data, error } = await supabase
+    .from("neroxa_contracts" as never)
+    .update(patch as never)
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Contrato não encontrado ou sem permissão para alterar.");
-  await recordNeroxaAudit({ action: "CONTRACT_STATUS_CHANGED", resourceType: "CONTRACT", resourceId: id, organizationId: row.client_id, details: { previousStatus: row.status, status } });
+
+  await recordNeroxaAudit({
+    action: "CONTRACT_STATUS_CHANGED",
+    resourceType: "CONTRACT",
+    resourceId: id,
+    organizationId: row.client_id,
+    details: { previousStatus: row.status, status },
+  });
+
   return true;
 }
