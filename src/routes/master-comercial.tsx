@@ -10,14 +10,13 @@ import {
   Loader2,
   RefreshCw,
   Send,
-  ShieldCheck,
   Pause,
   Play,
   TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { isNeroxaStaff } from "@/features/master/clients/services";
+import { canPerform, isNeroxaStaff } from "@/features/master/clients/services";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import {
@@ -26,7 +25,7 @@ import {
   type CommercialContract,
   type CommercialProposal,
 } from "@/features/master/commercial/types";
-import { loadCommercialOverview,updateContractStatus,updateProposalStatus } from "@/features/master/commercial/services";
+import { createContractFromProposal, loadCommercialOverview, updateContractStatus, updateProposalStatus } from "@/features/master/commercial/services";
 
 export const Route = createFileRoute("/master-comercial")({
   component: MasterCommercialPage,
@@ -92,7 +91,7 @@ function MasterCommercialPage() {
     void load(true);
   }, []);
   const handleProposalStatus = async (id: string, status: "DRAFT" | "SENT" | "NEGOTIATION" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateProposalStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar a proposta."); } finally { setSaving(null); } };
-  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };
+  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };\n  const handleCreateContract = async (proposalId: string) => { if (!canPerform(role, "manageCommercial")) return; setSaving(proposalId); setError(null); try { await createContractFromProposal(proposalId); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível gerar o contrato."); } finally { setSaving(null); } };
 
 
   const clientMap = useMemo(
@@ -174,7 +173,7 @@ function MasterCommercialPage() {
                       {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"SENT")}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>{if(window.confirm("Cancelar esta proposta?"))void handleProposalStatus(proposal.id,"CANCELLED")}}>Cancelar</Button>}</div>
+                  <div className="flex items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"SENT")}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{proposal.status==="ACCEPTED"&&!contracts.some((contract)=>contract.proposal_id===proposal.id)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>void handleCreateContract(proposal.id)}>Gerar contrato</Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>{if(window.confirm("Cancelar esta proposta?"))void handleProposalStatus(proposal.id,"CANCELLED")}}>Cancelar</Button>}</div>
                 </div>
               );
             })}
