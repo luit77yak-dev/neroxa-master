@@ -52,7 +52,15 @@ export function Client360Shell({
 
     const scrollY = scrollPositionRef.current;
     scrollPositionRef.current = null;
-    window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+
+    window.scrollTo(0, scrollY);
+
+    const frame = window.requestAnimationFrame(() => {
+      window.scrollTo(0, scrollY);
+      window.requestAnimationFrame(() => window.scrollTo(0, scrollY));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [openSection]);
 
   const handleSectionChange = (section: string) => {
