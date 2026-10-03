@@ -1325,6 +1325,7 @@ export type Database = {
       }
       is_org_manager: { Args: { _org: string }; Returns: boolean }
       is_org_staff: { Args: { _org: string }; Returns: boolean }
+      activate_neroxa_contract_and_subscription: { Args: { p_contract_id: string }; Returns: string | null }
       next_order_number: { Args: { _org: string }; Returns: number }
       update_order_status: {
         Args: {
