@@ -2,13 +2,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type DomainStatus = "PENDING" | "VERIFYING" | "VERIFIED" | "FAILED" | "DISABLED";
 
-export type DomainDnsVerification = {
+export type DomainDnsValidation = {
   ok: boolean;
   domain: string;
-  status: "VERCEL_DNS_VALID" | "INVALID_CONFIGURATION";
-  records: { a: string[]; cname: string[]; nameservers: string[] };
-  recommended: { apexA: string; cname: string; nameservers: string[] };
-  message: string;
+  status?: string;
+  reason?: string;
+  message?: string;
+  records?: {
+    a: string[];
+    cname: string[];
+    nameservers: string[];
+  };
+  recommended?: {
+    apexA: string;
+    cname: string;
+    nameservers: string[];
+  };
 };
 
 export async function transitionDomainStatus(domainId: string, status: DomainStatus) {
@@ -21,28 +30,20 @@ export async function transitionDomainStatus(domainId: string, status: DomainSta
   return String(data) as DomainStatus;
 }
 
-export async function verifyDomainDns(domain: string) {
-  const { data, error } = await supabase.functions.invoke<DomainDnsVerification>("neroxa-verify-domain-dns", {
-    body: { domain },
+export async function validateDomainDns(domain: string): Promise<DomainDnsValidation> {
+  const normalized = domain.trim().toLowerCase().replace(/^https?:\\/\\//, "").replace(/\\/$/, "");
+  if (!normalized || normalized.includes("/") || normalized.includes(" ")) {
+    throw new Error("Domínio inválido para validação DNS.");
+  }
+
+  const { data, error } = await supabase.functions.invoke("neroxa-verify-domain-dns", {
+    body: { domain: normalized },
   });
 
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("A verificação DNS não retornou dados.");
-  return data;
-}
-
-export async function validateDomainDns(domainId: string, domain: string) {
-  await transitionDomainStatus(domainId, "VERIFYING");
-  try {
-    const result = await verifyDomainDns(domain);
-    await transitionDomainStatus(domainId, result.ok ? "VERIFIED" : "FAILED");
-    return result;
-  } catch (error) {
-    try {
-      await transitionDomainStatus(domainId, "FAILED");
-    } catch {
-      // Preserve the original verification error if the fallback transition also fails.
-    }
-    throw error;
+  if (!data || typeof data !== "object") {
+    throw new Error("A validação DNS retornou uma resposta inválida.");
   }
+
+  return data as DomainDnsValidation;
 }
