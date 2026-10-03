@@ -101,8 +101,7 @@ function MasterDominios() {
 
     try {
       await transitionDomainStatus(domain.id, "VERIFYING");
-      const result = await validateDomainDns(domain.domain);
-      await transitionDomainStatus(domain.id, result.ok ? "VERIFIED" : "FAILED");
+      const result = await validateDomainDns(domain.id, domain.domain);
 
       setDnsResult((current) => ({
         ...current,
@@ -124,7 +123,6 @@ function MasterDominios() {
       await load();
     } catch (changeError) {
       setError(changeError instanceof Error ? changeError.message : "Não foi possível validar o DNS.");
-      try { await transitionDomainStatus(domain.id, "FAILED"); } catch { /* preserve original error */ }
       await load();
     } finally {
       setWorking(null);
