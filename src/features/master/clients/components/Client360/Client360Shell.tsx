@@ -23,18 +23,31 @@ const SECTIONS: Section[] = [
 ];
 
 export function Client360Shell({
+  clientId,
   clientName,
   status,
+  initialSection = "client",
   onBack,
+  onSectionChange,
   children,
 }: {
+  clientId: string;
   clientName: string;
   status: string;
+  initialSection?: string;
   onBack: () => void;
+  onSectionChange?: (section: string) => void;
   children: ReactNode;
 }) {
   const [expanded, setExpanded] = useState(true);
-  const [openSection, setOpenSection] = useState("client");
+  const [openSection, setOpenSection] = useState(() =>
+    SECTIONS.some((section) => section.key === initialSection) ? initialSection : "client",
+  );
+
+  const handleSectionChange = (section: string) => {
+    setOpenSection(section);
+    onSectionChange?.(section);
+  };
 
   return (
     <div className="min-w-0 space-y-4">
@@ -105,7 +118,7 @@ export function Client360Shell({
                     <button
                       type="button"
                       aria-expanded={isOpen}
-                      onClick={() => setOpenSection(isOpen ? "" : section.key)}
+                      onClick={() => handleSectionChange(isOpen ? "" : section.key)}
                       className="flex min-h-16 w-full items-center justify-between gap-4 bg-white px-4 py-3 text-left transition hover:bg-slate-50 sm:px-5"
                     >
                       <div className="min-w-0">
@@ -126,7 +139,7 @@ export function Client360Shell({
                           <div className="min-w-0">{children}</div>
                         ) : section.href ? (
                           <a
-                            href={section.href}
+                            href={section.href ? `${section.href}?clientId=${encodeURIComponent(clientId)}&returnSection=${encodeURIComponent(section.key)}` : undefined}
                             className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition hover:border-slate-300 hover:bg-slate-50"
                           >
                             <div className="min-w-0">
