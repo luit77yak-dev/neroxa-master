@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { canPerform, isNeroxaStaff } from "@/features/master/clients/services";
+import { isNeroxaStaff } from "@/features/master/clients/services";
+import { canPerform } from "@/features/master/permissions";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import {
@@ -96,7 +97,8 @@ function MasterCommercialPage() {
     void load(true);
   }, []);
   const handleProposalStatus = async (id: string, status: "DRAFT" | "SENT" | "NEGOTIATION" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateProposalStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar a proposta."); } finally { setSaving(null); } };
-  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };\n  const handleCreateContract = async (proposalId: string) => { if (!canPerform(role, "manageCommercial")) return; setSaving(proposalId); setError(null); try { await createContractFromProposal(proposalId); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível gerar o contrato."); } finally { setSaving(null); } };
+  const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };
+  const handleCreateContract = async (proposalId: string) => { if (!canPerform(role, "manageCommercial")) return; setSaving(proposalId); setError(null); try { await createContractFromProposal(proposalId); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível gerar o contrato."); } finally { setSaving(null); } };
 
   const startEditContract = (contract: CommercialContract) => {
     if (contract.status !== "DRAFT" || !canPerform(role, "manageCommercial")) return;
