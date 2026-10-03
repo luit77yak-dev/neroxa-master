@@ -17,7 +17,7 @@ describe("billing engine pure rules", () => {
   });
 
   it("handles leap-day monthly renewal without timezone drift", () => {
-    expect(calculateNextPeriodEnd("2028-01-31", "MONTHLY")).toBe("2028-03-02");
+    expect(calculateNextPeriodEnd("2028-01-31", "MONTHLY")).toBe("2028-02-29");
   });
 
   it("marks only pending billing due today or earlier as overdue", () => {
