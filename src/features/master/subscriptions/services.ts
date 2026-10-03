@@ -8,9 +8,12 @@ type PlanRow = {
   slug: string;
   description: string | null;
   active: boolean;
+  system_id: string | null;
   billing_period: BillingInterval;
   price_monthly: number | null;
   setup_price: number | null;
+  commercial_model: "SUBSCRIPTION" | "PERMANENT" | null;
+  maintenance_price: number | null;
   gateway_provider: string | null;
   gateway_plan_id: string | null;
   gateway_status: string | null;
@@ -38,7 +41,7 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     supabase
       .from("neroxa_plans" as never)
       .select(
-        "id,name,slug,description,active,billing_period,price_monthly,setup_price,gateway_provider,gateway_plan_id,gateway_status,gateway_synced_at",
+        "id,name,slug,description,active,system_id,billing_period,price_monthly,setup_price,commercial_model,maintenance_price,gateway_provider,gateway_plan_id,gateway_status,gateway_synced_at",
       )
       .order("active", { ascending: false })
       .order("name", { ascending: true }),
@@ -64,9 +67,12 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     slug: String(p.slug),
     description: p.description ?? null,
     active: Boolean(p.active),
+    system_id: p.system_id ?? null,
     billing_interval: (p.billing_period === "ONE_TIME" ? "ONE_TIME" : p.billing_period) as BillingInterval,
     base_price: Number(p.price_monthly ?? 0),
     setup_price: Number(p.setup_price ?? 0),
+    commercial_model: p.commercial_model === "PERMANENT" ? "PERMANENT" : "SUBSCRIPTION",
+    maintenance_price: p.maintenance_price == null ? null : Number(p.maintenance_price),
     gateway_provider: p.gateway_provider ?? null,
     gateway_plan_id: p.gateway_plan_id ?? null,
     gateway_status: String(p.gateway_status ?? "NOT_CONFIGURED"),
@@ -133,16 +139,19 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
 }
 
 
-export async function createPlan(input: { name: string; slug: string; description?: string; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; active?: boolean }) {
+export async function createPlan(input: { name: string; slug: string; description?: string; systemId?: string | null; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; commercialModel: "SUBSCRIPTION" | "PERMANENT"; maintenancePrice?: number | null; active?: boolean }) {
   const { data, error } = await supabase
     .from("neroxa_plans" as never)
     .insert({
       name: input.name.trim(),
       slug: input.slug.trim().toLowerCase(),
       description: input.description?.trim() || null,
+      system_id: input.systemId || null,
       price_monthly: input.priceMonthly,
       setup_price: input.setupPrice,
       billing_period: input.billingPeriod,
+      commercial_model: input.commercialModel,
+      maintenance_price: input.maintenancePrice ?? null,
       active: input.active ?? true,
     } as never)
     .select("id")
@@ -153,21 +162,24 @@ export async function createPlan(input: { name: string; slug: string; descriptio
     action: "PLAN_CREATED",
     resourceType: "PLAN",
     resourceId: planId,
-    details: { name: input.name, slug: input.slug, active: input.active ?? true },
+    details: { name: input.name, slug: input.slug, commercialModel: input.commercialModel, active: input.active ?? true },
   });
   return data;
 }
 
-export async function updatePlan(input: { id: string; name: string; slug: string; description?: string; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; active: boolean }) {
+export async function updatePlan(input: { id: string; name: string; slug: string; description?: string; systemId?: string | null; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; commercialModel: "SUBSCRIPTION" | "PERMANENT"; maintenancePrice?: number | null; active: boolean }) {
   const { data, error } = await supabase
     .from("neroxa_plans" as never)
     .update({
       name: input.name.trim(),
       slug: input.slug.trim().toLowerCase(),
       description: input.description?.trim() || null,
+      system_id: input.systemId || null,
       price_monthly: input.priceMonthly,
       setup_price: input.setupPrice,
       billing_period: input.billingPeriod,
+      commercial_model: input.commercialModel,
+      maintenance_price: input.maintenancePrice ?? null,
       active: input.active,
     } as never)
     .eq("id", input.id)
@@ -179,7 +191,68 @@ export async function updatePlan(input: { id: string; name: string; slug: string
     action: "PLAN_UPDATED",
     resourceType: "PLAN",
     resourceId: input.id,
-    details: { name: input.name, slug: input.slug, active: input.active },
+    details: { name: input.name, slug: input.slug, commercialModel: input.commercialModel, active: input.active },
   });
   return true;
+}
+
+
+export async function deletePlan(planId: string) {
+  const { error } = await supabase
+    .from("neroxa_plans" as never)
+    .delete()
+    .eq("id", planId);
+
+  if (error) {
+    if (error.code === "23503") {
+      throw new Error("Este plano já está sendo usado por assinaturas, instâncias ou outros registros e não pode ser excluído. Desative-o para impedir novas contratações.");
+    }
+    throw new Error(error.message);
+  }
+
+  await recordNeroxaAudit({
+    action: "PLAN_DELETED",
+    resourceType: "PLAN",
+    resourceId: planId,
+    details: {},
+  });
+
+  return true;
+}
+
+
+export type NeroxaPlanFeature = {
+  id: string;
+  plan_id: string;
+  feature_key: string;
+  enabled: boolean;
+  limit_value: number | null;
+};
+
+export async function listPlanFeatures(planId: string): Promise<NeroxaPlanFeature[]> {
+  const { data, error } = await supabase
+    .from("neroxa_plan_features" as never)
+    .select("id,plan_id,feature_key,enabled,limit_value")
+    .eq("plan_id", planId)
+    .eq("enabled", true)
+    .order("feature_key", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as NeroxaPlanFeature[];
+}
+
+export async function setPlanFeature(input: { planId: string; featureKey: string; enabled?: boolean }) {
+  await removePlanFeature(input.planId, input.featureKey);
+  const { error } = await supabase
+    .from("neroxa_plan_features" as never)
+    .insert({ plan_id: input.planId, feature_key: input.featureKey, enabled: input.enabled ?? true } as never);
+  if (error) throw new Error(error.message);
+}
+
+export async function removePlanFeature(planId: string, featureKey: string) {
+  const { error } = await supabase
+    .from("neroxa_plan_features" as never)
+    .delete()
+    .eq("plan_id", planId)
+    .eq("feature_key", featureKey);
+  if (error) throw new Error(error.message);
 }
