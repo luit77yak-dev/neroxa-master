@@ -373,14 +373,27 @@ type BillingRecordRow = {
   paid_at: string | null;
 };
 
-function calculateNextPeriodEnd(periodStart: string, billingPeriod: BillingInterval) {
+export function calculateNextPeriodEnd(periodStart: string, billingPeriod: BillingInterval) {
   const end = new Date(`${periodStart}T00:00:00.000Z`);
-  if (billingPeriod === "YEARLY") {
-    end.setUTCFullYear(end.getUTCFullYear() + 1);
-  } else {
-    end.setUTCMonth(end.getUTCMonth() + 1);
-  }
+  if (billingPeriod === "YEARLY") end.setUTCFullYear(end.getUTCFullYear() + 1);
+  else end.setUTCMonth(end.getUTCMonth() + 1);
   return end.toISOString().slice(0, 10);
+}
+
+export function shouldMarkBillingOverdue(status: string, dueDate: string, today: string) {
+  return status === "PENDING" && dueDate <= today;
+}
+
+export function shouldMarkSubscriptionPastDue(subscriptionStatus: string, billingDueDate: string, today: string) {
+  return subscriptionStatus === "ACTIVE" && billingDueDate <= today;
+}
+
+export function canCreateRenewalBilling(subscriptionStatus: string, periodEnd: string | null, today: string) {
+  return subscriptionStatus === "ACTIVE" && !!periodEnd && periodEnd <= today;
+}
+
+export function isFinalSubscriptionStatus(status: string) {
+  return status === "CANCELLED" || status === "EXPIRED";
 }
 
 export async function confirmBillingPayment(billingId: string) {
@@ -592,7 +605,7 @@ export async function processSubscriptionBilling(subscriptionId: string, today =
     current_period_end: string | null;
   };
 
-  if (row.status === "CANCELLED" || row.status === "EXPIRED" || row.status === "PAUSED") {
+  if (isFinalSubscriptionStatus(row.status) || row.status === "PAUSED") {
     return { status: row.status, changed: false };
   }
 
