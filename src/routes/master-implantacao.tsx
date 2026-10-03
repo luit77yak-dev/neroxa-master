@@ -17,6 +17,7 @@ const statusClass: Record<ProvisioningStatus, string> = {
 };
 
 function MasterImplantacao() {
+  const contextClientId=typeof window==="undefined"?null:new URLSearchParams(window.location.search).get("clientId");
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
   const [jobs, setJobs] = useState<ProvisioningJob[]>([]);
@@ -33,8 +34,10 @@ function MasterImplantacao() {
       setRole(access?.active ? access.role : null);
       if (!access?.active) return;
       const [jobData, instanceData] = await Promise.all([listProvisioningJobs(), listImplementationInstances()]);
-      setJobs(jobData);
-      setInstances(instanceData);
+      const scopedJobs = contextClientId ? jobData.filter((job) => job.organization_id === contextClientId) : jobData;
+      const scopedInstances = contextClientId ? instanceData.filter((instance) => instance.organization_id === contextClientId) : instanceData;
+      setJobs(scopedJobs);
+      setInstances(scopedInstances);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar a central de implantação.");
     } finally { setLoading(false); }
