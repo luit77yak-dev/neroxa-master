@@ -98,24 +98,38 @@ function MasterDominios() {
   async function validateDns(domain: DomainRow) {
     setWorking(domain.id);
     setError(null);
+
     try {
-      const result = await validateDomainDns(domain.id, domain.domain);
+      await transitionDomainStatus(domain.id, "VERIFYING");
+      const result = await validateDomainDns(domain.domain);
+      await transitionDomainStatus(domain.id, result.ok ? "VERIFIED" : "FAILED");
+
       setDnsResult((current) => ({
         ...current,
         [domain.id]: {
           ok: result.ok,
-          message: result.message,
-          records: result.records,
+          message: result.message ?? (result.ok ? "DNS configurado para a Vercel." : "O DNS ainda não aponta para a configuração esperada da Vercel."),
+          records: result.records ?? { a: [], cname: [], nameservers: [] },
         },
       }));
+
+      if (!result.ok) {
+        const detected = [
+          ...(result.records?.a ?? []).map((value) => `A: ${value}`),
+          ...(result.records?.cname ?? []).map((value) => `CNAME: ${value}`),
+        ].join(", ");
+        setError(result.message ?? `Validação DNS falhou.${detected ? ` Detectado: ${detected}.` : ""}`);
+      }
+
       await load();
     } catch (changeError) {
       setError(changeError instanceof Error ? changeError.message : "Não foi possível validar o DNS.");
+      try { await transitionDomainStatus(domain.id, "FAILED"); } catch { /* preserve original error */ }
+      await load();
     } finally {
       setWorking(null);
     }
   }
-
   async function changeStatus(domain: DomainRow, nextStatus: DomainStatus) {
     setWorking(domain.id);
     setError(null);
