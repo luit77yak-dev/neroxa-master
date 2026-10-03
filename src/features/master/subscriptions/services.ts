@@ -772,8 +772,7 @@ export type NeroxaPlanFeature = {
 };
 
 export async function listPlanFeatures(planId: string): Promise<NeroxaPlanFeature[]> {
-  const { data, error } = await supabase
-    .from("neroxa_plan_features" as never)
+  const { data, error } = await supabase.from("neroxa_plan_features" as never)
     .select("id,plan_id,feature_key,enabled,limit_value")
     .eq("plan_id", planId)
     .eq("enabled", true)
@@ -784,15 +783,13 @@ export async function listPlanFeatures(planId: string): Promise<NeroxaPlanFeatur
 
 export async function setPlanFeature(input: { planId: string; featureKey: string; enabled?: boolean }) {
   await removePlanFeature(input.planId, input.featureKey);
-  const { error } = await supabase
-    .from("neroxa_plan_features" as never)
+  const { error } = await supabase.from("neroxa_plan_features" as never)
     .insert({ plan_id: input.planId, feature_key: input.featureKey, enabled: input.enabled ?? true } as never);
   if (error) throw new Error(error.message);
 }
 
 export async function removePlanFeature(planId: string, featureKey: string) {
-  const { error } = await supabase
-    .from("neroxa_plan_features" as never)
+  const { error } = await supabase.from("neroxa_plan_features" as never)
     .delete()
     .eq("plan_id", planId)
     .eq("feature_key", featureKey);
