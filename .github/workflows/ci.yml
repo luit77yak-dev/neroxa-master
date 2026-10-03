@@ -1,4 +1,4 @@
-name: Build and Lint
+name: Build and Test
 
 on:
   pull_request:
@@ -21,15 +21,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm install
 
-      - name: Format
-        run: npx prettier --write .
+      - name: Format check
+        run: npx prettier --check .
 
       - name: Lint
         run: npm run lint
+
+      - name: Test
+        run: npm test
 
       - name: Build
         run: npm run build
