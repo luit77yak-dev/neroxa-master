@@ -404,9 +404,10 @@ function MasterClientsPage() {
         <Client360Shell
           key={selected.id}
           clientId={selected.id}
+          organizationId={selected.organization_id}
           clientName={selected.trade_name || selected.legal_name || "Cliente sem nome"}
           status={STATUS_LABELS[selected.status]}
-          initialSection={routeContext.section}
+          initialSection={routeContext.clientId === selected.id ? routeContext.section : "client"}
           onBack={() => {
             setSelectedId(null);
             window.history.replaceState({}, "", "/master-clientes");
