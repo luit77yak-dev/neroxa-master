@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowLeft, Building2, ChevronDown, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -45,8 +45,21 @@ export function Client360Shell({
   const [openSection, setOpenSection] = useState(() =>
     SECTIONS.some((section) => section.key === initialSection) ? initialSection : "client",
   );
+  const scrollPositionRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (scrollPositionRef.current === null || typeof window === "undefined") return;
+
+    const scrollY = scrollPositionRef.current;
+    scrollPositionRef.current = null;
+    window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+  }, [openSection]);
 
   const handleSectionChange = (section: string) => {
+    if (typeof window !== "undefined") {
+      scrollPositionRef.current = window.scrollY;
+    }
+
     setOpenSection(section);
     onSectionChange?.(section);
   };
@@ -141,7 +154,7 @@ export function Client360Shell({
                           <div className="min-w-0">{children}</div>
                         ) : section.href ? (
                           <a
-                            href={section.href ? `${section.href}?clientId=${encodeURIComponent(clientId)}${organizationId ? `&organizationId=${encodeURIComponent(organizationId)}` : ""}&returnSection=${encodeURIComponent(section.key)}` : undefined}
+                            href={`${section.href}?clientId=${encodeURIComponent(clientId)}${organizationId ? `&organizationId=${encodeURIComponent(organizationId)}` : ""}&returnSection=${encodeURIComponent(section.key)}`}
                             target="_blank"
                             rel="noreferrer"
                             className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition hover:border-slate-300 hover:bg-slate-50"
