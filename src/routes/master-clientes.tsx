@@ -544,7 +544,7 @@ function MasterClientsPage() {
                     )}
                   
           </aside>
-        </Client360Shell></aside>
+        </Client360Shell>
       </div>
 
       {showInstanceCreate && selected && (
