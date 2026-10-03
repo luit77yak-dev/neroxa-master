@@ -121,127 +121,42 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
 }
 
 
-export async function createSubscription(input: { organizationId: string; planId: string }) {
-  const { data: client, error: clientError } = await supabase
-    .from("neroxa_organizations" as never)
-    .select("id,status,active")
-    .eq("id", input.organizationId)
-    .maybeSingle();
+export type SubscriptionContractOption = {
+  id: string;
+  client_id: string;
+  title: string;
+  contract_number: string | null;
+  plan_id: string | null;
+  commercial_model: "SUBSCRIPTION" | "PERMANENT";
+  billing_period: BillingInterval | null;
+  recurring_value: number | null;
+  status: string;
+};
 
-  if (clientError) throw new Error(clientError.message);
-  if (!client) throw new Error("Cliente não encontrado ou sem permissão.");
-  const clientRow = client as { id: string; status: string; active: boolean };
-  if (!clientRow.active || clientRow.status === "CANCELLED") {
-    throw new Error("Não é possível criar uma assinatura para um cliente inativo ou cancelado.");
-  }
-  if (["LEAD", "PROPOSAL", "NEGOTIATION"].includes(clientRow.status)) {
-    throw new Error("O cliente ainda não está contratado. Avance o cliente até Contratado antes de criar a assinatura.");
-  }
-
-  const { data: plan, error: planError } = await supabase
-    .from("neroxa_plans" as never)
-    .select("id,name,active,commercial_model,price_monthly,setup_price,billing_period,system_id")
-    .eq("id", input.planId)
-    .maybeSingle();
-
-  if (planError) throw new Error(planError.message);
-  if (!plan) throw new Error("Plano não encontrado ou sem permissão.");
-  const planRow = plan as {
-    id: string; name: string; active: boolean; commercial_model: string;
-    price_monthly: number; setup_price: number; billing_period: BillingInterval; system_id: string | null;
-  };
-  if (!planRow.active) throw new Error("O plano selecionado está inativo.");
-  if (planRow.commercial_model !== "SUBSCRIPTION") {
-    throw new Error("Este plano é de compra permanente e não pode gerar uma assinatura recorrente.");
-  }
-  if (planRow.billing_period === "ONE_TIME") {
-    throw new Error("Planos avulsos não podem gerar uma assinatura recorrente.");
-  }
-
-  const { data: existing, error: existingError } = await supabase
-    .from("neroxa_subscriptions" as never)
-    .select("id,status")
-    .eq("organization_id", input.organizationId)
-    .eq("plan_id", input.planId)
-    .in("status", ["TRIAL", "ACTIVE", "PAUSED", "PAST_DUE"])
-    .limit(1)
-    .maybeSingle();
-
-  if (existingError) throw new Error(existingError.message);
-  if (existing) {
-    throw new Error("Este cliente já possui uma assinatura não encerrada para este plano.");
-  }
-
-  const now = new Date();
-  const periodStartTimestamp = now.toISOString();
-  const periodStartDate = periodStartTimestamp.slice(0, 10);
-  const periodEnd = calculateNextPeriodEnd(periodStartDate, planRow.billing_period);
-  const recurringPrice = Number(planRow.price_monthly ?? 0);
-  const referenceMonth = `${periodStartDate.slice(0, 7)}-01`;
-
+export async function listActivatableSubscriptionContracts(): Promise<SubscriptionContractOption[]> {
   const { data, error } = await supabase
-    .from("neroxa_subscriptions" as never)
-    .insert({
-      organization_id: input.organizationId,
-      plan_id: input.planId,
-      status: "TRIAL",
-      price: recurringPrice,
-      started_at: periodStartTimestamp,
-      current_period_start: periodStartDate,
-      current_period_end: periodEnd,
-      gateway_provider: null,
-      gateway_status: "NOT_CONFIGURED",
-    } as never)
-    .select("id")
-    .single();
+    .from("neroxa_contracts" as never)
+    .select("id,client_id,title,contract_number,plan_id,commercial_model,billing_period,recurring_value,status")
+    .eq("status", "DRAFT")
+    .eq("commercial_model", "SUBSCRIPTION")
+    .order("updated_at", { ascending: false });
 
   if (error) throw new Error(error.message);
-  const subscriptionId = (data as { id: string }).id;
+  return (data ?? []) as unknown as SubscriptionContractOption[];
+}
 
-  const { error: billingError } = await supabase
-    .from("neroxa_billing_records" as never)
-    .insert({
-      organization_id: input.organizationId,
-      subscription_id: subscriptionId,
-      reference_month: referenceMonth,
-      amount: recurringPrice,
-      due_date: periodStartDate,
-      status: "PENDING",
-      payment_method: null,
-      external_id: null,
-      gateway_provider: null,
-      gateway_payment_id: null,
-      gateway_status: "PENDING",
-      gateway_event_id: null,
-    } as never);
+export async function createSubscription(input: { contractId: string }) {
+  if (!input.contractId) throw new Error("Contrato não informado.");
 
-  if (billingError) {
-    await supabase
-      .from("neroxa_subscriptions" as never)
-      .delete()
-      .eq("id", subscriptionId);
-    throw new Error(`A assinatura não foi criada porque a primeira cobrança não pôde ser registrada: ${billingError.message}`);
+  const { data: subscriptionId, error } = await supabase.rpc(
+    "activate_neroxa_contract_and_subscription",
+    { p_contract_id: input.contractId },
+  );
+
+  if (error) throw new Error(error.message);
+  if (!subscriptionId) {
+    throw new Error("O contrato foi ativado sem gerar uma assinatura recorrente. Verifique o modelo comercial.");
   }
-
-  await recordNeroxaAudit({
-    action: "SUBSCRIPTION_CREATED",
-    resourceType: "SUBSCRIPTION",
-    resourceId: subscriptionId,
-    organizationId: input.organizationId,
-    details: {
-      planId: input.planId,
-      planName: planRow.name,
-      price: recurringPrice,
-      setupPrice: Number(planRow.setup_price ?? 0),
-      billingPeriod: planRow.billing_period,
-      periodStart: periodStartDate,
-      periodEnd,
-      firstChargeTiming: "CREATED_AS_PENDING_DUE_ON_PERIOD_START",
-      firstBillingReferenceMonth: referenceMonth,
-      systemId: planRow.system_id,
-      status: "TRIAL",
-    },
-  });
 
   return subscriptionId;
 }

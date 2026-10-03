@@ -7,6 +7,13 @@ create unique index if not exists idx_neroxa_subscriptions_contract_id
 
 create index if not exists idx_neroxa_subscriptions_organization_id
   on public.neroxa_subscriptions(organization_id);
+-- Prevent concurrent non-terminal subscriptions for the same organization and plan.
+-- The partial unique index makes the database the final concurrency guard;
+-- the activation RPC remains responsible for the friendly business error.
+create unique index if not exists idx_neroxa_subscriptions_active_org_plan
+  on public.neroxa_subscriptions(organization_id, plan_id)
+  where status in ('TRIAL','ACTIVE','PAUSED','PAST_DUE');
+
 
 create or replace function public.activate_neroxa_contract_and_subscription(p_contract_id uuid)
 returns uuid
@@ -89,16 +96,21 @@ begin
       v_period_end := (v_period_start + interval '1 month')::date;
     end if;
 
-    insert into public.neroxa_subscriptions (
-      organization_id, contract_id, plan_id, status, price, started_at,
-      current_period_start, current_period_end, gateway_provider, gateway_status
-    )
-    values (
-      v_contract.client_id, p_contract_id, v_contract.plan_id, 'TRIAL',
-      v_contract.recurring_value, now(), v_period_start, v_period_end,
-      null, 'NOT_CONFIGURED'
-    )
-    returning id into v_subscription_id;
+    begin
+      insert into public.neroxa_subscriptions (
+        organization_id, contract_id, plan_id, status, price, started_at,
+        current_period_start, current_period_end, gateway_provider, gateway_status
+      )
+      values (
+        v_contract.client_id, p_contract_id, v_contract.plan_id, 'TRIAL',
+        v_contract.recurring_value, now(), v_period_start, v_period_end,
+        null, 'NOT_CONFIGURED'
+      )
+      returning id into v_subscription_id;
+    exception
+      when unique_violation then
+        raise exception 'Este cliente já possui uma assinatura não encerrada para este plano';
+    end;
 
     insert into public.neroxa_billing_records (
       organization_id, subscription_id, reference_month, amount, due_date,
