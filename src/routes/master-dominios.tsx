@@ -21,6 +21,9 @@ type DomainRow = NeroxaSystemDomain & {
 };
 
 function MasterDominios() {
+  const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
+  const contextClientId=params?.get("clientId") ?? null;
+  const contextOrganizationId=params?.get("organizationId") ?? null;
   const [domains, setDomains] = useState<DomainRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,8 +39,9 @@ function MasterDominios() {
 
       const clients = await listNeroxaClients();
       const rows: DomainRow[] = [];
+      const scopedClients = contextOrganizationId ? clients.filter((client) => client.organization_id === contextOrganizationId) : contextClientId ? clients.filter((client) => client.id === contextClientId) : clients;
 
-      for (const client of clients) {
+      for (const client of scopedClients) {
         const instances = await listNeroxaClientInstances(client.organization_id);
         for (const instance of instances) {
           const instanceDomains = await listNeroxaInstanceDomains(instance.id);

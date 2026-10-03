@@ -52,9 +52,17 @@ export const Route = createFileRoute("/master-clientes")({
 const emptyDraft = { legalName: "", tradeName: "", taxId: "", notes: "" };
 
 function MasterClientsPage() {
+  const [routeContext] = useState(() => {
+    if (typeof window === "undefined") return { clientId: null, section: "client" };
+    const params = new URLSearchParams(window.location.search);
+    return {
+      clientId: params.get("clientId"),
+      section: params.get("section") || "client",
+    };
+  });
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [clients, setClients] = useState<NeroxaClient[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(routeContext.clientId);
   const [contacts, setContacts] = useState<NeroxaClientContact[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ClientStatus | "ALL">("ALL");
@@ -88,6 +96,10 @@ function MasterClientsPage() {
       if (!staff) return;
       const rows = await listNeroxaClients();
       setClients(rows);
+      if (routeContext.clientId && rows.some((client) => client.id === routeContext.clientId)) {
+        setSelectedId(routeContext.clientId);
+        return;
+      }
       if (keepSelection && selectedId && rows.some((client) => client.id === selectedId)) return;
       setSelectedId(rows[0]?.id ?? null);
     } catch (cause) {
@@ -127,6 +139,18 @@ function MasterClientsPage() {
       })
       .then((entries) => setDomains(Object.fromEntries(entries)))
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar as instâncias."));
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (selectedId) {
+      params.set("clientId", selectedId);
+    } else {
+      params.delete("clientId");
+      params.delete("section");
+    }
+    window.history.replaceState({}, "", params.toString() ? `/master-clientes?${params.toString()}` : "/master-clientes");
   }, [selectedId]);
 
   useEffect(() => {
@@ -378,9 +402,23 @@ function MasterClientsPage() {
         </section>
 
         <Client360Shell
+          key={selected.id}
+          clientId={selected.id}
+          organizationId={selected.organization_id}
           clientName={selected.trade_name || selected.legal_name || "Cliente sem nome"}
           status={STATUS_LABELS[selected.status]}
-          onBack={() => setSelectedId(null)}
+          initialSection={routeContext.clientId === selected.id ? routeContext.section : "client"}
+          onBack={() => {
+            setSelectedId(null);
+            window.history.replaceState({}, "", "/master-clientes");
+          }}
+          onSectionChange={(section) => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("clientId", selected.id);
+            if (section) params.set("section", section);
+            else params.delete("section");
+            window.history.replaceState({}, "", `/master-clientes?${params.toString()}`);
+          }}
         >
           <aside className="lg:sticky lg:top-[73px] lg:max-h-[calc(100vh-89px)] lg:overflow-y-auto">
                     {selected ? (

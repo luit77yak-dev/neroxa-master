@@ -16,6 +16,9 @@ const priorityLabel: Record<SupportTicketPriority,string> = { LOW:"Baixa", NORMA
 const statusTone: Record<SupportTicketStatus,string> = { OPEN:"bg-blue-50 text-blue-700", IN_PROGRESS:"bg-amber-50 text-amber-700", WAITING_CLIENT:"bg-violet-50 text-violet-700", RESOLVED:"bg-emerald-50 text-emerald-700", CLOSED:"bg-slate-100 text-slate-600" };
 
 function MasterSupportPage() {
+  const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
+  const contextClientId=params?.get("clientId") ?? null;
+  const contextOrganizationId=params?.get("organizationId") ?? null;
   const [authorized,setAuthorized]=useState<boolean|null>(null);
   const [tickets,setTickets]=useState<SupportTicket[]>([]);
   const [selectedId,setSelectedId]=useState<string|null>(null);
@@ -24,11 +27,12 @@ function MasterSupportPage() {
   const [loading,setLoading]=useState(true), [saving,setSaving]=useState(false);
   const [error,setError]=useState(""), [showCreate,setShowCreate]=useState(false), [reply,setReply]=useState(""), [internal,setInternal]=useState(false);
   const [draft,setDraft]=useState({ organizationId:"",subject:"",description:"",category:"GENERAL",priority:"NORMAL" as SupportTicketPriority });
+  const scopedTickets=contextOrganizationId?tickets.filter(t=>t.organization_id===contextOrganizationId):contextClientId?tickets.filter(t=>t.organization_id===contextClientId):tickets;
   const selected=tickets.find(t=>t.id===selectedId)??null;
-  const counts=useMemo(()=>({open:tickets.filter(t=>t.status==="OPEN").length,active:tickets.filter(t=>t.status==="IN_PROGRESS").length,waiting:tickets.filter(t=>t.status==="WAITING_CLIENT").length,urgent:tickets.filter(t=>t.priority==="URGENT"&&!["RESOLVED","CLOSED"].includes(t.status)).length}),[tickets]);
-  const visible=filter==="ALL"?tickets:tickets.filter(t=>t.status===filter);
+  const counts=useMemo(()=>({open:scopedTickets.filter(t=>t.status==="OPEN").length,active:scopedTickets.filter(t=>t.status==="IN_PROGRESS").length,waiting:scopedTickets.filter(t=>t.status==="WAITING_CLIENT").length,urgent:scopedTickets.filter(t=>t.priority==="URGENT"&&!["RESOLVED","CLOSED"].includes(t.status)).length}),[scopedTickets]);
+  const visible=filter==="ALL"?scopedTickets:scopedTickets.filter(t=>t.status===filter);
 
-  async function load(keep=true){setLoading(true);setError("");try{const access=await getNeroxaPlatformAccess();const ok=Boolean(access?.active&&canPerform(access.role,"manageSupport"));setAuthorized(ok);if(!ok)return;const rows=await listSupportTickets();setTickets(rows);if(!keep||!selectedId||!rows.some(r=>r.id===selectedId))setSelectedId(rows[0]?.id??null);}catch(cause){setAuthorized(false);setError(cause instanceof Error?cause.message:"Não foi possível carregar o suporte.");}finally{setLoading(false);}}
+  async function load(keep=true){setLoading(true);setError("");try{const access=await getNeroxaPlatformAccess();const ok=Boolean(access?.active&&canPerform(access.role,"manageSupport"));setAuthorized(ok);if(!ok)return;const rows=await listSupportTickets();setTickets(rows);const scopedRows=contextOrganizationId?rows.filter(r=>r.organization_id===contextOrganizationId):contextClientId?rows.filter(r=>r.organization_id===contextClientId):rows;if(!keep||!selectedId||!scopedRows.some(r=>r.id===selectedId))setSelectedId(scopedRows[0]?.id??null);}catch(cause){setAuthorized(false);setError(cause instanceof Error?cause.message:"Não foi possível carregar o suporte.");}finally{setLoading(false);}}
   useEffect(()=>{void load(false)},[]);
   useEffect(()=>{if(!selectedId){setMessages([]);return;}void listSupportMessages(selectedId).then(setMessages).catch(c=>setError(c instanceof Error?c.message:"Não foi possível carregar as mensagens."))},[selectedId]);
 
