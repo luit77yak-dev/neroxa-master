@@ -112,14 +112,14 @@ function MasterConfiguracoes() {
                   <div><h2 className="font-semibold">Plataforma</h2><p className="text-xs text-slate-500">Parâmetros gerais persistidos no Master.</p></div>
                 </div>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <Field label="Nome da plataforma"><input value={platform.name} onChange={(e) => setPlatform({ ...platform, name: e.target.value })} className="field" /></Field>
+                  <Field label="Nome da plataforma"><input value={platform.name} onChange={(e) => setPlatform({ ...platform, name: e.target.value })} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200" /></Field>
                   <Field label="Moeda">
-                    <select value={platform.currency} onChange={(e) => setPlatform({ ...platform, currency: e.target.value })} className="field">
+                    <select value={platform.currency} onChange={(e) => setPlatform({ ...platform, currency: e.target.value })} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200">
                       <option value="BRL">BRL — Real brasileiro</option><option value="USD">USD — Dólar americano</option><option value="EUR">EUR — Euro</option>
                     </select>
                   </Field>
                   <Field label="Fuso horário">
-                    <select value={platform.timezone} onChange={(e) => setPlatform({ ...platform, timezone: e.target.value })} className="field">
+                    <select value={platform.timezone} onChange={(e) => setPlatform({ ...platform, timezone: e.target.value })} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200">
                       <option value="America/Sao_Paulo">America/Sao_Paulo</option><option value="America/Manaus">America/Manaus</option><option value="America/Belem">America/Belem</option><option value="UTC">UTC</option>
                     </select>
                   </Field>
@@ -136,7 +136,7 @@ function MasterConfiguracoes() {
                   <div><h2 className="font-semibold">Segurança</h2><p className="text-xs text-slate-500">Preferências administrativas e perfil atual: {role ? ROLE_LABELS[role] : "—"}.</p></div>
                 </div>
                 <div className="mt-5 space-y-4">
-                  <Field label="Tempo de sessão (minutos)"><input type="number" min={15} max={1440} value={security.session_timeout_minutes} onChange={(e) => setSecurity({ ...security, session_timeout_minutes: Math.min(1440, Math.max(15, Number(e.target.value) || 15)) })} className="field" /></Field>
+                  <Field label="Tempo de sessão (minutos)"><input type="number" min={15} max={1440} value={security.session_timeout_minutes} onChange={(e) => setSecurity({ ...security, session_timeout_minutes: Math.min(1440, Math.max(15, Number(e.target.value) || 15)) })} className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200" /></Field>
                   <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
                     <input type="checkbox" checked={security.require_reauthentication_for_sensitive_actions} onChange={(e) => setSecurity({ ...security, require_reauthentication_for_sensitive_actions: e.target.checked })} />
                     <span><span className="font-medium">Reautenticação para ações sensíveis</span><span className="block text-xs text-slate-500">Preferência registrada para futuras validações de ações críticas.</span></span>
@@ -157,7 +157,7 @@ function MasterConfiguracoes() {
               </div>
               <Button variant="outline" onClick={() => void load()} disabled={refreshing}><RefreshCw className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} /> Atualizar</Button>
             </div>
-            <div className="border-b border-slate-100 p-4"><input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filtrar por ação, recurso, usuário ou detalhes" className="field" /></div>
+            <div className="border-b border-slate-100 p-4"><input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filtrar por ação, recurso, usuário ou detalhes" className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200" /></div>
             {filteredLogs.length === 0 ? <div className="p-10 text-center text-sm text-slate-500">Nenhum registro encontrado.</div> : (
               <div className="divide-y divide-slate-100">
                 {filteredLogs.map((log) => (
