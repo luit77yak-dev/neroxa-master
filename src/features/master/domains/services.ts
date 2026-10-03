@@ -33,13 +33,16 @@ export async function verifyDomainDns(domain: string) {
 
 export async function validateDomainDns(domainId: string, domain: string) {
   await transitionDomainStatus(domainId, "VERIFYING");
-  const result = await verifyDomainDns(domain);
-
-  if (result.ok) {
-    await transitionDomainStatus(domainId, "VERIFIED");
-  } else {
-    await transitionDomainStatus(domainId, "FAILED");
+  try {
+    const result = await verifyDomainDns(domain);
+    await transitionDomainStatus(domainId, result.ok ? "VERIFIED" : "FAILED");
+    return result;
+  } catch (error) {
+    try {
+      await transitionDomainStatus(domainId, "FAILED");
+    } catch {
+      // Preserve the original verification error if the fallback transition also fails.
+    }
+    throw error;
   }
-
-  return result;
 }
