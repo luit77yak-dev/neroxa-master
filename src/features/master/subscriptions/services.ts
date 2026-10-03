@@ -171,6 +171,15 @@ export async function createSubscription(input: { organizationId: string; planId
     throw new Error("Este cliente já possui uma assinatura não encerrada para este plano.");
   }
 
+  const now = new Date();
+  const periodStart = now.toISOString();
+  const periodEnd = new Date(now);
+  if (planRow.billing_period === "YEARLY") {
+    periodEnd.setUTCFullYear(periodEnd.getUTCFullYear() + 1);
+  } else {
+    periodEnd.setUTCMonth(periodEnd.getUTCMonth() + 1);
+  }
+
   const { data, error } = await supabase
     .from("neroxa_subscriptions" as never)
     .insert({
@@ -178,6 +187,9 @@ export async function createSubscription(input: { organizationId: string; planId
       plan_id: input.planId,
       status: "TRIAL",
       price: Number(planRow.price_monthly ?? 0),
+      started_at: periodStart,
+      current_period_start: periodStart,
+      current_period_end: periodEnd.toISOString(),
       gateway_provider: null,
       gateway_status: "NOT_CONFIGURED",
     } as never)
@@ -198,6 +210,9 @@ export async function createSubscription(input: { organizationId: string; planId
       price: Number(planRow.price_monthly ?? 0),
       setupPrice: Number(planRow.setup_price ?? 0),
       billingPeriod: planRow.billing_period,
+      periodStart: periodStart,
+      periodEnd: periodEnd.toISOString(),
+      firstChargeTiming: "NOW_WITH_EXTERNAL_PAYMENT_CONFIRMATION",
       systemId: planRow.system_id,
       status: "TRIAL",
     },
