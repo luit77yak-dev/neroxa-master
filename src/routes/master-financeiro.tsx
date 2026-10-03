@@ -16,22 +16,25 @@ const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency
 const date=(v:string|null)=>{if(!v)return "—";const raw=String(v).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
 
 function MasterFinancePage(){
+ const contextClientId=typeof window==="undefined"?null:new URLSearchParams(window.location.search).get("clientId");
  const [authorized,setAuthorized]=useState<boolean|null>(null),[role,setRole]=useState<import("@/features/master/clients/services").NeroxaPlatformRole|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
  const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const access=await getNeroxaPlatformAccess();setRole(access?.active?access.role:null);const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
  useEffect(()=>{void load(true)},[]);
  const handleBillingStatus=async(id:string,status:"PENDING"|"PAID"|"OVERDUE"|"CANCELLED"|"REFUNDED")=>{setSaving(id);setError(null);try{await updateBillingStatus(id,status);await load()}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível alterar a fatura.")}finally{setSaving(null)}};
+ const scopedInvoices=contextClientId?invoices.filter(i=>i.client_id===contextClientId):invoices;
+ const scopedPayments=contextClientId?payments.filter(p=>p.client_id===contextClientId):payments;
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]);
  const metrics=useMemo(
   () => ({
-   total: invoices.length,
-   pending: invoices.filter((i)=>i.status==="PENDING").reduce((sum,i)=>sum+i.total_amount,0),
-   overdue: invoices.filter((i)=>i.status==="OVERDUE").reduce((sum,i)=>sum+i.total_amount,0),
-   paid: invoices.filter((i)=>i.status==="PAID").reduce((sum,i)=>sum+i.total_amount,0),
-   payments: payments.filter((p)=>p.status==="CONFIRMED").reduce((sum,p)=>sum+p.amount,0),
+   total: scopedInvoices.length,
+   pending: scopedInvoices.filter((i)=>i.status==="PENDING").reduce((sum,i)=>sum+i.total_amount,0),
+   overdue: scopedInvoices.filter((i)=>i.status==="OVERDUE").reduce((sum,i)=>sum+i.total_amount,0),
+   paid: scopedInvoices.filter((i)=>i.status==="PAID").reduce((sum,i)=>sum+i.total_amount,0),
+   payments: scopedPayments.filter((p)=>p.status==="CONFIRMED").reduce((sum,p)=>sum+p.amount,0),
   }),
-  [invoices,payments],
+  [scopedInvoices,scopedPayments],
  );
- const invoiceRows=invoices.slice(0,10).map((i)=>{
+ const invoiceRows=scopedInvoices.slice(0,10).map((i)=>{
   const c=clientMap.get(i.client_id);
   return (
    <div key={i.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
@@ -46,7 +49,7 @@ function MasterFinancePage(){
    </div>
   );
  });
- const confirmedPayments=payments.filter((p)=>p.status==="CONFIRMED");
+ const confirmedPayments=scopedPayments.filter((p)=>p.status==="CONFIRMED");
  const paymentRows=confirmedPayments.slice(0,5).map((p)=>(
   <div key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
    <div className="min-w-0">
