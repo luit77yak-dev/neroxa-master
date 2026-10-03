@@ -362,6 +362,312 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
 }
 
 
+type BillingRecordRow = {
+  id: string;
+  subscription_id: string;
+  organization_id: string;
+  reference_month: string;
+  amount: number;
+  due_date: string;
+  status: string;
+  paid_at: string | null;
+};
+
+function calculateNextPeriodEnd(periodStart: string, billingPeriod: BillingInterval) {
+  const end = new Date(`${periodStart}T00:00:00.000Z`);
+  if (billingPeriod === "YEARLY") {
+    end.setUTCFullYear(end.getUTCFullYear() + 1);
+  } else {
+    end.setUTCMonth(end.getUTCMonth() + 1);
+  }
+  return end.toISOString().slice(0, 10);
+}
+
+export async function confirmBillingPayment(billingId: string) {
+  const { data: billing, error: billingError } = await supabase
+    .from("neroxa_billing_records" as never)
+    .select("id,subscription_id,organization_id,reference_month,amount,due_date,status,paid_at")
+    .eq("id", billingId)
+    .maybeSingle();
+
+  if (billingError) throw new Error(billingError.message);
+  if (!billing) throw new Error("Cobrança não encontrada ou sem permissão para alterar.");
+
+  const row = billing as BillingRecordRow;
+  if (row.status === "PAID") return true;
+  if (row.status === "CANCELLED" || row.status === "REFUNDED") {
+    throw new Error("Esta cobrança já foi encerrada e não pode ser paga.");
+  }
+
+  const paidAt = new Date().toISOString();
+  const { data: updatedBilling, error: updateError } = await supabase
+    .from("neroxa_billing_records" as never)
+    .update({
+      status: "PAID",
+      paid_at: paidAt,
+      gateway_status: "PAID",
+    } as never)
+    .eq("id", billingId)
+    .select("id")
+    .maybeSingle();
+
+  if (updateError) throw new Error(updateError.message);
+  if (!updatedBilling) throw new Error("A cobrança não pôde ser marcada como paga.");
+
+  const { data: subscription, error: subscriptionError } = await supabase
+    .from("neroxa_subscriptions" as never)
+    .select("id,plan_id,status,current_period_start,current_period_end,price")
+    .eq("id", row.subscription_id)
+    .maybeSingle();
+
+  if (subscriptionError) throw new Error(subscriptionError.message);
+  if (!subscription) throw new Error("A assinatura vinculada à cobrança não foi encontrada.");
+
+  const subscriptionRow = subscription as {
+    id: string;
+    plan_id: string;
+    status: string;
+    current_period_start: string | null;
+    current_period_end: string | null;
+    price: number | null;
+  };
+
+  const { data: plan, error: planError } = await supabase
+    .from("neroxa_plans" as never)
+    .select("id,billing_period,commercial_model,active")
+    .eq("id", subscriptionRow.plan_id)
+    .maybeSingle();
+
+  if (planError) throw new Error(planError.message);
+  if (!plan) throw new Error("O plano da assinatura não foi encontrado.");
+
+  const planRow = plan as {
+    id: string;
+    billing_period: BillingInterval;
+    commercial_model: string;
+    active: boolean;
+  };
+
+  if (planRow.commercial_model !== "SUBSCRIPTION") {
+    throw new Error("A cobrança pertence a um plano que não opera como assinatura recorrente.");
+  }
+
+  if (subscriptionRow.status === "TRIAL") {
+    const { error } = await supabase
+      .from("neroxa_subscriptions" as never)
+      .update({ status: "ACTIVE" } as never)
+      .eq("id", subscriptionRow.id);
+    if (error) throw new Error(error.message);
+
+    await recordNeroxaAudit({
+      action: "SUBSCRIPTION_ACTIVATED_BY_PAYMENT",
+      resourceType: "SUBSCRIPTION",
+      resourceId: subscriptionRow.id,
+      organizationId: row.organization_id,
+      details: { billingId, billingStatus: "PAID" },
+    });
+  } else if (subscriptionRow.status === "PAST_DUE") {
+    const currentEnd = subscriptionRow.current_period_end;
+    if (!currentEnd) throw new Error("A assinatura inadimplente não possui fim de período para regularização.");
+
+    const nextEnd = calculateNextPeriodEnd(currentEnd, planRow.billing_period);
+    const { error } = await supabase
+      .from("neroxa_subscriptions" as never)
+      .update({
+        status: "ACTIVE",
+        current_period_start: currentEnd,
+        current_period_end: nextEnd,
+      } as never)
+      .eq("id", subscriptionRow.id);
+    if (error) throw new Error(error.message);
+
+    await recordNeroxaAudit({
+      action: "SUBSCRIPTION_RENEWED_BY_PAYMENT",
+      resourceType: "SUBSCRIPTION",
+      resourceId: subscriptionRow.id,
+      organizationId: row.organization_id,
+      details: {
+        billingId,
+        periodStart: currentEnd,
+        periodEnd: nextEnd,
+        billingStatus: "PAID",
+      },
+    });
+  }
+
+  return true;
+}
+
+export async function createRenewalBilling(subscriptionId: string) {
+  const { data: subscription, error: subscriptionError } = await supabase
+    .from("neroxa_subscriptions" as never)
+    .select("id,organization_id,plan_id,status,price,current_period_end")
+    .eq("id", subscriptionId)
+    .maybeSingle();
+
+  if (subscriptionError) throw new Error(subscriptionError.message);
+  if (!subscription) throw new Error("Assinatura não encontrada.");
+
+  const row = subscription as {
+    id: string;
+    organization_id: string;
+    plan_id: string;
+    status: string;
+    price: number | null;
+    current_period_end: string | null;
+  };
+
+  if (row.status !== "ACTIVE") {
+    throw new Error("Somente assinaturas ativas podem gerar uma cobrança de renovação.");
+  }
+  if (!row.current_period_end) {
+    throw new Error("A assinatura não possui uma data de término de período.");
+  }
+
+  const { data: existing, error: existingError } = await supabase
+    .from("neroxa_billing_records" as never)
+    .select("id,status")
+    .eq("subscription_id", subscriptionId)
+    .eq("due_date", row.current_period_end)
+    .in("status", ["PENDING", "PAID", "OVERDUE"])
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) throw new Error(existingError.message);
+  if (existing) return existing.id as string;
+
+  const referenceMonth = `${row.current_period_end.slice(0, 7)}-01`;
+  const { data, error } = await supabase
+    .from("neroxa_billing_records" as never)
+    .insert({
+      organization_id: row.organization_id,
+      subscription_id: subscriptionId,
+      reference_month: referenceMonth,
+      amount: Number(row.price ?? 0),
+      due_date: row.current_period_end,
+      status: "PENDING",
+      payment_method: null,
+      external_id: null,
+      gateway_provider: null,
+      gateway_payment_id: null,
+      gateway_status: "PENDING",
+      gateway_event_id: null,
+    } as never)
+    .select("id")
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  await recordNeroxaAudit({
+    action: "RENEWAL_BILLING_CREATED",
+    resourceType: "BILLING_RECORD",
+    resourceId: (data as { id: string }).id,
+    organizationId: row.organization_id,
+    details: {
+      subscriptionId,
+      dueDate: row.current_period_end,
+      amount: Number(row.price ?? 0),
+      referenceMonth,
+    },
+  });
+
+  return (data as { id: string }).id;
+}
+
+export async function processSubscriptionBilling(subscriptionId: string, today = new Date().toISOString().slice(0, 10)) {
+  const { data: subscription, error: subscriptionError } = await supabase
+    .from("neroxa_subscriptions" as never)
+    .select("id,organization_id,plan_id,status,current_period_end")
+    .eq("id", subscriptionId)
+    .maybeSingle();
+
+  if (subscriptionError) throw new Error(subscriptionError.message);
+  if (!subscription) throw new Error("Assinatura não encontrada.");
+
+  const row = subscription as {
+    id: string;
+    organization_id: string;
+    plan_id: string;
+    status: string;
+    current_period_end: string | null;
+  };
+
+  if (row.status === "CANCELLED" || row.status === "EXPIRED" || row.status === "PAUSED") {
+    return { status: row.status, changed: false };
+  }
+
+  const { data: dueBilling, error: billingError } = await supabase
+    .from("neroxa_billing_records" as never)
+    .select("id,status,due_date,paid_at")
+    .eq("subscription_id", subscriptionId)
+    .in("status", ["PENDING", "OVERDUE"])
+    .order("due_date", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (billingError) throw new Error(billingError.message);
+
+  if (dueBilling) {
+    const billingRow = dueBilling as { id: string; status: string; due_date: string; paid_at: string | null };
+    if (billingRow.status === "PENDING" && billingRow.due_date <= today) {
+      const { error: overdueError } = await supabase
+        .from("neroxa_billing_records" as never)
+        .update({ status: "OVERDUE", gateway_status: "OVERDUE" } as never)
+        .eq("id", billingRow.id);
+      if (overdueError) throw new Error(overdueError.message);
+    }
+
+    if (row.status === "ACTIVE" && billingRow.due_date <= today) {
+      const { error: subscriptionError } = await supabase
+        .from("neroxa_subscriptions" as never)
+        .update({ status: "PAST_DUE" } as never)
+        .eq("id", subscriptionId);
+      if (subscriptionError) throw new Error(subscriptionError.message);
+
+      await recordNeroxaAudit({
+        action: "SUBSCRIPTION_MARKED_PAST_DUE",
+        resourceType: "SUBSCRIPTION",
+        resourceId: subscriptionId,
+        organizationId: row.organization_id,
+        details: { billingId: billingRow.id, dueDate: billingRow.due_date },
+      });
+
+      return { status: "PAST_DUE", changed: true, billingId: billingRow.id };
+    }
+
+    return { status: row.status, changed: false, billingId: billingRow.id };
+  }
+
+  if (row.status === "ACTIVE" && row.current_period_end && row.current_period_end <= today) {
+    const billingId = await createRenewalBilling(subscriptionId);
+    const { error: overdueError } = await supabase
+      .from("neroxa_billing_records" as never)
+      .update({ status: "OVERDUE", gateway_status: "OVERDUE" } as never)
+      .eq("id", billingId)
+      .eq("status", "PENDING");
+    if (overdueError) throw new Error(overdueError.message);
+
+    const { error: subscriptionError } = await supabase
+      .from("neroxa_subscriptions" as never)
+      .update({ status: "PAST_DUE" } as never)
+      .eq("id", subscriptionId);
+    if (subscriptionError) throw new Error(subscriptionError.message);
+
+    await recordNeroxaAudit({
+      action: "SUBSCRIPTION_MARKED_PAST_DUE",
+      resourceType: "SUBSCRIPTION",
+      resourceId: subscriptionId,
+      organizationId: row.organization_id,
+      details: { billingId, dueDate: row.current_period_end },
+    });
+
+    return { status: "PAST_DUE", changed: true, billingId };
+  }
+
+  return { status: row.status, changed: false };
+}
+
+
 export async function createPlan(input: { name: string; slug: string; description?: string; systemId?: string | null; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; commercialModel: "SUBSCRIPTION" | "PERMANENT"; maintenancePrice?: number | null; active?: boolean }) {
   const { data, error } = await supabase
     .from("neroxa_plans" as never)
