@@ -9,12 +9,13 @@ import {
 
 
 
+const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
+
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    rpc,
-  },
+  supabase: { rpc },
 }));
-\ndescribe("billing engine pure rules", () => {
+
+describe("billing engine pure rules", () => {
   it("calculates monthly renewal periods", () => {
     expect(calculateNextPeriodEnd("2026-10-02", "MONTHLY")).toBe("2026-11-02");
   });
@@ -58,8 +59,6 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 
 describe("contract activation flow", () => {
-  const rpc = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
     rpc.mockReset();
