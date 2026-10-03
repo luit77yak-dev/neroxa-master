@@ -142,6 +142,8 @@ export function Client360Shell({
                         ) : section.href ? (
                           <a
                             href={section.href ? `${section.href}?clientId=${encodeURIComponent(clientId)}${organizationId ? `&organizationId=${encodeURIComponent(organizationId)}` : ""}&returnSection=${encodeURIComponent(section.key)}` : undefined}
+                            target="_blank"
+                            rel="noreferrer"
                             className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition hover:border-slate-300 hover:bg-slate-50"
                           >
                             <div className="min-w-0">
