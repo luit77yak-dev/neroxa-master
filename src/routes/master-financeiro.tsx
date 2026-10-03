@@ -16,13 +16,15 @@ const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency
 const date=(v:string|null)=>{if(!v)return "—";const raw=String(v).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
 
 function MasterFinancePage(){
- const contextClientId=typeof window==="undefined"?null:new URLSearchParams(window.location.search).get("clientId");
+ const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
+  const contextClientId=params?.get("clientId") ?? null;
+  const contextOrganizationId=params?.get("organizationId") ?? null;
  const [authorized,setAuthorized]=useState<boolean|null>(null),[role,setRole]=useState<import("@/features/master/clients/services").NeroxaPlatformRole|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
  const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const access=await getNeroxaPlatformAccess();setRole(access?.active?access.role:null);const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
  useEffect(()=>{void load(true)},[]);
  const handleBillingStatus=async(id:string,status:"PENDING"|"PAID"|"OVERDUE"|"CANCELLED"|"REFUNDED")=>{setSaving(id);setError(null);try{await updateBillingStatus(id,status);await load()}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível alterar a fatura.")}finally{setSaving(null)}};
- const scopedInvoices=contextClientId?invoices.filter(i=>i.client_id===contextClientId):invoices;
- const scopedPayments=contextClientId?payments.filter(p=>p.client_id===contextClientId):payments;
+ const scopedInvoices=contextOrganizationId?invoices.filter(i=>i.client_id===contextOrganizationId):contextClientId?invoices.filter(i=>i.client_id===contextClientId):invoices;
+ const scopedPayments=contextOrganizationId?payments.filter(p=>p.client_id===contextOrganizationId):contextClientId?payments.filter(p=>p.client_id===contextClientId):payments;
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]);
  const metrics=useMemo(
   () => ({
