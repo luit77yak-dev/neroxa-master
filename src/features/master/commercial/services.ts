@@ -20,7 +20,7 @@ const CONTRACT_TRANSITIONS: Record<ContractStatus, ContractStatus[]> = {
   EXPIRED: [],
 };
 
-function assertTransition<T extends string>(transitions: Record<T, T[]>, current: T, next: T, entity: string) {
+export function isAllowedProposalTransition(current: ProposalStatus, next: ProposalStatus) {\n  return current === next || PROPOSAL_TRANSITIONS[current].includes(next);\n}\n\nexport function isAllowedContractTransition(current: ContractStatus, next: ContractStatus) {\n  return current === next || CONTRACT_TRANSITIONS[current].includes(next);\n}\n\nfunction assertTransition<T extends string>(transitions: Record<T, T[]>, current: T, next: T, entity: string) {
   if (current === next) return;
   if (!transitions[current].includes(next)) {
     throw new Error(`Transição inválida para ${entity}: ${current} → ${next}.`);
