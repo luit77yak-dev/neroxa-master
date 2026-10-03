@@ -7,6 +7,13 @@ create unique index if not exists idx_neroxa_subscriptions_contract_id
 
 create index if not exists idx_neroxa_subscriptions_organization_id
   on public.neroxa_subscriptions(organization_id);
+-- Prevent concurrent non-terminal subscriptions for the same organization and plan.
+-- The partial unique index makes the database the final concurrency guard;
+-- the activation RPC remains responsible for the friendly business error.
+create unique index if not exists idx_neroxa_subscriptions_active_org_plan
+  on public.neroxa_subscriptions(organization_id, plan_id)
+  where status in ('TRIAL','ACTIVE','PAUSED','PAST_DUE');
+
 
 create or replace function public.activate_neroxa_contract_and_subscription(p_contract_id uuid)
 returns uuid
