@@ -35,7 +35,7 @@ export function canAccessModule(role: NeroxaPlatformRole | null | undefined, mod
 
 export function canPerform(
   role: NeroxaPlatformRole | null | undefined,
-  action: "manageClients" | "manageCommercial" | "managePlans" | "manageProducts" | "manageSubscriptions" | "manageFinance" | "manageSystems" | "viewAudit",
+  action: "manageClients" | "manageCommercial" | "managePlans" | "manageProducts" | "manageSubscriptions" | "manageFinance" | "manageSystems" | "manageSupport" | "viewAudit",
 ) {
   if (!role) return false;
   if (role === "SUPER_ADMIN") return true;
@@ -47,6 +47,7 @@ export function canPerform(
     manageSubscriptions: ["ADMIN", "FINANCE"],
     manageFinance: ["FINANCE"],
     manageSystems: ["ADMIN", "SUPPORT"],
+    manageSupport: ["ADMIN", "SUPPORT"],
     viewAudit: ["ADMIN"],
   } as const;
   return (map[action] as readonly string[]).includes(role);
