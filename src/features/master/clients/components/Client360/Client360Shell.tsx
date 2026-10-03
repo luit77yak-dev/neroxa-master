@@ -24,6 +24,7 @@ const SECTIONS: Section[] = [
 
 export function Client360Shell({
   clientId,
+  organizationId,
   clientName,
   status,
   initialSection = "client",
@@ -32,6 +33,7 @@ export function Client360Shell({
   children,
 }: {
   clientId: string;
+  organizationId?: string | null;
   clientName: string;
   status: string;
   initialSection?: string;
@@ -139,7 +141,7 @@ export function Client360Shell({
                           <div className="min-w-0">{children}</div>
                         ) : section.href ? (
                           <a
-                            href={section.href ? `${section.href}?clientId=${encodeURIComponent(clientId)}&returnSection=${encodeURIComponent(section.key)}` : undefined}
+                            href={section.href ? `${section.href}?clientId=${encodeURIComponent(clientId)}${organizationId ? `&organizationId=${encodeURIComponent(organizationId)}` : ""}&returnSection=${encodeURIComponent(section.key)}` : undefined}
                             className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition hover:border-slate-300 hover:bg-slate-50"
                           >
                             <div className="min-w-0">
