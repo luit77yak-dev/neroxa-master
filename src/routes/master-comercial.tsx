@@ -99,15 +99,21 @@ function MasterCommercialPage() {
     [clients],
   );
 
+  const scopedProposals = contextOrganizationId
+    ? proposals.filter((item) => item.client_id === contextOrganizationId)
+    : contextClientId
+      ? proposals.filter((item) => item.client_id === contextClientId)
+      : proposals;
+  const scopedContracts = contextClientId
+    ? contracts.filter((item) => item.client_id === contextClientId)
+    : contracts;
+
   const metrics = useMemo(() => ({
     totalProposals: scopedProposals.length,
     openProposals: scopedProposals.filter((item) => ["SENT", "NEGOTIATION"].includes(item.status)).length,
     acceptedProposals: scopedProposals.filter((item) => item.status === "ACCEPTED").length,
     activeContracts: scopedContracts.filter((item) => item.status === "ACTIVE").length,
-  }), [proposals, contracts]);
-
-  const scopedProposals = contextOrganizationId ? proposals.filter((item) => item.client_id === contextOrganizationId) : contextClientId ? proposals.filter((item) => item.client_id === contextClientId) : proposals;
-  const scopedContracts = contextClientId ? contracts.filter((item) => item.client_id === contextClientId) : contracts;
+  }), [scopedProposals, scopedContracts]);
   const recentProposals = scopedProposals.slice(0, 5);
   const recentContracts = scopedContracts.slice(0, 5);
 
