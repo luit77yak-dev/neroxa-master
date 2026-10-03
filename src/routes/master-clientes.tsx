@@ -4,6 +4,7 @@ import { MasterShell } from "@/features/master/shell/MasterShell";
 import { createNeroxaSystemInstance, listNeroxaSystems, type NeroxaSystem } from "@/features/master/systems/services";
 import { loadSubscriptionOverview } from "@/features/master/subscriptions/services";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
+import { Client360Shell } from "@/features/master/clients/components/Client360/Client360Shell";
 import {
   Building2,
   Check,
@@ -376,167 +377,174 @@ function MasterClientsPage() {
           </Card>
         </section>
 
-        <aside className="lg:sticky lg:top-[73px] lg:h-[calc(100vh-89px)] lg:overflow-y-auto">
-          {selected ? (
-            <Card className="border-slate-200 bg-white shadow-sm">
-              <div className="border-b border-slate-200 p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-lg font-semibold">{selected.trade_name || selected.legal_name}</p>
-                      <p className="text-xs text-slate-500">{selected.organization_id ? "Organização vinculada" : "Ainda sem organização"}</p>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={() => setSelectedId(null)} aria-label="Fechar">
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="mt-4">
-                  <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_TONE[selected.status]}`}>
-                    {STATUS_LABELS[selected.status]}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-5 p-5">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold">Dados comerciais</h2>
-                  <Button variant="ghost" size="sm" onClick={() => setEditing((value) => !value)}>
-                    <Pencil className="h-3.5 w-3.5" /> {editing ? "Cancelar" : "Editar"}
-                  </Button>
-                </div>
-
-                {editing ? (
-                  <ClientForm draft={draft} setDraft={setDraft} onSubmit={handleUpdate} saving={saving} compact />
-                ) : (
-                  <div className="space-y-3 text-sm">
-                    <Detail label="Razão social" value={selected.legal_name} />
-                    <Detail label="Nome comercial" value={selected.trade_name} />
-                    <Detail label="CNPJ / CPF" value={selected.tax_id} />
-                    <Detail label="Observações" value={selected.notes} />
-                  </div>
-                )}
-
-                <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">Próximos estados</p>
-                  <div className="flex flex-wrap gap-2">
-                    {ALLOWED_TRANSITIONS[selected.status].map((status) => (
-                      <Button key={status} variant="outline" size="sm" disabled={saving} onClick={() => void handleTransition(status)}>
-                        {STATUS_LABELS[status]}
-                      </Button>
-                    ))}
-                    {!ALLOWED_TRANSITIONS[selected.status].length && (
-                      <p className="text-xs text-slate-500">Este estado não possui novas transições.</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-slate-200 bg-white p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold">Instâncias e domínios</p>
-                      <p className="mt-1 text-xs text-slate-500">Cadastre o endereço que será usado pelo sistema do cliente.</p>
-                    </div>
-                  </div>
-
-                  {selected.organization_id && <Button className="mt-4 w-full" variant="outline" onClick={() => setShowInstanceCreate(true)}><Plus className="h-4 w-4" /> Adicionar sistema</Button>}
-
-                  {!selected.organization_id ? (
-                    <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                      Este cliente ainda não está vinculado a uma organização. Vincule a organização antes de cadastrar um domínio.
-                    </div>
-                  ) : instances.length === 0 ? (
-                    <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-xs text-slate-500">
-                      Nenhuma instância foi provisionada para este cliente ainda.
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mt-4 space-y-3">
-                        {instances.map((instance) => (
-                          <div key={instance.id} className="rounded-lg border border-slate-200 p-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-medium">{instance.name}</p>
-                                <p className="truncate text-xs text-slate-500">{instance.slug} · {instance.status}</p>
+        <Client360Shell
+          clientName={selected.trade_name || selected.legal_name || "Cliente sem nome"}
+          status={STATUS_LABELS[selected.status]}
+          onBack={() => setSelectedId(null)}
+        >
+          <aside className="lg:sticky lg:top-[73px] lg:max-h-[calc(100vh-89px)] lg:overflow-y-auto">
+                    {selected ? (
+                      <Card className="border-slate-200 bg-white shadow-sm">
+                        <div className="border-b border-slate-200 p-5">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-slate-950 text-white">
+                                <Building2 className="h-5 w-5" />
                               </div>
-                              <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600">
-                                {instance.system_type}
-                              </span>
+                              <div className="min-w-0">
+                                <p className="truncate text-lg font-semibold">{selected.trade_name || selected.legal_name}</p>
+                                <p className="text-xs text-slate-500">{selected.organization_id ? "Organização vinculada" : "Ainda sem organização"}</p>
+                              </div>
                             </div>
-                            <div className="mt-3 space-y-2">
-                              {(domains[instance.id] ?? []).map((domain) => (
-                                <div key={domain.id} className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-3 py-2">
-                                  <div className="min-w-0">
-                                    <p className="truncate text-xs font-medium text-slate-800">{domain.domain}</p>
-                                    <p className="text-[10px] text-slate-500">{domain.is_primary ? "Principal · " : ""}{domain.status}</p>
-                                  </div>
-                                </div>
+                            <Button variant="ghost" size="icon" onClick={() => setSelectedId(null)} aria-label="Fechar">
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="mt-4">
+                            <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_TONE[selected.status]}`}>
+                              {STATUS_LABELS[selected.status]}
+                            </span>
+                          </div>
+                        </div>
+          
+                        <div className="space-y-5 p-5">
+                          <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-semibold">Dados comerciais</h2>
+                            <Button variant="ghost" size="sm" onClick={() => setEditing((value) => !value)}>
+                              <Pencil className="h-3.5 w-3.5" /> {editing ? "Cancelar" : "Editar"}
+                            </Button>
+                          </div>
+          
+                          {editing ? (
+                            <ClientForm draft={draft} setDraft={setDraft} onSubmit={handleUpdate} saving={saving} compact />
+                          ) : (
+                            <div className="space-y-3 text-sm">
+                              <Detail label="Razão social" value={selected.legal_name} />
+                              <Detail label="Nome comercial" value={selected.trade_name} />
+                              <Detail label="CNPJ / CPF" value={selected.tax_id} />
+                              <Detail label="Observações" value={selected.notes} />
+                            </div>
+                          )}
+          
+                          <div>
+                            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">Próximos estados</p>
+                            <div className="flex flex-wrap gap-2">
+                              {ALLOWED_TRANSITIONS[selected.status].map((status) => (
+                                <Button key={status} variant="outline" size="sm" disabled={saving} onClick={() => void handleTransition(status)}>
+                                  {STATUS_LABELS[status]}
+                                </Button>
                               ))}
-                              {!domains[instance.id]?.length && (
-                                <p className="text-[11px] text-slate-500">Nenhum domínio cadastrado.</p>
+                              {!ALLOWED_TRANSITIONS[selected.status].length && (
+                                <p className="text-xs text-slate-500">Este estado não possui novas transições.</p>
                               )}
                             </div>
                           </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-4 border-t border-slate-100 pt-4">
-                        <p className="text-xs font-semibold text-slate-700">Adicionar domínio</p>
-                        <div className="mt-2 space-y-2">
-                          <select
-                            value={domainInstanceId}
-                            onChange={(event) => setDomainInstanceId(event.target.value)}
-                            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
-                          >
-                            {instances.map((instance) => (
-                              <option key={instance.id} value={instance.id}>{instance.name}</option>
-                            ))}
-                          </select>
-                          <input
-                            value={domainDraft}
-                            onChange={(event) => setDomainDraft(event.target.value)}
-                            onKeyDown={(event) => { if (event.key === "Enter") void handleAddDomain(); }}
-                            placeholder="Ex.: cliente.neroxa.ia.br"
-                            className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
-                          />
-                          <Button className="w-full" onClick={() => void handleAddDomain()} disabled={savingDomain}>
-                            {savingDomain ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                            {savingDomain ? "Cadastrando..." : "Cadastrar domínio"}
-                          </Button>
+          
+                          <div className="rounded-xl border border-slate-200 bg-white p-4">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-sm font-semibold">Instâncias e domínios</p>
+                                <p className="mt-1 text-xs text-slate-500">Cadastre o endereço que será usado pelo sistema do cliente.</p>
+                              </div>
+                            </div>
+          
+                            {selected.organization_id && <Button className="mt-4 w-full" variant="outline" onClick={() => setShowInstanceCreate(true)}><Plus className="h-4 w-4" /> Adicionar sistema</Button>}
+          
+                            {!selected.organization_id ? (
+                              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                                Este cliente ainda não está vinculado a uma organização. Vincule a organização antes de cadastrar um domínio.
+                              </div>
+                            ) : instances.length === 0 ? (
+                              <div className="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-xs text-slate-500">
+                                Nenhuma instância foi provisionada para este cliente ainda.
+                              </div>
+                            ) : (
+                              <>
+                                <div className="mt-4 space-y-3">
+                                  {instances.map((instance) => (
+                                    <div key={instance.id} className="rounded-lg border border-slate-200 p-3">
+                                      <div className="flex items-center justify-between gap-3">
+                                        <div className="min-w-0">
+                                          <p className="truncate text-sm font-medium">{instance.name}</p>
+                                          <p className="truncate text-xs text-slate-500">{instance.slug} · {instance.status}</p>
+                                        </div>
+                                        <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2 py-1 text-[10px] font-medium text-slate-600">
+                                          {instance.system_type}
+                                        </span>
+                                      </div>
+                                      <div className="mt-3 space-y-2">
+                                        {(domains[instance.id] ?? []).map((domain) => (
+                                          <div key={domain.id} className="flex items-center justify-between gap-3 rounded-md bg-slate-50 px-3 py-2">
+                                            <div className="min-w-0">
+                                              <p className="truncate text-xs font-medium text-slate-800">{domain.domain}</p>
+                                              <p className="text-[10px] text-slate-500">{domain.is_primary ? "Principal · " : ""}{domain.status}</p>
+                                            </div>
+                                          </div>
+                                        ))}
+                                        {!domains[instance.id]?.length && (
+                                          <p className="text-[11px] text-slate-500">Nenhum domínio cadastrado.</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+          
+                                <div className="mt-4 border-t border-slate-100 pt-4">
+                                  <p className="text-xs font-semibold text-slate-700">Adicionar domínio</p>
+                                  <div className="mt-2 space-y-2">
+                                    <select
+                                      value={domainInstanceId}
+                                      onChange={(event) => setDomainInstanceId(event.target.value)}
+                                      className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+                                    >
+                                      {instances.map((instance) => (
+                                        <option key={instance.id} value={instance.id}>{instance.name}</option>
+                                      ))}
+                                    </select>
+                                    <input
+                                      value={domainDraft}
+                                      onChange={(event) => setDomainDraft(event.target.value)}
+                                      onKeyDown={(event) => { if (event.key === "Enter") void handleAddDomain(); }}
+                                      placeholder="Ex.: cliente.neroxa.ia.br"
+                                      className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-white"
+                                    />
+                                    <Button className="w-full" onClick={() => void handleAddDomain()} disabled={savingDomain}>
+                                      {savingDomain ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                                      {savingDomain ? "Cadastrando..." : "Cadastrar domínio"}
+                                    </Button>
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+          
+                          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                            <div className="flex items-center gap-2">
+                              <UserRound className="h-4 w-4 text-slate-500" />
+                              <p className="text-sm font-semibold">Contato principal</p>
+                            </div>
+                            {contacts[0] ? (
+                              <div className="mt-3 space-y-1 text-sm">
+                                <p className="font-medium">{contacts[0].name}</p>
+                                {contacts[0].role_title && <p className="text-xs text-slate-500">{contacts[0].role_title}</p>}
+                                {contacts[0].email && <p className="flex items-center gap-2 text-xs text-slate-600"><Mail className="h-3.5 w-3.5" />{contacts[0].email}</p>}
+                                {contacts[0].whatsapp && <p className="text-xs text-slate-600">WhatsApp: {contacts[0].whatsapp}</p>}
+                              </div>
+                            ) : (
+                              <p className="mt-3 text-xs text-slate-500">Nenhum contato cadastrado ainda.</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center gap-2">
-                    <UserRound className="h-4 w-4 text-slate-500" />
-                    <p className="text-sm font-semibold">Contato principal</p>
-                  </div>
-                  {contacts[0] ? (
-                    <div className="mt-3 space-y-1 text-sm">
-                      <p className="font-medium">{contacts[0].name}</p>
-                      {contacts[0].role_title && <p className="text-xs text-slate-500">{contacts[0].role_title}</p>}
-                      {contacts[0].email && <p className="flex items-center gap-2 text-xs text-slate-600"><Mail className="h-3.5 w-3.5" />{contacts[0].email}</p>}
-                      {contacts[0].whatsapp && <p className="text-xs text-slate-600">WhatsApp: {contacts[0].whatsapp}</p>}
-                    </div>
-                  ) : (
-                    <p className="mt-3 text-xs text-slate-500">Nenhum contato cadastrado ainda.</p>
-                  )}
-                </div>
-              </div>
-            </Card>
-          ) : (
-            <Card className="border-dashed border-slate-300 bg-white p-8 text-center">
-              <Building2 className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-3 text-sm font-medium">Selecione um cliente</p>
-            </Card>
-          )}
-        </aside>
+                      </Card>
+                    ) : (
+                      <Card className="border-dashed border-slate-300 bg-white p-8 text-center">
+                        <Building2 className="mx-auto h-8 w-8 text-slate-300" />
+                        <p className="mt-3 text-sm font-medium">Selecione um cliente</p>
+                      </Card>
+                    )}
+                  
+          </aside>
+        </Client360Shell></aside>
       </div>
 
       {showInstanceCreate && selected && (
