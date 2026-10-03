@@ -9,6 +9,7 @@ import {
   FolderKanban,
   Globe2,
   LayoutDashboard,
+  LogOut,
   Menu,
   Package,
   Settings,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { getNeroxaPlatformAccess } from "@/features/master/clients/services";
+import { supabase } from "@/integrations/supabase/client";
 import { canAccessModule, moduleForPath, ROLE_LABELS } from "@/features/master/permissions";
 
 type MasterShellProps = {
@@ -68,6 +70,11 @@ export function MasterShell({ children }: MasterShellProps) {
 
   const currentModule = moduleForPath(location.pathname);
   const allowed = canAccessModule(role, currentModule);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.assign("/master");
+  };
 
   const isActive = (item: NavItem) =>
     item.active?.(location.pathname) ??
@@ -164,9 +171,20 @@ export function MasterShell({ children }: MasterShellProps) {
             </div>
           </div>
 
-          <div className="hidden items-center gap-2 text-xs text-slate-500 sm:flex">
-            <Database className="h-4 w-4" />
-            Plataforma operacional
+          <div className="flex items-center gap-2">
+            <div className="hidden items-center gap-2 text-xs text-slate-500 sm:flex">
+              <Database className="h-4 w-4" />
+              Plataforma operacional
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleLogout()}
+              className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
+              aria-label="Sair do Neroxa Master"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sair</span>
+            </button>
           </div>
         </header>
 

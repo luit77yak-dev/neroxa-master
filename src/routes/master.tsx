@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Activity, ArrowRight, Building2, FileText, ShieldCheck, Users, WalletCards } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -191,15 +191,24 @@ function MasterOverviewPage() {
                 ["Assinaturas", `${data?.activeSubscriptions ?? 0} ativas · ${money(data?.mrr ?? 0)} MRR`],
                 ["Financeiro", `${data?.openInvoices ?? 0} cobranças em aberto`],
                 ["Implantação", `${data?.implementations ?? 0} instâncias cadastradas`],
-              ].map(([title, description]) => (
-                <div key={title} className="flex items-center gap-3 py-3.5">
+              ].map(([title, description]) => {
+                const routeMap: Record<string, "/master-comercial" | "/master-assinaturas" | "/master-financeiro" | "/master-implantacao"> = {
+                  Comercial: "/master-comercial",
+                  Assinaturas: "/master-assinaturas",
+                  Financeiro: "/master-financeiro",
+                  Implantação: "/master-implantacao",
+                };
+                const route = routeMap[title];
+                return (
+                <Link key={title} to={route} className="flex items-center gap-3 py-3.5 transition hover:bg-slate-50">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{title}</p>
                     <p className="mt-0.5 text-xs text-slate-500">{description}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-slate-300" />
-                </div>
-              ))}
+                  <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:text-slate-500" />
+                </Link>
+                );
+              })}
             </div>
           </Card>
 
