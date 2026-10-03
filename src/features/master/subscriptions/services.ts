@@ -174,13 +174,7 @@ export async function createSubscription(input: { organizationId: string; planId
   const now = new Date();
   const periodStartTimestamp = now.toISOString();
   const periodStartDate = periodStartTimestamp.slice(0, 10);
-  const periodEndDate = new Date(`${periodStartDate}T00:00:00.000Z`);
-  if (planRow.billing_period === "YEARLY") {
-    periodEndDate.setUTCFullYear(periodEndDate.getUTCFullYear() + 1);
-  } else {
-    periodEndDate.setUTCMonth(periodEndDate.getUTCMonth() + 1);
-  }
-  const periodEnd = periodEndDate.toISOString().slice(0, 10);
+  const periodEnd = calculateNextPeriodEnd(periodStartDate, planRow.billing_period);
   const recurringPrice = Number(planRow.price_monthly ?? 0);
   const referenceMonth = `${periodStartDate.slice(0, 7)}-01`;
 
@@ -374,10 +368,22 @@ type BillingRecordRow = {
 };
 
 export function calculateNextPeriodEnd(periodStart: string, billingPeriod: BillingInterval) {
-  const end = new Date(`${periodStart}T00:00:00.000Z`);
-  if (billingPeriod === "YEARLY") end.setUTCFullYear(end.getUTCFullYear() + 1);
-  else end.setUTCMonth(end.getUTCMonth() + 1);
-  return end.toISOString().slice(0, 10);
+  const start = new Date(`${periodStart}T00:00:00.000Z`);
+  const originalDay = start.getUTCDate();
+
+  if (billingPeriod === "YEARLY") {
+    start.setUTCFullYear(start.getUTCFullYear() + 1);
+    return start.toISOString().slice(0, 10);
+  }
+
+  start.setUTCDate(1);
+  start.setUTCMonth(start.getUTCMonth() + 1);
+  const lastDayOfTargetMonth = new Date(
+    Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  start.setUTCDate(Math.min(originalDay, lastDayOfTargetMonth));
+
+  return start.toISOString().slice(0, 10);
 }
 
 export function shouldMarkBillingOverdue(status: string, dueDate: string, today: string) {
@@ -772,7 +778,8 @@ export type NeroxaPlanFeature = {
 };
 
 export async function listPlanFeatures(planId: string): Promise<NeroxaPlanFeature[]> {
-  const { data, error } = await supabase.from("neroxa_plan_features" as never)
+  const { data, error } = await supabase
+    .from("neroxa_plan_features" as never)
     .select("id,plan_id,feature_key,enabled,limit_value")
     .eq("plan_id", planId)
     .eq("enabled", true)
@@ -783,7 +790,8 @@ export async function listPlanFeatures(planId: string): Promise<NeroxaPlanFeatur
 
 export async function setPlanFeature(input: { planId: string; featureKey: string; enabled?: boolean }) {
   await removePlanFeature(input.planId, input.featureKey);
-  const { error } = await supabase.from("neroxa_plan_features" as never)
+  const { error } = await supabase
+    .from("neroxa_plan_features" as never)
     .insert({ plan_id: input.planId, feature_key: input.featureKey, enabled: input.enabled ?? true } as never);
   if (error) throw new Error(error.message);
 }
