@@ -7,7 +7,7 @@ import { getNeroxaPlatformAccess, isNeroxaStaff } from "@/features/master/client
 import { canPerform } from "@/features/master/permissions";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
-import { BILLING_INTERVAL_LABELS,COMMERCIAL_MODEL_LABELS,SUBSCRIPTION_STATUS_LABELS,type Subscription,type SubscriptionPlan } from "@/features/master/subscriptions/types";
+import { COMMERCIAL_MODEL_LABELS,SUBSCRIPTION_STATUS_LABELS,type Subscription,type SubscriptionPlan } from "@/features/master/subscriptions/types";
 import { loadSubscriptionOverview,updateSubscriptionStatus } from "@/features/master/subscriptions/services";
 import { listNeroxaSystems } from "@/features/master/systems/services";
 import { listProductPlans,listProducts } from "@/features/master/products/services";
