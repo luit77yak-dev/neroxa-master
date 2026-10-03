@@ -17,7 +17,9 @@ const statusClass: Record<ProvisioningStatus, string> = {
 };
 
 function MasterImplantacao() {
-  const contextClientId=typeof window==="undefined"?null:new URLSearchParams(window.location.search).get("clientId");
+  const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
+  const contextClientId=params?.get("clientId") ?? null;
+  const contextOrganizationId=params?.get("organizationId") ?? null;
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
   const [jobs, setJobs] = useState<ProvisioningJob[]>([]);
@@ -34,8 +36,8 @@ function MasterImplantacao() {
       setRole(access?.active ? access.role : null);
       if (!access?.active) return;
       const [jobData, instanceData] = await Promise.all([listProvisioningJobs(), listImplementationInstances()]);
-      const scopedJobs = contextClientId ? jobData.filter((job) => job.organization_id === contextClientId) : jobData;
-      const scopedInstances = contextClientId ? instanceData.filter((instance) => instance.organization_id === contextClientId) : instanceData;
+      const scopedJobs = contextOrganizationId ? jobData.filter((job) => job.organization_id === contextOrganizationId) : contextClientId ? jobData.filter((job) => job.organization_id === contextClientId) : jobData;
+      const scopedInstances = contextOrganizationId ? instanceData.filter((instance) => instance.organization_id === contextOrganizationId) : contextClientId ? instanceData.filter((instance) => instance.organization_id === contextClientId) : instanceData;
       setJobs(scopedJobs);
       setInstances(scopedInstances);
     } catch (cause) {
