@@ -110,3 +110,13 @@ export async function retryProvisioningJob(job: ProvisioningJob) {
 export async function cancelProvisioningJob(jobId: string) {
   return updateProvisioningJob({ id: jobId, status: "CANCELLED" });
 }
+
+export async function prepareImplementationFromSubscription(input: { subscriptionId: string; name: string; slug: string }) {
+  const { data, error } = await supabase.rpc("prepare_neroxa_implementation_from_subscription", {
+    p_subscription_id: input.subscriptionId,
+    p_name: input.name.trim(),
+    p_slug: input.slug.trim().toLowerCase(),
+  });
+  if (error) throw new Error(error.message);
+  return String(data);
+}
