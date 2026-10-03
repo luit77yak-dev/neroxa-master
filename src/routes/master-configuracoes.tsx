@@ -23,7 +23,7 @@ function formatDate(value: string) {
 }
 
 function labelAction(action: string) {
-  return action.replaceAll("_", " ").toLowerCase().replace(/\\b\\w/g, (letter) => letter.toUpperCase());
+  return action.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function MasterConfiguracoes() {
