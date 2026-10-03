@@ -84,14 +84,14 @@ export async function transitionDomainStatus(domainId: string, status: DomainSta
   return String(data) as DomainStatus;
 }
 
-export async function validateDomainDns(domain: string): Promise<DomainDnsValidation> {
+export async function validateDomainDns(domainId: string, domain: string): Promise<DomainDnsValidation> {
   const normalized = domain.trim().toLowerCase().replace(/^https?:\\/\\//, "").replace(/\\/$/, "");
   if (!normalized || normalized.includes("/") || normalized.includes(" ")) {
     throw new Error("Domínio inválido para validação DNS.");
   }
 
   const { data, error } = await supabase.functions.invoke("neroxa-verify-domain-dns", {
-    body: { domain: normalized },
+    body: { domainId, domain: normalized },
   });
 
   if (error) throw new Error(error.message);
