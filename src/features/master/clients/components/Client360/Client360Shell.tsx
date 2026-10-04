@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { ArrowLeft, Building2, ChevronDown, ExternalLink } from "lucide-react";
+import { Building2, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -76,11 +76,7 @@ export function Client360Shell({
     <div className="min-w-0 space-y-4">
       <Card className="overflow-hidden border-slate-200 bg-white shadow-sm">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
-          <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 min-h-10 shrink-0">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Clientes</span>
-          </Button>
-          <div className="h-5 w-px bg-slate-200" />
+          <div className="h-9 w-1 shrink-0 rounded-full bg-slate-900" />
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-950 text-white">
             <Building2 className="h-4 w-4" />
           </div>
@@ -162,9 +158,7 @@ export function Client360Shell({
                           <div className="min-w-0">{children}</div>
                         ) : section.href ? (
                           <a
-                            href={`${section.href}?clientId=${encodeURIComponent(clientId)}${organizationId ? `&organizationId=${encodeURIComponent(organizationId)}` : ""}&returnSection=${encodeURIComponent(section.key)}`}
-                            target="_blank"
-                            rel="noreferrer"
+                            href={`${section.href}?clientId=${encodeURIComponent(clientId)}${organizationId ? `&organizationId=${encodeURIComponent(organizationId)}` : ""}`}
                             className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition hover:border-slate-300 hover:bg-slate-50"
                           >
                             <div className="min-w-0">
@@ -173,7 +167,7 @@ export function Client360Shell({
                                 Continuar esta operação no módulo correspondente.
                               </p>
                             </div>
-                            <ExternalLink className="h-4 w-4 shrink-0 text-slate-400" />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
                           </a>
                         ) : null}
                       </div>
