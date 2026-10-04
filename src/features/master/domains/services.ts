@@ -150,26 +150,10 @@ export async function updateDomain(input: { domainId: string; domain: string; is
 }
 
 export async function deleteDomain(domainId: string) {
-  const { data: current, error: currentError } = await supabase
-    .from("neroxa_system_domains" as never)
-    .select("status,is_primary")
-    .eq("id", domainId)
-    .single();
-
-  if (currentError) throw new Error(currentError.message);
-
-  const domain = current as { status: DomainStatus; is_primary: boolean };
-  if (domain.is_primary) {
-    throw new Error("Remova o domínio da posição principal antes de excluí-lo.");
-  }
-  if (domain.status !== "DISABLED") {
-    throw new Error("Desative o domínio antes de excluí-lo.");
-  }
-
-  const { error } = await supabase
-    .from("neroxa_system_domains" as never)
-    .delete()
-    .eq("id", domainId);
+  const { data, error } = await supabase.rpc("delete_neroxa_system_domain_safely" as never, {
+    p_domain_id: domainId,
+  } as never);
 
   if (error) throw new Error(error.message);
+  return data as { deleted: boolean; domain_id: string };
 }
