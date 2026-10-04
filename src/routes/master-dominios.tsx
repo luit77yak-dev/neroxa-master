@@ -183,6 +183,14 @@ function MasterDominios() {
       await load();
     } catch (changeError) {
       setError(changeError instanceof Error ? changeError.message : "Não foi possível validar o DNS.");
+      try {
+        const current = domains.find((item) => item.id === domain.id);
+        if (current?.status === "VERIFYING") {
+          await transitionDomainStatus(domain.id, "FAILED");
+        }
+      } catch {
+        // Preserve the original validation error; the status can be retried manually.
+      }
       await load();
     } finally {
       setWorking(null);
