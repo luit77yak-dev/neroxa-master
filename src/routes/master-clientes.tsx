@@ -5,6 +5,7 @@ import { createNeroxaSystemInstance, listNeroxaSystems, type NeroxaSystem } from
 import { loadSubscriptionOverview } from "@/features/master/subscriptions/services";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { Client360Shell } from "@/features/master/clients/components/Client360/Client360Shell";
+import { createDomain } from "@/features/master/domains/services";
 import {
   Building2,
   Check,
@@ -38,7 +39,6 @@ import {
   listNeroxaClients,
   transitionNeroxaClient,
   updateNeroxaClient,
-  createNeroxaSystemDomain,
   listNeroxaClientInstances,
   listNeroxaInstanceDomains,
   type NeroxaSystemDomain,
@@ -273,7 +273,7 @@ function MasterClientsPage() {
 
     setSavingDomain(true);
     try {
-      const domainId = await createNeroxaSystemDomain({
+      const domainId = await createDomain({
         instanceId: domainInstanceId,
         domain: domainDraft,
         isPrimary: (domains[domainInstanceId] ?? []).length === 0,
