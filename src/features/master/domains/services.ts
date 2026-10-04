@@ -101,3 +101,40 @@ export async function validateDomainDns(domainId: string, domain: string): Promi
 
   return data as DomainDnsValidation;
 }
+
+
+export function normalizeDomain(input: string) {
+  const normalized = input.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+  if (!normalized || normalized.includes("/") || normalized.includes(" ")) {
+    throw new Error("Informe um domínio válido, sem https:// ou caminhos.");
+  }
+  return normalized;
+}
+
+export async function createDomain(input: { instanceId: string; domain: string; isPrimary?: boolean }) {
+  const normalized = normalizeDomain(input.domain);
+  const { data, error } = await supabase
+    .from("neroxa_system_domains" as never)
+    .insert({ system_instance_id: input.instanceId, domain: normalized, is_primary: Boolean(input.isPrimary), status: "PENDING" } as never)
+    .select("id")
+    .single();
+  if (error) throw new Error(error.message);
+  return (data as { id: string }).id;
+}
+
+export async function updateDomain(input: { domainId: string; domain: string; isPrimary?: boolean }) {
+  const normalized = normalizeDomain(input.domain);
+  const { error } = await supabase
+    .from("neroxa_system_domains" as never)
+    .update({ domain: normalized, is_primary: Boolean(input.isPrimary) } as never)
+    .eq("id", input.domainId);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteDomain(domainId: string) {
+  const { error } = await supabase
+    .from("neroxa_system_domains" as never)
+    .delete()
+    .eq("id", domainId);
+  if (error) throw new Error(error.message);
+}
