@@ -80,6 +80,34 @@ export function MasterShell({ children }: MasterShellProps) {
     item.active?.(location.pathname) ??
     (item.to === "/master" ? location.pathname === "/master" : location.pathname === item.to);
 
+  if (accessLoading) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-white" aria-label="Carregando permissões" />
+      </main>
+    );
+  }
+
+  if (!role || !allowed) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-950 px-4 text-slate-100">
+        <section className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-6 text-center shadow-xl">
+          <ShieldCheck className="mx-auto h-8 w-8 text-slate-300" />
+          <h1 className="mt-4 text-lg font-semibold">Acesso restrito</h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            Seu perfil não possui permissão para acessar este módulo do Neroxa Master.
+          </p>
+          <Link
+            to="/master"
+            className="mt-5 inline-flex min-h-10 items-center justify-center rounded-lg bg-white px-4 text-sm font-medium text-[#102a2e] transition hover:bg-slate-100"
+          >
+            Voltar para a visão geral
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f7f8] text-slate-900">
       <aside
