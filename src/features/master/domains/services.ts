@@ -85,7 +85,7 @@ export async function transitionDomainStatus(domainId: string, status: DomainSta
 }
 
 export async function validateDomainDns(domainId: string, domain: string): Promise<DomainDnsValidation> {
-  const normalized = domain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+  const normalized = domain.trim().toLowerCase().replace(new RegExp("^https?://"), "").replace(new RegExp("/$"), "");
   if (!normalized || normalized.includes("/") || normalized.includes(" ")) {
     throw new Error("Domínio inválido para validação DNS.");
   }
