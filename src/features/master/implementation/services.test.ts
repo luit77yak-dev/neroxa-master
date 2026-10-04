@@ -63,3 +63,39 @@ describe("prepareImplementationFromSubscription", () => {
     ).resolves.toBe("instance-456");
   });
 });
+
+describe("updateImplementationInstanceStatus", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("calls the controlled instance status transition RPC", async () => {
+    rpc.mockResolvedValue({ data: "SUSPENDED", error: null });
+
+    await expect(
+      (await import("./services")).updateImplementationInstanceStatus({
+        id: "instance-123",
+        status: "SUSPENDED",
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(rpc).toHaveBeenCalledWith("transition_neroxa_instance_status", {
+      p_instance_id: "instance-123",
+      p_status: "SUSPENDED",
+    });
+  });
+
+  it("propagates instance status transition errors", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "Uma instância arquivada não pode ter o status alterado" },
+    });
+
+    await expect(
+      (await import("./services")).updateImplementationInstanceStatus({
+        id: "instance-123",
+        status: "ACTIVE",
+      }),
+    ).rejects.toThrow("Uma instância arquivada não pode ter o status alterado");
+  });
+});
