@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock3, FolderKanban, Globe2, Loader2, Play, RefreshCw, RotateCcw, XCircle, Zap } from "lucide-react";
+import { CheckCircle2, Clock3, FolderKanban, Globe2, Loader2, Pencil, Play, Plus, RefreshCw, RotateCcw, Trash2, XCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getNeroxaPlatformAccess, type NeroxaPlatformRole } from "@/features/master/clients/services";
+import { getNeroxaPlatformAccess, listNeroxaClients, type NeroxaClient, type NeroxaPlatformRole } from "@/features/master/clients/services";
 import { canPerform } from "@/features/master/permissions";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { MasterShell } from "@/features/master/shell/MasterShell";
-import { cancelProvisioningJob, createProvisioningJob, listImplementationInstances, listProvisioningJobs, prepareImplementationFromSubscription, retryProvisioningJob, updateImplementationInstanceStatus, updateProvisioningJob, type ImplementationInstance, type InstanceStatus, type ProvisioningJob, type ProvisioningStatus } from "@/features/master/implementation/services";
+import { cancelProvisioningJob, createImplementationInstance, createProvisioningJob, deleteImplementationInstance, listImplementationInstances, listProvisioningJobs, prepareImplementationFromSubscription, retryProvisioningJob, updateImplementationInstance, updateImplementationInstanceStatus, updateProvisioningJob, type ImplementationInstance, type InstanceStatus, type ProvisioningJob, type ProvisioningStatus } from "@/features/master/implementation/services";
 
 export const Route = createFileRoute("/master-implantacao")({ component: MasterImplantacao });
 
@@ -15,16 +15,19 @@ const statusLabel: Record<ProvisioningStatus, string> = { PENDING: "Pendente", R
 const statusClass: Record<ProvisioningStatus, string> = {
   PENDING: "bg-amber-50 text-amber-700", RUNNING: "bg-blue-50 text-blue-700", COMPLETED: "bg-emerald-50 text-emerald-700", FAILED: "bg-red-50 text-red-700", CANCELLED: "bg-slate-100 text-slate-500",
 };
+const INSTANCE_STATUSES: InstanceStatus[] = ["PROVISIONING", "ACTIVE", "SUSPENDED", "ARCHIVED"];
+const SYSTEM_TYPES = ["DELIVERY", "FOOD", "CLINIC", "BEAUTY", "BARBER", "FITNESS", "CUSTOM"];
 
 function MasterImplantacao() {
-  const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
-  const contextClientId=params?.get("clientId") ?? null;
-  const contextOrganizationId=params?.get("organizationId") ?? null;
-  const contextSubscriptionId=params?.get("subscriptionId") ?? null;
+  const params = typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
+  const contextClientId = params?.get("clientId") ?? null;
+  const contextOrganizationId = params?.get("organizationId") ?? null;
+  const contextSubscriptionId = params?.get("subscriptionId") ?? null;
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
   const [jobs, setJobs] = useState<ProvisioningJob[]>([]);
   const [instances, setInstances] = useState<ImplementationInstance[]>([]);
+  const [clients, setClients] = useState<NeroxaClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +35,13 @@ function MasterImplantacao() {
   const [prepareName, setPrepareName] = useState("");
   const [prepareSlug, setPrepareSlug] = useState("");
   const [preparing, setPreparing] = useState(false);
+  const [instanceModal, setInstanceModal] = useState<"create" | "edit" | null>(null);
+  const [editingInstance, setEditingInstance] = useState<ImplementationInstance | null>(null);
+  const [instanceName, setInstanceName] = useState("");
+  const [instanceSlug, setInstanceSlug] = useState("");
+  const [instanceType, setInstanceType] = useState("CUSTOM");
+  const [instanceOrganizationId, setInstanceOrganizationId] = useState(contextOrganizationId ?? "");
+  const [savingInstance, setSavingInstance] = useState(false);
 
   const load = async () => {
     setError(null);
@@ -40,11 +50,12 @@ function MasterImplantacao() {
       setAuthorized(Boolean(access?.active));
       setRole(access?.active ? access.role : null);
       if (!access?.active) return;
-      const [jobData, instanceData] = await Promise.all([listProvisioningJobs(), listImplementationInstances()]);
+      const [jobData, instanceData, clientData] = await Promise.all([listProvisioningJobs(), listImplementationInstances(), listNeroxaClients()]);
       const scopedJobs = contextOrganizationId ? jobData.filter((job) => job.organization_id === contextOrganizationId) : contextClientId ? jobData.filter((job) => job.organization_id === contextClientId) : jobData;
       const scopedInstances = contextOrganizationId ? instanceData.filter((instance) => instance.organization_id === contextOrganizationId) : contextClientId ? instanceData.filter((instance) => instance.organization_id === contextClientId) : instanceData;
       setJobs(scopedJobs);
       setInstances(scopedInstances);
+      setClients(clientData);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar a central de implantação.");
     } finally { setLoading(false); }
@@ -87,6 +98,59 @@ function MasterImplantacao() {
     finally { setWorking(null); }
   };
 
+  const changeInstanceStatus = async (instance: ImplementationInstance, status: InstanceStatus) => {
+    if (status === instance.status) return;
+    setWorking(instance.id); setError(null);
+    try { await updateImplementationInstanceStatus({ id: instance.id, status }); await load(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o status da instância."); }
+    finally { setWorking(null); }
+  };
+
+  const openCreate = () => {
+    setEditingInstance(null);
+    setInstanceName("");
+    setInstanceSlug("");
+    setInstanceType("CUSTOM");
+    setInstanceOrganizationId(contextOrganizationId ?? "");
+    setInstanceModal("create");
+    setError(null);
+  };
+
+  const openEdit = (instance: ImplementationInstance) => {
+    setEditingInstance(instance);
+    setInstanceName(instance.name);
+    setInstanceSlug(instance.slug);
+    setInstanceType(instance.system_type);
+    setInstanceOrganizationId(instance.organization_id);
+    setInstanceModal("edit");
+    setError(null);
+  };
+
+  const saveInstance = async () => {
+    setSavingInstance(true); setError(null);
+    try {
+      if (instanceModal === "create") {
+        await createImplementationInstance({ organizationId: instanceOrganizationId, name: instanceName, slug: instanceSlug, systemType: instanceType });
+      } else if (editingInstance) {
+        await updateImplementationInstance({ id: editingInstance.id, name: instanceName, slug: instanceSlug, systemType: instanceType });
+      }
+      setInstanceModal(null);
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível salvar a instância.");
+    } finally { setSavingInstance(false); }
+  };
+
+  const removeInstance = async (instance: ImplementationInstance) => {
+    if (instance.status !== "ARCHIVED") return;
+    const confirmed = window.confirm("Excluir instância permanentemente? Esta ação não pode ser desfeita. A exclusão só será permitida se a instância não possuir vínculos ou histórico operacional.");
+    if (!confirmed) return;
+    setWorking(instance.id); setError(null);
+    try { await deleteImplementationInstance(instance.id); await load(); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível excluir a instância."); }
+    finally { setWorking(null); }
+  };
+
   const prepareFromSubscription = async () => {
     if (!contextSubscriptionId || !prepareName.trim() || !prepareSlug.trim()) {
       setError("Informe o nome e o slug da instância.");
@@ -94,18 +158,12 @@ function MasterImplantacao() {
     }
     setPreparing(true); setError(null);
     try {
-      await prepareImplementationFromSubscription({
-        subscriptionId: contextSubscriptionId,
-        name: prepareName,
-        slug: prepareSlug,
-      });
+      await prepareImplementationFromSubscription({ subscriptionId: contextSubscriptionId, name: prepareName, slug: prepareSlug });
       setPrepareOpen(false);
       await load();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível preparar a implantação.");
-    } finally {
-      setPreparing(false);
-    }
+    } finally { setPreparing(false); }
   };
 
   const createForInstance = async (instance: ImplementationInstance) => {
@@ -126,36 +184,40 @@ function MasterImplantacao() {
   if (authorized === null || loading) return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin" /></main>;
 
   return <MasterShell><div className="mx-auto max-w-[1250px] space-y-5 px-4 py-5 sm:px-6">
-    <section className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Operação · Implantação</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Central de implantação</h1><p className="mt-1 text-sm text-slate-500">Acompanhe instâncias e jobs de provisionamento.</p></div><div className="flex gap-2">{contextSubscriptionId && <Button onClick={()=>setPrepareOpen(true)}>Preparar implantação</Button>}<Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4"/>Atualizar</Button></div></section>
+    <section className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+      <div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Operação · Implantação</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Central de implantação</h1><p className="mt-1 text-sm text-slate-500">Acompanhe instâncias e jobs de provisionamento.</p></div>
+      <div className="flex flex-wrap gap-2">{canPerform(role,"manageSystems") && <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4"/>Nova instância</Button>}{contextSubscriptionId && <Button variant="outline" onClick={()=>setPrepareOpen(true)}>Preparar implantação</Button>}<Button variant="outline" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4"/>Atualizar</Button></div>
+    </section>
+
+    {instanceModal && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4">
+      <Card className="w-full max-w-lg border-slate-200 bg-white p-5 shadow-2xl">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Instâncias</p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-900">{instanceModal === "create" ? "Nova instância" : "Editar instância"}</h2>
+        <div className="mt-5 space-y-4">
+          {instanceModal === "create" && <label className="block"><span className="text-xs font-medium text-slate-700">Cliente</span><select className="mt-1.5 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" value={instanceOrganizationId} onChange={e=>setInstanceOrganizationId(e.target.value)}><option value="">Selecione...</option>{clients.filter(c=>c.organization_id).map(c=><option key={c.id} value={c.organization_id!}>{c.trade_name || c.legal_name || c.organization_id}</option>)}</select></label>}
+          <label className="block"><span className="text-xs font-medium text-slate-700">Nome</span><input className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 text-sm" value={instanceName} onChange={e=>setInstanceName(e.target.value)} placeholder="Ex.: Barbearia Silva"/></label>
+          <label className="block"><span className="text-xs font-medium text-slate-700">Slug</span><input className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 text-sm" value={instanceSlug} onChange={e=>setInstanceSlug(e.target.value)} placeholder="ex.: barbearia-silva"/></label>
+          <label className="block"><span className="text-xs font-medium text-slate-700">Tipo de sistema</span><select className="mt-1.5 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm" value={instanceType} onChange={e=>setInstanceType(e.target.value)}>{SYSTEM_TYPES.map(type=><option key={type} value={type}>{type}</option>)}</select></label>
+        </div>
+        <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-4"><Button variant="outline" onClick={()=>setInstanceModal(null)} disabled={savingInstance}>Cancelar</Button><Button onClick={()=>void saveInstance()} disabled={savingInstance}>{savingInstance?<Loader2 className="h-4 w-4 animate-spin"/>:"Salvar instância"}</Button></div>
+      </Card>
+    </div>}
+
     {prepareOpen && contextSubscriptionId && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4">
       <Card className="w-full max-w-lg border-slate-200 bg-white p-5 shadow-2xl">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assinatura ativa</p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-900">Preparar implantação</h2>
-        <p className="mt-1 text-sm text-slate-500">A instância será criada vinculada à assinatura e receberá automaticamente o primeiro job de provisionamento.</p>
-        <div className="mt-5 space-y-4">
-          <label className="block"><span className="text-xs font-medium text-slate-700">Nome da instância</span><input className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 text-sm" value={prepareName} onChange={e=>setPrepareName(e.target.value)} placeholder="Ex.: Barbearia Silva"/></label>
-          <label className="block"><span className="text-xs font-medium text-slate-700">Slug</span><input className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 text-sm" value={prepareSlug} onChange={e=>setPrepareSlug(e.target.value)} placeholder="ex.: barbearia-silva"/></label>
-        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Assinatura ativa</p><h2 className="mt-1 text-xl font-semibold text-slate-900">Preparar implantação</h2><p className="mt-1 text-sm text-slate-500">A instância será criada vinculada à assinatura e receberá automaticamente o primeiro job de provisionamento.</p>
+        <div className="mt-5 space-y-4"><label className="block"><span className="text-xs font-medium text-slate-700">Nome da instância</span><input className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 text-sm" value={prepareName} onChange={e=>setPrepareName(e.target.value)} placeholder="Ex.: Barbearia Silva"/></label><label className="block"><span className="text-xs font-medium text-slate-700">Slug</span><input className="mt-1.5 h-10 w-full rounded-md border border-slate-300 px-3 text-sm" value={prepareSlug} onChange={e=>setPrepareSlug(e.target.value)} placeholder="ex.: barbearia-silva"/></label></div>
         <div className="mt-5 flex justify-end gap-2 border-t border-slate-100 pt-4"><Button variant="outline" onClick={()=>setPrepareOpen(false)} disabled={preparing}>Cancelar</Button><Button onClick={()=>void prepareFromSubscription()} disabled={preparing}>{preparing?<Loader2 className="h-4 w-4 animate-spin"/>:"Preparar implantação"}</Button></div>
       </Card>
     </div>}
+
     {error && <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[["Pendentes",metrics.pending,Clock3],["Executando",metrics.running,Play],["Falhos",metrics.failed,XCircle],["Ativas",metrics.active,CheckCircle2]].map(([label,value,Icon]) => <Card key={String(label)} className="border-slate-200 bg-white p-4 shadow-sm"><Icon className="h-4 w-4 text-slate-500"/><p className="mt-2 text-xs text-slate-500">{label}</p><p className="mt-0.5 text-2xl font-semibold">{value}</p></Card>)}</div>
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_390px]">
+
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_430px]">
       <Card className="border-slate-200 bg-white shadow-sm"><div className="border-b border-slate-100 p-5"><h2 className="font-semibold">Fila de provisionamento</h2><p className="mt-1 text-xs text-slate-500">{jobs.length} job(s) registrados</p></div><div className="divide-y divide-slate-100">{jobs.length === 0 ? <div className="p-10 text-center"><FolderKanban className="mx-auto h-9 w-9 text-slate-300"/><p className="mt-3 text-sm font-medium">Nenhum job de implantação</p><p className="mt-1 text-xs text-slate-500">Os jobs aparecerão quando uma instância for preparada para provisionamento.</p></div> : jobs.map(job => <div key={job.id} className="p-5"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{job.action}</p><span className={`rounded-full px-2 py-1 text-[10px] font-medium ${statusClass[job.status]}`}>{statusLabel[job.status]}</span></div><p className="mt-1 truncate text-xs text-slate-500">Job {job.id.slice(0,8)} · instância {job.system_instance_id?.slice(0,8) ?? "—"}</p>{job.error_message && <p className="mt-2 text-xs text-red-600">{job.error_message}</p>}</div><div className="flex shrink-0 gap-1">{canPerform(role,"manageSystems") && job.status === "PENDING" && <Button size="sm" variant="outline" disabled={working===job.id} onClick={() => void run(job)}><Play className="mr-1 h-3.5 w-3.5"/>Executar</Button>}{canPerform(role,"manageSystems") && job.status === "RUNNING" && <Button size="sm" variant="outline" disabled={working===job.id} onClick={() => void complete(job)}><CheckCircle2 className="mr-1 h-3.5 w-3.5"/>Concluir</Button>}{canPerform(role,"manageSystems") && ["FAILED","CANCELLED"].includes(job.status) && <Button size="sm" variant="outline" disabled={working===job.id} onClick={() => void retry(job)}><RotateCcw className="mr-1 h-3.5 w-3.5"/>Tentar novamente</Button>}{canPerform(role,"manageSystems") && ["PENDING","RUNNING"].includes(job.status) && <Button size="sm" variant="ghost" disabled={working===job.id} onClick={() => void cancel(job)}><XCircle className="h-4 w-4"/></Button>}</div></div><div className="mt-3 grid grid-cols-2 gap-2 text-[11px] text-slate-500"><span>Criado: {new Date(job.created_at).toLocaleString("pt-BR")}</span><span>Início: {job.started_at ? new Date(job.started_at).toLocaleString("pt-BR") : "—"}</span></div></div>)}</div></Card>
-      <Card className="h-fit border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2"><Zap className="h-4 w-4 text-slate-500"/><h2 className="font-semibold">Instâncias</h2></div><div className="mt-4 space-y-3">{instances.length===0 ? <p className="text-sm text-slate-500">Nenhuma instância cadastrada.</p> : instances.map(instance => { const hasPending=jobs.some(j=>j.system_instance_id===instance.id && ["PENDING","RUNNING"].includes(j.status)); return <div key={instance.id} className="rounded-xl border border-slate-200 p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium">{instance.name}</p><p className="truncate text-xs text-slate-500">{instance.slug} · {instance.system_type}</p></div><select
-  value={instance.status}
-  disabled={working===instance.id}
-  onChange={(event) => void changeInstanceStatus(instance, event.target.value as InstanceStatus)}
-  className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-medium text-slate-600 outline-none disabled:opacity-50"
-  aria-label={`Status da instância ${instance.name}`}
->
-  {(["PROVISIONING","ACTIVE","SUSPENDED","ARCHIVED"] as InstanceStatus[]).map((status) => (
-    <option key={status} value={status}>{status}</option>
-  ))}
-</select></div>{canPerform(role,"manageSystems") && <div className="mt-3 grid gap-2 sm:grid-cols-2"><Link to="/master-dominios" search={{ organizationId: instance.organization_id }} className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"><Globe2 className="mr-1.5 h-3.5 w-3.5"/>Domínios</Link>{!hasPending && instance.status === "PROVISIONING" && <Button size="sm" variant="outline" disabled={working===instance.id} onClick={() => void createForInstance(instance)}><RocketIcon/>Criar job de implantação</Button>}</div>}</div> })}</div></Card>
+
+      <Card className="h-fit border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-center gap-2"><Zap className="h-4 w-4 text-slate-500"/><h2 className="font-semibold">Instâncias</h2></div><div className="mt-4 space-y-3">{instances.length===0 ? <p className="text-sm text-slate-500">Nenhuma instância cadastrada.</p> : instances.map(instance => { const hasPending=jobs.some(j=>j.system_instance_id===instance.id && ["PENDING","RUNNING"].includes(j.status)); return <div key={instance.id} className="rounded-xl border border-slate-200 p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="font-medium">{instance.name}</p><p className="truncate text-xs text-slate-500">{instance.slug} · {instance.system_type}</p></div><select value={instance.status} disabled={working===instance.id || !canPerform(role,"manageSystems")} onChange={(event) => void changeInstanceStatus(instance, event.target.value as InstanceStatus)} className="rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-medium text-slate-600 outline-none disabled:opacity-50" aria-label={`Status da instância ${instance.name}`}>{INSTANCE_STATUSES.map(status => <option key={status} value={status}>{status}</option>)}</select></div>{canPerform(role,"manageSystems") && <div className="mt-3 grid grid-cols-2 gap-2"><Button size="sm" variant="outline" onClick={()=>openEdit(instance)} disabled={working===instance.id}><Pencil className="mr-1.5 h-3.5 w-3.5"/>Editar</Button><Button size="sm" variant="outline" onClick={()=>void removeInstance(instance)} disabled={working===instance.id || instance.status!=="ARCHIVED"}><Trash2 className="mr-1.5 h-3.5 w-3.5"/>Excluir</Button><Link to="/master-dominios" search={{ organizationId: instance.organization_id }} className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"><Globe2 className="mr-1.5 h-3.5 w-3.5"/>Domínios</Link>{!hasPending && instance.status === "PROVISIONING" && <Button size="sm" variant="outline" disabled={working===instance.id} onClick={() => void createForInstance(instance)}><Zap className="mr-1.5 h-3.5 w-3.5"/>Criar job</Button>}</div>}</div>; })}</div></Card>
     </div>
   </div></MasterShell>;
 }
-
-function RocketIcon(){ return <Zap className="mr-2 h-3.5 w-3.5"/>; }
