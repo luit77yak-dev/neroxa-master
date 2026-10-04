@@ -408,10 +408,6 @@ function MasterClientsPage() {
           clientName={selected.trade_name || selected.legal_name || "Cliente sem nome"}
           status={STATUS_LABELS[selected.status]}
           initialSection={routeContext.clientId === selected.id ? routeContext.section : "client"}
-          onBack={() => {
-            setSelectedId(null);
-            window.history.replaceState({}, "", "/master-clientes");
-          }}
           onSectionChange={(section) => {
             const params = new URLSearchParams(window.location.search);
             params.set("clientId", selected.id);
