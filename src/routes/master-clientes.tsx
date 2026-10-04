@@ -408,10 +408,6 @@ function MasterClientsPage() {
           clientName={selected.trade_name || selected.legal_name || "Cliente sem nome"}
           status={STATUS_LABELS[selected.status]}
           initialSection={routeContext.clientId === selected.id ? routeContext.section : "client"}
-          onBack={() => {
-            setSelectedId(null);
-            window.history.replaceState({}, "", "/master-clientes");
-          }}
           onSectionChange={(section) => {
             const params = new URLSearchParams(window.location.search);
             params.set("clientId", selected.id);
@@ -434,9 +430,7 @@ function MasterClientsPage() {
                                 <p className="text-xs text-slate-500">{selected.organization_id ? "Organização vinculada" : "Ainda sem organização"}</p>
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setSelectedId(null)} aria-label="Fechar">
-                              <X className="h-4 w-4" />
-                            </Button>
+
                           </div>
                           <div className="mt-4">
                             <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_TONE[selected.status]}`}>

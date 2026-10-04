@@ -54,7 +54,7 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
       .order("updated_at", { ascending: false }),
     supabase
       .from("neroxa_clients" as never)
-      .select("id,legal_name,trade_name,status,active")
+      .select("id,legal_name,trade_name,status")
       .order("updated_at", { ascending: false }),
   ]);
 
