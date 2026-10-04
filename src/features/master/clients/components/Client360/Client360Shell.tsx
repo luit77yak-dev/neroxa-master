@@ -28,7 +28,6 @@ export function Client360Shell({
   clientName,
   status,
   initialSection = "client",
-  onBack,
   onSectionChange,
   children,
 }: {
@@ -37,7 +36,6 @@ export function Client360Shell({
   clientName: string;
   status: string;
   initialSection?: string;
-  onBack: () => void;
   onSectionChange?: (section: string) => void;
   children: ReactNode;
 }) {
