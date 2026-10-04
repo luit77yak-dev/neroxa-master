@@ -10,7 +10,7 @@ import {
   type NeroxaSystemDomain,
 } from "@/features/master/clients/services";
 import { canPerform } from "@/features/master/permissions";
-import { validateDomainDns, transitionDomainStatus, type DomainStatus } from "@/features/master/domains/services";
+import { createDomain, deleteDomain, updateDomain, validateDomainDns, transitionDomainStatus, type DomainStatus } from "@/features/master/domains/services";
 import { Button } from "@/components/ui/button";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 
@@ -45,6 +45,12 @@ function MasterDominios() {
   const contextClientId = params?.get("clientId") ?? null;
   const contextOrganizationId = params?.get("organizationId") ?? null;
   const [domains, setDomains] = useState<DomainRow[]>([]);
+  const [instances, setInstances] = useState<Array<{ id: string; name: string; slug: string; status: DomainRow["instanceStatus"] }>>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<DomainRow | null>(null);
+  const [domainDraft, setDomainDraft] = useState("");
+  const [instanceDraft, setInstanceDraft] = useState("");
+  const [primaryDraft, setPrimaryDraft] = useState(false);
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
@@ -62,6 +68,7 @@ function MasterDominios() {
 
       const clients = await listNeroxaClients();
       const rows: DomainRow[] = [];
+      const allInstances: Array<{ id: string; name: string; slug: string; status: DomainRow["instanceStatus"] }> = [];
       const scopedClients = contextOrganizationId
         ? clients.filter((client) => client.organization_id === contextOrganizationId)
         : contextClientId
@@ -69,8 +76,9 @@ function MasterDominios() {
           : clients;
 
       for (const client of scopedClients) {
-        const instances = await listNeroxaClientInstances(client.organization_id);
-        for (const instance of instances) {
+        const clientInstances = await listNeroxaClientInstances(client.organization_id);
+        allInstances.push(...clientInstances.map((instance) => ({ id: instance.id, name: instance.name, slug: instance.slug, status: instance.status })));
+        for (const instance of clientInstances) {
           const instanceDomains = await listNeroxaInstanceDomains(instance.id);
           rows.push(
             ...instanceDomains.map((domain) => ({
@@ -84,6 +92,7 @@ function MasterDominios() {
       }
 
       setDomains(rows);
+      setInstances(allInstances);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os domínios.");
     } finally {
@@ -94,6 +103,57 @@ function MasterDominios() {
   useEffect(() => {
     void load();
   }, []);
+
+  function openCreate() {
+    const first = instances.find((instance) => instance.status !== "ARCHIVED");
+    setEditing(null);
+    setDomainDraft("");
+    setInstanceDraft(first?.id ?? "");
+    setPrimaryDraft(false);
+    setShowCreate(true);
+  }
+
+  function openEdit(domain: DomainRow) {
+    setShowCreate(false);
+    setEditing(domain);
+    setDomainDraft(domain.domain);
+    setInstanceDraft(domain.system_instance_id);
+    setPrimaryDraft(domain.is_primary);
+  }
+
+  async function saveDomain() {
+    setWorking("domain-form");
+    setError(null);
+    try {
+      if (editing) {
+        await updateDomain({ domainId: editing.id, domain: domainDraft, isPrimary: primaryDraft });
+      } else {
+        if (!instanceDraft) throw new Error("Selecione a instância do domínio.");
+        await createDomain({ instanceId: instanceDraft, domain: domainDraft, isPrimary: primaryDraft });
+      }
+      setShowCreate(false);
+      setEditing(null);
+      await load();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Não foi possível salvar o domínio.");
+    } finally {
+      setWorking(null);
+    }
+  }
+
+  async function removeDomain(domain: DomainRow) {
+    if (!window.confirm(`Excluir o domínio ${domain.domain}? Esta ação não pode ser desfeita.`)) return;
+    setWorking(domain.id);
+    setError(null);
+    try {
+      await deleteDomain(domain.id);
+      await load();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Não foi possível excluir o domínio.");
+    } finally {
+      setWorking(null);
+    }
+  }
 
   async function validateDns(domain: DomainRow) {
     setWorking(domain.id);
@@ -155,6 +215,7 @@ function MasterDominios() {
               Acompanhe e valide os domínios vinculados às instâncias dos clientes.
             </p>
           </div>
+          {canManage && <Button onClick={openCreate} disabled={loading || instances.every((instance) => instance.status === "ARCHIVED")}>Adicionar domínio</Button>}
           <Button variant="outline" onClick={() => void load()} disabled={loading}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Atualizar
@@ -219,6 +280,10 @@ function MasterDominios() {
                         </Button>
                       )}
 
+                      {canManage && !disabled && <Button size="sm" variant="ghost" disabled={disabled} onClick={() => openEdit(domain)}>Editar</Button>}
+
+                      {canManage && !disabled && <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void removeDomain(domain)}>Excluir</Button>}
+
                       {canDisable && (
                         <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void changeStatus(domain, "DISABLED")}>
                           Desativar
@@ -239,6 +304,46 @@ function MasterDominios() {
             </div>
           )}
         </div>
+
+
+        {(showCreate || editing) && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
+            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">{editing ? "Editar domínio" : "Adicionar domínio"}</h2>
+                  <p className="mt-1 text-xs text-slate-500">Use apenas o hostname, sem protocolo ou caminho.</p>
+                </div>
+                <Button variant="ghost" onClick={() => { setShowCreate(false); setEditing(null); }}>Fechar</Button>
+              </div>
+              <div className="mt-5 space-y-4">
+                {!editing && (
+                  <label className="block text-sm font-medium text-slate-700">
+                    Instância
+                    <select value={instanceDraft} onChange={(event) => setInstanceDraft(event.target.value)} className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                      <option value="">Selecione...</option>
+                      {instances.filter((instance) => instance.status !== "ARCHIVED").map((instance) => (
+                        <option key={instance.id} value={instance.id}>{instance.name} · {instance.slug}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                <label className="block text-sm font-medium text-slate-700">
+                  Domínio
+                  <input value={domainDraft} onChange={(event) => setDomainDraft(event.target.value)} placeholder="cliente.com.br" className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+                </label>
+                <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <input type="checkbox" checked={primaryDraft} onChange={(event) => setPrimaryDraft(event.target.checked)} />
+                  Definir como domínio principal
+                </label>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => { setShowCreate(false); setEditing(null); }}>Cancelar</Button>
+                  <Button onClick={() => void saveDomain()} disabled={working === "domain-form"}>{working === "domain-form" ? "Salvando..." : "Salvar domínio"}</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </MasterShell>
   );
