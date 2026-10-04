@@ -434,9 +434,7 @@ function MasterClientsPage() {
                                 <p className="text-xs text-slate-500">{selected.organization_id ? "Organização vinculada" : "Ainda sem organização"}</p>
                               </div>
                             </div>
-                            <Button variant="ghost" size="icon" onClick={() => setSelectedId(null)} aria-label="Fechar">
-                              <X className="h-4 w-4" />
-                            </Button>
+
                           </div>
                           <div className="mt-4">
                             <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_TONE[selected.status]}`}>
