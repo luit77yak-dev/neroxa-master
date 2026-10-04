@@ -48,6 +48,77 @@ export async function listImplementationInstances() {
   return (data ?? []) as unknown as ImplementationInstance[];
 }
 
+export async function createImplementationInstance(input: {
+  organizationId: string;
+  name: string;
+  slug: string;
+  systemType: string;
+  planId?: string | null;
+  systemId?: string | null;
+  subscriptionId?: string | null;
+}) {
+  const name = input.name.trim();
+  const slug = input.slug.trim().toLowerCase();
+  const systemType = input.systemType.trim().toUpperCase();
+  if (!input.organizationId || !name || !slug || !systemType) {
+    throw new Error("Informe cliente, nome, slug e tipo de sistema.");
+  }
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    throw new Error("O slug deve usar apenas letras minúsculas, números e hífens.");
+  }
+
+  const { data, error } = await supabase
+    .from("neroxa_system_instances" as never)
+    .insert({
+      organization_id: input.organizationId,
+      name,
+      slug,
+      system_type: systemType,
+      plan_id: input.planId || null,
+      system_id: input.systemId || null,
+      subscription_id: input.subscriptionId || null,
+      status: "PROVISIONING",
+    } as never)
+    .select("id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data as unknown as ImplementationInstance;
+}
+
+export async function updateImplementationInstance(input: {
+  id: string;
+  name: string;
+  slug: string;
+  systemType: string;
+}) {
+  const name = input.name.trim();
+  const slug = input.slug.trim().toLowerCase();
+  const systemType = input.systemType.trim().toUpperCase();
+  if (!name || !slug || !systemType) throw new Error("Informe nome, slug e tipo de sistema.");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    throw new Error("O slug deve usar apenas letras minúsculas, números e hífens.");
+  }
+
+  const { data, error } = await supabase
+    .from("neroxa_system_instances" as never)
+    .update({ name, slug, system_type: systemType, updated_at: new Date().toISOString() } as never)
+    .eq("id", input.id)
+    .select("id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data as unknown as ImplementationInstance;
+}
+
+export async function deleteImplementationInstance(id: string) {
+  const { data, error } = await supabase.rpc("delete_neroxa_system_instance_safely", {
+    p_instance_id: id,
+  });
+  if (error) throw new Error(error.message);
+  return data as { deleted: boolean; instance_id: string; status: InstanceStatus };
+}
+
 export async function createProvisioningJob(input: {
   organizationId: string;
   systemInstanceId?: string | null;
@@ -74,28 +145,12 @@ export async function updateProvisioningJob(input: {
   status: ProvisioningStatus;
   errorMessage?: string | null;
 }) {
-  const patch: Record<string, unknown> = {
-    status: input.status,
-    error_message: input.errorMessage ?? null,
-  };
-  if (input.status === "RUNNING") patch.started_at = new Date().toISOString();
-  if (["COMPLETED", "FAILED", "CANCELLED"].includes(input.status)) patch.completed_at = new Date().toISOString();
-
-  const { error } = await supabase
-    .from("neroxa_provisioning_jobs" as never)
-    .update(patch as never)
-    .eq("id", input.id);
+  const { error } = await supabase.rpc("update_neroxa_provisioning_job_status", {
+    p_job_id: input.id,
+    p_status: input.status,
+    p_error_message: input.errorMessage ?? null,
+  });
   if (error) throw new Error(error.message);
-
-  if (input.status === "COMPLETED" || input.status === "FAILED") {
-    const job = await supabase.from("neroxa_provisioning_jobs" as never).select("system_instance_id").eq("id", input.id).single();
-    if (!job.error && job.data?.system_instance_id) {
-      await supabase.from("neroxa_system_instances" as never).update({
-        status: input.status === "COMPLETED" ? "ACTIVE" : "PROVISIONING",
-        updated_at: new Date().toISOString(),
-      } as never).eq("id", job.data.system_instance_id);
-    }
-  }
 }
 
 export async function updateImplementationInstanceStatus(input: { id: string; status: InstanceStatus }) {
