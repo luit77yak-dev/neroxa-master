@@ -109,12 +109,21 @@ Deno.serve(async (req) => {
     }
 
     const query = async (type: "A" | "CNAME" | "NS") => {
-      const response = await fetch(
-        `https://dns.google/resolve?name=${encodeURIComponent(normalized)}&type=${type}`,
-        { headers: { accept: "application/dns-json" } },
-      );
-      if (!response.ok) throw new Error(`Falha no resolvedor DNS (${response.status})`);
-      return (await response.json()) as DnsResponse;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      try {
+        const response = await fetch(
+          `https://dns.google/resolve?name=${encodeURIComponent(normalized)}&type=${type}`,
+          {
+            headers: { accept: "application/dns-json" },
+            signal: controller.signal,
+          },
+        );
+        if (!response.ok) throw new Error(`Falha no resolvedor DNS (${response.status})`);
+        return (await response.json()) as DnsResponse;
+      } finally {
+        clearTimeout(timeout);
+      }
     };
 
     const [a, cname, ns] = await Promise.all([query("A"), query("CNAME"), query("NS")]);
