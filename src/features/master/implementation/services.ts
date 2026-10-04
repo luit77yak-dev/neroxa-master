@@ -98,6 +98,14 @@ export async function updateProvisioningJob(input: {
   }
 }
 
+export async function updateImplementationInstanceStatus(input: { id: string; status: InstanceStatus }) {
+  const { error } = await supabase.rpc("transition_neroxa_instance_status", {
+    p_instance_id: input.id,
+    p_status: input.status,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function retryProvisioningJob(job: ProvisioningJob) {
   return createProvisioningJob({
     organizationId: job.organization_id,
