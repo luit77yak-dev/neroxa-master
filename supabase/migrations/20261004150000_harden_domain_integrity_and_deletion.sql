@@ -2,10 +2,6 @@
 -- One primary domain per instance, primary domains cannot be disabled,
 -- and deleting a domain requires it to be non-primary and disabled.
 
-create unique index if not exists neroxa_system_domains_one_primary_per_instance
-  on public.neroxa_system_domains (system_instance_id)
-  where is_primary = true;
-
 alter table public.neroxa_system_domains
   drop constraint if exists neroxa_system_domains_primary_not_disabled;
 
