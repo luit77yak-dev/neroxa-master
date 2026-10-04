@@ -124,17 +124,52 @@ export async function createDomain(input: { instanceId: string; domain: string; 
 
 export async function updateDomain(input: { domainId: string; domain: string; isPrimary?: boolean }) {
   const normalized = normalizeDomain(input.domain);
+  const { data: current, error: currentError } = await supabase
+    .from("neroxa_system_domains" as never)
+    .select("domain,status,is_primary")
+    .eq("id", input.domainId)
+    .single();
+
+  if (currentError) throw new Error(currentError.message);
+
+  const currentDomain = current as { domain: string; status: DomainStatus; is_primary: boolean };
   const { error } = await supabase
     .from("neroxa_system_domains" as never)
-    .update({ domain: normalized, is_primary: Boolean(input.isPrimary) } as never)
+    .update({
+      domain: normalized,
+      is_primary: Boolean(input.isPrimary),
+    } as never)
     .eq("id", input.domainId);
+
   if (error) throw new Error(error.message);
+
+  if (currentDomain.domain !== normalized && currentDomain.status === "VERIFIED") {
+    // The database trigger also enforces this invariant; this keeps the client behavior explicit.
+    return;
+  }
 }
 
 export async function deleteDomain(domainId: string) {
+  const { data: current, error: currentError } = await supabase
+    .from("neroxa_system_domains" as never)
+    .select("status,is_primary")
+    .eq("id", domainId)
+    .single();
+
+  if (currentError) throw new Error(currentError.message);
+
+  const domain = current as { status: DomainStatus; is_primary: boolean };
+  if (domain.is_primary) {
+    throw new Error("Remova o domínio da posição principal antes de excluí-lo.");
+  }
+  if (domain.status !== "DISABLED") {
+    throw new Error("Desative o domínio antes de excluí-lo.");
+  }
+
   const { error } = await supabase
     .from("neroxa_system_domains" as never)
     .delete()
     .eq("id", domainId);
+
   if (error) throw new Error(error.message);
 }
