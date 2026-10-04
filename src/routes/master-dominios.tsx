@@ -251,7 +251,8 @@ function MasterDominios() {
               {domains.map((domain) => {
                 const disabled = working === domain.id || domain.instanceStatus === "ARCHIVED";
                 const canStart = canManage && !disabled && ["PENDING", "FAILED", "DISABLED"].includes(domain.status);
-                const canDisable = canManage && !disabled && domain.status === "VERIFIED";
+                const canDisable = canManage && !disabled && domain.status === "VERIFIED" && !domain.is_primary;
+                const canDelete = canManage && !disabled && domain.status === "DISABLED" && !domain.is_primary;
 
                 return (
                   <div key={domain.id} className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
@@ -282,7 +283,7 @@ function MasterDominios() {
 
                       {canManage && !disabled && <Button size="sm" variant="ghost" disabled={disabled} onClick={() => openEdit(domain)}>Editar</Button>}
 
-                      {canManage && !disabled && <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void removeDomain(domain)}>Excluir</Button>}
+                      {canDelete && <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void removeDomain(domain)}>Excluir</Button>}
 
                       {canDisable && (
                         <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void changeStatus(domain, "DISABLED")}>
