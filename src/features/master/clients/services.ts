@@ -215,27 +215,3 @@ export async function listNeroxaInstanceDomains(instanceId: string) {
   return (data ?? []) as unknown as NeroxaSystemDomain[];
 }
 
-export async function createNeroxaSystemDomain(input: {
-  instanceId: string;
-  domain: string;
-  isPrimary?: boolean;
-}) {
-  const normalized = input.domain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
-  if (!normalized || normalized.includes("/") || normalized.includes(" ")) {
-    throw new Error("Informe um domínio válido, sem https:// ou caminhos.");
-  }
-
-  const { data, error } = await supabase
-    .from("neroxa_system_domains" as never)
-    .insert({
-      system_instance_id: input.instanceId,
-      domain: normalized,
-      is_primary: Boolean(input.isPrimary),
-      status: "PENDING",
-    } as never)
-    .select("id")
-    .single();
-
-  if (error) throw new Error(error.message);
-  return (data as { id: string }).id;
-}
