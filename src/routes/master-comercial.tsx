@@ -75,6 +75,7 @@ function MasterCommercialPage() {
   const [showNewProposal, setShowNewProposal] = useState(Boolean(contextClientId || contextOrganizationId));
   const [proposalForm, setProposalForm] = useState({ clientId: contextOrganizationId ?? contextClientId ?? "", planId: "", title: "", notes: "", validUntil: "" });
   const [creatingProposal, setCreatingProposal] = useState(false);
+  const [shareLink, setShareLink] = useState<string | null>(null);
 
   const load = async (initial = false) => {
     setError(null);
@@ -123,6 +124,19 @@ function MasterCommercialPage() {
       setError(cause instanceof Error ? cause.message : "Não foi possível criar a proposta.");
     } finally {
       setCreatingProposal(false);
+    }
+  };
+
+  const handleShareProposal = async (proposal: CommercialProposal) => {
+    if (!canPerform(role, "manageCommercial")) return;
+    try {
+      if (proposal.status === "DRAFT") await updateProposalStatus(proposal.id, "SENT");
+      const link = `${window.location.origin}/proposta-publica?token=${proposal.public_token}`;
+      setShareLink(link);
+      await navigator.clipboard?.writeText(link);
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível preparar o link da proposta.");
     }
   };
 
@@ -203,7 +217,7 @@ function MasterCommercialPage() {
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
               Atualizar
             </Button>
-            {canPerform(role, "manageCommercial") && <Button onClick={() => setShowNewProposal((current) => !current)}><Plus className="h-4 w-4" />Nova proposta</Button>}
+            {canPerform(role, "manageCommercial") && <><Link to="/master-contratos"><Button variant="outline"><FileCheck2 className="h-4 w-4" />Contratos</Button></Link><Button onClick={() => setShowNewProposal((current) => !current)}><Plus className="h-4 w-4" />Nova proposta</Button></>}
           </div>
         </section>
 
@@ -223,6 +237,8 @@ function MasterCommercialPage() {
             <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" onClick={() => setShowNewProposal(false)}>Cancelar</Button><Button onClick={() => void handleCreateProposal()} disabled={creatingProposal || !proposalForm.clientId || !proposalForm.planId}>{creatingProposal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Criar proposta</Button></div>
           </Card>
         )}
+
+        {shareLink && <Card className="border-border bg-card p-4 shadow-soft"><p className="text-xs font-medium text-muted-foreground">Link público da proposta</p><div className="mt-2 flex flex-col gap-2 sm:flex-row"><input readOnly value={shareLink} className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-muted/50 px-3 text-xs" /><Button onClick={() => void navigator.clipboard?.writeText(shareLink)}>Copiar link</Button></div></Card>}
 
         {error && (
           <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -257,7 +273,7 @@ function MasterCommercialPage() {
                       {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"SENT")}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{proposal.status==="ACCEPTED"&&!contracts.some((contract)=>contract.proposal_id===proposal.id)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>void handleCreateContract(proposal.id)}>Gerar contrato</Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>{if(window.confirm("Cancelar esta proposta?"))void handleProposalStatus(proposal.id,"CANCELLED")}}>Cancelar</Button>}</div>
+                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar proposta" disabled={saving===proposal.id} onClick={()=>void handleShareProposal(proposal)}><Send className="h-3.5 w-3.5"/></Button>}{proposal.status==="SENT"&&<Button variant="ghost" size="icon" title="Copiar link" onClick={()=>void handleShareProposal(proposal)}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{proposal.status==="ACCEPTED"&&!contracts.some((contract)=>contract.proposal_id===proposal.id)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>void handleCreateContract(proposal.id)}>Gerar contrato</Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>{if(window.confirm("Cancelar esta proposta?"))void handleProposalStatus(proposal.id,"CANCELLED")}}>Cancelar</Button>}</div>
                 </div>
               );
             })}
