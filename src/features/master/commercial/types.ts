@@ -82,6 +82,7 @@ export type CommercialClient = {
   id: string;
   legal_name: string | null;
   trade_name: string | null;
+  tax_id: string | null;
 };
 
 export type CommercialOverview = {
