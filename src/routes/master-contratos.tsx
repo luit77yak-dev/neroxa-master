@@ -7,6 +7,7 @@ import { getNeroxaPlatformAccess } from "@/features/master/clients/services";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { canPerform } from "@/features/master/permissions";
+import { getNeroxaLegalProfile, type NeroxaLegalProfile } from "@/features/master/settings/services";
 import { CONTRACT_STATUS_LABELS, type CommercialContract } from "@/features/master/commercial/types";
 import { loadCommercialOverview, sendContractForSignature, signContractAsNeroxa, updateContractDraft, updateContractStatus } from "@/features/master/commercial/services";
 
@@ -33,6 +34,7 @@ function MasterContractsPage() {
   const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
   const [contracts, setContracts] = useState<CommercialContract[]>([]);
   const [clients, setClients] = useState<import("@/features/master/commercial/types").CommercialClient[]>([]);
+  const [legalProfile, setLegalProfile] = useState<NeroxaLegalProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<CommercialContract | null>(null);
   const [draft, setDraft] = useState({ title: "", contractNumber: "" });
@@ -50,9 +52,10 @@ function MasterContractsPage() {
       setAuthorized(Boolean(access?.active));
       setRole(access?.role ?? null);
       if (!access?.active) return;
-      const overview = await loadCommercialOverview();
+      const [overview, profile] = await Promise.all([loadCommercialOverview(), getNeroxaLegalProfile()]);
       setContracts(overview.contracts);
       setClients(overview.clients);
+      setLegalProfile(profile);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar os contratos.");
     } finally {
@@ -146,7 +149,7 @@ function MasterContractsPage() {
                       <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setSelectedId(contract.id)}><Eye className="h-3.5 w-3.5" />Visualizar</Button>
                       {contract.status === "DRAFT" && contract.signature_status === "NOT_SENT" && <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => { setEditing(contract); setDraft({ title: contract.title, contractNumber: contract.contract_number ?? "" }); }}><Pencil className="h-3.5 w-3.5" />Editar</Button>}
                       {canSend && <Button size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => void send(contract)}><Send className="h-3.5 w-3.5" />Enviar assinatura</Button>}
-                      {canSign && <Button size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => setSigning(contract)}><CheckCircle2 className="h-3.5 w-3.5" />Assinar Neroxa</Button>}
+                      {canSign && <Button size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => { setSigner({ name: contract.neroxa_signer_name || legalProfile?.signer_name || legalProfile?.legal_name || "", role: contract.neroxa_signer_role || legalProfile?.signer_role || "Fundador / Responsável pela Neroxa" }); setSigning(contract); }}><CheckCircle2 className="h-3.5 w-3.5" />Assinar Neroxa</Button>}
                       {canActivate && <Button size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => void (async () => { setSaving(contract.id); try { await updateContractStatus(contract.id, "ACTIVE"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível ativar."); } finally { setSaving(null); } })()}><Play className="h-3.5 w-3.5" />Ativar</Button>}
                       {contract.status === "ACTIVE" && <Button variant="outline" size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => void updateContractStatus(contract.id, "SUSPENDED").then(load).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível suspender."))}><Pause className="h-3.5 w-3.5" />Suspender</Button>}
                       {["ACTIVE","SUSPENDED"].includes(contract.status) && <Button variant="outline" size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => { if (window.confirm("Encerrar este contrato?")) void updateContractStatus(contract.id, "TERMINATED").then(load).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível encerrar.")); }}><XCircle className="h-3.5 w-3.5" />Encerrar</Button>}
@@ -193,7 +196,7 @@ function MasterContractsPage() {
                           <section><h3 className="font-semibold">4. Partes e assinaturas</h3>
                             <div className="mt-2 grid gap-3 sm:grid-cols-2">
                               <div className="rounded-xl border border-border p-4"><p className="font-medium">Cliente</p><p className="mt-1">{client?.legal_name || client?.trade_name || "Cliente não identificado"}</p><p className="text-xs text-muted-foreground">CNPJ: {client?.tax_id || "Não informado"}</p><p className="mt-2">{contract.customer_signer_name || "Aguardando assinatura"}</p><p className="text-xs text-muted-foreground">{contract.customer_signed_at ? new Date(contract.customer_signed_at).toLocaleString("pt-BR") : "Não assinado"}</p></div>
-                              <div className="rounded-xl border border-border p-4"><p className="font-medium">Neroxa</p><p className="mt-1">{contract.neroxa_signer_name || "Aguardando assinatura"}</p><p className="text-xs text-muted-foreground">Cargo: {contract.neroxa_signer_role || "Não informado"}</p><p className="mt-2 text-xs text-muted-foreground">CNPJ da Neroxa: não cadastrado no Master</p><p className="mt-1 text-xs text-muted-foreground">{contract.neroxa_signed_at ? new Date(contract.neroxa_signed_at).toLocaleString("pt-BR") : "Não assinado"}</p></div>
+                              <div className="rounded-xl border border-border p-4"><p className="font-medium">Prestadora · Neroxa</p><p className="mt-1">{contract.neroxa_trade_name || legalProfile?.trade_name || "Neroxa | Soluções Personalizadas"}</p><p className="text-xs text-muted-foreground">Pessoa Física · CPF: {contract.neroxa_tax_id || legalProfile?.tax_id || "Não configurado"}</p><p className="mt-2">{contract.neroxa_legal_name || contract.neroxa_signer_name || legalProfile?.legal_name || "Aguardando assinatura"}</p><p className="text-xs text-muted-foreground">Cargo: {contract.neroxa_signer_role || legalProfile?.signer_role || "Não informado"}</p><p className="mt-1 text-xs text-muted-foreground">{contract.neroxa_signed_at ? new Date(contract.neroxa_signed_at).toLocaleString("pt-BR") : "Não assinado"}</p></div>
                             </div>
                           </section>
                           <section><h3 className="font-semibold">5. Status e versão</h3><p className="mt-1 text-muted-foreground">Versão {contract.version}. Assinatura: {signatureLabel(contract.signature_status)}. Status operacional: {CONTRACT_STATUS_LABELS[contract.status]}.</p></section>
@@ -218,7 +221,8 @@ function MasterContractsPage() {
 
         {signing && canPerform(role, "manageCommercial") && <Card className="border-primary/30 bg-primary/5 p-5">
           <h2 className="font-semibold">Assinar em nome da Neroxa</h2>
-          <p className="mt-1 text-sm text-muted-foreground">A assinatura será registrada para a versão {signing.version} deste contrato e o conteúdo ficará congelado.</p>
+          <p className="mt-1 text-sm text-muted-foreground">A assinatura será registrada para a versão {signing.version} deste contrato. A identificação da prestadora e o conteúdo desta versão ficam congelados no envio.</p>
+          <div className="mb-4 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">Prestadora: <span className="font-medium text-foreground">{signing.neroxa_trade_name || legalProfile?.trade_name || "Neroxa | Soluções Personalizadas"}</span> · Pessoa Física · CPF: <span className="font-medium text-foreground">{signing.neroxa_tax_id || legalProfile?.tax_id || "Não configurado"}</span></div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <label className="text-xs font-medium text-muted-foreground">Nome do responsável<input className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground" value={signer.name} onChange={(e) => setSigner((v) => ({ ...v, name: e.target.value }))} placeholder="Nome completo" /></label>
             <label className="text-xs font-medium text-muted-foreground">Cargo<input className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground" value={signer.role} onChange={(e) => setSigner((v) => ({ ...v, role: e.target.value }))} placeholder="Administrador" /></label>
