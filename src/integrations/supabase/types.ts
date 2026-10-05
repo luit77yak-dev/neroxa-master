@@ -346,10 +346,14 @@ export type Database = {
           id: string
           issued_at: string | null
           maintenance_value: number | null
+          neroxa_entity_type: string | null
+          neroxa_legal_name: string | null
           neroxa_signed_at: string | null
           neroxa_signer_name: string | null
           neroxa_signer_role: string | null
           neroxa_signer_user_id: string | null
+          neroxa_tax_id: string | null
+          neroxa_trade_name: string | null
           plan_id: string | null
           proposal_id: string | null
           public_signature_token: string
@@ -380,10 +384,14 @@ export type Database = {
           id?: string
           issued_at?: string | null
           maintenance_value?: number | null
+          neroxa_entity_type?: string | null
+          neroxa_legal_name?: string | null
           neroxa_signed_at?: string | null
           neroxa_signer_name?: string | null
           neroxa_signer_role?: string | null
           neroxa_signer_user_id?: string | null
+          neroxa_tax_id?: string | null
+          neroxa_trade_name?: string | null
           plan_id?: string | null
           proposal_id?: string | null
           public_signature_token?: string
@@ -414,10 +422,14 @@ export type Database = {
           id?: string
           issued_at?: string | null
           maintenance_value?: number | null
+          neroxa_entity_type?: string | null
+          neroxa_legal_name?: string | null
           neroxa_signed_at?: string | null
           neroxa_signer_name?: string | null
           neroxa_signer_role?: string | null
           neroxa_signer_user_id?: string | null
+          neroxa_tax_id?: string | null
+          neroxa_trade_name?: string | null
           plan_id?: string | null
           proposal_id?: string | null
           public_signature_token?: string
