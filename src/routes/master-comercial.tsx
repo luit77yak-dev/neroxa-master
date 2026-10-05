@@ -207,22 +207,39 @@ function MasterCommercialPage() {
   return (
     <MasterShell>
       <div className="mx-auto min-w-0 max-w-[1500px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
-        <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground/70">
-              Gestão · Comercial
-            </p>
-            <h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Comercial</h1>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Acompanhe propostas e contratos sem misturar regras comerciais com a operação dos clientes.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <Button variant="outline" onClick={() => void load()} disabled={refreshing}>
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-              Atualizar
-            </Button>
-            {canPerform(role, "manageCommercial") && <><Link to="/master-contratos"><Button variant="outline"><FileCheck2 className="h-4 w-4" />Contratos</Button></Link><Button onClick={() => setShowNewProposal((current) => !current)}><Plus className="h-4 w-4" />Nova proposta</Button></>}
+        <section className="w-full min-w-0 rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5">
+          <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground/70">
+                Gestão · Comercial
+              </p>
+              <h1 className="mt-1 break-words font-display text-[28px] leading-tight font-semibold tracking-tight text-foreground sm:text-[32px]">
+                Comercial
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">
+                Acompanhe propostas e contratos sem misturar regras comerciais com a operação dos clientes.
+              </p>
+            </div>
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 lg:w-auto lg:min-w-[390px]">
+              <Button className="w-full" variant="outline" onClick={() => void load()} disabled={refreshing}>
+                <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+                Atualizar
+              </Button>
+              {canPerform(role, "manageCommercial") && (
+                <>
+                  <Link to="/master-contratos" className="w-full">
+                    <Button className="w-full" variant="outline">
+                      <FileCheck2 className="h-4 w-4" />
+                      Contratos
+                    </Button>
+                  </Link>
+                  <Button className="w-full" onClick={() => setShowNewProposal((current) => !current)}>
+                    <Plus className="h-4 w-4" />
+                    Nova proposta
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </section>
 
@@ -243,7 +260,39 @@ function MasterCommercialPage() {
           </Card>
         )}
 
-        {shareLink && <Card className="border-border bg-card p-4 shadow-soft"><p className="text-xs font-medium text-muted-foreground">Link público da proposta</p><div className="mt-2 flex flex-col gap-2 sm:flex-row"><input readOnly value={shareLink} className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-muted/50 px-3 text-xs" /><Button onClick={() => void navigator.clipboard?.writeText(shareLink).catch(() => undefined)}>Copiar link</Button></div></Card>}
+        {shareLink && (
+          <Card className="w-full min-w-0 border-border bg-card p-4 shadow-soft sm:p-5">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Proposta enviada com sucesso</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  O link público está pronto para compartilhar com o cliente.
+                </p>
+              </div>
+              <Button
+                className="w-full shrink-0 sm:w-auto"
+                onClick={() => window.open(shareLink, "_blank", "noopener,noreferrer")}
+              >
+                Abrir proposta
+              </Button>
+            </div>
+            <div className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row">
+              <input
+                readOnly
+                value={shareLink}
+                aria-label="Link público da proposta"
+                className="h-10 min-w-0 w-full flex-1 rounded-lg border border-border bg-muted/50 px-3 text-xs"
+              />
+              <Button
+                className="w-full shrink-0 sm:w-auto"
+                variant="outline"
+                onClick={() => void navigator.clipboard?.writeText(shareLink).catch(() => undefined)}
+              >
+                Copiar link
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {error && (
           <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">
