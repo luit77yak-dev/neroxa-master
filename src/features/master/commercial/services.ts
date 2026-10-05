@@ -180,6 +180,24 @@ export async function updateContractDraft(input: { id: string; title: string; co
   return true;
 }
 
+export async function sendContractForSignature(id: string) {
+  const { data, error } = await supabase.rpc("send_neroxa_contract_for_signature" as never, { p_contract_id: id } as never);
+  if (error) throw new Error(error.message);
+  await recordNeroxaAudit({ action: "CONTRACT_SENT_FOR_SIGNATURE", resourceType: "CONTRACT", resourceId: id, details: { contractId: id } });
+  return String(data);
+}
+
+export async function signContractAsNeroxa(input: { id: string; name: string; role: string }) {
+  const name = input.name.trim();
+  const role = input.role.trim();
+  if (!name) throw new Error("Informe o nome do responsável pela Neroxa.");
+  if (!role) throw new Error("Informe o cargo do responsável pela Neroxa.");
+  const { error } = await supabase.rpc("sign_neroxa_contract" as never, { p_contract_id: input.id, p_signer_name: name, p_signer_role: role } as never);
+  if (error) throw new Error(error.message);
+  await recordNeroxaAudit({ action: "CONTRACT_SIGNED_BY_NEROXA", resourceType: "CONTRACT", resourceId: input.id, details: { signerName: name, signerRole: role } });
+  return true;
+}
+
 export async function updateContractStatus(id: string, status: ContractStatus) {
   const { data: contract, error: contractError } = await supabase
     .from("neroxa_contracts" as never)
