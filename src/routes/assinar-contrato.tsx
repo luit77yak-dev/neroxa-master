@@ -23,6 +23,10 @@ type PublicContract = {
   started_at: string | null;
   customer_name: string | null;
   customer_document: string | null;
+  neroxa_entity_type: "INDIVIDUAL" | null;
+  neroxa_trade_name: string | null;
+  neroxa_legal_name: string | null;
+  neroxa_tax_id: string | null;
   customer_signed_at: string | null;
   neroxa_signer_name: string | null;
   neroxa_signer_role: string | null;
@@ -111,7 +115,7 @@ function SignContractPage() {
             <section><h2 className="font-semibold">1. Objeto</h2><p className="mt-1 text-muted-foreground">Prestação dos serviços e disponibilização do sistema descritos na proposta comercial vinculada a este contrato.</p></section>
             <section><h2 className="font-semibold">2. Valores e condições</h2><p className="mt-1 text-muted-foreground">Implantação: {money(contract.setup_value)}. Recorrência: {money(contract.recurring_value)}. Manutenção: {money(contract.maintenance_value)}.</p></section>
             <section><h2 className="font-semibold">3. Vigência</h2><p className="mt-1 text-muted-foreground">{contract.term_months ? `Prazo inicial de ${contract.term_months} meses.` : "Vigência a partir da ativação do contrato, conforme as condições comerciais desta versão."}</p></section>
-            <section><h2 className="font-semibold">4. Partes e assinaturas</h2><p className="mt-1 text-muted-foreground">Este documento corresponde à versão {contract.version}. O conteúdo fica congelado após a primeira assinatura.</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-border p-4"><p className="font-medium">Cliente</p><p className="mt-1">{contract.customer_name || "Cliente"}</p><p className="text-xs text-muted-foreground">CNPJ: {contract.customer_document || "Não informado"}</p></div><div className="rounded-xl border border-border p-4"><p className="font-medium">Neroxa</p><p className="mt-1">{contract.neroxa_signer_name || "Aguardando assinatura"}</p><p className="text-xs text-muted-foreground">Cargo: {contract.neroxa_signer_role || "Aguardando assinatura"}</p></div></div></section>
+            <section><h2 className="font-semibold">4. Partes e assinaturas</h2><p className="mt-1 text-muted-foreground">Este documento corresponde à versão {contract.version}. O conteúdo fica congelado após a primeira assinatura.</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><div className="rounded-xl border border-border p-4"><p className="font-medium">Cliente</p><p className="mt-1">{contract.customer_name || "Cliente"}</p><p className="text-xs text-muted-foreground">CNPJ: {contract.customer_document || "Não informado"}</p></div><div className="rounded-xl border border-border p-4"><p className="font-medium">Prestadora · Neroxa</p><p className="mt-1">{contract.neroxa_trade_name || "Neroxa | Soluções Personalizadas"}</p><p className="text-xs text-muted-foreground">Pessoa Física · CPF: {contract.neroxa_tax_id || "Não informado"}</p><p className="mt-2">{contract.neroxa_legal_name || contract.neroxa_signer_name || "Aguardando assinatura"}</p><p className="text-xs text-muted-foreground">Cargo: {contract.neroxa_signer_role || "Aguardando assinatura"}</p></div></div></section>
           </div>
 
           {message && <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4 text-sm">{message}</div>}
