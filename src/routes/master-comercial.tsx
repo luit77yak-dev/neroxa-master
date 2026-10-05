@@ -77,6 +77,7 @@ function MasterCommercialPage() {
   const [creatingProposal, setCreatingProposal] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [shareProposalId, setShareProposalId] = useState<string | null>(null);
+  const [shareProposalId, setShareProposalId] = useState<string | null>(null);
 
   const load = async (initial = false) => {
     setError(null);
@@ -135,6 +136,7 @@ function MasterCommercialPage() {
       if (proposal.status === "DRAFT") await updateProposalStatus(proposal.id, "SENT");
       const link = window.location.origin + "/proposta-publica?token=" + proposal.public_token;
       setShareLink(link);
+      setShareProposalId(proposal.id);
       setShareProposalId(proposal.id);
       try {
         await navigator.clipboard?.writeText(link);
@@ -285,7 +287,8 @@ function MasterCommercialPage() {
             {recentProposals.map((proposal) => {
               const client = clientMap.get(proposal.client_id);
               return (
-                <div key={proposal.id} className="flex items-center gap-3 border-b border-border/60 py-3.5 last:border-0">
+                <>
+                  <div key={proposal.id} className="flex items-center gap-3 border-b border-border/60 py-3.5 last:border-0">
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
                     <FileText className="h-4 w-4" />
                   </div>
@@ -296,8 +299,8 @@ function MasterCommercialPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar proposta" disabled={saving===proposal.id} onClick={()=>void handleShareProposal(proposal)}><Send className="h-3.5 w-3.5"/></Button>}{proposal.status==="SENT"&&<Button variant="ghost" size="icon" title="Copiar link" onClick={()=>void handleShareProposal(proposal)}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{proposal.status==="ACCEPTED"&&!contracts.some((contract)=>contract.proposal_id===proposal.id)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>void handleCreateContract(proposal.id)}>Gerar contrato</Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>{if(window.confirm("Cancelar esta proposta?"))void handleProposalStatus(proposal.id,"CANCELLED")}}>Cancelar</Button>}</div>
-                </div>
-                {shareLink && shareProposalId === proposal.id && (
+                  </div>
+                  {shareLink && shareProposalId === proposal.id && (
                   <div className="mt-3 rounded-xl border border-border bg-muted/30 p-4">
                     <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
@@ -329,7 +332,8 @@ function MasterCommercialPage() {
                       </Button>
                     </div>
                   </div>
-                )}
+                  )}
+                </>
               );
             })}
           </CommercialList>
