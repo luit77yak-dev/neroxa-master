@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, CheckCircle2, Copy, Eye, FileCheck2, Link2, Loader2, Pause, Pencil, Play, Printer, Send, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,8 +43,6 @@ function MasterContractsPage() {
   const [signer, setSigner] = useState({ name: "", role: "Administrador" });
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [shareContractId, setShareContractId] = useState<string | null>(null);
-
-  const selected = useMemo(() => contracts.find((item) => item.id === selectedId) ?? null, [contracts, selectedId]);
 
   const load = async () => {
     try {
