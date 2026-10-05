@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { isNeroxaStaff } from "@/features/master/clients/services";
+import { getNeroxaPlatformAccess, isNeroxaStaff } from "@/features/master/clients/services";
 import { canPerform } from "@/features/master/permissions";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
@@ -84,8 +84,10 @@ function MasterCommercialPage() {
       setRefreshing(true);
     }
     try {
-      const staff = await isNeroxaStaff();
+      const access = await getNeroxaPlatformAccess();
+      const staff = Boolean(access?.active);
       setAuthorized(staff);
+      setRole(access?.role ?? null);
       if (!staff) return;
 
       const [overview, subscriptionOverview] = await Promise.all([loadCommercialOverview(), loadSubscriptionOverview()]);
