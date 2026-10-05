@@ -75,7 +75,7 @@ export function moduleForPath(pathname: string): MasterModule {
   if (pathname === "/master") return "overview";
   if (pathname === "/master-clientes") return "clients";
   if (pathname === "/master-sistemas") return "systems";
-  if (pathname === "/master-comercial") return "commercial";
+  if (pathname === "/master-comercial" || pathname === "/master-contratos") return "commercial";
   if (pathname === "/master-planos") return "plans";
   if (pathname === "/master-assinaturas") return "subscriptions";
   if (pathname === "/master-financeiro") return "finance";
