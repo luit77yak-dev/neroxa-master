@@ -214,8 +214,8 @@ function MasterDominios() {
 
   return (
     <MasterShell>
-      <div className="space-y-6 p-4 sm:p-6 lg:p-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 space-y-5 overflow-x-hidden p-3 sm:space-y-6 sm:p-6 lg:p-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Sistema</p>
             <h1 className="font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Domínios</h1>
@@ -223,11 +223,11 @@ function MasterDominios() {
               Acompanhe e valide os domínios vinculados às instâncias dos clientes.
             </p>
           </div>
-          {canManage && <Button onClick={openCreate} disabled={loading || instances.every((instance) => instance.status === "ARCHIVED")}>Adicionar domínio</Button>}
+          <div className="flex flex-wrap gap-2 sm:justify-end">{canManage && <Button onClick={openCreate} disabled={loading || instances.every((instance) => instance.status === "ARCHIVED")}>Adicionar domínio</Button>}
           <Button variant="outline" onClick={() => void load()} disabled={loading}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Atualizar
-          </Button>
+          </Button></div>
         </div>
 
         {error && (
@@ -237,7 +237,7 @@ function MasterDominios() {
         )}
 
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
-          <div className="border-b border-border px-5 py-4">
+          <div className="border-b border-border px-4 py-4 sm:px-5">
             <p className="text-sm font-semibold text-foreground">Domínios cadastrados</p>
             <p className="text-xs text-muted-foreground">{domains.length} domínio(s)</p>
           </div>
@@ -263,7 +263,7 @@ function MasterDominios() {
                 const canDelete = canManage && !disabled && domain.status === "DISABLED" && !domain.is_primary;
 
                 return (
-                  <div key={domain.id} className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div key={domain.id} className="flex min-w-0 flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
                       <p className="truncate font-medium text-foreground">{domain.domain}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -318,7 +318,7 @@ function MasterDominios() {
         {(showCreate || editing) && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
             <div className="w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">{editing ? "Editar domínio" : "Adicionar domínio"}</h2>
                   <p className="mt-1 text-xs text-muted-foreground">Use apenas o hostname, sem protocolo ou caminho.</p>
@@ -345,7 +345,7 @@ function MasterDominios() {
                   <input type="checkbox" checked={primaryDraft} onChange={(event) => setPrimaryDraft(event.target.checked)} />
                   Definir como domínio principal
                 </label>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
                   <Button variant="outline" onClick={() => { setShowCreate(false); setEditing(null); }}>Cancelar</Button>
                   <Button onClick={() => void saveDomain()} disabled={working === "domain-form"}>{working === "domain-form" ? "Salvando..." : "Salvar domínio"}</Button>
                 </div>

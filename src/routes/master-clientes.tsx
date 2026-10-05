@@ -318,7 +318,7 @@ function MasterClientsPage() {
     <MasterShell>
     <main className="min-h-screen bg-muted/50 text-foreground">
 
-      <div className="mx-auto grid max-w-[1500px] gap-4 px-4 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="mx-auto grid min-w-0 max-w-[1500px] gap-4 overflow-x-hidden px-3 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <section className="min-w-0 space-y-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
@@ -582,7 +582,7 @@ function MasterClientsPage() {
       {showInstanceCreate && selected && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
           <Card className="max-h-[90vh] w-full max-w-lg overflow-auto border-border bg-card shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4 sm:p-5">
               <div><p className="text-xs font-medium tracking-wide text-muted-foreground">Neroxa Master</p><h2 className="mt-1 text-lg font-semibold">Adicionar sistema ao cliente</h2></div>
               <Button variant="ghost" size="icon" onClick={() => setShowInstanceCreate(false)}><X className="h-4 w-4" /></Button>
             </div>

@@ -84,6 +84,15 @@ export async function createNeroxaSystem(input: {
   return data as unknown as NeroxaSystem;
 }
 
+export async function deleteNeroxaSystem(id: string) {
+  const { error } = await supabase
+    .from("neroxa_systems" as never)
+    .delete()
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+}
+
 export async function updateNeroxaSystem(input: {
   id: string;
   name: string;

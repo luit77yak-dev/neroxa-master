@@ -56,6 +56,8 @@ function MasterPlansPage() {
   const [planFeatures, setPlanFeatures] = useState<Record<string, string[]>>({});
   const [form, setForm] = useState<Form>(emptyForm);
   const [editing, setEditing] = useState<string | null>(null);
+  const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
+  const [planFilter, setPlanFilter] = useState<string>("ALL");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -63,56 +65,53 @@ function MasterPlansPage() {
 
   const load = async () => {
     setError(null);
-    setLoading(true);
     try {
       const access = await getNeroxaPlatformAccess();
       const staff = Boolean(access?.active);
       setAuthorized(staff);
       setRole(access?.active ? access.role : null);
       if (!staff) return;
-
-      // The plan catalog is the primary payload for this screen. Render it first
-      // instead of blocking the whole page on the secondary product/feature joins.
       const overview = await loadSubscriptionOverview();
       setPlans(overview.plans);
       setLoading(false);
 
-      try {
-        const [productData, systemData] = await Promise.all([listProducts(), listNeroxaSystems()]);
-        setProducts(productData);
-        setSystems(systemData);
+      void (async () => {
+        try {
+          const [productData, systemData] = await Promise.all([listProducts(), listNeroxaSystems()]);
+          setProducts(productData);
+          setSystems(systemData);
 
-        const productLinks = await Promise.all(productData.map(async (product) => [product.id, await listProductPlans(product.id)] as const));
-        const productMap: Record<string, string[]> = {};
-        for (const [productId, links] of productLinks) {
-          for (const link of links.filter((item) => item.included)) {
-            const plan = overview.plans.find((item) => item.id === link.plan_id);
-            if (plan) {
-              productMap[plan.id] = [
-                ...(productMap[plan.id] ?? []),
-                productData.find((item) => item.id === productId)?.name ?? "",
-              ].filter(Boolean);
+          const productLinks = await Promise.all(productData.map(async (product) => [product.id, await listProductPlans(product.id)] as const));
+          const productMap: Record<string, string[]> = {};
+          for (const [productId, links] of productLinks) {
+            for (const link of links.filter((item) => item.included)) {
+              const plan = overview.plans.find((item) => item.id === link.plan_id);
+              if (plan) productMap[plan.id] = [...(productMap[plan.id] ?? []), productData.find((item) => item.id === productId)?.name ?? ""].filter(Boolean);
             }
           }
-        }
-        setPlanProducts(productMap);
+          setPlanProducts(productMap);
 
-        const featureRows = await Promise.all(
-          overview.plans.map(async (plan) => [plan.id, await listPlanFeatures(plan.id)] as const),
-        );
-        setPlanFeatures(
-          Object.fromEntries(featureRows.map(([planId, rows]) => [planId, rows.map((row) => row.feature_key)])),
-        );
-      } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível carregar todos os detalhes dos planos.");
-      }
+          const featureRows = await Promise.all(overview.plans.map(async (plan) => [plan.id, await listPlanFeatures(plan.id)] as const));
+          setPlanFeatures(Object.fromEntries(featureRows.map(([planId, rows]) => [planId, rows.map((row) => row.feature_key)])));
+        } catch (cause) {
+          setError(cause instanceof Error ? cause.message : "Não foi possível carregar produtos e recursos dos planos.");
+        }
+      })();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar os planos.");
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => { void load(); }, []);
+
+  const filteredPlans = planFilter === "ALL"
+    ? plans
+    : planFilter === "GLOBAL"
+      ? plans.filter((plan) => !plan.system_id)
+      : plans.filter((plan) => plan.system_id === planFilter);
+
 
   const startEdit = (plan: SubscriptionPlan) => {
     setError(null);
@@ -216,12 +215,34 @@ function MasterPlansPage() {
   if (authorized === false) return <MasterLogin />;
   if (authorized === null || loading) return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin" /></main>;
 
-  return <MasterShell><div className="mx-auto w-full max-w-[1200px] space-y-5 px-3 py-4 sm:px-6 sm:py-5">
+  return <MasterShell><div className="mx-auto w-full min-w-0 max-w-[1200px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
     <section className="min-w-0"><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Planos</p><h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Planos</h1><p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">Gerencie catálogo, preços e disponibilidade para novas contratações.</p></section>
+      <div className="flex min-w-0 gap-2 overflow-x-auto pb-1">
+        <button type="button" onClick={() => setPlanFilter("ALL")} className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium ${planFilter === "ALL" ? "border-sidebar bg-sidebar text-white" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}>Todos <span className="ml-1 opacity-70">{plans.length}</span></button>
+        {systems.filter((system) => system.active).map((system) => {
+          const count = plans.filter((plan) => plan.system_id === system.id).length;
+          return <button key={system.id} type="button" onClick={() => setPlanFilter(system.id)} className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium ${planFilter === system.id ? "border-sidebar bg-sidebar text-white" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}>{system.name} <span className="ml-1 opacity-70">{count}</span></button>;
+        })}
+        <button type="button" onClick={() => setPlanFilter("GLOBAL")} className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium ${planFilter === "GLOBAL" ? "border-sidebar bg-sidebar text-white" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}>Globais <span className="ml-1 opacity-70">{plans.filter((plan) => !plan.system_id).length}</span></button>
+      </div>
     {error && <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-      <div className="space-y-3">{plans.map(plan => <Card key={plan.id} className="min-w-0 border-border bg-card p-4 shadow-soft sm:p-5"><div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex min-w-0 flex-wrap items-center gap-2"><h2 className="min-w-0 break-words font-semibold">{plan.name}</h2><span className={plan.active ? "rounded-full bg-success/10 px-2 py-1 text-[10px] text-success" : "rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground"}>{plan.active ? "Ativo" : "Inativo"}</span></div><p className="mt-1 text-xs text-muted-foreground">{plan.slug} · {COMMERCIAL_MODEL_LABELS[plan.commercial_model]} · {BILLING_INTERVAL_LABELS[plan.billing_interval]}</p>{plan.description && <p className="mt-2 max-w-2xl whitespace-pre-line break-words text-sm leading-5 text-muted-foreground">{plan.description}</p>}</div>{canPerform(role,"managePlans") && <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto"><Button className="w-full sm:w-auto" variant="outline" size="sm" onClick={() => startEdit(plan)} disabled={deleting === plan.id}><Edit3 className="h-3.5 w-3.5" />Editar</Button><Button className="w-full sm:w-auto text-red-600 hover:text-red-700" onClick={() => void handleDelete(plan)} disabled={deleting === plan.id}>{deleting === plan.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}Excluir</Button></div>}</div><div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3"><div className="rounded-xl bg-muted/50 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{plan.commercial_model === "PERMANENT" ? "Aquisição" : plan.slug === "custom" ? "A partir de" : "Recorrência"}</p><p className="mt-1 font-semibold">{plan.commercial_model === "PERMANENT" ? formatPlanPrice(plan.base_price) : plan.slug === "custom" ? `A partir de ${formatPlanPrice(plan.base_price)}` : `R$ ${plan.base_price.toFixed(2).replace(".", ",")}`}</p></div><div className="rounded-xl bg-muted/50 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{plan.commercial_model === "PERMANENT" ? "Manutenção" : plan.slug === "custom" ? "Implantação" : "Implantação"}</p><p className="mt-1 font-semibold">{plan.commercial_model === "PERMANENT" && plan.maintenance_price != null ? formatPlanPrice(plan.maintenance_price) : plan.slug === "custom" ? "Sob orçamento" : formatPlanPrice(plan.setup_price)}</p></div></div><div className="mt-4 rounded-xl border border-border/60 bg-muted/50/70 p-3"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Produtos incluídos</p><div className="mt-2 flex flex-wrap gap-1.5">{(planProducts[plan.id] ?? []).length ? (planProducts[plan.id] ?? []).map((product) => <span key={product} className="rounded-full bg-card px-2 py-1 text-xs text-muted-foreground ring-1 ring-border">{product}</span>) : <span className="text-xs text-muted-foreground/70">Nenhum produto vinculado</span>}</div><p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Recursos</p><div className="mt-2 grid gap-1.5 sm:grid-cols-2">{(planFeatures[plan.id] ?? []).map((key) => <span key={key} className="text-xs text-muted-foreground">✓ {FEATURE_OPTIONS.find(([featureKey]) => featureKey === key)?.[1] ?? key}</span>)}</div></div></Card>)}</div>
-      <Card className="h-fit min-w-0 border-border bg-card p-4 shadow-soft sm:p-5"><div className="flex items-center justify-between"><div><p className="text-xs font-medium tracking-wide text-muted-foreground">{editing ? "Editar plano" : "Novo plano"}</p><h2 className="mt-1 text-lg font-semibold">{editing ? "Atualizar catálogo" : "Cadastrar plano"}</h2></div>{editing && <Button variant="ghost" size="icon" onClick={() => { setEditing(null); setForm(emptyForm); setSelectedProducts([]); setSelectedFeatures([]); }}><X className="h-4 w-4" /></Button>}</div><div className="mt-5 space-y-3">
+      <div className="space-y-3">{filteredPlans.map(plan => {
+          const expanded = expandedPlan === plan.id || editing === plan.id;
+          return <Card key={plan.id} className="min-w-0 border-border bg-card p-4 shadow-soft sm:p-5">
+            <div className="flex min-w-0 items-start justify-between gap-3"><div className="min-w-0"><div className="flex min-w-0 flex-wrap items-center gap-2"><h2 className="break-words font-semibold">{plan.name}</h2><span className={plan.active ? "rounded-full bg-success/10 px-2 py-1 text-[10px] text-success" : "rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground"}>{plan.active ? "Ativo" : "Inativo"}</span></div><p className="mt-1 text-xs text-muted-foreground">{plan.slug} · {COMMERCIAL_MODEL_LABELS[plan.commercial_model]} · {BILLING_INTERVAL_LABELS[plan.billing_interval]}</p></div><button type="button" className="shrink-0 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted" onClick={()=>setExpandedPlan(expanded?null:plan.id)}>{expanded?"Recolher":"Detalhes"}</button></div>
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2"><div className="rounded-xl bg-muted/50 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{plan.commercial_model === "PERMANENT" ? "Aquisição" : plan.slug === "custom" ? "A partir de" : "Recorrência"}</p><p className="mt-1 font-semibold">{plan.commercial_model === "PERMANENT" ? formatPlanPrice(plan.base_price) : plan.slug === "custom" ? `A partir de ${formatPlanPrice(plan.base_price)}` : formatPlanPrice(plan.base_price)}</p></div><div className="rounded-xl bg-muted/50 p-3"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{plan.commercial_model === "PERMANENT" ? "Manutenção" : "Implantação"}</p><p className="mt-1 font-semibold">{plan.commercial_model === "PERMANENT" && plan.maintenance_price != null ? formatPlanPrice(plan.maintenance_price) : plan.slug === "custom" ? "Sob orçamento" : formatPlanPrice(plan.setup_price)}</p></div></div>
+            {expanded && <div className="mt-4 space-y-4 border-t border-border/60 pt-4">
+              {plan.description && <p className="text-sm leading-5 text-muted-foreground">{plan.description}</p>}
+              <div className="rounded-xl border border-border/60 bg-muted/50/70 p-3"><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Produtos incluídos</p><div className="mt-2 flex flex-wrap gap-1.5">{(planProducts[plan.id]??[]).length?(planProducts[plan.id]??[]).map(product=><span key={product} className="rounded-full bg-card px-2 py-1 text-xs text-muted-foreground ring-1 ring-border">{product}</span>):<span className="text-xs text-muted-foreground/70">Nenhum produto vinculado</span>}</div><p className="mt-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Recursos</p><div className="mt-2 grid gap-1.5 sm:grid-cols-2">{(planFeatures[plan.id]??[]).map(key=><span key={key} className="text-xs text-muted-foreground">✓ {FEATURE_OPTIONS.find(([featureKey])=>featureKey===key)?.[1]??key}</span>)}</div></div>
+              {canPerform(role,"managePlans") && <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={()=>startEdit(plan)} disabled={deleting===plan.id}><Edit3 className="h-3.5 w-3.5"/>Editar</Button><Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={()=>void handleDelete(plan)} disabled={deleting===plan.id}>{deleting===plan.id?<Loader2 className="h-3.5 w-3.5 animate-spin"/>:<Trash2 className="h-3.5 w-3.5"/>}Excluir</Button></div>}
+              {editing===plan.id && <PlanEditor form={form} setForm={setForm} systems={systems} products={products} compatibleProducts={compatibleProducts} selectedProducts={selectedProducts} setSelectedProducts={setSelectedProducts} selectedFeatures={selectedFeatures} setSelectedFeatures={setSelectedFeatures} saving={saving} reset={()=>{setEditing(null);setForm(emptyForm);setSelectedProducts([]);setSelectedFeatures([])}} save={save} role={role}/>}
+            </div>}
+          </Card>;
+        })}
+        {!filteredPlans.length && <Card className="border-dashed p-8 text-center text-sm text-muted-foreground">Nenhum plano neste filtro.</Card>}
+      </div>
+      <Card className="h-fit min-w-0 border-border bg-card p-4 shadow-soft sm:p-5"><div className="flex items-center justify-between"><div><p className="text-xs font-medium tracking-wide text-muted-foreground">Novo plano</p><h2 className="mt-1 text-lg font-semibold">Cadastrar plano</h2></div></div><div className="mt-5 space-y-3">
         <Field label="Nome"><input value={form.name} onChange={e => setForm({...form,name:e.target.value})} placeholder="Ex.: Neroxa Essencial" /></Field>
         <Field label="Slug"><input value={form.slug} onChange={e => setForm({...form,slug:e.target.value})} placeholder="neroxa-essencial" /></Field>
         <Field label="Sistema-base / segmento">
@@ -243,10 +264,27 @@ function MasterPlansPage() {
         <div className="mt-3"><p className="mb-1 text-xs font-medium text-muted-foreground">Recursos do plano</p><p className="mb-2 text-[11px] leading-4 text-muted-foreground">Recursos são capacidades da solução; eles não substituem o produto.</p><div className="max-h-56 space-y-2 overflow-x-hidden overflow-y-auto rounded-lg border border-border p-3">{FEATURE_OPTIONS.map(([key, label]) => <label key={key} className="flex items-start gap-2 text-sm"><input type="checkbox" checked={selectedFeatures.includes(key)} onChange={(e) => setSelectedFeatures((current) => e.target.checked ? [...current, key] : current.filter((item) => item !== key))} /><span>{label}</span></label>)}</div></div>
         <Field label="Periodicidade"><select value={form.billingPeriod} disabled={form.commercialModel === "PERMANENT"} onChange={e => setForm({...form,billingPeriod:e.target.value as Form["billingPeriod"]})}><option value="MONTHLY">Mensal</option><option value="YEARLY">Anual</option><option value="ONE_TIME">Avulso</option></select></Field>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={e => setForm({...form,active:e.target.checked})} /> Disponível para contratação</label>
-        {canPerform(role,"managePlans") && <Button className="w-full" onClick={() => void save()} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editing ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}{saving ? "Salvando..." : editing ? "Salvar alterações" : "Criar plano"}</Button>}
+        {canPerform(role,"managePlans") && <Button className="w-full" onClick={() => void save()} disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{saving ? "Salvando..." : "Criar plano"}</Button>}
       </div></Card>
     </div>
   </div></MasterShell>;
+}
+
+function PlanEditor({ form, setForm, systems, products, compatibleProducts, selectedProducts, setSelectedProducts, selectedFeatures, setSelectedFeatures, saving, reset, save, role }: any) {
+  return <div className="rounded-xl border border-border bg-muted/30 p-4"><div className="mb-4 flex items-center justify-between"><div><p className="text-xs font-medium text-muted-foreground">Editando plano</p><p className="font-semibold">Atualizar catálogo</p></div><Button variant="ghost" size="sm" onClick={reset}>Cancelar</Button></div>
+    <div className="space-y-3">
+      <Field label="Nome"><input value={form.name} onChange={(e:any)=>setForm({...form,name:e.target.value})}/></Field><Field label="Slug"><input value={form.slug} onChange={(e:any)=>setForm({...form,slug:e.target.value})}/></Field>
+      <Field label="Sistema-base / segmento"><select value={form.systemId} onChange={(e:any)=>{const next=e.target.value;setForm({...form,systemId:next});const allowed=new Set(products.filter((p:NeroxaProduct)=>!next||!p.system_id||p.system_id===next).map((p:NeroxaProduct)=>p.id));setSelectedProducts((current:string[])=>current.filter(id=>allowed.has(id)));}}><option value="">Sem sistema fixo (plano global)</option>{systems.filter((s:NeroxaSystem)=>s.active).map((s:NeroxaSystem)=><option key={s.id} value={s.id}>{s.name} · {s.system_type}</option>)}</select></Field>
+      <Field label="Descrição"><textarea value={form.description} onChange={(e:any)=>setForm({...form,description:e.target.value})} rows={3}/></Field>
+      <Field label="Modelo comercial"><select value={form.commercialModel} onChange={(e:any)=>{const commercialModel=e.target.value as Form["commercialModel"];setForm({...form,commercialModel,billingPeriod:commercialModel==="PERMANENT"?"ONE_TIME":form.billingPeriod});}}><option value="SUBSCRIPTION">Assinatura recorrente</option><option value="PERMANENT">Compra permanente</option></select></Field>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Field label={form.commercialModel==="PERMANENT"?"Valor de aquisição":"Recorrência"}><input type="number" min="0" step="0.01" value={form.priceMonthly} onChange={(e:any)=>setForm({...form,priceMonthly:e.target.value})}/></Field><Field label="Implantação"><input type="number" min="0" step="0.01" value={form.setupPrice} onChange={(e:any)=>setForm({...form,setupPrice:e.target.value})}/></Field></div>
+      {form.commercialModel==="PERMANENT"&&<Field label="Manutenção recorrente (opcional)"><input type="number" min="0" step="0.01" value={form.maintenancePrice} onChange={(e:any)=>setForm({...form,maintenancePrice:e.target.value})}/></Field>}
+      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Produtos incluídos</p><div className="max-h-40 space-y-2 overflow-auto rounded-lg border border-border p-3">{compatibleProducts.map((product:NeroxaProduct)=><label key={product.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selectedProducts.includes(product.id)} onChange={(e:any)=>setSelectedProducts((current:string[])=>e.target.checked?[...current,product.id]:current.filter(id=>id!==product.id))}/><span className="truncate">{product.name}</span></label>)}</div></div>
+      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Recursos do plano</p><div className="max-h-44 space-y-2 overflow-auto rounded-lg border border-border p-3">{FEATURE_OPTIONS.map(([key,label])=><label key={key} className="flex items-start gap-2 text-sm"><input type="checkbox" checked={selectedFeatures.includes(key)} onChange={(e:any)=>setSelectedFeatures((current:string[])=>e.target.checked?[...current,key]:current.filter(item=>item!==key))}/><span>{label}</span></label>)}</div></div>
+      <Field label="Periodicidade"><select value={form.billingPeriod} disabled={form.commercialModel==="PERMANENT"} onChange={(e:any)=>setForm({...form,billingPeriod:e.target.value as Form["billingPeriod"]})}><option value="MONTHLY">Mensal</option><option value="YEARLY">Anual</option><option value="ONE_TIME">Avulso</option></select></Field>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e:any)=>setForm({...form,active:e.target.checked})}/> Disponível para contratação</label>
+      {canPerform(role,"managePlans")&&<Button className="w-full" onClick={()=>void save()} disabled={saving}>{saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?"Salvando...":"Salvar alterações"}</Button>}
+    </div></div>;
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) { return <label className="block"><span className="mb-1.5 block text-xs font-medium text-muted-foreground">{label}</span><div className="[&_input]:h-10 [&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-border [&_input]:bg-muted/50 [&_input]:px-3 [&_input]:text-sm [&_textarea]:w-full [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-border [&_textarea]:bg-muted/50 [&_textarea]:px-3 [&_textarea]:py-2.5 [&_textarea]:text-sm [&_select]:h-10 [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-border [&_select]:bg-card [&_select]:px-3 [&_select]:text-sm">{children}</div></label>; }

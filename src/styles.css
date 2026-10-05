@@ -3019,3 +3019,148 @@
     color: rgba(244,238,226,.3) !important;
   }
 }
+
+
+/* Neroxa Master shell header must not inherit storefront header mobile rules. */
+@media (max-width: 639px) {
+  .master-shell-header {
+    display: flex !important;
+    height: 3.5rem !important;
+    grid-template-columns: none !important;
+    gap: .75rem !important;
+    padding-inline: .75rem !important;
+  }
+
+  .master-shell-header > div {
+    display: flex !important;
+    grid-template-columns: none !important;
+    height: auto !important;
+    gap: .75rem !important;
+    padding-inline: 0 !important;
+  }
+
+  .master-shell-header button {
+    width: auto !important;
+    min-height: 2.5rem !important;
+    padding-inline: .75rem !important;
+    font-size: .75rem !important;
+    gap: .5rem !important;
+  }
+
+  .master-shell-header button > span:not(.absolute):not([class*="badge"]) {
+    display: inline !important;
+  }
+}
+
+/* Master route headers must not inherit the storefront's global mobile header grid. */
+@media (max-width: 639px) {
+  .master-page-header > div:first-child {
+    display: block !important;
+    height: auto !important;
+    gap: 0 !important;
+    padding-inline: 0 !important;
+  }
+
+  .master-page-header > div:last-child {
+    height: auto !important;
+    padding-inline: 0 !important;
+  }
+}
+
+/* Neroxa Master — viewport containment
+   Route content must never establish a layout wider than the mobile viewport. */
+.master-main {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.master-main > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 639px) {
+  .master-main .grid > *,
+  .master-main .flex > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Neroxa Master — mobile-first layout guardrails */
+@layer components {
+  .master-main {
+    min-width: 0;
+    overflow-x: clip;
+  }
+
+  .master-main input,
+  .master-main textarea,
+  .master-main select {
+    max-width: 100%;
+  }
+
+  @media (max-width: 639px) {
+    .master-main > * {
+      min-width: 0;
+    }
+
+    .master-main .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .master-main table {
+      min-width: 640px;
+    }
+
+    .master-main [class*="grid-cols-2"],
+    .master-main [class*="grid-cols-3"],
+    .master-main [class*="grid-cols-4"] {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .master-main [class*="lg:grid-cols-2"],
+    .master-main [class*="lg:grid-cols-3"],
+    .master-main [class*="lg:grid-cols-4"] {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .master-main [class*="grid-cols-[1fr_"],
+    .master-main [class*="grid-cols-[360px_"],
+    .master-main [class*="grid-cols-[280px_"] {
+      grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .master-main [class*="p-8"] {
+      padding: 1rem !important;
+    }
+
+    .master-main [class*="px-8"] {
+      padding-left: 1rem !important;
+      padding-right: 1rem !important;
+    }
+
+    .master-main [class*="py-8"] {
+      padding-top: 1rem !important;
+      padding-bottom: 1rem !important;
+    }
+
+    .master-main h1 {
+      overflow-wrap: anywhere;
+    }
+
+    .master-main button,
+    .master-main [role="button"] {
+      max-width: 100%;
+    }
+
+    .master-main [class*="whitespace-nowrap"] {
+      white-space: normal;
+    }
+  }
+}

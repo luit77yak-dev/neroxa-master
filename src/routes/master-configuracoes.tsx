@@ -49,14 +49,17 @@ function MasterConfiguracoes() {
         throw new Error("Você não tem permissão para acessar as configurações.");
       }
       setRole(access.role);
-      const results = await Promise.all([
+      const [platformSettings, securitySettings] = await Promise.all([
         getPlatformSettings(),
         getSecuritySettings(),
-        canPerform(access.role, "viewAudit") ? listNeroxaAuditLogs(100) : Promise.resolve([]),
       ]);
-      setPlatform(results[0]);
-      setSecurity(results[1]);
-      setLogs(results[2]);
+      setPlatform(platformSettings);
+      setSecurity(securitySettings);
+      if (canPerform(access.role, "viewAudit")) {
+        void listNeroxaAuditLogs(100)
+          .then(setLogs)
+          .catch(() => setLogs([]));
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar as configurações.");
     } finally {
@@ -93,7 +96,7 @@ function MasterConfiguracoes() {
 
   return (
     <MasterShell>
-      <div className="mx-auto max-w-[1400px] space-y-6 p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto min-w-0 max-w-[1400px] space-y-5 overflow-x-hidden p-3 sm:space-y-6 sm:p-6 lg:p-8">
         <header>
           <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Sistema</p>
           <h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Configurações</h1>
@@ -144,7 +147,7 @@ function MasterConfiguracoes() {
                 </div>
               </Card>
             </div>
-            <div className="flex justify-end"><Button onClick={() => void save()} disabled={saving}>{saving ? "Salvando..." : "Salvar configurações"}</Button></div>
+            <div className="flex flex-wrap justify-end gap-2"><Button onClick={() => void save()} disabled={saving}>{saving ? "Salvando..." : "Salvar configurações"}</Button></div>
           </>
         )}
 
