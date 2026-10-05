@@ -13,6 +13,8 @@ import { Route as MasterRouteImport } from './routes/master'
 import { Route as MasterAssinaturasRouteImport } from './routes/master-assinaturas'
 import { Route as MasterClientesRouteImport } from './routes/master-clientes'
 import { Route as MasterComercialRouteImport } from './routes/master-comercial'
+import { Route as MasterContratosRouteImport } from './routes/master-contratos'
+import { Route as PropostaPublicaRouteImport } from './routes/proposta-publica'
 import { Route as MasterConfiguracoesRouteImport } from './routes/master-configuracoes'
 import { Route as MasterDominiosRouteImport } from './routes/master-dominios'
 import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro'
@@ -46,6 +48,16 @@ const MasterClientesRoute = MasterClientesRouteImport.update({
 const MasterComercialRoute = MasterComercialRouteImport.update({
   id: '/master-comercial',
   path: '/master-comercial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MasterContratosRoute = MasterContratosRouteImport.update({
+  id: '/master-contratos',
+  path: '/master-contratos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PropostaPublicaRoute = PropostaPublicaRouteImport.update({
+  id: '/proposta-publica',
+  path: '/proposta-publica',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MasterConfiguracoesRoute = MasterConfiguracoesRouteImport.update({
@@ -100,6 +112,8 @@ export interface FileRoutesByFullPath {
   '/master-assinaturas': typeof MasterAssinaturasRoute
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
+  '/master-contratos': typeof MasterContratosRoute
+  '/proposta-publica': typeof PropostaPublicaRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -244,6 +258,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MasterComercialRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/master-contratos': {
+      id: '/master-contratos'
+      path: '/master-contratos'
+      fullPath: '/master-contratos'
+      preLoaderRoute: typeof MasterContratosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposta-publica': {
+      id: '/proposta-publica'
+      path: '/proposta-publica'
+      fullPath: '/proposta-publica'
+      preLoaderRoute: typeof PropostaPublicaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/master-configuracoes': {
       id: '/master-configuracoes'
       path: '/master-configuracoes'
@@ -316,6 +344,8 @@ const rootRouteChildren: RootRouteChildren = {
   MasterAssinaturasRoute: MasterAssinaturasRoute,
   MasterClientesRoute: MasterClientesRoute,
   MasterComercialRoute: MasterComercialRoute,
+  MasterContratosRoute: MasterContratosRoute,
+  PropostaPublicaRoute: PropostaPublicaRoute,
   MasterConfiguracoesRoute: MasterConfiguracoesRoute,
   MasterDominiosRoute: MasterDominiosRoute,
   MasterFinanceiroRoute: MasterFinanceiroRoute,
