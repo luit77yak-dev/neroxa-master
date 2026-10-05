@@ -41,6 +41,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
+  const debug = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug");
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -50,6 +52,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
+        {debug && (
+          <pre className="mt-4 max-h-64 overflow-auto rounded-lg bg-slate-950 p-3 text-left text-[11px] leading-4 text-slate-100 whitespace-pre-wrap">
+            {error.stack || error.message}
+          </pre>
+        )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
             onClick={() => {
