@@ -121,8 +121,6 @@ export interface FileRoutesByFullPath {
   '/master-contratos': typeof MasterContratosRoute
   '/proposta-publica': typeof PropostaPublicaRoute
   '/assinar-contrato': typeof AssinarContratoRoute
-  '/assinar-contrato': typeof AssinarContratoRoute
-  '/assinar-contrato': typeof AssinarContratoRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -141,7 +139,6 @@ export interface FileRoutesByTo {
   '/master-comercial': typeof MasterComercialRoute
   '/master-contratos': typeof MasterContratosRoute
   '/proposta-publica': typeof PropostaPublicaRoute
-  '/assinar-contrato': typeof AssinarContratoRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -160,7 +157,6 @@ export interface FileRoutesById {
   '/master-comercial': typeof MasterComercialRoute
   '/master-contratos': typeof MasterContratosRoute
   '/proposta-publica': typeof PropostaPublicaRoute
-  '/assinar-contrato': typeof AssinarContratoRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -227,6 +223,9 @@ export interface RootRouteChildren {
   MasterAssinaturasRoute: typeof MasterAssinaturasRoute
   MasterClientesRoute: typeof MasterClientesRoute
   MasterComercialRoute: typeof MasterComercialRoute
+  MasterContratosRoute: typeof MasterContratosRoute
+  PropostaPublicaRoute: typeof PropostaPublicaRoute
+  AssinarContratoRoute: typeof AssinarContratoRoute
   MasterConfiguracoesRoute: typeof MasterConfiguracoesRoute
   MasterDominiosRoute: typeof MasterDominiosRoute
   MasterFinanceiroRoute: typeof MasterFinanceiroRoute
