@@ -287,55 +287,74 @@ function MasterCommercialPage() {
             {recentProposals.map((proposal) => {
               const client = clientMap.get(proposal.client_id);
               return (
-                <>
-                  <div key={proposal.id} className="flex items-center gap-3 border-b border-border/60 py-3.5 last:border-0">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                    <FileText className="h-4 w-4" />
+                <div key={proposal.id} className="border-b border-border/60 py-3.5 last:border-0">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+                      <FileText className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{proposal.title}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {client?.trade_name || client?.legal_name || "Cliente não identificado"}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>
+                        {PROPOSAL_STATUS_LABELS[proposal.status]}
+                      </span>
+                      {proposal.status === "DRAFT" && (
+                        <Button variant="ghost" size="icon" title="Enviar proposta" disabled={saving === proposal.id} onClick={() => void handleShareProposal(proposal)}>
+                          <Send className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      {proposal.status === "SENT" && (
+                        <Button variant="ghost" size="icon" title="Copiar link" onClick={() => void handleShareProposal(proposal)}>
+                          <Send className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      {["SENT", "NEGOTIATION"].includes(proposal.status) && (
+                        <Button variant="ghost" size="icon" title="Aceitar" disabled={saving === proposal.id} onClick={() => void handleProposalStatus(proposal.id, "ACCEPTED")}>
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                      {proposal.status === "ACCEPTED" && !contracts.some((contract) => contract.proposal_id === proposal.id) && (
+                        <Button variant="outline" size="sm" disabled={saving === proposal.id} onClick={() => void handleCreateContract(proposal.id)}>
+                          Gerar contrato
+                        </Button>
+                      )}
+                      {!["ACCEPTED", "REJECTED", "EXPIRED", "CANCELLED"].includes(proposal.status) && (
+                        <Button variant="outline" size="sm" disabled={saving === proposal.id} onClick={() => { if (window.confirm("Cancelar esta proposta?")) void handleProposalStatus(proposal.id, "CANCELLED"); }}>
+                          Cancelar
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{proposal.title}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {client?.trade_name || client?.legal_name || "Cliente não identificado"}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>{PROPOSAL_STATUS_LABELS[proposal.status]}</span>{proposal.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Enviar proposta" disabled={saving===proposal.id} onClick={()=>void handleShareProposal(proposal)}><Send className="h-3.5 w-3.5"/></Button>}{proposal.status==="SENT"&&<Button variant="ghost" size="icon" title="Copiar link" onClick={()=>void handleShareProposal(proposal)}><Send className="h-3.5 w-3.5"/></Button>}{["SENT","NEGOTIATION"].includes(proposal.status)&&<Button variant="ghost" size="icon" title="Aceitar" disabled={saving===proposal.id} onClick={()=>void handleProposalStatus(proposal.id,"ACCEPTED")}><CheckCircle2 className="h-3.5 w-3.5"/></Button>}{proposal.status==="ACCEPTED"&&!contracts.some((contract)=>contract.proposal_id===proposal.id)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>void handleCreateContract(proposal.id)}>Gerar contrato</Button>}{!["ACCEPTED","REJECTED","EXPIRED","CANCELLED"].includes(proposal.status)&&<Button variant="outline" size="sm" disabled={saving===proposal.id} onClick={()=>{if(window.confirm("Cancelar esta proposta?"))void handleProposalStatus(proposal.id,"CANCELLED")}}>Cancelar</Button>}</div>
-                  </div>
+
                   {shareLink && shareProposalId === proposal.id && (
-                  <div className="mt-3 rounded-xl border border-border bg-muted/30 p-4">
-                    <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-foreground">Proposta enviada com sucesso</p>
-                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                          O link público desta proposta está pronto para compartilhar com o cliente.
-                        </p>
+                    <div className="mt-3 ml-0 rounded-xl border border-border bg-muted/30 p-4 sm:ml-12">
+                      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground">Proposta enviada com sucesso</p>
+                          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                            O link público desta proposta está pronto para compartilhar com o cliente.
+                          </p>
+                        </div>
+                        <Button className="w-full shrink-0 sm:w-auto" onClick={() => window.open(shareLink, "_blank", "noopener,noreferrer")}>
+                          Abrir proposta
+                        </Button>
                       </div>
-                      <Button
-                        className="w-full shrink-0 sm:w-auto"
-                        onClick={() => window.open(shareLink, "_blank", "noopener,noreferrer")}
-                      >
-                        Abrir proposta
-                      </Button>
+                      <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row">
+                        <input readOnly value={shareLink} aria-label="Link público da proposta" className="h-10 min-w-0 w-full flex-1 rounded-lg border border-border bg-background px-3 text-xs" />
+                        <Button className="w-full shrink-0 sm:w-auto" variant="outline" onClick={() => void navigator.clipboard?.writeText(shareLink).catch(() => undefined)}>
+                          Copiar link
+                        </Button>
+                      </div>
                     </div>
-                    <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row">
-                      <input
-                        readOnly
-                        value={shareLink}
-                        aria-label="Link público da proposta"
-                        className="h-10 min-w-0 w-full flex-1 rounded-lg border border-border bg-background px-3 text-xs"
-                      />
-                      <Button
-                        className="w-full shrink-0 sm:w-auto"
-                        variant="outline"
-                        onClick={() => void navigator.clipboard?.writeText(shareLink).catch(() => undefined)}
-                      >
-                        Copiar link
-                      </Button>
-                    </div>
-                  </div>
                   )}
-                </>
+                </div>
               );
             })}
+
           </CommercialList>
 
           <CommercialList
