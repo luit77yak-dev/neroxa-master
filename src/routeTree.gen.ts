@@ -114,6 +114,8 @@ export interface FileRoutesByFullPath {
   '/master-comercial': typeof MasterComercialRoute
   '/master-contratos': typeof MasterContratosRoute
   '/proposta-publica': typeof PropostaPublicaRoute
+  '/master-contratos': typeof MasterContratosRoute
+  '/proposta-publica': typeof PropostaPublicaRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -130,6 +132,8 @@ export interface FileRoutesByTo {
   '/master-assinaturas': typeof MasterAssinaturasRoute
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
+  '/master-contratos': typeof MasterContratosRoute
+  '/proposta-publica': typeof PropostaPublicaRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -146,6 +150,8 @@ export interface FileRoutesById {
   '/master-assinaturas': typeof MasterAssinaturasRoute
   '/master-clientes': typeof MasterClientesRoute
   '/master-comercial': typeof MasterComercialRoute
+  '/master-contratos': typeof MasterContratosRoute
+  '/proposta-publica': typeof PropostaPublicaRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -272,6 +278,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PropostaPublicaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/master-contratos': {
+      id: '/master-contratos'
+      path: '/master-contratos'
+      fullPath: '/master-contratos'
+      preLoaderRoute: typeof MasterContratosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/proposta-publica': {
+      id: '/proposta-publica'
+      path: '/proposta-publica'
+      fullPath: '/proposta-publica'
+      preLoaderRoute: typeof PropostaPublicaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/master-configuracoes': {
       id: '/master-configuracoes'
       path: '/master-configuracoes'
@@ -344,6 +364,8 @@ const rootRouteChildren: RootRouteChildren = {
   MasterAssinaturasRoute: MasterAssinaturasRoute,
   MasterClientesRoute: MasterClientesRoute,
   MasterComercialRoute: MasterComercialRoute,
+  MasterContratosRoute: MasterContratosRoute,
+  PropostaPublicaRoute: PropostaPublicaRoute,
   MasterContratosRoute: MasterContratosRoute,
   PropostaPublicaRoute: PropostaPublicaRoute,
   MasterConfiguracoesRoute: MasterConfiguracoesRoute,
