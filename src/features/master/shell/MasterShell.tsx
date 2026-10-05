@@ -38,7 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Visão geral", to: "/master", icon: LayoutDashboard },
   { label: "Clientes", to: "/master-clientes", icon: Users },
   { label: "Sistemas", to: "/master-sistemas", icon: Package },
-  { label: "Comercial", to: "/master-comercial", icon: BriefcaseBusiness },
+  { label: "Comercial", to: "/master-comercial", icon: BriefcaseBusiness, active: (pathname) => pathname === "/master-comercial" || pathname === "/master-contratos" },
   { label: "Planos", to: "/master-planos", icon: Package },
   { label: "Assinaturas", to: "/master-assinaturas", icon: CreditCard },
   { label: "Financeiro", to: "/master-financeiro", icon: BarChart3 },
