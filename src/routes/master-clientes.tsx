@@ -318,6 +318,19 @@ function MasterClientsPage() {
     <MasterShell>
     <main className="min-h-screen bg-muted/50 text-foreground">
 
+      <div className="mx-auto max-w-[1500px] px-3 pt-4 sm:px-6">
+        <div className="master-page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground">Neroxa Master</p>
+            <h1 className="mt-1 text-xl font-semibold sm:text-2xl">Clientes</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Gerencie clientes, organizações, contatos e implantações.</p>
+          </div>
+          <Button className="min-h-11 w-full shrink-0 sm:w-auto" onClick={() => { setDraft(emptyDraft); setShowCreate(true); }}>
+            <Plus className="h-4 w-4" /> Novo cliente
+          </Button>
+        </div>
+      </div>
+
       <div className="mx-auto grid min-w-0 max-w-[1500px] gap-4 overflow-x-hidden px-3 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <section className="min-w-0 space-y-4">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -401,7 +414,7 @@ function MasterClientsPage() {
           </Card>
         </section>
 
-        <Client360Shell
+        {selected ? <Client360Shell
           key={selected.id}
           clientId={selected.id}
           organizationId={selected.organization_id}
@@ -576,7 +589,16 @@ function MasterClientsPage() {
                     )}
                   
           </aside>
-        </Client360Shell>
+        </Client360Shell> : (
+          <Card className="border-dashed border-input bg-card p-8 text-center lg:col-start-2">
+            <Building2 className="mx-auto h-8 w-8 text-muted-foreground/50" />
+            <p className="mt-3 text-sm font-medium">Nenhum cliente selecionado</p>
+            <p className="mt-1 text-xs text-muted-foreground">Cadastre o primeiro cliente para começar o fluxo comercial.</p>
+            <Button className="mt-4 w-full sm:w-auto" onClick={() => { setDraft(emptyDraft); setShowCreate(true); }}>
+              <Plus className="h-4 w-4" /> Cadastrar cliente
+            </Button>
+          </Card>
+        )}
       </div>
 
       {showInstanceCreate && selected && (
