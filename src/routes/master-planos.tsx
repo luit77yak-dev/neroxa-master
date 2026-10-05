@@ -58,30 +58,51 @@ function MasterPlansPage() {
 
   const load = async () => {
     setError(null);
+    setLoading(true);
     try {
       const access = await getNeroxaPlatformAccess();
       const staff = Boolean(access?.active);
       setAuthorized(staff);
       setRole(access?.active ? access.role : null);
       if (!staff) return;
-      const [overview, productData, systemData] = await Promise.all([loadSubscriptionOverview(), listProducts(), listNeroxaSystems()]);
+
+      // The plan catalog is the primary payload for this screen. Render it first
+      // instead of blocking the whole page on the secondary product/feature joins.
+      const overview = await loadSubscriptionOverview();
       setPlans(overview.plans);
-      setProducts(productData);
-      setSystems(systemData);
-      const productLinks = await Promise.all(productData.map(async (product) => [product.id, await listProductPlans(product.id)] as const));
-      const productMap: Record<string, string[]> = {};
-      for (const [productId, links] of productLinks) {
-        for (const link of links.filter((item) => item.included)) {
-          const plan = overview.plans.find((item) => item.id === link.plan_id);
-          if (plan) productMap[plan.id] = [...(productMap[plan.id] ?? []), productData.find((item) => item.id === productId)?.name ?? ""].filter(Boolean);
+      setLoading(false);
+
+      try {
+        const [productData, systemData] = await Promise.all([listProducts(), listNeroxaSystems()]);
+        setProducts(productData);
+        setSystems(systemData);
+
+        const productLinks = await Promise.all(productData.map(async (product) => [product.id, await listProductPlans(product.id)] as const));
+        const productMap: Record<string, string[]> = {};
+        for (const [productId, links] of productLinks) {
+          for (const link of links.filter((item) => item.included)) {
+            const plan = overview.plans.find((item) => item.id === link.plan_id);
+            if (plan) {
+              productMap[plan.id] = [
+                ...(productMap[plan.id] ?? []),
+                productData.find((item) => item.id === productId)?.name ?? "",
+              ].filter(Boolean);
+            }
+          }
         }
+        setPlanProducts(productMap);
+
+        const featureRows = await Promise.all(
+          overview.plans.map(async (plan) => [plan.id, await listPlanFeatures(plan.id)] as const),
+        );
+        setPlanFeatures(
+          Object.fromEntries(featureRows.map(([planId, rows]) => [planId, rows.map((row) => row.feature_key)])),
+        );
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar todos os detalhes dos planos.");
       }
-      setPlanProducts(productMap);
-      const featureRows = await Promise.all(overview.plans.map(async (plan) => [plan.id, await listPlanFeatures(plan.id)] as const));
-      setPlanFeatures(Object.fromEntries(featureRows.map(([planId, rows]) => [planId, rows.map((row) => row.feature_key)])));
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível carregar os planos.");
-    } finally {
       setLoading(false);
     }
   };
