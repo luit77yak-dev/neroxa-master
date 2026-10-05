@@ -18,6 +18,7 @@ export const CONTRACT_STATUS_LABELS = {
 
 export type ProposalStatus = keyof typeof PROPOSAL_STATUS_LABELS;
 export type ContractStatus = keyof typeof CONTRACT_STATUS_LABELS;
+export type ContractSignatureStatus = "NOT_SENT" | "PENDING_CUSTOMER" | "PENDING_NEROXA" | "SIGNED" | "DECLINED" | "CANCELLED";
 
 export type CommercialProposal = {
   id: string;
@@ -52,6 +53,18 @@ export type CommercialContract = {
   started_at: string | null;
   ended_at: string | null;
   signed_at: string | null;
+  signature_status: ContractSignatureStatus;
+  public_signature_token: string;
+  signature_requested_at: string | null;
+  customer_signer_name: string | null;
+  customer_signer_document: string | null;
+  customer_signed_at: string | null;
+  neroxa_signer_user_id: string | null;
+  neroxa_signer_name: string | null;
+  neroxa_signer_role: string | null;
+  neroxa_signed_at: string | null;
+  issued_at: string | null;
+  term_months: number | null;
   plan_id: string | null;
   system_id: string | null;
   commercial_model: "SUBSCRIPTION" | "PERMANENT";
