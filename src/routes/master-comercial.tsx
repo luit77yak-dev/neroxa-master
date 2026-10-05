@@ -16,6 +16,7 @@ import {
   Pause,
   Play,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -29,7 +30,9 @@ import {
   type CommercialContract,
   type CommercialProposal,
 } from "@/features/master/commercial/types";
-import { createContractFromProposal, loadCommercialOverview, updateContractDraft, updateContractStatus, updateProposalStatus } from "@/features/master/commercial/services";
+import { createContractFromProposal, createProposal, loadCommercialOverview, updateContractDraft, updateContractStatus, updateProposalStatus } from "@/features/master/commercial/services";
+import { loadSubscriptionOverview } from "@/features/master/subscriptions/services";
+import type { SubscriptionPlan } from "@/features/master/subscriptions/types";
 
 export const Route = createFileRoute("/master-comercial")({
   component: MasterCommercialPage,
@@ -68,6 +71,10 @@ function MasterCommercialPage() {
   const [saving, setSaving] = useState<string | null>(null);
   const [editingContractId, setEditingContractId] = useState<string | null>(null);
   const [contractDraft, setContractDraft] = useState({ title: "", contractNumber: "" });
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [showNewProposal, setShowNewProposal] = useState(Boolean(contextClientId || contextOrganizationId));
+  const [proposalForm, setProposalForm] = useState({ clientId: contextOrganizationId ?? contextClientId ?? "", planId: "", title: "", notes: "", validUntil: "" });
+  const [creatingProposal, setCreatingProposal] = useState(false);
 
   const load = async (initial = false) => {
     setError(null);
@@ -81,7 +88,8 @@ function MasterCommercialPage() {
       setAuthorized(staff);
       if (!staff) return;
 
-      const overview = await loadCommercialOverview();
+      const [overview, subscriptionOverview] = await Promise.all([loadCommercialOverview(), loadSubscriptionOverview()]);
+      setPlans(subscriptionOverview.plans.filter((plan) => plan.active));
       setProposals(overview.proposals);
       setContracts(overview.contracts);
       setClients(overview.clients);
@@ -96,6 +104,26 @@ function MasterCommercialPage() {
   useEffect(() => {
     void load(true);
   }, []);
+  const handleCreateProposal = async () => {
+    if (!canPerform(role, "manageCommercial")) return;
+    if (!proposalForm.clientId || !proposalForm.planId) {
+      setError("Selecione o cliente e o plano.");
+      return;
+    }
+    setCreatingProposal(true);
+    setError(null);
+    try {
+      await createProposal({ clientId: proposalForm.clientId, planId: proposalForm.planId, title: proposalForm.title, notes: proposalForm.notes || null, validUntil: proposalForm.validUntil || null });
+      setProposalForm((current) => ({ ...current, title: "", notes: "", validUntil: "" }));
+      setShowNewProposal(false);
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível criar a proposta.");
+    } finally {
+      setCreatingProposal(false);
+    }
+  };
+
   const handleProposalStatus = async (id: string, status: "DRAFT" | "SENT" | "NEGOTIATION" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "CANCELLED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateProposalStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar a proposta."); } finally { setSaving(null); } };
   const handleContractStatus = async (id: string, status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "TERMINATED" | "EXPIRED") => { if (!canPerform(role, "manageCommercial")) return; setSaving(id); setError(null); try { await updateContractStatus(id, status); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível alterar o contrato."); } finally { setSaving(null); } };
   const handleCreateContract = async (proposalId: string) => { if (!canPerform(role, "manageCommercial")) return; setSaving(proposalId); setError(null); try { await createContractFromProposal(proposalId); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível gerar o contrato."); } finally { setSaving(null); } };
@@ -168,11 +196,31 @@ function MasterCommercialPage() {
               Acompanhe propostas e contratos sem misturar regras comerciais com a operação dos clientes.
             </p>
           </div>
-          <Button variant="outline" onClick={() => void load()} disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Atualizar
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Button variant="outline" onClick={() => void load()} disabled={refreshing}>
+              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+              Atualizar
+            </Button>
+            {canPerform(role, "manageCommercial") && <Button onClick={() => setShowNewProposal((current) => !current)}><Plus className="h-4 w-4" />Nova proposta</Button>}
+          </div>
         </section>
+
+        {showNewProposal && canPerform(role, "manageCommercial") && (
+          <Card className="border-border bg-card p-5 shadow-soft">
+            <div className="flex items-center justify-between gap-3">
+              <div><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Comercial · Nova proposta</p><h2 className="mt-1 text-base font-semibold">Criar proposta</h2><p className="mt-1 text-xs text-muted-foreground">Selecione o cliente e o plano. Os valores serão copiados automaticamente do plano.</p></div>
+              <Button variant="ghost" size="icon" onClick={() => setShowNewProposal(false)}><X className="h-4 w-4" /></Button>
+            </div>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <label><span className="mb-1.5 block text-xs font-medium text-muted-foreground">Cliente</span><select className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm" value={proposalForm.clientId} onChange={(e) => setProposalForm((v) => ({ ...v, clientId: e.target.value }))}><option value="">Selecione um cliente</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.trade_name || client.legal_name || "Cliente"}</option>)}</select></label>
+              <label><span className="mb-1.5 block text-xs font-medium text-muted-foreground">Plano</span><select className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm" value={proposalForm.planId} onChange={(e) => setProposalForm((v) => ({ ...v, planId: e.target.value }))}><option value="">Selecione um plano</option>{plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</select></label>
+              <label><span className="mb-1.5 block text-xs font-medium text-muted-foreground">Título</span><input className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm" value={proposalForm.title} onChange={(e) => setProposalForm((v) => ({ ...v, title: e.target.value }))} placeholder="Ex.: Pizza Perfect Plate · Implantação" /></label>
+              <label><span className="mb-1.5 block text-xs font-medium text-muted-foreground">Validade</span><input type="date" className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm" value={proposalForm.validUntil} onChange={(e) => setProposalForm((v) => ({ ...v, validUntil: e.target.value }))} /></label>
+              <label className="sm:col-span-2"><span className="mb-1.5 block text-xs font-medium text-muted-foreground">Observações</span><textarea className="min-h-20 w-full rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm" value={proposalForm.notes} onChange={(e) => setProposalForm((v) => ({ ...v, notes: e.target.value }))} /></label>
+            </div>
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><Button variant="outline" onClick={() => setShowNewProposal(false)}>Cancelar</Button><Button onClick={() => void handleCreateProposal()} disabled={creatingProposal || !proposalForm.clientId || !proposalForm.planId}>{creatingProposal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Criar proposta</Button></div>
+          </Card>
+        )}
 
         {error && (
           <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">
