@@ -13,7 +13,7 @@ const PROPOSAL_TRANSITIONS: Record<ProposalStatus, ProposalStatus[]> = {
 };
 
 const CONTRACT_TRANSITIONS: Record<ContractStatus, ContractStatus[]> = {
-  DRAFT: ["ACTIVE"],
+  DRAFT: ["ACTIVE", "TERMINATED"],
   ACTIVE: ["SUSPENDED", "TERMINATED", "EXPIRED"],
   SUSPENDED: ["ACTIVE", "TERMINATED", "EXPIRED"],
   TERMINATED: [],
