@@ -141,6 +141,7 @@ export interface FileRoutesByTo {
   '/master-comercial': typeof MasterComercialRoute
   '/master-contratos': typeof MasterContratosRoute
   '/proposta-publica': typeof PropostaPublicaRoute
+  '/assinar-contrato': typeof AssinarContratoRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -159,6 +160,7 @@ export interface FileRoutesById {
   '/master-comercial': typeof MasterComercialRoute
   '/master-contratos': typeof MasterContratosRoute
   '/proposta-publica': typeof PropostaPublicaRoute
+  '/assinar-contrato': typeof AssinarContratoRoute
   '/master-configuracoes': typeof MasterConfiguracoesRoute
   '/master-dominios': typeof MasterDominiosRoute
   '/master-financeiro': typeof MasterFinanceiroRoute
@@ -185,6 +187,7 @@ export interface FileRouteTypes {
     | '/master-recovery'
     | '/master-sistemas'
     | '/master-suporte'
+    | '/assinar-contrato'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -200,6 +203,7 @@ export interface FileRouteTypes {
     | '/master-produtos'
     | '/master-recovery'
     | '/master-suporte'
+    | '/assinar-contrato'
   id:
     | '__root__'
     | '/'
