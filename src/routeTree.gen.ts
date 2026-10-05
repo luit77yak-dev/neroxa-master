@@ -366,8 +366,6 @@ const rootRouteChildren: RootRouteChildren = {
   MasterComercialRoute: MasterComercialRoute,
   MasterContratosRoute: MasterContratosRoute,
   PropostaPublicaRoute: PropostaPublicaRoute,
-  MasterContratosRoute: MasterContratosRoute,
-  PropostaPublicaRoute: PropostaPublicaRoute,
   MasterConfiguracoesRoute: MasterConfiguracoesRoute,
   MasterDominiosRoute: MasterDominiosRoute,
   MasterFinanceiroRoute: MasterFinanceiroRoute,
