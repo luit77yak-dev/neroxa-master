@@ -44,7 +44,7 @@ function MasterFinancePage(){
      <p className="text-sm font-medium">{i.invoice_number}</p>
      <p className="truncate text-xs text-muted-foreground">{c?.trade_name||c?.legal_name||"Cliente não identificado"} · vence {date(i.due_date)}</p>
     </div>
-    <div className="flex items-center justify-between gap-3 sm:justify-end">
+    <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
      <p className="text-sm font-semibold">{money(i.total_amount)}</p>
      <div className="flex items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>{canPerform(role,"manageFinance")&&["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Marcar como paga" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"PAID")}><Check className="h-3.5 w-3.5"/></Button>}{canPerform(role,"manageFinance")&&i.status==="PAID"&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Reembolsar esta fatura? Essa ação altera o status para reembolsada."))void handleBillingStatus(i.id,"REFUNDED")}}><Undo2 className="h-3.5 w-3.5"/>Reembolsar</Button>}{canPerform(role,"manageFinance")&&["PENDING","OVERDUE"].includes(i.status)&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Cancelar esta fatura?"))void handleBillingStatus(i.id,"CANCELLED")}}>Cancelar</Button>}</div>
     </div>
@@ -63,7 +63,7 @@ function MasterFinancePage(){
  ));
  if(authorized===false)return <MasterLogin />;
  if(authorized===null||loading)return <main data-route="master-financeiro" className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin"/></main>;
- return <MasterShell><div className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6">
+ return <MasterShell><div className="mx-auto min-w-0 max-w-[1500px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
  <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Financeiro</p><h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Financeiro</h1><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Acompanhe faturas, recebimentos e valores em aberto sem misturar cobrança com a operação comercial.</p></div><Button variant="outline" onClick={()=>void load()} disabled={refreshing}><RefreshCw className={refreshing?"h-4 w-4 animate-spin":"h-4 w-4"}/>Atualizar</Button></section>
  {error&&<Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric icon={CreditCard} label="Faturas" value={metrics.total.toString()} hint="Total registrado"/><Metric icon={CircleDollarSign} label="Em aberto" value={money(metrics.pending)} hint="Faturas pendentes"/><Metric icon={AlertTriangle} label="Inadimplência" value={money(metrics.overdue)} hint="Faturas vencidas"/><Metric icon={CheckCircle2} label="Recebido" value={money(metrics.paid)} hint="Faturas quitadas"/></div>

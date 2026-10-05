@@ -118,11 +118,11 @@ export function MasterShell({ children }: MasterShellProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[264px] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(86vw,320px)] flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl transition-transform duration-200 lg:w-[264px] lg:shadow-none lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-5">
+        <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4 sm:h-16 sm:px-5">
           <Link to="/master" onClick={() => setMobileOpen(false)} className="flex items-center gap-3">
             <span className="grid h-9 w-9 place-items-center rounded-lg border border-sidebar-primary/60 bg-sidebar-accent font-display text-base font-semibold text-sidebar-primary">
               N
@@ -142,7 +142,7 @@ export function MasterShell({ children }: MasterShellProps) {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label="Navegação do Neroxa Master">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 sm:py-5" aria-label="Navegação do Neroxa Master">
           {sections.map((section) => {
             const visible = section.items.filter((item) => canAccessModule(role, moduleForPath(item.to)));
             if (visible.length === 0) return null;
@@ -183,13 +183,13 @@ export function MasterShell({ children }: MasterShellProps) {
         />
       )}
 
-      <div className="min-h-screen lg:pl-[264px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/85 px-4 backdrop-blur-md sm:px-8">
+      <div className="min-h-screen overflow-x-clip lg:pl-[264px]">
+        <header className="master-shell-header sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-3 backdrop-blur-md sm:h-16 sm:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:text-foreground lg:hidden"
+              className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-card text-muted-foreground transition hover:text-foreground lg:hidden"
               aria-label="Abrir menu"
             >
               <Menu className="h-5 w-5" />
@@ -219,7 +219,7 @@ export function MasterShell({ children }: MasterShellProps) {
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-64px)] min-w-0 overflow-x-clip">{children}</main>
+        <main className="master-main min-h-[calc(100vh-56px)] min-w-0 sm:min-h-[calc(100vh-64px)]">{children}</main>
       </div>
     </div>
   );
