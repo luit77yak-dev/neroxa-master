@@ -104,7 +104,9 @@ function MasterContractsPage() {
   };
 
   return (
-    <MasterShell>
+    <>
+      <style>{`@media print { body * { visibility: hidden !important; } #contract-print-document, #contract-print-document * { visibility: visible !important; } #contract-print-document { position: absolute !important; inset: 0 !important; width: 100% !important; margin: 0 !important; padding: 24px !important; border: 0 !important; box-shadow: none !important; background: white !important; color: black !important; } #contract-print-document button { display: none !important; } @page { margin: 12mm; } }`}</style>
+      <MasterShell>
       <div className="mx-auto w-full min-w-0 max-w-[1200px] space-y-4 overflow-x-clip px-2.5 py-3 sm:space-y-5 sm:px-6 sm:py-5">
         <header className="w-full min-w-0 rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5">
           <div className="min-w-0">
@@ -162,7 +164,7 @@ function MasterContractsPage() {
         )}
 
         {selected && (
-          <Card className="min-w-0 overflow-hidden border-border bg-card p-4 shadow-soft print:shadow-none sm:p-6">
+          <Card id="contract-print-document" className="min-w-0 overflow-hidden border-border bg-card p-4 shadow-soft print:shadow-none sm:p-6">
             <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0"><p className="text-xs font-medium tracking-wide text-muted-foreground/70">NEROXA · CONTRATO COMERCIAL</p><h2 className="mt-1 break-words text-xl font-semibold sm:text-2xl">{selected.title}</h2><p className="mt-1 text-sm text-muted-foreground">{selected.contract_number || "Número ainda não definido"} · {CONTRACT_STATUS_LABELS[selected.status]}</p></div>
               <Button variant="outline" className="w-full shrink-0 sm:w-auto" onClick={() => window.print()}><Printer className="h-4 w-4" />Imprimir / PDF</Button>
@@ -202,6 +204,7 @@ function MasterContractsPage() {
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button variant="outline" onClick={() => setSigning(null)}>Cancelar</Button><Button onClick={() => void signAsNeroxa()} disabled={saving === signing.id}><CheckCircle2 className="h-4 w-4" />Confirmar assinatura</Button></div>
         </Card>}
       </div>
-    </MasterShell>
+      </MasterShell>
+    </>
   );
 }
