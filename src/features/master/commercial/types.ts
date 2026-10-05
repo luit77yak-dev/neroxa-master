@@ -21,6 +21,7 @@ export type ContractStatus = keyof typeof CONTRACT_STATUS_LABELS;
 
 export type CommercialProposal = {
   id: string;
+  public_token: string;
   client_id: string;
   status: ProposalStatus;
   title: string;
