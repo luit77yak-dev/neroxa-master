@@ -281,6 +281,56 @@ export type Database = {
           },
         ]
       }
+      neroxa_contract_signatures: {
+        Row: {
+          contract_id: string
+          contract_version: number
+          created_at: string
+          id: string
+          party: string
+          signature_method: string
+          signed_at: string
+          signer_document: string | null
+          signer_name: string
+          signer_role: string | null
+          signer_user_id: string | null
+        }
+        Insert: {
+          contract_id: string
+          contract_version: number
+          created_at?: string
+          id?: string
+          party: string
+          signature_method?: string
+          signed_at?: string
+          signer_document?: string | null
+          signer_name: string
+          signer_role?: string | null
+          signer_user_id?: string | null
+        }
+        Update: {
+          contract_id?: string
+          contract_version?: number
+          created_at?: string
+          id?: string
+          party?: string
+          signature_method?: string
+          signed_at?: string
+          signer_document?: string | null
+          signer_name?: string
+          signer_role?: string | null
+          signer_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neroxa_contract_signatures_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "neroxa_contracts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       neroxa_contracts: {
         Row: {
           billing_period: string | null
@@ -289,17 +339,29 @@ export type Database = {
           contract_number: string | null
           created_at: string
           currency: string
+          customer_signed_at: string | null
+          customer_signer_document: string | null
+          customer_signer_name: string | null
           ended_at: string | null
           id: string
+          issued_at: string | null
           maintenance_value: number | null
+          neroxa_signed_at: string | null
+          neroxa_signer_name: string | null
+          neroxa_signer_role: string | null
+          neroxa_signer_user_id: string | null
           plan_id: string | null
           proposal_id: string | null
+          public_signature_token: string
           recurring_value: number | null
           setup_value: number
+          signature_requested_at: string | null
+          signature_status: string
           signed_at: string | null
           started_at: string | null
           status: string
           system_id: string | null
+          term_months: number | null
           title: string
           updated_at: string
           version: number
@@ -311,17 +373,29 @@ export type Database = {
           contract_number?: string | null
           created_at?: string
           currency?: string
+          customer_signed_at?: string | null
+          customer_signer_document?: string | null
+          customer_signer_name?: string | null
           ended_at?: string | null
           id?: string
+          issued_at?: string | null
           maintenance_value?: number | null
+          neroxa_signed_at?: string | null
+          neroxa_signer_name?: string | null
+          neroxa_signer_role?: string | null
+          neroxa_signer_user_id?: string | null
           plan_id?: string | null
           proposal_id?: string | null
+          public_signature_token?: string
           recurring_value?: number | null
           setup_value?: number
+          signature_requested_at?: string | null
+          signature_status?: string
           signed_at?: string | null
           started_at?: string | null
           status?: string
           system_id?: string | null
+          term_months?: number | null
           title: string
           updated_at?: string
           version?: number
@@ -333,17 +407,29 @@ export type Database = {
           contract_number?: string | null
           created_at?: string
           currency?: string
+          customer_signed_at?: string | null
+          customer_signer_document?: string | null
+          customer_signer_name?: string | null
           ended_at?: string | null
           id?: string
+          issued_at?: string | null
           maintenance_value?: number | null
+          neroxa_signed_at?: string | null
+          neroxa_signer_name?: string | null
+          neroxa_signer_role?: string | null
+          neroxa_signer_user_id?: string | null
           plan_id?: string | null
           proposal_id?: string | null
+          public_signature_token?: string
           recurring_value?: number | null
           setup_value?: number
+          signature_requested_at?: string | null
+          signature_status?: string
           signed_at?: string | null
           started_at?: string | null
           status?: string
           system_id?: string | null
+          term_months?: number | null
           title?: string
           updated_at?: string
           version?: number
@@ -750,6 +836,7 @@ export type Database = {
           maintenance_value: number | null
           notes: string | null
           plan_id: string | null
+          public_token: string
           recurring_value: number | null
           rejected_at: string | null
           sent_at: string | null
@@ -759,6 +846,7 @@ export type Database = {
           title: string
           updated_at: string
           valid_until: string | null
+          version: number
         }
         Insert: {
           accepted_at?: string | null
@@ -771,6 +859,7 @@ export type Database = {
           maintenance_value?: number | null
           notes?: string | null
           plan_id?: string | null
+          public_token?: string
           recurring_value?: number | null
           rejected_at?: string | null
           sent_at?: string | null
@@ -780,6 +869,7 @@ export type Database = {
           title: string
           updated_at?: string
           valid_until?: string | null
+          version?: number
         }
         Update: {
           accepted_at?: string | null
@@ -792,6 +882,7 @@ export type Database = {
           maintenance_value?: number | null
           notes?: string | null
           plan_id?: string | null
+          public_token?: string
           recurring_value?: number | null
           rejected_at?: string | null
           sent_at?: string | null
@@ -801,6 +892,7 @@ export type Database = {
           title?: string
           updated_at?: string
           valid_until?: string | null
+          version?: number
         }
         Relationships: [
           {
@@ -1270,6 +1362,10 @@ export type Database = {
         Args: { p_contract_id: string }
         Returns: string
       }
+      apply_neroxa_domain_validation_result: {
+        Args: { p_domain_id: string; p_valid: boolean }
+        Returns: Database["public"]["Enums"]["neroxa_domain_status"]
+      }
       create_neroxa_client: {
         Args: {
           p_legal_name: string
@@ -1292,6 +1388,14 @@ export type Database = {
         }
         Returns: string
       }
+      delete_neroxa_system_domain_safely: {
+        Args: { p_domain_id: string }
+        Returns: Json
+      }
+      delete_neroxa_system_instance_safely: {
+        Args: { p_instance_id: string }
+        Returns: Json
+      }
       get_neroxa_platform_access: {
         Args: never
         Returns: {
@@ -1299,6 +1403,8 @@ export type Database = {
           role: Database["public"]["Enums"]["neroxa_platform_role"]
         }[]
       }
+      get_neroxa_public_contract: { Args: { p_token: string }; Returns: Json }
+      get_neroxa_public_proposal: { Args: { p_token: string }; Returns: Json }
       neroxa_has_platform_role: {
         Args: { p_roles: Database["public"]["Enums"]["neroxa_platform_role"][] }
         Returns: boolean
@@ -1318,6 +1424,31 @@ export type Database = {
         }
         Returns: string
       }
+      respond_neroxa_public_proposal: {
+        Args: { p_action: string; p_token: string }
+        Returns: Json
+      }
+      send_neroxa_contract_for_signature: {
+        Args: { p_contract_id: string }
+        Returns: string
+      }
+      sign_neroxa_contract: {
+        Args: {
+          p_contract_id: string
+          p_signer_name: string
+          p_signer_role: string
+        }
+        Returns: boolean
+      }
+      sign_neroxa_contract_as_customer: {
+        Args: {
+          p_confirmed: boolean
+          p_signer_document: string
+          p_signer_name: string
+          p_token: string
+        }
+        Returns: boolean
+      }
       transition_neroxa_client_status: {
         Args: { p_client_id: string; p_new_status: string }
         Returns: boolean
@@ -1328,6 +1459,13 @@ export type Database = {
           p_new_status: Database["public"]["Enums"]["neroxa_domain_status"]
         }
         Returns: Database["public"]["Enums"]["neroxa_domain_status"]
+      }
+      transition_neroxa_instance_status: {
+        Args: {
+          p_instance_id: string
+          p_status: Database["public"]["Enums"]["neroxa_instance_status"]
+        }
+        Returns: Database["public"]["Enums"]["neroxa_instance_status"]
       }
       update_neroxa_client: {
         Args: {
