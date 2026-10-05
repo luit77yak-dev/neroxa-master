@@ -61,10 +61,18 @@ function MasterContractsPage() {
 
   return (
     <MasterShell>
-      <div className="mx-auto min-w-0 max-w-[1200px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Comercial</p><h1 className="mt-1 text-[28px] font-semibold tracking-tight">Contratos</h1><p className="mt-1 text-sm text-muted-foreground">Contratos gerados a partir de propostas aceitas.</p></div>
-          <Link to="/master-comercial"><Button variant="outline"><ArrowLeft className="h-4 w-4" />Voltar ao Comercial</Button></Link>
+      <div className="mx-auto w-full min-w-0 max-w-[1200px] space-y-4 overflow-x-clip px-2.5 py-3 sm:space-y-5 sm:px-6 sm:py-5">
+        <header className="w-full min-w-0 rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5">
+          <div className="min-w-0">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Comercial</p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-[28px]">Contratos</h1>
+            <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">Contratos gerados a partir de propostas aceitas.</p>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:mt-0 sm:flex sm:justify-end">
+            <Link to="/master-comercial" className="block w-full sm:w-auto">
+              <Button variant="outline" className="w-full sm:w-auto"><ArrowLeft className="h-4 w-4" />Voltar ao Comercial</Button>
+            </Link>
+          </div>
         </header>
 
         {error && <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
@@ -75,17 +83,17 @@ function MasterContractsPage() {
           <div className="space-y-3">
             {contracts.map((contract) => (
               <Card key={contract.id} className="p-4 sm:p-5">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted"><FileCheck2 className="h-5 w-5" /></div>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold">{contract.title}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{contract.contract_number || "Sem número"} · {CONTRACT_STATUS_LABELS[contract.status]}</p>
                     <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground"><span className="rounded-full bg-muted px-2.5 py-1">Implantação: {money(contract.setup_value)}</span><span className="rounded-full bg-muted px-2.5 py-1">Recorrência: {money(contract.recurring_value)}</span><span className="rounded-full bg-muted px-2.5 py-1">Versão {contract.version}</span></div>
                   </div>
-                  {canPerform(role, "manageCommercial") && <div className="flex flex-wrap gap-2">
-                    {<Button variant="outline" size="sm" onClick={() => setSelectedId(contract.id)}><Eye className="h-3.5 w-3.5" />Visualizar</Button>}{contract.status === "DRAFT" && <Button variant="outline" size="sm" onClick={() => { setEditing(contract); setDraft({ title: contract.title, contractNumber: contract.contract_number ?? "" }); }}><Pencil className="h-3.5 w-3.5" />Editar</Button>}
-                    {contract.status === "DRAFT" && <Button size="sm" disabled={saving === contract.id} onClick={() => void (async () => { setSaving(contract.id); try { await updateContractStatus(contract.id, "ACTIVE"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível ativar."); } finally { setSaving(null); } })()}><Play className="h-3.5 w-3.5" />Ativar</Button>}
-                    {contract.status === "ACTIVE" && <Button variant="outline" size="sm" disabled={saving === contract.id} onClick={() => void (async () => { setSaving(contract.id); try { await updateContractStatus(contract.id, "SUSPENDED"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível suspender."); } finally { setSaving(null); } })()}><Pause className="h-3.5 w-3.5" />Suspender</Button>}
+                  {canPerform(role, "manageCommercial") && <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
+                    {<Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setSelectedId(contract.id)}><Eye className="h-3.5 w-3.5" />Visualizar</Button>}{contract.status === "DRAFT" && <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => { setEditing(contract); setDraft({ title: contract.title, contractNumber: contract.contract_number ?? "" }); }}><Pencil className="h-3.5 w-3.5" />Editar</Button>}
+                    {contract.status === "DRAFT" && <Button size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => void (async () => { setSaving(contract.id); try { await updateContractStatus(contract.id, "ACTIVE"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível ativar."); } finally { setSaving(null); } })()}><Play className="h-3.5 w-3.5" />Ativar</Button>}
+                    {contract.status === "ACTIVE" && <Button variant="outline" size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => void (async () => { setSaving(contract.id); try { await updateContractStatus(contract.id, "SUSPENDED"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível suspender."); } finally { setSaving(null); } })()}><Pause className="h-3.5 w-3.5" />Suspender</Button>}
                     {["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status) && <Button variant="outline" size="sm" disabled={saving === contract.id} onClick={() => { if (window.confirm("Encerrar este contrato?")) void updateContractStatus(contract.id, "TERMINATED").then(load).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível encerrar.")); }}><XCircle className="h-3.5 w-3.5" />Encerrar</Button>}
                   </div>}
                 </div>
@@ -99,14 +107,14 @@ function MasterContractsPage() {
           if (!contract) return null;
           const client = contract.client_id;
           return (
-            <Card className="border-border bg-card p-5 shadow-soft print:shadow-none">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div>
+            <Card className="min-w-0 overflow-hidden border-border bg-card p-4 shadow-soft print:shadow-none sm:p-5">
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <p className="text-xs font-medium tracking-wide text-muted-foreground/70">NEROXA · CONTRATO COMERCIAL</p>
-                  <h2 className="mt-1 text-2xl font-semibold">{contract.title}</h2>
+                  <h2 className="mt-1 break-words text-xl font-semibold sm:text-2xl">{contract.title}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">{contract.contract_number || "Número ainda não definido"} · {CONTRACT_STATUS_LABELS[contract.status]}</p>
                 </div>
-                <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" />Imprimir / PDF</Button>
+                <Button variant="outline" className="w-full shrink-0 sm:w-auto" onClick={() => window.print()}><Printer className="h-4 w-4" />Imprimir / PDF</Button>
               </div>
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Cliente</p><p className="mt-1 break-all text-sm font-medium">{client}</p></div>
@@ -120,7 +128,7 @@ function MasterContractsPage() {
                 <section><h3 className="font-semibold">3. Vigência</h3><p className="mt-1 text-muted-foreground">A vigência e as condições operacionais serão definidas na ativação do contrato e no vínculo de assinatura correspondente.</p></section>
                 <section><h3 className="font-semibold">4. Status e versão</h3><p className="mt-1 text-muted-foreground">Este documento representa a versão {contract.version} do contrato, atualmente em status {CONTRACT_STATUS_LABELS[contract.status]}.</p></section>
               </div>
-              <div className="mt-8 grid gap-8 border-t border-border pt-8 sm:grid-cols-2">
+              <div className="mt-8 grid gap-6 border-t border-border pt-8 sm:grid-cols-2">
                 <div><div className="border-b border-foreground/40 pb-2"></div><p className="mt-2 text-xs text-muted-foreground">Neroxa</p></div>
                 <div><div className="border-b border-foreground/40 pb-2"></div><p className="mt-2 text-xs text-muted-foreground">Cliente</p></div>
               </div>
