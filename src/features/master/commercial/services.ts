@@ -39,7 +39,7 @@ export async function loadCommercialOverview(): Promise<CommercialOverview> {
   const [proposalsResult, contractsResult, clientsResult] = await Promise.all([
     supabase.from("neroxa_proposals" as never).select("*").order("updated_at", { ascending: false }),
     supabase.from("neroxa_contracts" as never).select("*").order("updated_at", { ascending: false }),
-    supabase.from("neroxa_clients" as never).select("organization_id,legal_name,trade_name").order("updated_at", { ascending: false }),
+    supabase.from("neroxa_clients" as never).select("organization_id,legal_name,trade_name,tax_id").order("updated_at", { ascending: false }),
   ]);
 
   if (proposalsResult.error) throw new Error(proposalsResult.error.message);
@@ -49,7 +49,7 @@ export async function loadCommercialOverview(): Promise<CommercialOverview> {
   return {
     proposals: (proposalsResult.data ?? []) as unknown as CommercialOverview["proposals"],
     contracts: (contractsResult.data ?? []) as unknown as CommercialOverview["contracts"],
-    clients: (clientsResult.data ?? []).map((client) => ({ id: String((client as { organization_id: string }).organization_id), legal_name: (client as { legal_name: string | null }).legal_name, trade_name: (client as { trade_name: string | null }).trade_name })),
+    clients: (clientsResult.data ?? []).map((client) => ({ id: String((client as { organization_id: string }).organization_id), legal_name: (client as { legal_name: string | null }).legal_name, trade_name: (client as { trade_name: string | null }).trade_name, tax_id: (client as { tax_id: string | null }).tax_id })),
   };
 }
 
