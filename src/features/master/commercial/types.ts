@@ -59,6 +59,10 @@ export type CommercialContract = {
   customer_signer_name: string | null;
   customer_signer_document: string | null;
   customer_signed_at: string | null;
+  neroxa_entity_type: "INDIVIDUAL" | null;
+  neroxa_trade_name: string | null;
+  neroxa_legal_name: string | null;
+  neroxa_tax_id: string | null;
   neroxa_signer_user_id: string | null;
   neroxa_signer_name: string | null;
   neroxa_signer_role: string | null;
