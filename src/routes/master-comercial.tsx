@@ -36,21 +36,21 @@ export const Route = createFileRoute("/master-comercial")({
 });
 
 const proposalTone: Record<keyof typeof PROPOSAL_STATUS_LABELS, string> = {
-  DRAFT: "bg-slate-100 text-slate-700",
+  DRAFT: "bg-muted text-foreground/80",
   SENT: "bg-blue-50 text-blue-700",
   NEGOTIATION: "bg-violet-50 text-violet-700",
-  ACCEPTED: "bg-emerald-50 text-emerald-700",
+  ACCEPTED: "bg-success/10 text-success",
   REJECTED: "bg-red-50 text-red-700",
   EXPIRED: "bg-amber-50 text-amber-700",
-  CANCELLED: "bg-slate-100 text-slate-500",
+  CANCELLED: "bg-muted text-muted-foreground",
 };
 
 const contractTone: Record<keyof typeof CONTRACT_STATUS_LABELS, string> = {
-  DRAFT: "bg-slate-100 text-slate-700",
-  ACTIVE: "bg-emerald-50 text-emerald-700",
+  DRAFT: "bg-muted text-foreground/80",
+  ACTIVE: "bg-success/10 text-success",
   SUSPENDED: "bg-amber-50 text-amber-700",
   TERMINATED: "bg-red-50 text-red-700",
-  EXPIRED: "bg-slate-100 text-slate-500",
+  EXPIRED: "bg-muted text-muted-foreground",
 };
 
 function MasterCommercialPage() {
@@ -160,11 +160,11 @@ function MasterCommercialPage() {
       <div className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6">
         <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground/70">
               Gestão · Comercial
             </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Comercial</h1>
-            <p className="mt-1 max-w-2xl text-sm text-slate-500">
+            <h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Comercial</h1>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Acompanhe propostas e contratos sem misturar regras comerciais com a operação dos clientes.
             </p>
           </div>
@@ -197,13 +197,13 @@ function MasterCommercialPage() {
             {recentProposals.map((proposal) => {
               const client = clientMap.get(proposal.client_id);
               return (
-                <div key={proposal.id} className="flex items-center gap-3 border-b border-slate-100 py-3.5 last:border-0">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600">
+                <div key={proposal.id} className="flex items-center gap-3 border-b border-border/60 py-3.5 last:border-0">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
                     <FileText className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{proposal.title}</p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-muted-foreground">
                       {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
@@ -222,13 +222,13 @@ function MasterCommercialPage() {
             {recentContracts.map((contract) => {
               const client = clientMap.get(contract.client_id);
               return (
-                <div key={contract.id} className="flex items-center gap-3 border-b border-slate-100 py-3.5 last:border-0">
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-600">
+                <div key={contract.id} className="flex items-center gap-3 border-b border-border/60 py-3.5 last:border-0">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
                     <FileCheck2 className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{contract.title}</p>
-                    <p className="truncate text-xs text-slate-500">
+                    <p className="truncate text-xs text-muted-foreground">
                       {contract.contract_number || "Sem número"} · {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
@@ -240,23 +240,23 @@ function MasterCommercialPage() {
         </div>
 
         {editingContractId && (
-          <Card className="border-slate-200 bg-white p-5 shadow-sm">
+          <Card className="border-border bg-card p-5 shadow-soft">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Contrato · Edição</p>
-                <h2 className="mt-1 text-base font-semibold text-slate-900">Editar rascunho</h2>
-                <p className="mt-1 text-xs text-slate-500">Os valores comerciais permanecem vinculados à proposta aceita e não podem ser alterados aqui.</p>
+                <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Contrato · Edição</p>
+                <h2 className="mt-1 text-base font-semibold text-foreground">Editar rascunho</h2>
+                <p className="mt-1 text-xs text-muted-foreground">Os valores comerciais permanecem vinculados à proposta aceita e não podem ser alterados aqui.</p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setEditingContractId(null)}><X className="h-4 w-4" /></Button>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-1.5 block text-xs font-medium text-slate-600">Título</span>
-                <input className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm" value={contractDraft.title} onChange={(event) => setContractDraft((current) => ({ ...current, title: event.target.value }))} />
+                <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Título</span>
+                <input className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm" value={contractDraft.title} onChange={(event) => setContractDraft((current) => ({ ...current, title: event.target.value }))} />
               </label>
               <label className="block">
-                <span className="mb-1.5 block text-xs font-medium text-slate-600">Número do contrato</span>
-                <input className="h-10 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm" value={contractDraft.contractNumber} onChange={(event) => setContractDraft((current) => ({ ...current, contractNumber: event.target.value }))} placeholder="Ex.: NRX-2026-001" />
+                <span className="mb-1.5 block text-xs font-medium text-muted-foreground">Número do contrato</span>
+                <input className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm" value={contractDraft.contractNumber} onChange={(event) => setContractDraft((current) => ({ ...current, contractNumber: event.target.value }))} placeholder="Ex.: NRX-2026-001" />
               </label>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-4">
@@ -266,9 +266,9 @@ function MasterCommercialPage() {
                 ["Implantação", editingContractId ? (() => { const item = contracts.find((row) => row.id === editingContractId); return item ? `R$ ${item.setup_value.toFixed(2).replace(".", ",")}` : "—"; })() : "—"],
                 ["Versão", editingContractId ? String(contracts.find((item) => item.id === editingContractId)?.version ?? 1) : "—"],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-xl bg-slate-50 p-3">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-500">{label}</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-800">{value}</p>
+                <div key={label} className="rounded-xl bg-muted/50 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
                 </div>
               ))}
             </div>
@@ -283,20 +283,20 @@ function MasterCommercialPage() {
         )}
 
         <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-          <Card className="border-slate-200 bg-white p-5 shadow-sm">
+          <Card className="border-border bg-card p-5 shadow-soft">
             <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#102a2e] text-white">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar text-white">
                 <BriefcaseBusiness className="h-4 w-4" />
               </div>
               <div>
                 <h2 className="text-base font-semibold">Fluxo comercial</h2>
-                <p className="text-xs text-slate-500">A fundação já controla as transições críticas.</p>
+                <p className="text-xs text-muted-foreground">A fundação já controla as transições críticas.</p>
               </div>
             </div>
             <div className="mt-5 flex flex-wrap items-center gap-2">
               {["Lead", "Proposta", "Negociação", "Aceite", "Contrato"].map((step, index, all) => (
                 <div key={step} className="flex items-center gap-2">
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700">
+                  <span className="rounded-full border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground/80">
                     {step}
                   </span>
                   {index < all.length - 1 && <ArrowRight className="h-3.5 w-3.5 text-slate-300" />}
@@ -305,10 +305,10 @@ function MasterCommercialPage() {
             </div>
           </Card>
 
-          <Card className="border-slate-200 bg-[#102a2e] p-5 text-slate-100 shadow-sm">
+          <Card className="border-border bg-sidebar p-5 text-slate-100 shadow-soft">
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-slate-300" />
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Próximo módulo</p>
+              <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Próximo módulo</p>
             </div>
             <h2 className="mt-2 text-lg font-semibold">Assinaturas</h2>
             <p className="mt-2 text-sm leading-6 text-slate-300">
@@ -320,8 +320,8 @@ function MasterCommercialPage() {
           </Card>
         </div>
 
-        <Card className="border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex items-center gap-3 text-xs text-slate-500">
+        <Card className="border-border bg-card p-4 shadow-soft">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <Clock3 className="h-4 w-4 shrink-0" />
             Esta visão usa apenas dados reais disponíveis no módulo Comercial; métricas financeiras ficam para o módulo Financeiro.
           </div>
@@ -343,11 +343,11 @@ function Metric({
   hint: string;
 }) {
   return (
-    <Card className="border-slate-200 bg-white p-4 shadow-sm">
-      <Icon className="h-4 w-4 text-slate-400" />
-      <p className="mt-3 text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
+    <Card className="border-border bg-card p-4 shadow-soft">
+      <Icon className="h-4 w-4 text-muted-foreground/70" />
+      <p className="mt-3 text-xs font-medium tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-2xl font-semibold">{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{hint}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
     </Card>
   );
 }
@@ -366,18 +366,18 @@ function CommercialList({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="border-slate-200 bg-white p-5 shadow-sm">
+    <Card className="border-border bg-card p-5 shadow-soft">
       <div className="flex items-center gap-3">
-        <div className="grid h-9 w-9 place-items-center rounded-lg bg-slate-100 text-slate-600">
+        <div className="grid h-9 w-9 place-items-center rounded-lg bg-muted text-muted-foreground">
           <Icon className="h-4 w-4" />
         </div>
         <div>
           <h2 className="text-base font-semibold">{title}</h2>
-          <p className="text-xs text-slate-500">{description}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
       </div>
       <div className="mt-4">
-        {children || <p className="py-8 text-center text-xs text-slate-500">{empty}</p>}
+        {children || <p className="py-8 text-center text-xs text-muted-foreground">{empty}</p>}
       </div>
     </Card>
   );

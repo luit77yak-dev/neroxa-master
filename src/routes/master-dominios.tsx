@@ -35,9 +35,9 @@ const statusLabel: Record<DomainStatus, string> = {
 const statusClass: Record<DomainStatus, string> = {
   PENDING: "bg-amber-50 text-amber-700",
   VERIFYING: "bg-blue-50 text-blue-700",
-  VERIFIED: "bg-emerald-50 text-emerald-700",
+  VERIFIED: "bg-success/10 text-success",
   FAILED: "bg-red-50 text-red-700",
-  DISABLED: "bg-slate-100 text-slate-500",
+  DISABLED: "bg-muted text-muted-foreground",
 };
 
 function MasterDominios() {
@@ -217,9 +217,9 @@ function MasterDominios() {
       <div className="space-y-6 p-4 sm:p-6 lg:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Sistema</p>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Domínios</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Sistema</p>
+            <h1 className="font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Domínios</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Acompanhe e valide os domínios vinculados às instâncias dos clientes.
             </p>
           </div>
@@ -231,31 +231,31 @@ function MasterDominios() {
         </div>
 
         {error && (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
           </div>
         )}
 
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-5 py-4">
-            <p className="text-sm font-semibold text-slate-800">Domínios cadastrados</p>
-            <p className="text-xs text-slate-500">{domains.length} domínio(s)</p>
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-soft">
+          <div className="border-b border-border px-5 py-4">
+            <p className="text-sm font-semibold text-foreground">Domínios cadastrados</p>
+            <p className="text-xs text-muted-foreground">{domains.length} domínio(s)</p>
           </div>
 
           {loading ? (
-            <div className="flex items-center gap-2 p-8 text-sm text-slate-500">
+            <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Carregando domínios…
             </div>
           ) : domains.length === 0 ? (
             <div className="p-10 text-center">
               <Globe2 className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-3 text-sm font-medium text-slate-700">Nenhum domínio cadastrado</p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-3 text-sm font-medium text-foreground/80">Nenhum domínio cadastrado</p>
+              <p className="mt-1 text-xs text-muted-foreground">
                 Cadastre um domínio na instância e ele aparecerá aqui para validação.
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-border">
               {domains.map((domain) => {
                 const disabled = working === domain.id || domain.instanceStatus === "ARCHIVED";
                 const canStart = canManage && !disabled && ["PENDING", "FAILED", "DISABLED"].includes(domain.status);
@@ -265,13 +265,13 @@ function MasterDominios() {
                 return (
                   <div key={domain.id} className="flex flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-slate-900">{domain.domain}</p>
-                      <p className="mt-1 text-xs text-slate-500">
+                      <p className="truncate font-medium text-foreground">{domain.domain}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {domain.instanceName} · {domain.instanceSlug}
                         {domain.is_primary ? " · Principal" : ""}
                       </p>
                       {domain.verified_at && (
-                        <p className="mt-1 text-[11px] text-slate-400">
+                        <p className="mt-1 text-[11px] text-muted-foreground/70">
                           Validado em {new Date(domain.verified_at).toLocaleString("pt-BR")}
                         </p>
                       )}
@@ -300,7 +300,7 @@ function MasterDominios() {
                       )}
 
                       {dnsResult[domain.id] && (
-                        <div className={`w-full rounded-lg border p-3 text-xs lg:w-auto lg:max-w-md ${dnsResult[domain.id].ok ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>
+                        <div className={`w-full rounded-lg border p-3 text-xs lg:w-auto lg:max-w-md ${dnsResult[domain.id].ok ? "border-emerald-200 bg-success/10 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>
                           <p className="font-medium">{dnsResult[domain.id].message}</p>
                           <p className="mt-1">A: {dnsResult[domain.id].records.a.join(", ") || "—"}</p>
                           <p>CNAME: {dnsResult[domain.id].records.cname.join(", ") || "—"}</p>
@@ -317,19 +317,19 @@ function MasterDominios() {
 
         {(showCreate || editing) && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div className="w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">{editing ? "Editar domínio" : "Adicionar domínio"}</h2>
-                  <p className="mt-1 text-xs text-slate-500">Use apenas o hostname, sem protocolo ou caminho.</p>
+                  <h2 className="text-lg font-semibold text-foreground">{editing ? "Editar domínio" : "Adicionar domínio"}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">Use apenas o hostname, sem protocolo ou caminho.</p>
                 </div>
                 <Button variant="ghost" onClick={() => { setShowCreate(false); setEditing(null); }}>Fechar</Button>
               </div>
               <div className="mt-5 space-y-4">
                 {!editing && (
-                  <label className="block text-sm font-medium text-slate-700">
+                  <label className="block text-sm font-medium text-foreground/80">
                     Instância
-                    <select value={instanceDraft} onChange={(event) => setInstanceDraft(event.target.value)} className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                    <select value={instanceDraft} onChange={(event) => setInstanceDraft(event.target.value)} className="mt-1 h-10 w-full rounded-md border border-border bg-card px-3 text-sm">
                       <option value="">Selecione...</option>
                       {instances.filter((instance) => instance.status !== "ARCHIVED").map((instance) => (
                         <option key={instance.id} value={instance.id}>{instance.name} · {instance.slug}</option>
@@ -337,11 +337,11 @@ function MasterDominios() {
                     </select>
                   </label>
                 )}
-                <label className="block text-sm font-medium text-slate-700">
+                <label className="block text-sm font-medium text-foreground/80">
                   Domínio
-                  <input value={domainDraft} onChange={(event) => setDomainDraft(event.target.value)} placeholder="cliente.com.br" className="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+                  <input value={domainDraft} onChange={(event) => setDomainDraft(event.target.value)} placeholder="cliente.com.br" className="mt-1 h-10 w-full rounded-md border border-border px-3 text-sm" />
                 </label>
-                <label className="flex items-center gap-2 text-sm text-slate-700">
+                <label className="flex items-center gap-2 text-sm text-foreground/80">
                   <input type="checkbox" checked={primaryDraft} onChange={(event) => setPrimaryDraft(event.target.checked)} />
                   Definir como domínio principal
                 </label>

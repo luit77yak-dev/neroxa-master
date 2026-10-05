@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Activity, ArrowRight, Building2, FileText, ShieldCheck, Users, WalletCards } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, Building2, CheckCircle2, FileText, ShieldCheck, Users, WalletCards } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
@@ -23,6 +23,23 @@ type OverviewData = {
 
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 2 });
+
+type MasterRoute = "/master-comercial" | "/master-assinaturas" | "/master-financeiro" | "/master-implantacao";
+type Priority = { tone: "warn" | "info"; title: string; hint: string; to: MasterRoute };
+
+function buildPriorities(d: OverviewData): Priority[] {
+  const list: Priority[] = [];
+  if (d.openInvoices > 0) {
+    list.push({ tone: "warn", title: `${d.openInvoices} cobrança(s) em aberto`, hint: "Pendentes ou vencidas", to: "/master-financeiro" });
+  }
+  if (d.openProposals > 0) {
+    list.push({ tone: "info", title: `${d.openProposals} proposta(s) em andamento`, hint: "Rascunho, enviadas ou em negociação", to: "/master-comercial" });
+  }
+  if (d.clients > 0 && d.activeContracts === 0) {
+    list.push({ tone: "info", title: "Nenhum contrato ativo", hint: "Formalize o relacionamento com os clientes", to: "/master-comercial" });
+  }
+  return list;
+}
 
 function MasterOverviewPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
@@ -147,14 +164,21 @@ function MasterOverviewPage() {
     );
   }
 
+  const priorities = data ? buildPriorities(data) : [];
+  const steps: Array<{ label: string; value: string; hint: string; to: MasterRoute; icon: typeof FileText }> = [
+    { label: "Comercial", value: String(data?.openProposals ?? 0), hint: "propostas em aberto", to: "/master-comercial", icon: FileText },
+    { label: "Assinaturas", value: String(data?.activeSubscriptions ?? 0), hint: `ativas, ${money(data?.mrr ?? 0)} de MRR`, to: "/master-assinaturas", icon: Activity },
+    { label: "Implantação", value: String(data?.implementations ?? 0), hint: "instâncias cadastradas", to: "/master-implantacao", icon: Building2 },
+    { label: "Financeiro", value: String(data?.openInvoices ?? 0), hint: "cobranças em aberto", to: "/master-financeiro", icon: WalletCards },
+  ];
+
   return (
     <MasterShell>
-      <div className="mx-auto max-w-[1500px] space-y-5 px-4 py-5 sm:px-6">
+      <div className="mx-auto max-w-[1400px] space-y-6 px-4 py-6 sm:px-8 sm:py-8">
         <section>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Visão geral</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">Neroxa Master</h1>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            Resumo operacional da plataforma, com os principais indicadores comerciais, financeiros e de implantação.
+          <h1 className="font-display text-[28px] font-semibold leading-tight tracking-tight sm:text-[32px]">Visão geral</h1>
+          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Panorama da empresa: receita recorrente, base de clientes e o andamento de cada etapa, da proposta à cobrança.
           </p>
         </section>
 
@@ -164,61 +188,78 @@ function MasterOverviewPage() {
           </Card>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="grid grid-cols-2 overflow-hidden border-border bg-card shadow-soft lg:grid-cols-4">
+          <Metric icon={Activity} label="Receita recorrente (MRR)" value={money(data?.mrr ?? 0)} hint="Assinaturas ativas" />
           <Metric icon={Users} label="Clientes" value={String(data?.clients ?? 0)} hint="Base cadastrada" />
-          <Metric icon={Activity} label="MRR" value={money(data?.mrr ?? 0)} hint="Assinaturas ativas" />
           <Metric icon={FileText} label="Contratos ativos" value={String(data?.activeContracts ?? 0)} hint="Relacionamentos vigentes" />
           <Metric icon={Building2} label="Implantações" value={String(data?.implementations ?? 0)} hint="Instâncias cadastradas" />
-        </div>
+        </Card>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Metric icon={ArrowRight} label="Propostas em aberto" value={String(data?.openProposals ?? 0)} hint="Rascunho, enviadas ou negociação" compact />
-          <Metric icon={ShieldCheck} label="Assinaturas ativas" value={String(data?.activeSubscriptions ?? 0)} hint="Recorrência vigente" compact />
-          <Metric icon={WalletCards} label="Financeiro em aberto" value={String(data?.openInvoices ?? 0)} hint="Pendências e vencidas" compact />
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-          <Card className="border-slate-200 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-base font-semibold">Status operacional</h2>
-                <p className="mt-1 text-xs text-slate-500">Indicadores puxados diretamente do banco da plataforma.</p>
-              </div>
-            </div>
-            <div className="mt-5 divide-y divide-slate-100">
-              {[
-                ["Comercial", `${data?.openProposals ?? 0} propostas em aberto`],
-                ["Assinaturas", `${data?.activeSubscriptions ?? 0} ativas · ${money(data?.mrr ?? 0)} MRR`],
-                ["Financeiro", `${data?.openInvoices ?? 0} cobranças em aberto`],
-                ["Implantação", `${data?.implementations ?? 0} instâncias cadastradas`],
-              ].map(([title, description]) => {
-                const routeMap: Record<string, "/master-comercial" | "/master-assinaturas" | "/master-financeiro" | "/master-implantacao"> = {
-                  Comercial: "/master-comercial",
-                  Assinaturas: "/master-assinaturas",
-                  Financeiro: "/master-financeiro",
-                  Implantação: "/master-implantacao",
-                };
-                const route = routeMap[title];
-                return (
-                <Link key={title} to={route} className="flex items-center gap-3 py-3.5 transition hover:bg-slate-50">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{title}</p>
-                    <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+        <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          <Card className="border-border bg-card p-5 shadow-soft sm:p-6">
+            <h2 className="text-lg font-semibold">Andamento por etapa</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Da proposta à cobrança. Toque em uma etapa para abrir o módulo.</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {steps.map((step, index) => (
+                <Link
+                  key={step.label}
+                  to={step.to}
+                  className="group rounded-xl border border-border bg-background p-4 transition hover:border-primary/40 hover:bg-card hover:shadow-soft"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <span className="grid h-6 w-6 place-items-center rounded-md bg-primary/10 text-[11px] font-semibold text-primary">
+                        {index + 1}
+                      </span>
+                      {step.label}
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground/40 transition group-hover:translate-x-0.5 group-hover:text-primary" />
                   </div>
-                  <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:text-slate-500" />
+                  <p className="mt-3 font-display text-3xl font-semibold tabular-nums">{step.value}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{step.hint}</p>
                 </Link>
-                );
-              })}
+              ))}
             </div>
           </Card>
 
-          <Card className="border-slate-200 bg-[#102a2e] p-5 text-slate-100 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">Segurança</p>
-            <h2 className="mt-2 text-lg font-semibold">Acesso por permissão.</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              A visão geral usa somente dados disponíveis para a equipe autorizada e não altera nenhum registro.
-            </p>
-          </Card>
+          <div className="space-y-6">
+            <Card className="border-border bg-card p-5 shadow-soft">
+              <h2 className="text-lg font-semibold">Prioridades</h2>
+              {priorities.length === 0 ? (
+                <div className="mt-4 flex items-start gap-3 rounded-lg bg-success/10 p-3 text-sm text-success">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>Tudo em dia. Nenhuma pendência no momento.</span>
+                </div>
+              ) : (
+                <ul className="mt-3 divide-y divide-border">
+                  {priorities.map((item) => (
+                    <li key={item.title}>
+                      <Link to={item.to} className="flex items-start gap-3 py-3 transition hover:opacity-80">
+                        <span className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-md ${item.tone === "warn" ? "bg-warning/20 text-warning-foreground" : "bg-primary/10 text-primary"}`}>
+                          <AlertTriangle className="h-4 w-4" />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-medium">{item.title}</span>
+                          <span className="block text-xs text-muted-foreground">{item.hint}</span>
+                        </span>
+                        <ArrowRight className="mt-1 h-4 w-4 text-muted-foreground/40" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+
+            <Card className="border-sidebar-border bg-sidebar p-5 text-sidebar-foreground shadow-soft">
+              <div className="flex items-center gap-2 text-sidebar-primary">
+                <ShieldCheck className="h-4 w-4" />
+                <span className="text-xs font-medium tracking-wide">Acesso protegido</span>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-sidebar-foreground/80">
+                A visão geral só exibe dados liberados para a equipe autorizada e não altera nenhum registro.
+              </p>
+            </Card>
+          </div>
         </div>
       </div>
     </MasterShell>
@@ -230,20 +271,20 @@ function Metric({
   label,
   value,
   hint,
-  compact = false,
 }: {
   icon: typeof Users;
   label: string;
   value: string;
   hint: string;
-  compact?: boolean;
 }) {
   return (
-    <Card className="border-slate-200 bg-white p-4 shadow-sm">
-      <Icon className="h-4 w-4 text-slate-400" />
-      <p className="mt-3 text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
-      <p className={`mt-1 font-semibold ${compact ? "text-lg" : "text-xl"}`}>{value}</p>
-      <p className="mt-1 text-xs text-slate-500">{hint}</p>
-    </Card>
+    <div className="border-b border-r border-border p-5 last:border-r-0 lg:border-b-0 [&:nth-child(2n)]:border-r-0 lg:[&:nth-child(2n)]:border-r">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="h-4 w-4" />
+        <p className="text-xs font-medium">{label}</p>
+      </div>
+      <p className="mt-3 font-display text-[26px] font-semibold leading-none tabular-nums tracking-tight">{value}</p>
+      <p className="mt-2 text-xs text-muted-foreground">{hint}</p>
+    </div>
   );
 }
