@@ -77,7 +77,6 @@ function MasterCommercialPage() {
   const [creatingProposal, setCreatingProposal] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [shareProposalId, setShareProposalId] = useState<string | null>(null);
-  const [shareProposalId, setShareProposalId] = useState<string | null>(null);
 
   const load = async (initial = false) => {
     setError(null);
