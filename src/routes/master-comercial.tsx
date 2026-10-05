@@ -129,11 +129,16 @@ function MasterCommercialPage() {
 
   const handleShareProposal = async (proposal: CommercialProposal) => {
     if (!canPerform(role, "manageCommercial")) return;
+    setError(null);
     try {
       if (proposal.status === "DRAFT") await updateProposalStatus(proposal.id, "SENT");
-      const link = `${window.location.origin}/proposta-publica?token=${proposal.public_token}`;
+      const link = window.location.origin + "/proposta-publica?token=" + proposal.public_token;
       setShareLink(link);
-      await navigator.clipboard?.writeText(link);
+      try {
+        await navigator.clipboard?.writeText(link);
+      } catch {
+        // O link continua disponível para cópia manual em navegadores que bloqueiam clipboard.
+      }
       await load();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível preparar o link da proposta.");
@@ -238,7 +243,7 @@ function MasterCommercialPage() {
           </Card>
         )}
 
-        {shareLink && <Card className="border-border bg-card p-4 shadow-soft"><p className="text-xs font-medium text-muted-foreground">Link público da proposta</p><div className="mt-2 flex flex-col gap-2 sm:flex-row"><input readOnly value={shareLink} className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-muted/50 px-3 text-xs" /><Button onClick={() => void navigator.clipboard?.writeText(shareLink)}>Copiar link</Button></div></Card>}
+        {shareLink && <Card className="border-border bg-card p-4 shadow-soft"><p className="text-xs font-medium text-muted-foreground">Link público da proposta</p><div className="mt-2 flex flex-col gap-2 sm:flex-row"><input readOnly value={shareLink} className="h-10 min-w-0 flex-1 rounded-lg border border-border bg-muted/50 px-3 text-xs" /><Button onClick={() => void navigator.clipboard?.writeText(shareLink).catch(() => undefined)}>Copiar link</Button></div></Card>}
 
         {error && (
           <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">
