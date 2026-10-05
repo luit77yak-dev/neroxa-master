@@ -94,10 +94,17 @@ function PublicProposalPage() {
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-3xl space-y-5">
-        <header>
-          <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground">NEROXA · PROPOSTA COMERCIAL</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">{proposal.title}</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{proposal.client_name}{proposal.system_name ? ` · ${proposal.system_name}` : ""}</p>
+        <header className="w-full rounded-2xl border border-border bg-card px-5 py-6 text-center shadow-soft sm:px-8 sm:py-7">
+          <p className="text-[11px] font-semibold tracking-[0.22em] text-muted-foreground">
+            NEROXA · PROPOSTA COMERCIAL
+          </p>
+          <h1 className="mx-auto mt-3 max-w-2xl break-words text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
+            {proposal.title}
+          </h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            {proposal.client_name}
+            {proposal.system_name ? ` · ${proposal.system_name}` : ""}
+          </p>
         </header>
 
         <Card className="p-5 sm:p-7">
