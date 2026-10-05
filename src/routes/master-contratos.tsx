@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { FileCheck2, Loader2, Pencil, Play, Pause, XCircle, ArrowLeft } from "lucide-react";
+import { FileCheck2, Loader2, Pencil, Play, Pause, XCircle, ArrowLeft, Eye, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getNeroxaPlatformAccess } from "@/features/master/clients/services";
@@ -26,6 +26,7 @@ function MasterContractsPage() {
   const [draft, setDraft] = useState({ title: "", contractNumber: "" });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const load = async () => {
     try {
@@ -82,7 +83,7 @@ function MasterContractsPage() {
                     <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground"><span className="rounded-full bg-muted px-2.5 py-1">Implantação: {money(contract.setup_value)}</span><span className="rounded-full bg-muted px-2.5 py-1">Recorrência: {money(contract.recurring_value)}</span><span className="rounded-full bg-muted px-2.5 py-1">Versão {contract.version}</span></div>
                   </div>
                   {canPerform(role, "manageCommercial") && <div className="flex flex-wrap gap-2">
-                    {contract.status === "DRAFT" && <Button variant="outline" size="sm" onClick={() => { setEditing(contract); setDraft({ title: contract.title, contractNumber: contract.contract_number ?? "" }); }}><Pencil className="h-3.5 w-3.5" />Editar</Button>}
+                    {<Button variant="outline" size="sm" onClick={() => setSelectedId(contract.id)}><Eye className="h-3.5 w-3.5" />Visualizar</Button>}{contract.status === "DRAFT" && <Button variant="outline" size="sm" onClick={() => { setEditing(contract); setDraft({ title: contract.title, contractNumber: contract.contract_number ?? "" }); }}><Pencil className="h-3.5 w-3.5" />Editar</Button>}
                     {contract.status === "DRAFT" && <Button size="sm" disabled={saving === contract.id} onClick={() => void (async () => { setSaving(contract.id); try { await updateContractStatus(contract.id, "ACTIVE"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível ativar."); } finally { setSaving(null); } })()}><Play className="h-3.5 w-3.5" />Ativar</Button>}
                     {contract.status === "ACTIVE" && <Button variant="outline" size="sm" disabled={saving === contract.id} onClick={() => void (async () => { setSaving(contract.id); try { await updateContractStatus(contract.id, "SUSPENDED"); await load(); } catch (cause) { setError(cause instanceof Error ? cause.message : "Não foi possível suspender."); } finally { setSaving(null); } })()}><Pause className="h-3.5 w-3.5" />Suspender</Button>}
                     {["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status) && <Button variant="outline" size="sm" disabled={saving === contract.id} onClick={() => { if (window.confirm("Encerrar este contrato?")) void updateContractStatus(contract.id, "TERMINATED").then(load).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível encerrar.")); }}><XCircle className="h-3.5 w-3.5" />Encerrar</Button>}
@@ -93,6 +94,40 @@ function MasterContractsPage() {
           </div>
         )}
 
+        {selectedId && (() => {
+          const contract = contracts.find((item) => item.id === selectedId);
+          if (!contract) return null;
+          const client = contract.client_id;
+          return (
+            <Card className="border-border bg-card p-5 shadow-soft print:shadow-none">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground/70">NEROXA · CONTRATO COMERCIAL</p>
+                  <h2 className="mt-1 text-2xl font-semibold">{contract.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{contract.contract_number || "Número ainda não definido"} · {CONTRACT_STATUS_LABELS[contract.status]}</p>
+                </div>
+                <Button variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" />Imprimir / PDF</Button>
+              </div>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Cliente</p><p className="mt-1 break-all text-sm font-medium">{client}</p></div>
+                <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Modelo</p><p className="mt-1 text-sm font-medium">{contract.commercial_model === "SUBSCRIPTION" ? "Assinatura" : "Permanente"}</p></div>
+                <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Implantação</p><p className="mt-1 text-sm font-medium">{money(contract.setup_value)}</p></div>
+                <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Recorrência</p><p className="mt-1 text-sm font-medium">{money(contract.recurring_value)}</p></div>
+              </div>
+              <div className="mt-6 space-y-4 text-sm leading-6">
+                <section><h3 className="font-semibold">1. Objeto</h3><p className="mt-1 text-muted-foreground">Prestação dos serviços e disponibilização do sistema descritos na proposta comercial vinculada a este contrato.</p></section>
+                <section><h3 className="font-semibold">2. Valores e condições</h3><p className="mt-1 text-muted-foreground">Implantação: {money(contract.setup_value)}. Recorrência: {money(contract.recurring_value)}. Manutenção: {money(contract.maintenance_value)}.</p></section>
+                <section><h3 className="font-semibold">3. Vigência</h3><p className="mt-1 text-muted-foreground">A vigência e as condições operacionais serão definidas na ativação do contrato e no vínculo de assinatura correspondente.</p></section>
+                <section><h3 className="font-semibold">4. Status e versão</h3><p className="mt-1 text-muted-foreground">Este documento representa a versão {contract.version} do contrato, atualmente em status {CONTRACT_STATUS_LABELS[contract.status]}.</p></section>
+              </div>
+              <div className="mt-8 grid gap-8 border-t border-border pt-8 sm:grid-cols-2">
+                <div><div className="border-b border-foreground/40 pb-2"></div><p className="mt-2 text-xs text-muted-foreground">Neroxa</p></div>
+                <div><div className="border-b border-foreground/40 pb-2"></div><p className="mt-2 text-xs text-muted-foreground">Cliente</p></div>
+              </div>
+            </Card>
+          );
+        })()}
+ 
         {editing && canPerform(role, "manageCommercial") && <Card className="p-5">
           <h2 className="font-semibold">Editar rascunho</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
