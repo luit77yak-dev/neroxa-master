@@ -219,7 +219,7 @@ export function MasterShell({ children }: MasterShellProps) {
           </div>
         </header>
 
-        <main className="min-h-[calc(100vh-64px)]">{children}</main>
+        <main className="min-h-[calc(100vh-64px)] min-w-0 overflow-x-clip">{children}</main>
       </div>
     </div>
   );
