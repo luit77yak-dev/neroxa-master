@@ -23,10 +23,10 @@ jobs:
           node-version: "22.x"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Format check
-        run: npx prettier --write .
+      - name: Format check (non-mutating)
+        run: npx prettier --check .
 
       - name: Lint
         run: npm run lint
