@@ -72,33 +72,33 @@ export function Client360Shell({
 
   return (
     <div className="min-w-0 space-y-4">
-      <Card className="overflow-hidden border-slate-200 bg-white shadow-sm">
+      <Card className="overflow-hidden border-border bg-card shadow-soft">
         <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
           <div className="h-9 w-1 shrink-0 rounded-full bg-slate-900" />
           <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-slate-950 text-white">
             <Building2 className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-slate-900">{clientName}</p>
-            <p className="text-[11px] text-slate-500">Cliente 360° · visão operacional</p>
+            <p className="truncate text-sm font-semibold text-foreground">{clientName}</p>
+            <p className="text-[11px] text-muted-foreground">Cliente 360° · visão operacional</p>
           </div>
-          <span className="shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600">
+          <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
             {status}
           </span>
         </div>
       </Card>
 
-      <Card className="border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 p-4 sm:p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Visão operacional</p>
+      <Card className="border-border bg-card shadow-soft">
+        <div className="border-b border-border p-4 sm:p-5">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Visão operacional</p>
           <div className="mt-1 flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 className="text-base font-semibold text-slate-900">{clientName}</h2>
-              <p className="mt-1 text-xs leading-5 text-slate-500">
+              <h2 className="text-base font-semibold text-foreground">{clientName}</h2>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
                 Resumo rápido para operação. Abra a edição completa quando precisar alterar ou acompanhar detalhes.
               </p>
             </div>
-            <span className="hidden shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600 sm:inline-flex">
+            <span className="hidden shrink-0 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground sm:inline-flex">
               Cliente 360°
             </span>
           </div>
@@ -113,59 +113,59 @@ export function Client360Shell({
           type="button"
           onClick={() => setExpanded((value) => !value)}
           aria-expanded={expanded}
-          className="flex min-h-14 w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-slate-50 sm:px-5"
+          className="flex min-h-14 w-full items-center justify-between gap-4 px-4 py-4 text-left transition hover:bg-muted/50 sm:px-5"
         >
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-slate-900">Edição completa</p>
-            <p className="mt-0.5 text-xs text-slate-500">Toque para abrir os módulos do cliente.</p>
+            <p className="text-sm font-semibold text-foreground">Edição completa</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Toque para abrir os módulos do cliente.</p>
           </div>
           <ChevronDown
-            className={["h-5 w-5 shrink-0 text-slate-400 transition-transform", expanded ? "rotate-180" : ""].join(" ")}
+            className={["h-5 w-5 shrink-0 text-muted-foreground/70 transition-transform", expanded ? "rotate-180" : ""].join(" ")}
           />
         </button>
 
         {expanded && (
-          <div className="border-t border-slate-200 p-3 sm:p-5">
-            <div className="overflow-hidden rounded-xl border border-slate-200">
+          <div className="border-t border-border p-3 sm:p-5">
+            <div className="overflow-hidden rounded-xl border border-border">
               {SECTIONS.map((section) => {
                 const isOpen = openSection === section.key;
 
                 return (
-                  <section key={section.key} className="border-b border-slate-200 last:border-b-0">
+                  <section key={section.key} className="border-b border-border last:border-b-0">
                     <button
                       type="button"
                       aria-expanded={isOpen}
                       onClick={() => handleSectionChange(isOpen ? "" : section.key)}
-                      className="flex min-h-16 w-full items-center justify-between gap-4 bg-white px-4 py-3 text-left transition hover:bg-slate-50 sm:px-5"
+                      className="flex min-h-16 w-full items-center justify-between gap-4 bg-card px-4 py-3 text-left transition hover:bg-muted/50 sm:px-5"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900">{section.title}</p>
-                        <p className="mt-0.5 truncate text-[11px] text-slate-500">{section.description}</p>
+                        <p className="text-sm font-semibold text-foreground">{section.title}</p>
+                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{section.description}</p>
                       </div>
                       <ChevronDown
                         className={[
-                          "h-5 w-5 shrink-0 text-slate-400 transition-transform",
+                          "h-5 w-5 shrink-0 text-muted-foreground/70 transition-transform",
                           isOpen ? "rotate-180" : "",
                         ].join(" ")}
                       />
                     </button>
 
                     {isOpen && (
-                      <div className="border-t border-slate-100 bg-slate-50/70 p-3 sm:p-4">
+                      <div className="border-t border-border/60 bg-muted/50/70 p-3 sm:p-4">
                         {section.key === "client" ? (
                           <div className="min-w-0">{children}</div>
                         ) : section.href ? (
                           <a
                             href={`${section.href}?clientId=${encodeURIComponent(clientId)}${organizationId ? `&organizationId=${encodeURIComponent(organizationId)}` : ""}`}
-                            className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition hover:border-slate-300 hover:bg-slate-50"
+                            className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 transition hover:border-input hover:bg-muted/50"
                           >
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-800">Abrir {section.title}</p>
-                              <p className="mt-0.5 text-xs text-slate-500">
+                              <p className="text-sm font-semibold text-foreground">Abrir {section.title}</p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">
                                 Continuar esta operação no módulo correspondente.
                               </p>
                             </div>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />
+                            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/70" />
                           </a>
                         ) : null}
                       </div>
@@ -183,9 +183,9 @@ export function Client360Shell({
 
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
+    <div className="rounded-xl border border-border bg-muted/50 p-3">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
     </div>
   );
 }
