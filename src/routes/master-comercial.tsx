@@ -260,40 +260,6 @@ function MasterCommercialPage() {
           </Card>
         )}
 
-        {shareLink && (
-          <Card className="w-full min-w-0 border-border bg-card p-4 shadow-soft sm:p-5">
-            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">Proposta enviada com sucesso</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  O link público está pronto para compartilhar com o cliente.
-                </p>
-              </div>
-              <Button
-                className="w-full shrink-0 sm:w-auto"
-                onClick={() => window.open(shareLink, "_blank", "noopener,noreferrer")}
-              >
-                Abrir proposta
-              </Button>
-            </div>
-            <div className="mt-4 flex min-w-0 flex-col gap-2 sm:flex-row">
-              <input
-                readOnly
-                value={shareLink}
-                aria-label="Link público da proposta"
-                className="h-10 min-w-0 w-full flex-1 rounded-lg border border-border bg-muted/50 px-3 text-xs"
-              />
-              <Button
-                className="w-full shrink-0 sm:w-auto"
-                variant="outline"
-                onClick={() => void navigator.clipboard?.writeText(shareLink).catch(() => undefined)}
-              >
-                Copiar link
-              </Button>
-            </div>
-          </Card>
-        )}
-
         {error && (
           <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {error}
@@ -331,6 +297,39 @@ function MasterCommercialPage() {
                 </div>
               );
             })}
+            {shareLink && (
+              <div className="mt-4 rounded-xl border border-border bg-muted/30 p-4">
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">Proposta enviada com sucesso</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      O link público está pronto para compartilhar com o cliente.
+                    </p>
+                  </div>
+                  <Button
+                    className="w-full shrink-0 sm:w-auto"
+                    onClick={() => window.open(shareLink, "_blank", "noopener,noreferrer")}
+                  >
+                    Abrir proposta
+                  </Button>
+                </div>
+                <div className="mt-3 flex min-w-0 flex-col gap-2 sm:flex-row">
+                  <input
+                    readOnly
+                    value={shareLink}
+                    aria-label="Link público da proposta"
+                    className="h-10 min-w-0 w-full flex-1 rounded-lg border border-border bg-background px-3 text-xs"
+                  />
+                  <Button
+                    className="w-full shrink-0 sm:w-auto"
+                    variant="outline"
+                    onClick={() => void navigator.clipboard?.writeText(shareLink).catch(() => undefined)}
+                  >
+                    Copiar link
+                  </Button>
+                </div>
+              </div>
+            )}
           </CommercialList>
 
           <CommercialList
