@@ -202,19 +202,6 @@ function MasterSubscriptionsPage() {
     });
   }, [clientMap, filter, planMap, query, scopedSubscriptions]);
 
-  const selectedSubscription = visibleSubscriptions.find((item) => item.id === selectedId)
-    ?? scopedSubscriptions.find((item) => item.id === selectedId)
-    ?? visibleSubscriptions[0]
-    ?? null;
-
-  const selectedBilling = selectedSubscription
-    ? billing.filter((item) => item.subscription_id === selectedSubscription.id)
-    : [];
-
-  const selectedContract = selectedSubscription?.contract_id
-    ? contracts.find((item) => item.id === selectedSubscription.contract_id) ?? null
-    : null;
-
   const metrics = useMemo(
     () => ({
       total: scopedSubscriptions.length,
@@ -326,7 +313,7 @@ function MasterSubscriptionsPage() {
                 <button
                   key={item}
                   type="button"
-                  onClick={() => setFilter(item)}
+                  onClick={() => { setFilter(item); setSelectedId(null); }}
                   className={"whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition " + (
                     filter === item ? "bg-sidebar text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
                   )}
@@ -338,48 +325,66 @@ function MasterSubscriptionsPage() {
           </div>
         </Card>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,.8fr)]">
-          <Card className="min-w-0 border-border bg-card p-5 shadow-soft">
-            <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar text-white"><CreditCard className="h-4 w-4" /></div>
-              <div>
-                <h2 className="text-base font-semibold">Carteira de assinaturas</h2>
-                <p className="text-xs text-muted-foreground">{visibleSubscriptions.length} registro(s) no filtro atual</p>
-              </div>
+        <div>
+
             </div>
 
             <div className="mt-4 divide-y divide-border">
               {visibleSubscriptions.map((subscription) => {
                 const client = clientMap.get(subscription.client_id);
                 const plan = planMap.get(subscription.plan_id);
-                const active = selectedSubscription?.id === subscription.id;
+                const active = selectedId === subscription.id;
                 const lastBilling = billing.find((item) => item.subscription_id === subscription.id);
 
+                const rowBilling = billing.filter((item) => item.subscription_id === subscription.id);
+                const rowContract = subscription.contract_id
+                  ? contracts.find((item) => item.id === subscription.contract_id) ?? null
+                  : null;
+
                 return (
-                  <button
-                    key={subscription.id}
-                    type="button"
-                    onClick={() => setSelectedId(subscription.id)}
-                    className={"flex w-full flex-col gap-3 py-4 text-left transition sm:flex-row sm:items-center " + (active ? "rounded-xl bg-muted/60 px-3" : "hover:bg-muted/30")}
-                  >
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{client?.trade_name || client?.legal_name || "Cliente não identificado"}</p>
-                      <p className="truncate text-xs text-muted-foreground">{plan?.name || "Plano não identificado"} · {subscription.billing_interval === "YEARLY" ? "Anual" : "Mensal"}</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3 sm:justify-end">
-                      <div className="text-right">
-                        <p className="text-sm font-semibold">{formatCurrency(subscription.contracted_recurring_value)}</p>
-                        <p className="text-[11px] text-muted-foreground/70">próx. {formatDate(subscription.next_billing_date)}</p>
+                  <div key={subscription.id} className={active ? "rounded-xl bg-muted/40" : ""}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(active ? null : subscription.id)}
+                      aria-expanded={active}
+                      className={"flex w-full flex-col gap-3 py-4 text-left transition sm:flex-row sm:items-center " + (active ? "px-3" : "hover:bg-muted/30")}
+                    >
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+                        <Users className="h-4 w-4" />
                       </div>
-                      <span className={"rounded-full px-2.5 py-1 text-[10px] font-medium " + statusTone[subscription.status]}>
-                        {SUBSCRIPTION_STATUS_LABELS[subscription.status]}
-                      </span>
-                      {lastBilling && <span className={"rounded-full px-2 py-1 text-[10px] " + (billingTone[lastBilling.status] ?? "bg-muted text-muted-foreground")}>{billingLabels[lastBilling.status] ?? lastBilling.status}</span>}
-                    </div>
-                  </button>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{client?.trade_name || client?.legal_name || "Cliente não identificado"}</p>
+                        <p className="truncate text-xs text-muted-foreground">{plan?.name || "Plano não identificado"} · {subscription.billing_interval === "YEARLY" ? "Anual" : "Mensal"}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+                        <div className="text-right">
+                          <p className="text-sm font-semibold">{formatCurrency(subscription.contracted_recurring_value)}</p>
+                          <p className="text-[11px] text-muted-foreground/70">próx. {formatDate(subscription.next_billing_date)}</p>
+                        </div>
+                        <span className={"rounded-full px-2.5 py-1 text-[10px] font-medium " + statusTone[subscription.status]}>
+                          {SUBSCRIPTION_STATUS_LABELS[subscription.status]}
+                        </span>
+                        {lastBilling && <span className={"rounded-full px-2 py-1 text-[10px] " + (billingTone[lastBilling.status] ?? "bg-muted text-muted-foreground")}>{billingLabels[lastBilling.status] ?? lastBilling.status}</span>}
+                      </div>
+                    </button>
+
+                    {active && (
+                      <div className="border-t border-border/70 px-3 pb-4 pt-4">
+                        <SubscriptionDetail
+                          subscription={subscription}
+                          client={client}
+                          plan={plan}
+                          contract={rowContract}
+                          billing={rowBilling}
+                          role={role}
+                          saving={saving}
+                          canManage={canPerform(role, "manageSubscriptions")}
+                          onStatus={handleStatus}
+                          systemName={plan?.system_id ? systems.find((system) => system.id === plan.system_id)?.name : undefined}
+                        />
+                      </div>
+                    )}
+                  </div>
                 );
               })}
 
