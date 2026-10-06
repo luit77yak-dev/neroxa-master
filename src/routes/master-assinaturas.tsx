@@ -403,12 +403,6 @@ function MasterSubscriptionsPage() {
               )}
             </div>
           </Card>
-
-        </div>
-
-
-            </div>
-          </Card>
         </div>
 
         <Card className="border-border bg-card p-5 shadow-soft">
