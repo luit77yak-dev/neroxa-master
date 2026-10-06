@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   CalendarClock,
   CheckCircle2,
+  ChevronUp,
   CircleDollarSign,
   CreditCard,
   ExternalLink,
@@ -308,13 +309,13 @@ function MasterSubscriptionsPage() {
               />
               {query && <Button variant="ghost" size="icon" onClick={() => setQuery("")} aria-label="Limpar busca"><X className="h-4 w-4" /></Button>}
             </div>
-            <div className="flex gap-1 overflow-x-auto pb-1">
+            <div className="grid grid-cols-2 gap-1 pb-1 sm:flex sm:flex-wrap">
               {(["ALL", "PENDING", "ACTIVE", "DELINQUENT", "PAUSED", "CANCELLED", "EXPIRED"] as const).map((item) => (
                 <button
                   key={item}
                   type="button"
                   onClick={() => { setFilter(item); setSelectedId(null); }}
-                  className={"whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition " + (
+                  className={"min-w-0 rounded-full px-2.5 py-1.5 text-center text-xs font-medium transition sm:px-3 " + (
                     filter === item ? "bg-sidebar text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
                   )}
                 >
@@ -375,7 +376,7 @@ function MasterSubscriptionsPage() {
                     </button>
 
                     {active && (
-                      <div className="border-t border-border/70 px-3 pb-4 pt-4">
+                      <div className="min-w-0 overflow-hidden border-t border-border/70 px-3 pb-4 pt-4">
                         <SubscriptionDetail
                           subscription={subscription}
                           client={client}
@@ -386,6 +387,7 @@ function MasterSubscriptionsPage() {
                           saving={saving}
                           canManage={canPerform(role, "manageSubscriptions")}
                           onStatus={handleStatus}
+                          onCollapse={() => setSelectedId(null)}
                           systemName={plan?.system_id ? systems.find((system) => system.id === plan.system_id)?.name : undefined}
                         />
                       </div>
@@ -512,6 +514,7 @@ function SubscriptionDetail({
   saving: string | null;
   canManage: boolean;
   onStatus: (id: string, status: "ACTIVE" | "PAUSED" | "CANCELLED") => Promise<void>;
+  onCollapse: () => void;
   systemName?: string;
 }) {
   const lastBilling = billing[0];
@@ -523,7 +526,13 @@ function SubscriptionDetail({
           <h2 className="mt-1 truncate text-lg font-semibold">{client?.trade_name || client?.legal_name || "Cliente não identificado"}</h2>
           <p className="mt-1 text-xs text-muted-foreground">{plan?.name || "Plano não identificado"} · {systemName || "Plano global"}</p>
         </div>
-        <span className={"shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium " + statusTone[subscription.status]}>{SUBSCRIPTION_STATUS_LABELS[subscription.status]}</span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className={"rounded-full px-2.5 py-1 text-[10px] font-medium " + statusTone[subscription.status]}>{SUBSCRIPTION_STATUS_LABELS[subscription.status]}</span>
+          <Button variant="ghost" size="sm" className="h-8 px-2" onClick={onCollapse} aria-label="Recolher detalhe">
+            <ChevronUp className="h-4 w-4" />
+            <span className="hidden sm:inline">Recolher</span>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
