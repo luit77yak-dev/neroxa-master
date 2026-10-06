@@ -38,7 +38,7 @@ type SubscriptionRow = {
 };
 
 export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> {
-  const [plansResult, subscriptionsResult, clientsResult] = await Promise.all([
+  const [plansResult, subscriptionsResult, clientsResult, billingResult] = await Promise.all([
     supabase
       .from("neroxa_plans" as never)
       .select(
@@ -56,11 +56,16 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
       .from("neroxa_clients" as never)
       .select("id,legal_name,trade_name,status")
       .order("updated_at", { ascending: false }),
+    supabase
+      .from("neroxa_billing_records" as never)
+      .select("id,subscription_id,organization_id,reference_month,amount,due_date,status,paid_at,payment_method,gateway_status,gateway_payment_id,created_at")
+      .order("due_date", { ascending: false }),
   ]);
 
   if (plansResult.error) throw new Error(plansResult.error.message);
   if (subscriptionsResult.error) throw new Error(subscriptionsResult.error.message);
   if (clientsResult.error) throw new Error(clientsResult.error.message);
+  if (billingResult.error) throw new Error(billingResult.error.message);
 
   const plans = ((plansResult.data ?? []) as unknown as PlanRow[]).map((p) => ({
     id: String(p.id),
@@ -117,6 +122,20 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     plans,
     subscriptions,
     clients: (clientsResult.data ?? []) as unknown as SubscriptionOverview["clients"],
+    billing: (billingResult.data ?? []).map((row) => ({
+      id: String((row as { id:string }).id),
+      subscription_id: String((row as { subscription_id:string }).subscription_id),
+      organization_id: String((row as { organization_id:string }).organization_id),
+      reference_month: String((row as { reference_month:string }).reference_month),
+      amount: Number((row as { amount:number }).amount ?? 0),
+      due_date: String((row as { due_date:string }).due_date),
+      status: String((row as { status:string }).status),
+      paid_at: (row as { paid_at:string|null }).paid_at ?? null,
+      payment_method: (row as { payment_method:string|null }).payment_method ?? null,
+      gateway_status: (row as { gateway_status:string|null }).gateway_status ?? null,
+      gateway_payment_id: (row as { gateway_payment_id:string|null }).gateway_payment_id ?? null,
+      created_at: String((row as { created_at:string }).created_at),
+    })),
   };
 }
 
