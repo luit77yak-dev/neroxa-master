@@ -113,10 +113,35 @@ export async function loadFinanceOverview(): Promise<FinanceOverview> {
   return { invoices, payments, clients:(clientsResult.data ?? []) as unknown as FinanceOverview["clients"] };
 }
 
+export async function registerBillingPayment(id: string, paymentMethod: string, externalId?: string | null) {
+  const method = paymentMethod.trim();
+  if (!method) throw new Error("Informe o método de pagamento.");
+  const patch: Record<string, unknown> = {
+    status: "PAID",
+    paid_at: new Date().toISOString(),
+    payment_method: method,
+    external_id: externalId?.trim() || null,
+  };
+  const { data, error } = await supabase.from("neroxa_billing_records" as never)
+    .update(patch as never)
+    .eq("id", id)
+    .in("status", ["PENDING", "OVERDUE"])
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("Cobrança não encontrada, já liquidada ou sem permissão para registrar o pagamento.");
+  await recordNeroxaAudit({
+    action: "BILLING_PAYMENT_REGISTERED",
+    resourceType: "BILLING_RECORD",
+    resourceId: id,
+    details: { status: "PAID", payment_method: method, external_id: externalId?.trim() || null, source: "FINANCE_ADMIN" },
+  });
+  return true;
+}
+
 export async function updateBillingStatus(id: string, status: "CANCELLED" | "REFUNDED") {
-  if (!["CANCELLED","REFUNDED"].includes(status)) throw new Error("Use o fluxo de registro de pagamento para confirmar uma cobrança.");
-  const patch: Record<string, unknown> = { status };
-  if (status !== "PAID") patch.paid_at = null;
+  if (!["CANCELLED","REFUNDED"].includes(status)) throw new Error("Status financeiro inválido para esta ação.");
+  const patch: Record<string, unknown> = { status, paid_at: null };
   const { data, error } = await supabase.from("neroxa_billing_records" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Fatura não encontrada ou sem permissão para alterar.");
