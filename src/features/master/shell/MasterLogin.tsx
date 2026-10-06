@@ -74,6 +74,8 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     if (challengeError) throw challengeError;
     const { error: verifyError } = await supabase.auth.mfa.verify({ factorId, challengeId: challenge.id, code: mfaCode.trim() });
     if (verifyError) throw verifyError;
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) throw refreshError;
     const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     if (error) throw error;
     if (data.currentLevel !== "aal2") throw new Error("O segundo fator não foi confirmado.");
