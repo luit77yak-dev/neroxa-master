@@ -176,6 +176,30 @@ function MasterContractsPage() {
                     </div>
                   )}
 
+                  {signing?.id === contract.id && canPerform(role, "manageCommercial") && (
+                    <div className="mt-4 border-t border-primary/20 pt-4">
+                      <Card className="border-primary/30 bg-primary/5 p-5">
+                        <h2 className="font-semibold">Assinar em nome da Neroxa</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">A assinatura será registrada para a versão {contract.version} deste contrato. A identificação da prestadora e o conteúdo desta versão ficam congelados no envio.</p>
+                        <div className="mb-4 mt-4 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">
+                          Prestadora: <span className="font-medium text-foreground">{contract.neroxa_trade_name || legalProfile?.trade_name || "Neroxa | Soluções Personalizadas"}</span>
+                          {" · "}Pessoa Física · CPF: <span className="font-medium text-foreground">{contract.neroxa_tax_id || legalProfile?.tax_id || "Não configurado"}</span>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <label className="text-xs font-medium text-muted-foreground">Nome do responsável<input className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground" value={signer.name} onChange={(e) => setSigner((v) => ({ ...v, name: e.target.value }))} placeholder="Nome completo" /></label>
+                          <label className="text-xs font-medium text-muted-foreground">Cargo<input className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground" value={signer.role} onChange={(e) => setSigner((v) => ({ ...v, role: e.target.value }))} placeholder="Fundador / Responsável pela Neroxa" /></label>
+                        </div>
+                        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                          <Button type="button" variant="outline" onClick={() => setSigning(null)}>Cancelar</Button>
+                          <Button type="button" onClick={() => void signAsNeroxa()} disabled={saving === contract.id || !signer.name.trim() || !signer.role.trim()}>
+                            {saving === contract.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                            Confirmar assinatura
+                          </Button>
+                        </div>
+                      </Card>
+                    </div>
+                  )}
+
                   {selectedId === contract.id && (
                     <div className="mt-4 border-t border-border/70 pt-4">
                       <div id="contract-print-document" className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-soft print:shadow-none sm:p-6">
@@ -219,16 +243,7 @@ function MasterContractsPage() {
           <div className="mt-4 flex justify-end gap-2"><Button variant="outline" onClick={() => setEditing(null)}>Cancelar</Button><Button onClick={() => void save()} disabled={saving === editing.id}>Salvar</Button></div>
         </Card>}
 
-        {signing && canPerform(role, "manageCommercial") && <Card className="border-primary/30 bg-primary/5 p-5">
-          <h2 className="font-semibold">Assinar em nome da Neroxa</h2>
-          <p className="mt-1 text-sm text-muted-foreground">A assinatura será registrada para a versão {signing.version} deste contrato. A identificação da prestadora e o conteúdo desta versão ficam congelados no envio.</p>
-          <div className="mb-4 rounded-xl border border-border bg-background/60 p-3 text-xs text-muted-foreground">Prestadora: <span className="font-medium text-foreground">{signing.neroxa_trade_name || legalProfile?.trade_name || "Neroxa | Soluções Personalizadas"}</span> · Pessoa Física · CPF: <span className="font-medium text-foreground">{signing.neroxa_tax_id || legalProfile?.tax_id || "Não configurado"}</span></div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="text-xs font-medium text-muted-foreground">Nome do responsável<input className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground" value={signer.name} onChange={(e) => setSigner((v) => ({ ...v, name: e.target.value }))} placeholder="Nome completo" /></label>
-            <label className="text-xs font-medium text-muted-foreground">Cargo<input className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground" value={signer.role} onChange={(e) => setSigner((v) => ({ ...v, role: e.target.value }))} placeholder="Administrador" /></label>
-          </div>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-end"><Button variant="outline" onClick={() => setSigning(null)}>Cancelar</Button><Button onClick={() => void signAsNeroxa()} disabled={saving === signing.id}><CheckCircle2 className="h-4 w-4" />Confirmar assinatura</Button></div>
-        </Card>}
+        
       </div>
       </MasterShell>
     </>
