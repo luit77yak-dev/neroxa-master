@@ -135,7 +135,19 @@ export async function createContractFromProposal(proposalId: string) {
     version: 1,
   } as never).select("id").single();
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    // The database enforces one contract per proposal. If two requests race,
+    // preserve the service's idempotent behavior by returning the winner.
+    if (error.code === "23505") {
+      const { data: racedContract, error: racedError } = await supabase
+        .from("neroxa_contracts" as never)
+        .select("id")
+        .eq("proposal_id", proposalId)
+        .maybeSingle();
+      if (!racedError && racedContract) return (racedContract as { id: string }).id;
+    }
+    throw new Error(error.message);
+  }
   const contractId = (data as { id: string }).id;
   await recordNeroxaAudit({ action: "CONTRACT_CREATED_FROM_PROPOSAL", resourceType: "CONTRACT", resourceId: contractId, organizationId: row.client_id, details: { proposalId, version: 1 } });
   return contractId;
