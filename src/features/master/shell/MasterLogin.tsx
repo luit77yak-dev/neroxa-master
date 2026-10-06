@@ -82,20 +82,22 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
   };
 
   const prepareMfaForSession = async () => {
-    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aalError) throw aalError;
-    if (aal.currentLevel === "aal2") {
-      const authorized = await isNeroxaStaffWithRetry();
-      if (!authorized) throw new Error("Sua conta não está autorizada no Neroxa Master.");
-      finishMfa();
-      return;
-    }
-
     const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
     if (factorsError) throw factorsError;
 
     const verifiedTotp = factors.totp.find((factor) => factor.status === "verified");
+
     if (verifiedTotp) {
+      const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aalError) throw aalError;
+
+      if (aal.currentLevel === "aal2") {
+        const authorized = await isNeroxaStaffWithRetry();
+        if (!authorized) throw new Error("Sua conta não está autorizada no Neroxa Master.");
+        finishMfa();
+        return;
+      }
+
       setMfaFactorId(verifiedTotp.id);
       setAuthStep("mfa");
       return;
