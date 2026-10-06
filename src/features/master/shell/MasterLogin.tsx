@@ -80,12 +80,11 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
   };
 
   const prepareMfaForSession = async () => {
-    const authorized = await isNeroxaStaffWithRetry();
-    if (!authorized) throw new Error("Sua conta não está autorizada no Neroxa Master.");
-
     const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     if (aalError) throw aalError;
     if (aal.currentLevel === "aal2") {
+      const authorized = await isNeroxaStaffWithRetry();
+      if (!authorized) throw new Error("Sua conta não está autorizada no Neroxa Master.");
       finishMfa();
       return;
     }
@@ -250,7 +249,7 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
       event.preventDefault();
       setLoading(true);
       clearFeedback();
-      if (!mfaFactorId || !/^\\d{6}$/.test(mfaCode.trim())) {
+      if (!mfaFactorId || !/^\d{6}$/.test(mfaCode.trim())) {
         setError("Informe o código de 6 dígitos.");
         setLoading(false);
         return;
