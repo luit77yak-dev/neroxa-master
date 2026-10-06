@@ -108,7 +108,6 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
 
     const { data: enrollment, error: enrollmentError } = await supabase.auth.mfa.enroll({
       factorType: "totp",
-      friendlyName: "Neroxa Master",
     });
     if (enrollmentError) throw enrollmentError;
 
