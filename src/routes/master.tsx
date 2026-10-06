@@ -62,6 +62,15 @@ function MasterOverviewPage() {
           return;
         }
 
+        const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aalError) throw aalError;
+        if (!active) return;
+
+        if (aal.currentLevel !== "aal2" && aal.nextLevel === "aal2") {
+          setAuthorized(false);
+          return;
+        }
+
         const staff = await isNeroxaStaff();
         if (!active) return;
 
