@@ -325,8 +325,14 @@ function MasterSubscriptionsPage() {
           </div>
         </Card>
 
-        <div>
-
+        <div className="grid gap-4 xl:grid-cols-1">
+          <Card className="min-w-0 border-border bg-card p-5 shadow-soft">
+            <div className="flex items-center gap-3">
+              <div className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar text-white"><CreditCard className="h-4 w-4" /></div>
+              <div>
+                <h2 className="text-base font-semibold">Carteira de assinaturas</h2>
+                <p className="text-xs text-muted-foreground">{visibleSubscriptions.length} registro(s) no filtro atual</p>
+              </div>
             </div>
 
             <div className="mt-4 divide-y divide-border">
@@ -398,6 +404,11 @@ function MasterSubscriptionsPage() {
             </div>
           </Card>
 
+        </div>
+
+
+            </div>
+          </Card>
         </div>
 
         <Card className="border-border bg-card p-5 shadow-soft">
