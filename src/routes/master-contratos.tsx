@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, CheckCircle2, Copy, Eye, FileCheck2, Link2, Loader2, Pause, Pencil, Play, Printer, Send, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, Copy, Eye, FileCheck2, Link2, Loader2, Pause, Pencil, Play, Printer, Send, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getNeroxaPlatformAccess } from "@/features/master/clients/services";
@@ -45,6 +45,7 @@ function MasterContractsPage() {
   const [signer, setSigner] = useState({ name: "", role: "Administrador" });
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [shareContractId, setShareContractId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | keyof typeof CONTRACT_STATUS_LABELS>("ALL");
 
   const load = async () => {
     try {
@@ -67,6 +68,8 @@ function MasterContractsPage() {
 
   if (authorized === false) return <MasterLogin />;
   if (authorized === null || loading) return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-7 w-7 animate-spin" /></main>;
+
+  const filteredContracts = useMemo(() => statusFilter === "ALL" ? contracts : contracts.filter((contract) => contract.status === statusFilter), [contracts, statusFilter]);
 
   const save = async () => {
     if (!editing || !canPerform(role, "manageCommercial")) return;
@@ -119,7 +122,8 @@ function MasterContractsPage() {
             <h1 className="mt-1 text-2xl font-semibold tracking-tight sm:text-[28px]">Contratos</h1>
             <p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">Contratos gerados a partir de propostas aceitas, com assinatura eletrônica das duas partes.</p>
           </div>
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <select aria-label="Filtrar contratos por status" className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm sm:w-auto" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}><option value="ALL">Todos os status</option>{Object.entries(CONTRACT_STATUS_LABELS).map(([status, label]) => <option key={status} value={status}>{label}</option>)}</select>
             <Link to="/master-comercial" className="block w-full sm:w-auto"><Button variant="outline" className="w-full sm:w-auto"><ArrowLeft className="h-4 w-4" />Voltar ao Comercial</Button></Link>
           </div>
         </header>
@@ -131,7 +135,7 @@ function MasterContractsPage() {
           <Card className="p-8 text-center"><FileCheck2 className="mx-auto h-9 w-9 text-muted-foreground" /><h2 className="mt-3 font-semibold">Nenhum contrato ainda</h2><p className="mt-1 text-sm text-muted-foreground">Aceite uma proposta e gere o primeiro contrato pelo Comercial.</p></Card>
         ) : (
           <div className="space-y-3">
-            {contracts.map((contract) => {
+            {filteredContracts.map((contract) => {
               const client = clients.find((item) => item.id === contract.client_id);
               const canSend = contract.status === "DRAFT" && contract.signature_status === "NOT_SENT";
               const canSign = contract.status === "DRAFT" && contract.signature_status === "PENDING_NEROXA";
@@ -146,7 +150,7 @@ function MasterContractsPage() {
                       <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground"><span className="rounded-full bg-muted px-2.5 py-1">Assinatura: {signatureLabel(contract.signature_status)}</span><span className="rounded-full bg-muted px-2.5 py-1">Implantação: {money(contract.setup_value)}</span><span className="rounded-full bg-muted px-2.5 py-1">Recorrência: {money(contract.recurring_value)}</span><span className="rounded-full bg-muted px-2.5 py-1">Versão {contract.version}</span></div>
                     </div>
                     {canPerform(role, "manageCommercial") && <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setSelectedId(contract.id)}><Eye className="h-3.5 w-3.5" />Visualizar</Button>
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => setSelectedId(selectedId === contract.id ? null : contract.id)}>{selectedId === contract.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}Detalhes</Button>
                       {contract.status === "DRAFT" && contract.signature_status === "NOT_SENT" && <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => { setEditing(contract); setDraft({ title: contract.title, contractNumber: contract.contract_number ?? "" }); }}><Pencil className="h-3.5 w-3.5" />Editar</Button>}
                       {canSend && <Button size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => void send(contract)}><Send className="h-3.5 w-3.5" />Enviar assinatura</Button>}
                       {canSign && <Button size="sm" className="w-full sm:w-auto" disabled={saving === contract.id} onClick={() => { setSigner({ name: contract.neroxa_signer_name || legalProfile?.signer_name || legalProfile?.legal_name || "", role: contract.neroxa_signer_role || legalProfile?.signer_role || "Fundador / Responsável pela Neroxa" }); setSigning(contract); }}><CheckCircle2 className="h-3.5 w-3.5" />Assinar Neroxa</Button>}
