@@ -503,6 +503,7 @@ function SubscriptionDetail({
   saving,
   canManage,
   onStatus,
+  onCollapse,
   systemName,
 }: {
   subscription: Subscription;
