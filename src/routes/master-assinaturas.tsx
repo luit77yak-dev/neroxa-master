@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,
-  CalendarClock,
   CheckCircle2,
   ChevronUp,
   CircleDollarSign,
@@ -13,7 +12,6 @@ import {
   Loader2,
   Pause,
   Play,
-  Plus,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -27,21 +25,17 @@ import { canPerform } from "@/features/master/permissions";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import {
-  COMMERCIAL_MODEL_LABELS,
   SUBSCRIPTION_STATUS_LABELS,
   type Subscription,
   type SubscriptionBilling,
   type SubscriptionPlan,
 } from "@/features/master/subscriptions/types";
 import {
-  createSubscription,
-  listActivatableSubscriptionContracts,
   loadSubscriptionOverview,
   updateSubscriptionStatus,
   type SubscriptionContractOption,
 } from "@/features/master/subscriptions/services";
 import { listNeroxaSystems } from "@/features/master/systems/services";
-import { listProductPlans, listProducts } from "@/features/master/products/services";
 
 export const Route = createFileRoute("/master-assinaturas")({
   component: MasterSubscriptionsPage,
@@ -97,15 +91,11 @@ function MasterSubscriptionsPage() {
   const [billing, setBilling] = useState<SubscriptionBilling[]>([]);
   const [clients, setClients] = useState<{ id: string; legal_name: string | null; trade_name: string | null; status: string }[]>([]);
   const [systems, setSystems] = useState<{ id: string; name: string }[]>([]);
-  const [planProducts, setPlanProducts] = useState<Record<string, string[]>>({});
   const [contracts, setContracts] = useState<SubscriptionContractOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(Boolean(contextClientId));
-  const [newContractId, setNewContractId] = useState("");
-  const [creating, setCreating] = useState(false);
   const [filter, setFilter] = useState<"ALL" | keyof typeof SUBSCRIPTION_STATUS_LABELS>("ALL");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -132,28 +122,14 @@ function MasterSubscriptionsPage() {
 
       void (async () => {
         try {
-          const [systemData, productData, contractData] = await Promise.all([
+          const [systemData, contractData] = await Promise.all([
             listNeroxaSystems(),
-            listProducts(),
             listActivatableSubscriptionContracts(),
           ]);
           setContracts(contractData);
           setSystems(systemData.map((system) => ({ id: system.id, name: system.name })));
-
-          const productLinks = await Promise.all(
-            productData.map(async (product) => [product.id, await listProductPlans(product.id)] as const),
-          );
-          const mapped: Record<string, string[]> = {};
-          for (const [productId, links] of productLinks) {
-            for (const link of links.filter((item) => item.included)) {
-              const plan = overview.plans.find((item) => item.id === link.plan_id);
-              const product = productData.find((item) => item.id === productId);
-              if (plan && product) mapped[plan.id] = [...(mapped[plan.id] ?? []), product.name];
-            }
-          }
-          setPlanProducts(mapped);
         } catch (cause) {
-          setError(cause instanceof Error ? cause.message : "Parte do catálogo não pôde ser carregada.");
+          setError(cause instanceof Error ? cause.message : "Parte dos vínculos da assinatura não pôde ser carregada.");
         }
       })();
     } catch (cause) {
@@ -215,43 +191,6 @@ function MasterSubscriptionsPage() {
     [scopedSubscriptions],
   );
 
-  const selectedContractOption = contracts.find((contract) => contract.id === newContractId) ?? null;
-  const selectedClient = selectedContractOption
-    ? clients.find((client) => client.id === selectedContractOption.client_id) ?? null
-    : null;
-  const selectedPlan = selectedContractOption?.plan_id
-    ? plans.find((plan) => plan.id === selectedContractOption.plan_id) ?? null
-    : null;
-  const selectedPlanProducts = selectedContractOption?.plan_id
-    ? planProducts[selectedContractOption.plan_id] ?? []
-    : [];
-
-  const createContractOptions = contracts.filter((contract) => {
-    if (contextClientId && contract.client_id !== contextClientId) return false;
-    const client = clients.find((item) => item.id === contract.client_id);
-    return Boolean(client && !["LEAD", "PROPOSAL", "NEGOTIATION", "CANCELLED"].includes(client.status));
-  });
-
-  const handleCreateSubscription = async () => {
-    if (!newContractId) {
-      setError("Selecione o contrato.");
-      return;
-    }
-    setCreating(true);
-    setError(null);
-    try {
-      const subscriptionId = await createSubscription({ contractId: newContractId });
-      setCreateOpen(false);
-      setNewContractId("");
-      setSelectedId(String(subscriptionId));
-      await load();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível ativar o contrato e criar a assinatura.");
-    } finally {
-      setCreating(false);
-    }
-  };
-
   if (authorized === false) return <MasterLogin />;
   if (authorized === null || loading) {
     return (
@@ -275,9 +214,6 @@ function MasterSubscriptionsPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => { setCreateOpen(true); setError(null); }} disabled={!canPerform(role, "manageSubscriptions")}>
-              <Plus className="h-4 w-4" /> Nova assinatura
-            </Button>
             <Button variant="outline" onClick={() => void load()} disabled={refreshing}>
               <RefreshCw className={refreshing ? "h-4 w-4 animate-spin" : "h-4 w-4"} /> Atualizar
             </Button>
@@ -407,87 +343,8 @@ function MasterSubscriptionsPage() {
           </Card>
         </div>
 
-        <Card className="border-border bg-card p-5 shadow-soft">
-          <div className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar text-white"><FileText className="h-4 w-4" /></div>
-            <div>
-              <h2 className="text-base font-semibold">Catálogo de planos</h2>
-              <p className="text-xs text-muted-foreground">Referência comercial; o valor da assinatura permanece congelado no contrato.</p>
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {plans.map((plan) => (
-              <div key={plan.id} className="rounded-xl border border-border p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold">{plan.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {plan.system_id ? systems.find((system) => system.id === plan.system_id)?.name ?? "Segmento" : "Plano global"} · {COMMERCIAL_MODEL_LABELS[plan.commercial_model]}
-                    </p>
-                  </div>
-                  <span className={"rounded-full px-2 py-1 text-[10px] " + (plan.active ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>
-                    {plan.active ? "Ativo" : "Inativo"}
-                  </span>
-                </div>
-                <p className="mt-4 text-lg font-semibold">{formatCurrency(plan.base_price)}</p>
-                <p className="text-[11px] text-muted-foreground">{plan.billing_interval === "YEARLY" ? "por ano" : plan.billing_interval === "MONTHLY" ? "por mês" : "cobrança avulsa"}</p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {(planProducts[plan.id] ?? []).map((product) => (
-                    <span key={product} className="rounded-full bg-muted px-2 py-1 text-[10px] text-muted-foreground">{product}</span>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {plans.length === 0 && <p className="py-6 text-center text-xs text-muted-foreground">Nenhum plano cadastrado.</p>}
-          </div>
-        </Card>
 
-        {createOpen && (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4">
-            <Card className="max-h-[90vh] w-full max-w-xl overflow-y-auto border-border bg-card p-5 shadow-2xl">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Nova contratação</p>
-                  <h2 className="mt-1 text-xl font-semibold text-foreground">Contrato de assinatura</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">A assinatura nasce da ativação de um contrato em rascunho vinculado a uma proposta aceita.</p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setCreateOpen(false)} disabled={creating}>Fechar</Button>
-              </div>
-              <div className="mt-5 space-y-4">
-                <label className="block">
-                  <span className="text-xs font-medium text-foreground/80">Contrato</span>
-                  <select className="mt-1.5 h-10 w-full rounded-md border border-input bg-card px-3 text-sm" value={newContractId} onChange={(event) => setNewContractId(event.target.value)} disabled={creating}>
-                    <option value="">Selecione o contrato</option>
-                    {createContractOptions.map((contract) => {
-                      const client = clients.find((item) => item.id === contract.client_id);
-                      const plan = plans.find((item) => item.id === contract.plan_id);
-                      return <option key={contract.id} value={contract.id}>{contract.contract_number || contract.title} · {client?.trade_name || client?.legal_name || "Cliente"} · {plan?.name || "Plano"}</option>;
-                    })}
-                  </select>
-                </label>
-                {selectedContractOption && selectedClient && selectedPlan && (
-                  <Card className="border-border bg-muted/50 p-4">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div><p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Cliente</p><p className="mt-1 text-sm font-semibold">{selectedClient.trade_name || selectedClient.legal_name}</p><p className="text-xs text-muted-foreground">{selectedContractOption.contract_number || selectedContractOption.title}</p></div>
-                      <div><p className="text-[11px] uppercase tracking-wide text-muted-foreground/70">Plano</p><p className="mt-1 text-sm font-semibold">{selectedPlan.name}</p><p className="text-xs text-muted-foreground">{selectedPlan.billing_interval === "YEARLY" ? "Anual" : "Mensal"}</p></div>
-                    </div>
-                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                      <div className="rounded-lg bg-card p-3 ring-1 ring-border"><p className="text-[11px] text-muted-foreground/70">Valor recorrente</p><p className="mt-1 text-base font-semibold">{formatCurrency(selectedContractOption.recurring_value ?? selectedPlan.base_price)}</p></div>
-                      <div className="rounded-lg bg-card p-3 ring-1 ring-border"><p className="text-[11px] text-muted-foreground/70">Implantação</p><p className="mt-1 text-base font-semibold">{formatCurrency(selectedPlan.setup_price)}</p></div>
-                    </div>
-                    <div className="mt-4 border-t border-border pt-3"><p className="text-xs font-medium">Produtos incluídos</p><div className="mt-2 flex flex-wrap gap-1.5">{selectedPlanProducts.length ? selectedPlanProducts.map((product) => <span key={product} className="rounded-full bg-card px-2.5 py-1 text-[11px] text-muted-foreground ring-1 ring-border">{product}</span>) : <span className="text-xs text-muted-foreground">Nenhum produto vinculado.</span>}</div></div>
-                  </Card>
-                )}
-              </div>
-              <div className="mt-5 flex flex-col-reverse gap-2 border-t border-border/60 pt-4 sm:flex-row sm:justify-end">
-                <Button variant="outline" onClick={() => setCreateOpen(false)} disabled={creating}>Cancelar</Button>
-                <Button onClick={() => void handleCreateSubscription()} disabled={creating || !newContractId}>
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} Ativar contrato e criar assinatura
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
+
       </div>
     </MasterShell>
   );
