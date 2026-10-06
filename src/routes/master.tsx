@@ -62,11 +62,21 @@ function MasterOverviewPage() {
           return;
         }
 
+        const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+        if (factorsError) throw factorsError;
+        if (!active) return;
+
+        const verifiedTotp = factors.totp.find((factor) => factor.status === "verified");
+        if (!verifiedTotp) {
+          setAuthorized(false);
+          return;
+        }
+
         const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (aalError) throw aalError;
         if (!active) return;
 
-        if (aal.currentLevel !== "aal2" && aal.nextLevel === "aal2") {
+        if (aal.currentLevel !== "aal2") {
           setAuthorized(false);
           return;
         }
