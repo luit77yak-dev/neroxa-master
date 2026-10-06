@@ -17,6 +17,8 @@ import {
   Play,
   TrendingUp,
   Plus,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -77,6 +79,10 @@ function MasterCommercialPage() {
   const [creatingProposal, setCreatingProposal] = useState(false);
   const [shareLink, setShareLink] = useState<string | null>(null);
   const [shareProposalId, setShareProposalId] = useState<string | null>(null);
+  const [proposalStatusFilter, setProposalStatusFilter] = useState<"ALL" | keyof typeof PROPOSAL_STATUS_LABELS>("ALL");
+  const [contractStatusFilter, setContractStatusFilter] = useState<"ALL" | keyof typeof CONTRACT_STATUS_LABELS>("ALL");
+  const [expandedProposalId, setExpandedProposalId] = useState<string | null>(null);
+  const [expandedContractId, setExpandedContractId] = useState<string | null>(null);
 
   const load = async (initial = false) => {
     setError(null);
@@ -194,8 +200,14 @@ function MasterCommercialPage() {
     acceptedProposals: scopedProposals.filter((item) => item.status === "ACCEPTED").length,
     activeContracts: scopedContracts.filter((item) => item.status === "ACTIVE").length,
   }), [scopedProposals, scopedContracts]);
-  const recentProposals = scopedProposals.slice(0, 5);
-  const recentContracts = scopedContracts.slice(0, 5);
+  const filteredProposals = proposalStatusFilter === "ALL"
+    ? scopedProposals
+    : scopedProposals.filter((item) => item.status === proposalStatusFilter);
+  const filteredContracts = contractStatusFilter === "ALL"
+    ? scopedContracts
+    : scopedContracts.filter((item) => item.status === contractStatusFilter);
+  const recentProposals = filteredProposals.slice(0, 5);
+  const recentContracts = filteredContracts.slice(0, 5);
 
   if (authorized === false) return <MasterLogin />;
 
@@ -282,6 +294,19 @@ function MasterCommercialPage() {
             description="Últimas movimentações comerciais"
             icon={FileText}
             empty="Nenhuma proposta cadastrada ainda."
+            toolbar={
+              <select
+                aria-label="Filtrar propostas por status"
+                className="h-9 rounded-lg border border-border bg-muted/50 px-2.5 text-xs"
+                value={proposalStatusFilter}
+                onChange={(event) => setProposalStatusFilter(event.target.value as typeof proposalStatusFilter)}
+              >
+                <option value="ALL">Todos os status</option>
+                {Object.entries(PROPOSAL_STATUS_LABELS).map(([status, label]) => (
+                  <option key={status} value={status}>{label}</option>
+                ))}
+              </select>
+            }
           >
             {recentProposals.map((proposal) => {
               const client = clientMap.get(proposal.client_id);
@@ -298,6 +323,14 @@ function MasterCommercialPage() {
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={expandedProposalId === proposal.id ? "Ocultar detalhes" : "Ver detalhes"}
+                        onClick={() => setExpandedProposalId((current) => current === proposal.id ? null : proposal.id)}
+                      >
+                        {expandedProposalId === proposal.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                      </Button>
                       <span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${proposalTone[proposal.status]}`}>
                         {PROPOSAL_STATUS_LABELS[proposal.status]}
                       </span>
@@ -328,6 +361,27 @@ function MasterCommercialPage() {
                       )}
                     </div>
                   </div>
+
+                  {expandedProposalId === proposal.id && (
+                    <div className="mt-3 ml-0 rounded-xl border border-border bg-muted/20 p-4 sm:ml-12">
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <Detail label="Status" value={PROPOSAL_STATUS_LABELS[proposal.status]} />
+                        <Detail label="Validade" value={proposal.valid_until ? new Date(proposal.valid_until + "T00:00:00").toLocaleDateString("pt-BR") : "Sem validade"} />
+                        <Detail label="Modelo" value={proposal.commercial_model === "PERMANENT" ? "Compra permanente" : "Assinatura"} />
+                        <Detail label="Moeda" value={proposal.currency || "BRL"} />
+                        <Detail label="Recorrência" value={proposal.recurring_value == null ? "—" : `R$ ${proposal.recurring_value.toFixed(2).replace(".", ",")}`} />
+                        <Detail label="Implantação" value={`R$ ${proposal.setup_value.toFixed(2).replace(".", ",")}`} />
+                        <Detail label="Manutenção" value={proposal.maintenance_value == null ? "—" : `R$ ${proposal.maintenance_value.toFixed(2).replace(".", ",")}`} />
+                        <Detail label="Versão" value={String(proposal.version ?? 1)} />
+                      </div>
+                      {proposal.notes && (
+                        <div className="mt-3 rounded-lg border border-border bg-background/60 p-3">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Observações</p>
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">{proposal.notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {shareLink && shareProposalId === proposal.id && (
                     <div className="mt-3 ml-0 rounded-xl border border-border bg-muted/30 p-4 sm:ml-12">
@@ -361,11 +415,25 @@ function MasterCommercialPage() {
             description="Últimos vínculos comerciais registrados"
             icon={FileCheck2}
             empty="Nenhum contrato cadastrado ainda."
+            toolbar={
+              <select
+                aria-label="Filtrar contratos por status"
+                className="h-9 rounded-lg border border-border bg-muted/50 px-2.5 text-xs"
+                value={contractStatusFilter}
+                onChange={(event) => setContractStatusFilter(event.target.value as typeof contractStatusFilter)}
+              >
+                <option value="ALL">Todos os status</option>
+                {Object.entries(CONTRACT_STATUS_LABELS).map(([status, label]) => (
+                  <option key={status} value={status}>{label}</option>
+                ))}
+              </select>
+            }
           >
             {recentContracts.map((contract) => {
               const client = clientMap.get(contract.client_id);
               return (
-                <div key={contract.id} className="flex items-center gap-3 border-b border-border/60 py-3.5 last:border-0">
+                <div key={contract.id} className="border-b border-border/60 py-3.5 last:border-0">
+                  <div className="flex items-center gap-3">
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
                     <FileCheck2 className="h-4 w-4" />
                   </div>
@@ -375,7 +443,31 @@ function MasterCommercialPage() {
                       {contract.contract_number || "Sem número"} · {client?.trade_name || client?.legal_name || "Cliente não identificado"}
                     </p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${contractTone[contract.status]}`}>{CONTRACT_STATUS_LABELS[contract.status]}</span>{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Editar rascunho" disabled={saving===contract.id} onClick={()=>startEditContract(contract)}><Edit3 className="h-3.5 w-3.5"/></Button>}{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Ativar" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"ACTIVE")}><Play className="h-3.5 w-3.5"/></Button>}{contract.status==="ACTIVE"&&<Button variant="ghost" size="icon" title="Suspender" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"SUSPENDED")}><Pause className="h-3.5 w-3.5"/></Button>}{["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status)&&<Button variant="outline" size="sm" disabled={saving===contract.id} onClick={()=>{if(window.confirm("Encerrar este contrato? Essa ação altera o status para encerrado."))void handleContractStatus(contract.id,"TERMINATED")}}>Encerrar</Button>}</div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      title={expandedContractId === contract.id ? "Ocultar detalhes" : "Ver detalhes"}
+                      onClick={() => setExpandedContractId((current) => current === contract.id ? null : contract.id)}
+                    >
+                      {expandedContractId === contract.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </Button>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-medium ${contractTone[contract.status]}`}>{CONTRACT_STATUS_LABELS[contract.status]}</span>{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Editar rascunho" disabled={saving===contract.id} onClick={()=>startEditContract(contract)}><Edit3 className="h-3.5 w-3.5"/></Button>}{contract.status==="DRAFT"&&<Button variant="ghost" size="icon" title="Ativar" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"ACTIVE")}><Play className="h-3.5 w-3.5"/></Button>}{contract.status==="ACTIVE"&&<Button variant="ghost" size="icon" title="Suspender" disabled={saving===contract.id} onClick={()=>void handleContractStatus(contract.id,"SUSPENDED")}><Pause className="h-3.5 w-3.5"/></Button>}{["DRAFT","ACTIVE","SUSPENDED"].includes(contract.status)&&<Button variant="outline" size="sm" disabled={saving===contract.id} onClick={()=>{if(window.confirm("Encerrar este contrato? Essa ação altera o status para encerrado."))void handleContractStatus(contract.id,"TERMINATED")}}>Encerrar</Button>}</div>
+                  </div>
+                  {expandedContractId === contract.id && (
+                    <div className="mt-3 rounded-xl border border-border bg-muted/20 p-4">
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <Detail label="Status" value={CONTRACT_STATUS_LABELS[contract.status]} />
+                        <Detail label="Assinatura" value={contract.signature_status === "SIGNED" ? "Assinado" : contract.signature_status === "PENDING_CUSTOMER" ? "Aguardando cliente" : contract.signature_status === "PENDING_NEROXA" ? "Aguardando Neroxa" : contract.signature_status === "NOT_SENT" ? "Não enviado" : contract.signature_status} />
+                        <Detail label="Modelo" value={contract.commercial_model === "PERMANENT" ? "Compra permanente" : "Assinatura"} />
+                        <Detail label="Recorrência" value={contract.recurring_value == null ? "—" : `R$ ${contract.recurring_value.toFixed(2).replace(".", ",")}`} />
+                        <Detail label="Implantação" value={`R$ ${contract.setup_value.toFixed(2).replace(".", ",")}`} />
+                        <Detail label="Manutenção" value={contract.maintenance_value == null ? "—" : `R$ ${contract.maintenance_value.toFixed(2).replace(".", ",")}`} />
+                        <Detail label="Número" value={contract.contract_number || "Sem número"} />
+                        <Detail label="Versão" value={String(contract.version ?? 1)} />
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -495,17 +587,28 @@ function Metric({
   );
 }
 
+function Detail({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg bg-background/60 p-3">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
 function CommercialList({
   title,
   description,
   icon: Icon,
   empty,
+  toolbar,
   children,
 }: {
   title: string;
   description: string;
   icon: typeof FileText;
   empty: string;
+  toolbar?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -514,10 +617,11 @@ function CommercialList({
         <div className="grid h-9 w-9 place-items-center rounded-lg bg-muted text-muted-foreground">
           <Icon className="h-4 w-4" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h2 className="text-base font-semibold">{title}</h2>
           <p className="text-xs text-muted-foreground">{description}</p>
         </div>
+        {toolbar}
       </div>
       <div className="mt-4">
         {children || <p className="py-8 text-center text-xs text-muted-foreground">{empty}</p>}
