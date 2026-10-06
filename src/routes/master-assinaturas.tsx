@@ -398,30 +398,6 @@ function MasterSubscriptionsPage() {
             </div>
           </Card>
 
-          <Card className="min-w-0 border-border bg-card p-5 shadow-soft">
-            {!selectedSubscription ? (
-              <div className="grid min-h-[420px] place-items-center text-center">
-                <div>
-                  <Activity className="mx-auto h-8 w-8 text-muted-foreground/40" />
-                  <p className="mt-3 text-sm font-medium">Selecione uma assinatura</p>
-                  <p className="mt-1 text-xs text-muted-foreground">O detalhe operacional aparecerá aqui.</p>
-                </div>
-              </div>
-            ) : (
-              <SubscriptionDetail
-                subscription={selectedSubscription}
-                client={clientMap.get(selectedSubscription.client_id)}
-                plan={planMap.get(selectedSubscription.plan_id)}
-                contract={selectedContract}
-                billing={selectedBilling}
-                role={role}
-                saving={saving}
-                canManage={canPerform(role, "manageSubscriptions")}
-                onStatus={handleStatus}
-                systemName={selectedSubscription ? systems.find((system) => system.id === planMap.get(selectedSubscription.plan_id)?.system_id)?.name : undefined}
-              />
-            )}
-          </Card>
         </div>
 
         <Card className="border-border bg-card p-5 shadow-soft">
