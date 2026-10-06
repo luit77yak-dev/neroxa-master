@@ -47,6 +47,11 @@ function MasterContractsPage() {
   const [shareContractId, setShareContractId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"ALL" | keyof typeof CONTRACT_STATUS_LABELS>("ALL");
 
+  useEffect(() => {
+    const contractId = new URLSearchParams(window.location.search).get("contractId");
+    if (contractId) setSelectedId(contractId);
+  }, []);
+
   const load = async () => {
     try {
       const access = await getNeroxaPlatformAccess();
@@ -66,10 +71,13 @@ function MasterContractsPage() {
 
   useEffect(() => { void load(); }, []);
 
+  const filteredContracts = useMemo(
+    () => statusFilter === "ALL" ? contracts : contracts.filter((contract) => contract.status === statusFilter),
+    [contracts, statusFilter],
+  );
+
   if (authorized === false) return <MasterLogin />;
   if (authorized === null || loading) return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-7 w-7 animate-spin" /></main>;
-
-  const filteredContracts = useMemo(() => statusFilter === "ALL" ? contracts : contracts.filter((contract) => contract.status === statusFilter), [contracts, statusFilter]);
 
   const save = async () => {
     if (!editing || !canPerform(role, "manageCommercial")) return;
