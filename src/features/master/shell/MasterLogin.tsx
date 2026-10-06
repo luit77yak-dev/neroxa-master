@@ -79,6 +79,63 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     if (data.currentLevel !== "aal2") throw new Error("O segundo fator não foi confirmado.");
   };
 
+  const prepareMfaForSession = async () => {
+    const authorized = await isNeroxaStaffWithRetry();
+    if (!authorized) throw new Error("Sua conta não está autorizada no Neroxa Master.");
+
+    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aalError) throw aalError;
+    if (aal.currentLevel === "aal2") {
+      finishMfa();
+      return;
+    }
+
+    const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+    if (factorsError) throw factorsError;
+
+    const verifiedTotp = factors.totp.find((factor) => factor.status === "verified");
+    if (verifiedTotp) {
+      setMfaFactorId(verifiedTotp.id);
+      setAuthStep("mfa");
+      return;
+    }
+
+    const pendingTotp = factors.totp.find((factor) => factor.status === "unverified");
+    if (pendingTotp) await supabase.auth.mfa.unenroll({ factorId: pendingTotp.id });
+
+    const { data: enrollment, error: enrollmentError } = await supabase.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName: "Neroxa Master",
+    });
+    if (enrollmentError) throw enrollmentError;
+
+    setMfaFactorId(enrollment.id);
+    setEnrollQrCode(enrollment.totp.qr_code);
+    setEnrollSecret(enrollment.totp.secret);
+    setAuthStep("enroll");
+  };
+
+  useEffect(() => {
+    if (recoveryMode) return;
+
+    let active = true;
+    void (async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!active || !sessionData.session) return;
+
+      try {
+        await prepareMfaForSession();
+      } catch (cause) {
+        if (!active) return;
+        setError(cause instanceof Error ? cause.message : "Não foi possível preparar a autenticação em dois fatores.");
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [recoveryMode]);
+
   const handleUpdatePassword = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -151,35 +208,7 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     }
 
     try {
-      const authorized = await isNeroxaStaffWithRetry();
-      if (!authorized) throw new Error("Sua conta entrou no Supabase, mas não está autorizada no Neroxa Master.");
-
-      const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-      if (aalError) throw aalError;
-      if (aal.currentLevel === "aal2") {
-        finishMfa();
-        return;
-      }
-
-      const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
-      if (factorsError) throw factorsError;
-      const verifiedTotp = factors.totp.find((factor) => factor.status === "verified");
-      if (verifiedTotp) {
-        setMfaFactorId(verifiedTotp.id);
-        setAuthStep("mfa");
-        setLoading(false);
-        return;
-      }
-
-      const pendingTotp = factors.totp.find((factor) => factor.status === "unverified");
-      if (pendingTotp) await supabase.auth.mfa.unenroll({ factorId: pendingTotp.id });
-
-      const { data: enrollment, error: enrollmentError } = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "Neroxa Master" });
-      if (enrollmentError) throw enrollmentError;
-      setMfaFactorId(enrollment.id);
-      setEnrollQrCode(enrollment.totp.qr_code);
-      setEnrollSecret(enrollment.totp.secret);
-      setAuthStep("enroll");
+      await prepareMfaForSession();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível preparar a autenticação em dois fatores.");
       await supabase.auth.signOut();
