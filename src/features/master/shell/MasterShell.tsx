@@ -43,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Assinaturas", to: "/master-assinaturas", icon: CreditCard },
   { label: "Financeiro", to: "/master-financeiro", icon: BarChart3 },
   { label: "Produtos", to: "/master-produtos", icon: Package },
+  { label: "Catálogo", to: "/master-catalogo", icon: Package },
   { label: "Implantação", to: "/master-implantacao", icon: FolderKanban },
   { label: "Domínios", to: "/master-dominios", icon: Globe2 },
   { label: "Suporte", to: "/master-suporte", icon: CircleHelp },
