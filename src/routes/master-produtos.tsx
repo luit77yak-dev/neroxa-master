@@ -233,8 +233,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function ProductDescription({ description }: { description: string }) {
-  const lines = description.split(/\r?
-|•/).map((line) => line.trim()).filter(Boolean);
+  const lines = description.split(/\r?\n|•/).map((line) => line.trim()).filter(Boolean);
   if (lines.length <= 1) return <p className="mt-3 text-sm leading-5 text-muted-foreground">{description}</p>;
   const [intro, ...resources] = lines;
   return <div className="mt-3 rounded-xl border border-border/60 bg-muted/50/70 p-3"><p className="text-xs font-semibold text-foreground/80">Recursos do produto</p><p className="mt-1.5 text-sm leading-5 text-muted-foreground">{intro}</p><ul className="mt-3 grid gap-2 sm:grid-cols-2">{resources.map((resource, index) => <li key={resource + index} className="flex min-w-0 items-start gap-2 text-sm leading-5 text-muted-foreground"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><span className="break-words">{resource}</span></li>)}</ul></div>;
