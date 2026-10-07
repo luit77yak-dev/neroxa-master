@@ -1,75 +1,80 @@
-import {useEffect,useMemo,useState} from "react";
-import {createFileRoute} from "@tanstack/react-router";
-import {AlertTriangle,CalendarClock,CheckCircle2,CircleDollarSign,CreditCard,Loader2,RefreshCw,ShieldCheck,WalletCards,Check,Undo2} from "lucide-react";
-import {Button} from "@/components/ui/button";
-import {Card} from "@/components/ui/card";
-import {getNeroxaPlatformAccess,isNeroxaStaff} from "@/features/master/clients/services";
-import {canPerform} from "@/features/master/permissions";
-import {MasterLogin} from "@/features/master/shell/MasterLogin";
-import {MasterShell} from "@/features/master/shell/MasterShell";
-import {INVOICE_STATUS_LABELS,type Invoice, type Payment} from "@/features/master/finance/types";
-import {loadFinanceOverview,updateBillingStatus} from "@/features/master/finance/services";
+import { useEffect, useMemo, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { AlertTriangle, CalendarClock, CheckCircle2, ChevronDown, ChevronUp, CircleDollarSign, CreditCard, ExternalLink, Loader2, RefreshCw, Search, ShieldCheck, WalletCards, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { getNeroxaPlatformAccess, isNeroxaStaff } from "@/features/master/clients/services";
+import { canPerform } from "@/features/master/permissions";
+import { MasterLogin } from "@/features/master/shell/MasterLogin";
+import { MasterShell } from "@/features/master/shell/MasterShell";
+import { INVOICE_STATUS_LABELS, type Invoice } from "@/features/master/finance/types";
+import { loadFinanceOverview, registerBillingPayment, updateBillingStatus } from "@/features/master/finance/services";
 
-export const Route=createFileRoute("/master-financeiro")({component:MasterFinancePage});
-const tone:Record<keyof typeof INVOICE_STATUS_LABELS,string>={PENDING:"bg-blue-50 text-blue-700",PAID:"bg-success/10 text-success",OVERDUE:"bg-red-50 text-red-700",CANCELLED:"bg-muted text-muted-foreground",REFUNDED:"bg-violet-50 text-violet-700",NEGOTIATION:"bg-amber-50 text-amber-700"};
+export const Route = createFileRoute("/master-financeiro")({ component: MasterFinancePage });
+
+const tone: Record<keyof typeof INVOICE_STATUS_LABELS, string> = {
+  PENDING:"bg-blue-50 text-blue-700", PAID:"bg-success/10 text-success", OVERDUE:"bg-red-50 text-red-700",
+  CANCELLED:"bg-muted text-muted-foreground", REFUNDED:"bg-violet-50 text-violet-700", NEGOTIATION:"bg-amber-50 text-amber-700",
+};
 const money=(v:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(v);
 const date=(v:string|null)=>{if(!v)return "—";const raw=String(v).trim();if(!raw)return "—";const parsed=new Date(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+"T12:00:00":raw);return Number.isNaN(parsed.getTime())?"—":new Intl.DateTimeFormat("pt-BR").format(parsed)};
+const filterOptions=[["ALL","Todas"],["PENDING","Pendentes"],["OVERDUE","Vencidas"],["PAID","Pagas"],["CANCELLED","Canceladas"],["REFUNDED","Reembolsadas"]] as const;
 
 function MasterFinancePage(){
  const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
-  const contextClientId=params?.get("clientId") ?? null;
-  const contextOrganizationId=params?.get("organizationId") ?? null;
- const [authorized,setAuthorized]=useState<boolean|null>(null),[role,setRole]=useState<import("@/features/master/clients/services").NeroxaPlatformRole|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Payment[]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
- const load=async(initial=false)=>{setError(null);if(initial){setLoading(true)}else{setRefreshing(true)}try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const access=await getNeroxaPlatformAccess();setRole(access?.active?access.role:null);const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
+ const contextClientId=params?.get("clientId")??null, contextOrganizationId=params?.get("organizationId")??null;
+ const [authorized,setAuthorized]=useState<boolean|null>(null),[role,setRole]=useState<import("@/features/master/clients/services").NeroxaPlatformRole|null>(null),[invoices,setInvoices]=useState<Invoice[]>([]),[payments,setPayments]=useState<Awaited<ReturnType<typeof loadFinanceOverview>>["payments"]>([]),[clients,setClients]=useState<{id:string;legal_name:string|null;trade_name:string|null}[]>([]),[loading,setLoading]=useState(true),[refreshing,setRefreshing]=useState(false),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null);
+ const [filter,setFilter]=useState<(typeof filterOptions)[number][0]>("ALL"),[query,setQuery]=useState(""),[selectedId,setSelectedId]=useState<string|null>(null),[paymentId,setPaymentId]=useState<string|null>(null),[paymentMethod,setPaymentMethod]=useState("PIX"),[externalId,setExternalId]=useState("");
+ const load=async(initial=false)=>{setError(null);if(initial)setLoading(true);else setRefreshing(true);try{const staff=await isNeroxaStaff();setAuthorized(staff);if(!staff)return;const access=await getNeroxaPlatformAccess();setRole(access?.active?access.role:null);const o=await loadFinanceOverview();setInvoices(o.invoices);setPayments(o.payments);setClients(o.clients)}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o financeiro.")}finally{setLoading(false);setRefreshing(false)}};
  useEffect(()=>{void load(true)},[]);
- const handleBillingStatus=async(id:string,status:"PENDING"|"PAID"|"OVERDUE"|"CANCELLED"|"REFUNDED")=>{setSaving(id);setError(null);try{await updateBillingStatus(id,status);await load()}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível alterar a fatura.")}finally{setSaving(null)}};
  const scopedInvoices=contextOrganizationId?invoices.filter(i=>i.client_id===contextOrganizationId):contextClientId?invoices.filter(i=>i.client_id===contextClientId):invoices;
- const scopedPayments=contextOrganizationId?payments.filter(p=>p.client_id===contextOrganizationId):contextClientId?payments.filter(p=>p.client_id===contextClientId):payments;
  const clientMap=useMemo(()=>new Map(clients.map(c=>[c.id,c])),[clients]);
- const metrics=useMemo(
-  () => ({
-   total: scopedInvoices.length,
-   pending: scopedInvoices.filter((i)=>i.status==="PENDING").reduce((sum,i)=>sum+i.total_amount,0),
-   overdue: scopedInvoices.filter((i)=>i.status==="OVERDUE").reduce((sum,i)=>sum+i.total_amount,0),
-   paid: scopedInvoices.filter((i)=>i.status==="PAID").reduce((sum,i)=>sum+i.total_amount,0),
-   payments: scopedPayments.filter((p)=>p.status==="CONFIRMED").reduce((sum,p)=>sum+p.amount,0),
-  }),
-  [scopedInvoices,scopedPayments],
- );
- const invoiceRows=scopedInvoices.slice(0,10).map((i)=>{
-  const c=clientMap.get(i.client_id);
-  return (
-   <div key={i.id} className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
-    <div className="min-w-0 flex-1">
-     <p className="text-sm font-medium">{i.invoice_number}</p>
-     <p className="truncate text-xs text-muted-foreground">{c?.trade_name||c?.legal_name||"Cliente não identificado"} · vence {date(i.due_date)}</p>
-    </div>
-    <div className="flex flex-wrap items-center justify-between gap-3 sm:justify-end">
-     <p className="text-sm font-semibold">{money(i.total_amount)}</p>
-     <div className="flex items-center gap-2"><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[i.status]}>{INVOICE_STATUS_LABELS[i.status]}</span>{canPerform(role,"manageFinance")&&["PENDING","OVERDUE"].includes(i.status)&&<Button variant="ghost" size="icon" title="Marcar como paga" disabled={saving===i.id} onClick={()=>void handleBillingStatus(i.id,"PAID")}><Check className="h-3.5 w-3.5"/></Button>}{canPerform(role,"manageFinance")&&i.status==="PAID"&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Reembolsar esta fatura? Essa ação altera o status para reembolsada."))void handleBillingStatus(i.id,"REFUNDED")}}><Undo2 className="h-3.5 w-3.5"/>Reembolsar</Button>}{canPerform(role,"manageFinance")&&["PENDING","OVERDUE"].includes(i.status)&&<Button variant="outline" size="sm" disabled={saving===i.id} onClick={()=>{if(window.confirm("Cancelar esta fatura?"))void handleBillingStatus(i.id,"CANCELLED")}}>Cancelar</Button>}</div>
-    </div>
-   </div>
-  );
- });
- const confirmedPayments=scopedPayments.filter((p)=>p.status==="CONFIRMED");
- const paymentRows=confirmedPayments.slice(0,5).map((p)=>(
-  <div key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3">
-   <div className="min-w-0">
-    <p className="text-xs font-medium">{clientMap.get(p.client_id)?.trade_name||clientMap.get(p.client_id)?.legal_name||"Cliente"}</p>
-    <p className="text-[11px] text-muted-foreground/70">{p.method} · {date(p.paid_at)}</p>
-   </div>
-   <p className="text-sm font-semibold">{money(p.amount)}</p>
-  </div>
- ));
+ const visible=useMemo(()=>{const q=query.trim().toLocaleLowerCase("pt-BR");return scopedInvoices.filter(i=>{if(filter!=="ALL"&&i.status!==filter)return false;if(!q)return true;const c=clientMap.get(i.client_id);return [c?.trade_name,c?.legal_name,i.invoice_number,i.external_id,i.id,i.contract?.contract_number,i.plan?.name].filter(Boolean).some(v=>String(v).toLocaleLowerCase("pt-BR").includes(q));})},[clientMap,filter,query,scopedInvoices]);
+ const metrics=useMemo(()=>({total:scopedInvoices.length,pending:scopedInvoices.filter(i=>i.status==="PENDING").reduce((s,i)=>s+i.total_amount,0),overdue:scopedInvoices.filter(i=>i.status==="OVERDUE").reduce((s,i)=>s+i.total_amount,0),paid:scopedInvoices.filter(i=>i.status==="PAID").reduce((s,i)=>s+i.total_amount,0),payments:payments.filter(p=>p.status==="CONFIRMED"&&(contextOrganizationId?p.client_id===contextOrganizationId:contextClientId?p.client_id===contextClientId:true)).reduce((s,p)=>s+p.amount,0)}),[scopedInvoices,payments,contextClientId,contextOrganizationId]);
+ const handlePayment=async(id:string)=>{setSaving(id);setError(null);try{await registerBillingPayment(id,paymentMethod,externalId);setPaymentId(null);setExternalId("");setPaymentMethod("PIX");await load()}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível registrar o pagamento.")}finally{setSaving(null)}};
+ const handleStatus=async(id:string,status:"CANCELLED"|"REFUNDED")=>{setSaving(id);setError(null);try{await updateBillingStatus(id,status);await load()}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível alterar a cobrança.")}finally{setSaving(null)}};
  if(authorized===false)return <MasterLogin />;
  if(authorized===null||loading)return <main data-route="master-financeiro" className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin"/></main>;
  return <MasterShell><div className="mx-auto min-w-0 max-w-[1500px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
- <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Financeiro</p><h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Financeiro</h1><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Acompanhe faturas, recebimentos e valores em aberto sem misturar cobrança com a operação comercial.</p></div><Button variant="outline" onClick={()=>void load()} disabled={refreshing}><RefreshCw className={refreshing?"h-4 w-4 animate-spin":"h-4 w-4"}/>Atualizar</Button></section>
+ <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Financeiro</p><h1 className="mt-1 font-display text-[28px] font-semibold leading-tight tracking-tight text-foreground sm:text-[32px]">Financeiro</h1><p className="mt-1 max-w-2xl text-sm text-muted-foreground">Acompanhe faturas, recebimentos e valores em aberto sem misturar cobrança com a operação comercial.</p></div><Button variant="outline" onClick={()=>void load()} disabled={refreshing}><RefreshCw className={refreshing?"h-4 w-4 animate-spin":"h-4 w-4"}/>Atualizar</Button></section>
  {error&&<Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
- <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric icon={CreditCard} label="Faturas" value={metrics.total.toString()} hint="Total registrado"/><Metric icon={CircleDollarSign} label="Em aberto" value={money(metrics.pending)} hint="Faturas pendentes"/><Metric icon={AlertTriangle} label="Inadimplência" value={money(metrics.overdue)} hint="Faturas vencidas"/><Metric icon={CheckCircle2} label="Recebido" value={money(metrics.paid)} hint="Faturas quitadas"/></div>
+ <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><Metric icon={CreditCard} label="Faturas" value={String(metrics.total)} hint="Total no contexto atual"/><Metric icon={CircleDollarSign} label="Em aberto" value={money(metrics.pending)} hint="Faturas pendentes"/><Metric icon={AlertTriangle} label="Inadimplência" value={money(metrics.overdue)} hint="Faturas vencidas"/><Metric icon={CheckCircle2} label="Recebido" value={money(metrics.paid)} hint="Faturas quitadas"/></div>
+ <Card className="border-border bg-card p-4 shadow-soft"><div className="flex flex-col gap-3 lg:flex-row lg:items-center"><div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar cliente, fatura, referência ou plano..." aria-label="Buscar no financeiro" className="h-10 w-full rounded-lg border border-input bg-background pl-9 pr-9 text-sm outline-none focus:ring-2 focus:ring-ring"/>{query&&<button type="button" onClick={()=>setQuery("")} aria-label="Limpar busca" className="absolute right-3 top-1/2 -translate-y-1/2"><X className="h-4 w-4"/></button>}</div><div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Filtrar faturas por status">{filterOptions.map(([value,label])=><button key={value} type="button" role="tab" aria-selected={filter===value} onClick={()=>setFilter(value)} className={"whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition "+(filter===value?"bg-sidebar text-sidebar-foreground":"bg-muted text-muted-foreground hover:bg-muted/70")}>{label}</button>)}</div></div></Card>
  <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(340px,.7fr)]">
- <Card className="border-border bg-card p-5 shadow-soft"><div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar text-white"><WalletCards className="h-4 w-4"/></div><div><h2 className="text-base font-semibold">Faturas</h2><p className="text-xs text-muted-foreground">Acompanhamento por vencimento e status</p></div></div><div className="mt-4 divide-y divide-border">{invoiceRows}{invoices.length===0&&<div className="py-12 text-center"><WalletCards className="mx-auto h-8 w-8 text-slate-300"/><p className="mt-3 text-sm font-medium text-foreground/80">Nenhuma fatura cadastrada</p><p className="mt-1 text-xs text-muted-foreground">As faturas criadas no Master aparecerão aqui.</p></div>}</div></Card>
- <Card className="border-border bg-sidebar p-5 text-slate-100 shadow-soft"><p className="text-xs font-medium tracking-wide text-sidebar-foreground/60">Recebimentos</p><h2 className="mt-2 text-lg font-semibold">Pagamentos confirmados</h2><p className="mt-2 text-sm leading-6 text-slate-300">Os pagamentos ficam separados das faturas para manter histórico e conciliação.</p><div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4"><p className="text-[11px] text-sidebar-foreground/60">Total confirmado</p><p className="mt-1 text-2xl font-semibold">{money(metrics.payments)}</p></div><div className="mt-4 space-y-2">{paymentRows}{confirmedPayments.length===0&&<p className="py-6 text-center text-xs text-sidebar-foreground/60">Nenhum pagamento confirmado.</p>}</div><div className="mt-5 flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-sidebar-foreground/60"><CalendarClock className="h-4 w-4"/>Cobrança e automações entram em uma etapa posterior.</div></Card>
+ <Card className="min-w-0 border-border bg-card p-5 shadow-soft"><div className="flex items-center gap-3"><div className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar text-white"><WalletCards className="h-4 w-4"/></div><div><h2 className="text-base font-semibold">Faturas</h2><p className="text-xs text-muted-foreground">{visible.length} registro(s) no filtro atual</p></div></div><div className="mt-4 divide-y divide-border">{visible.map(i=><InvoiceRow key={i.id} invoice={i} client={clientMap.get(i.client_id)} expanded={selectedId===i.id} canManage={canPerform(role,"manageFinance")} saving={saving===i.id} onToggle={()=>setSelectedId(selectedId===i.id?null:i.id)} onStatus={handleStatus} paymentOpen={paymentId===i.id} paymentMethod={paymentMethod} externalId={externalId} onOpenPayment={()=>{setPaymentId(i.id);setPaymentMethod(i.payment_method||"PIX");setExternalId("")}} onClosePayment={()=>{setPaymentId(null);setExternalId("")}} onPaymentMethodChange={setPaymentMethod} onExternalIdChange={setExternalId} onRegisterPayment={()=>void handlePayment(i.id)}/>)}{visible.length===0&&<div className="py-12 text-center"><WalletCards className="mx-auto h-8 w-8 text-muted-foreground/40"/><p className="mt-3 text-sm font-medium">Nenhuma cobrança encontrada</p><p className="mt-1 text-xs text-muted-foreground">Ajuste os filtros ou a busca.</p></div>}</div></Card>
+ <Card className="border-border bg-sidebar p-5 text-slate-100 shadow-soft"><p className="text-xs font-medium tracking-wide text-sidebar-foreground/60">Recebimentos</p><h2 className="mt-2 text-lg font-semibold">Pagamentos confirmados</h2><p className="mt-2 text-sm leading-6 text-slate-300">No MVP, o pagamento confirmado é derivado da cobrança paga; quando o gateway entrar, ele será substituído por um registro de conciliação independente.</p><div className="mt-5 rounded-xl border border-white/10 bg-white/5 p-4"><p className="text-[11px] text-sidebar-foreground/60">Total confirmado</p><p className="mt-1 text-2xl font-semibold">{money(metrics.payments)}</p></div><div className="mt-4 space-y-2">{payments.filter(p=>p.status==="CONFIRMED"&&(contextOrganizationId?p.client_id===contextOrganizationId:contextClientId?p.client_id===contextClientId:true)).slice(0,5).map(p=><div key={p.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 p-3"><div className="min-w-0"><p className="text-xs font-medium">{clientMap.get(p.client_id)?.trade_name||clientMap.get(p.client_id)?.legal_name||"Cliente"}</p><p className="text-[11px] text-muted-foreground/70">{p.method} · {date(p.paid_at)}</p></div><p className="text-sm font-semibold">{money(p.amount)}</p></div>)}</div><div className="mt-5 flex items-center gap-2 border-t border-white/10 pt-4 text-xs text-sidebar-foreground/60"><CalendarClock className="h-4 w-4"/>Conciliação automática entra com o gateway.</div></Card>
  </div></div></MasterShell>;
 }
+
+function InvoiceRow({invoice,client,expanded,canManage,saving,onToggle,onStatus,paymentOpen,paymentMethod,externalId,onOpenPayment,onClosePayment,onPaymentMethodChange,onExternalIdChange,onRegisterPayment}:{invoice:Invoice;client?:{trade_name:string|null;legal_name:string|null};expanded:boolean;canManage:boolean;saving:boolean;onToggle:()=>void;onStatus:(id:string,status:"CANCELLED"|"REFUNDED")=>Promise<void>;paymentOpen:boolean;paymentMethod:string;externalId:string;onOpenPayment:()=>void;onClosePayment:()=>void;onPaymentMethodChange:(value:string)=>void;onExternalIdChange:(value:string)=>void;onRegisterPayment:()=>void}) {
+ return <div className={expanded?"rounded-xl bg-muted/30":""}>
+  <button type="button" onClick={onToggle} aria-expanded={expanded} className={"flex w-full flex-col gap-3 py-4 text-left sm:flex-row sm:items-center "+(expanded?"px-3":"hover:bg-muted/30")}>
+   <div className="min-w-0 flex-1"><p className="text-sm font-medium">{invoice.invoice_number}</p><p className="truncate text-xs text-muted-foreground">{client?.trade_name||client?.legal_name||"Cliente não identificado"} · vence {date(invoice.due_date)}</p></div>
+   <div className="flex flex-wrap items-center gap-3 sm:justify-end"><p className="text-sm font-semibold">{money(invoice.total_amount)}</p><span className={"rounded-full px-2.5 py-1 text-[10px] font-medium "+tone[invoice.status]}>{INVOICE_STATUS_LABELS[invoice.status]}</span>{expanded?<ChevronUp className="h-4 w-4 text-muted-foreground"/>:<ChevronDown className="h-4 w-4 text-muted-foreground"/>}</div>
+  </button>
+  {expanded&&<div className="border-t border-border/70 px-3 pb-4 pt-4"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"><Info label="Cliente" value={client?.trade_name||client?.legal_name||"—"}/><Info label="Referência" value={invoice.invoice_number}/><Info label="Valor" value={money(invoice.total_amount)}/><Info label="Vencimento" value={date(invoice.due_date)}/><Info label="Pagamento" value={invoice.paid_at?date(invoice.paid_at):"Ainda não pago"}/><Info label="Método" value={invoice.payment_method||"Não informado"}/><Info label="Gateway" value={invoice.gateway_provider||"Não configurado"}/><Info label="Gateway ID" value={invoice.gateway_payment_id||"—"}/><Info label="Gateway status" value={invoice.gateway_status||"—"}/><Info label="ID externo" value={invoice.external_id||"—"}/></div>
+   <div className="mt-4 grid gap-3 sm:grid-cols-2"><Info label="Assinatura" value={invoice.subscription_id||"Não vinculada"}/><Info label="Contrato" value={invoice.contract?.contract_number||invoice.contract?.title||"Não localizado"}/><Info label="Plano" value={invoice.plan?.name||"Não localizado"}/><Info label="Status do contrato" value={invoice.contract?.status||"—"}/></div>
+   <div className="mt-4 rounded-xl border border-border p-4"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-medium">Histórico / auditoria</p><p className="mt-1 text-[11px] text-muted-foreground">{invoice.audits.length} registro(s)</p></div><ShieldCheck className="h-4 w-4 text-muted-foreground"/></div><div className="mt-3 space-y-2">{invoice.audits.length?invoice.audits.map(a=><div key={a.id} className="rounded-lg bg-muted/40 p-3"><p className="text-xs font-medium">{a.action}</p><p className="mt-1 text-[11px] text-muted-foreground">{date(a.created_at)}</p></div>):<p className="text-xs text-muted-foreground">Nenhum evento de auditoria encontrado.</p>}</div></div>
+   {canManage&&<div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
+    {["PENDING","OVERDUE"].includes(invoice.status)&&!paymentOpen&&<Button size="sm" disabled={saving} onClick={(e)=>{e.stopPropagation();onOpenPayment()}}><CheckCircle2 className="h-3.5 w-3.5"/>Registrar pagamento</Button>}
+    {["PENDING","OVERDUE"].includes(invoice.status)&&<span className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">Baixa manual administrativa; gateway ainda não configurado.</span>}
+    {invoice.status==="PAID"&&<span className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">Reembolso real depende de gateway. Esta ação fica bloqueada até integração.</span>}
+    {["PENDING","OVERDUE"].includes(invoice.status)&&<Button variant="outline" size="sm" disabled={saving} onClick={(e)=>{e.stopPropagation();if(window.confirm("Cancelar esta cobrança?"))void onStatus(invoice.id,"CANCELLED")}}>Cancelar</Button>}
+  </div>}
+  {canManage&&paymentOpen&&["PENDING","OVERDUE"].includes(invoice.status)&&<div className="mt-3 rounded-xl border border-border bg-background p-4">
+    <div className="grid gap-3 sm:grid-cols-2">
+      <label className="text-xs font-medium">Método de pagamento<input value={paymentMethod} onChange={e=>onPaymentMethodChange(e.target.value)} placeholder="PIX, cartão, boleto..." className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"/></label>
+      <label className="text-xs font-medium">Referência externa <span className="font-normal text-muted-foreground">(opcional)</span><input value={externalId} onChange={e=>onExternalIdChange(e.target.value)} placeholder="ID da transação, comprovante..." className="mt-1 h-10 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"/></label>
+    </div>
+    <div className="mt-3 flex flex-wrap gap-2">
+      <Button size="sm" disabled={saving||!paymentMethod.trim()} onClick={(e)=>{e.stopPropagation();if(window.confirm("Registrar esta cobrança como paga agora?"))onRegisterPayment()}}><CheckCircle2 className="h-3.5 w-3.5"/>Confirmar pagamento</Button>
+      <Button variant="ghost" size="sm" disabled={saving} onClick={(e)=>{e.stopPropagation();onClosePayment()}}>Cancelar</Button>
+    </div>
+  </div>}
+  </div>}
+ </div>;
+}
+
+function Info({label,value}:{label:string;value:string}){return <div className="rounded-lg bg-muted/50 p-3"><p className="text-[10px] uppercase tracking-wide text-muted-foreground/70">{label}</p><p className="mt-1 break-words text-sm font-medium">{value}</p></div>}
 function Metric({icon:Icon,label,value,hint}:{icon:typeof CreditCard;label:string;value:string;hint:string}){return <Card className="border-border bg-card p-4 shadow-soft"><Icon className="h-4 w-4 text-muted-foreground/70"/><p className="mt-3 text-xs font-medium tracking-wide text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p><p className="mt-1 text-xs text-muted-foreground">{hint}</p></Card>}
+
