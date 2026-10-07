@@ -48,6 +48,7 @@ function MasterPlansPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [products, setProducts] = useState<NeroxaProduct[]>([]);
   const [systems, setSystems] = useState<NeroxaSystem[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
@@ -106,11 +107,12 @@ function MasterPlansPage() {
 
   useEffect(() => { void load(); }, []);
 
-  const filteredPlans = planFilter === "ALL"
+  const filteredPlans = (planFilter === "ALL"
     ? plans
     : planFilter === "GLOBAL"
       ? plans.filter((plan) => !plan.system_id)
-      : plans.filter((plan) => plan.system_id === planFilter);
+      : plans.filter((plan) => plan.system_id === planFilter))
+    .filter((plan) => statusFilter === "ALL" || (statusFilter === "ACTIVE" ? plan.active : !plan.active));
 
 
   const startEdit = (plan: SubscriptionPlan) => {
@@ -216,7 +218,8 @@ function MasterPlansPage() {
   if (authorized === null || loading) return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin" /></main>;
 
   return <MasterShell><div className="mx-auto w-full min-w-0 max-w-[1200px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
-    <section className="min-w-0"><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Planos</p><h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Planos</h1><p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">Gerencie catálogo, preços e disponibilidade para novas contratações.</p></section>
+    <div className="flex justify-end"><select aria-label="Filtrar planos por status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "ALL" | "ACTIVE" | "INACTIVE")} className="h-9 w-full rounded-lg border border-border bg-card px-3 text-xs sm:w-auto"><option value="ALL">Todos os status</option><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option></select></div>
+      <section className="min-w-0"><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Planos</p><h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Planos</h1><p className="mt-1 max-w-2xl text-sm leading-5 text-muted-foreground">Gerencie catálogo, preços e disponibilidade para novas contratações.</p></section>
       <div className="flex min-w-0 gap-2 overflow-x-auto pb-1">
         <button type="button" onClick={() => setPlanFilter("ALL")} className={`shrink-0 rounded-full border px-3 py-2 text-xs font-medium ${planFilter === "ALL" ? "border-sidebar bg-sidebar text-white" : "border-border bg-card text-muted-foreground hover:bg-muted"}`}>Todos <span className="ml-1 opacity-70">{plans.length}</span></button>
         {systems.filter((system) => system.active).map((system) => {
