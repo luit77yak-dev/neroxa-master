@@ -22,6 +22,7 @@ import { Route as MasterFinanceiroRouteImport } from './routes/master-financeiro
 import { Route as MasterImplantacaoRouteImport } from './routes/master-implantacao'
 import { Route as MasterPlanosRouteImport } from './routes/master-planos'
 import { Route as MasterProdutosRouteImport } from './routes/master-produtos'
+import { Route as MasterCatalogoRouteImport } from './routes/master-catalogo'
 import { Route as MasterRecoveryRouteImport } from './routes/master-recovery'
 import { Route as MasterSistemasRouteImport } from './routes/master-sistemas'
 import { Route as MasterSuporteRouteImport } from './routes/master-suporte'
@@ -96,6 +97,11 @@ const MasterProdutosRoute = MasterProdutosRouteImport.update({
   path: '/master-produtos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MasterCatalogoRoute = MasterCatalogoRouteImport.update({
+  id: '/master-catalogo',
+  path: '/master-catalogo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MasterRecoveryRoute = MasterRecoveryRouteImport.update({
   id: '/master-recovery',
   path: '/master-recovery',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/master-implantacao': typeof MasterImplantacaoRoute
   '/master-planos': typeof MasterPlanosRoute
   '/master-produtos': typeof MasterProdutosRoute
+  '/master-catalogo': typeof MasterCatalogoRoute
   '/master-recovery': typeof MasterRecoveryRoute
   '/master-sistemas': typeof MasterSistemasRoute
   '/master-suporte': typeof MasterSuporteRoute
@@ -232,6 +239,7 @@ export interface RootRouteChildren {
   MasterImplantacaoRoute: typeof MasterImplantacaoRoute
   MasterPlanosRoute: typeof MasterPlanosRoute
   MasterProdutosRoute: typeof MasterProdutosRoute
+  MasterCatalogoRoute: typeof MasterCatalogoRoute
   MasterRecoveryRoute: typeof MasterRecoveryRoute
   MasterSistemasRoute: typeof MasterSistemasRoute
   MasterSuporteRoute: typeof MasterSuporteRoute
