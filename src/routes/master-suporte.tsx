@@ -43,7 +43,7 @@ function MasterSupportPage() {
   if(authorized===false)return <MasterLogin />;
   if(authorized===null||loading)return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Clock3 className="h-7 w-7 animate-pulse"/></main>;
 
-  return <MasterShell><main className="min-h-screen min-w-0 overflow-x-hidden bg-muted/50 p-3 text-foreground sm:p-6 lg:p-8"><div className="mx-auto min-w-0 max-w-[1500px] space-y-5">
+  const filteredTickets = tickets.filter((ticket) => statusFilter === "ALL" || ticket.status === statusFilter);\n\n  return <MasterShell><main className="min-h-screen min-w-0 overflow-x-hidden bg-muted/50 p-3 text-foreground sm:p-6 lg:p-8"><div className="mx-auto min-w-0 max-w-[1500px] space-y-5">
     <header className="master-page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Atendimento</p><h1 className="text-2xl font-semibold">Central de suporte</h1><p className="mt-1 text-sm text-muted-foreground">Chamados, acompanhamento e histórico dos clientes.</p></div><div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
 <Button type="button" variant="outline" className="w-full sm:w-auto min-h-10" onClick={()=>void load()} disabled={loading}><RefreshCw className="mr-2 h-4 w-4 shrink-0"/>Atualizar</Button>
 <Button type="button" className="w-full sm:w-auto min-h-10" onClick={()=>setShowCreate(true)}><Plus className="mr-2 h-4 w-4 shrink-0"/>Novo chamado</Button>
