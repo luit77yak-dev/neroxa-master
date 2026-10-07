@@ -48,6 +48,17 @@ export async function listImplementationInstances() {
   return (data ?? []) as unknown as ImplementationInstance[];
 }
 
+export async function createImplementationInstance(input: {
+  organizationId: string; name: string; slug: string; systemType: string;
+  planId?: string | null; systemId?: string | null; subscriptionId?: string | null;
+}) {
+  const name=input.name.trim(); const slug=input.slug.trim().toLowerCase(); const systemType=input.systemType.trim().toUpperCase();
+  if(!input.organizationId||!name||!slug||!systemType) throw new Error("Informe cliente, nome, slug e tipo de sistema.");
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("O slug deve usar apenas letras minúsculas, números e hífens.");
+  const {data,error}=await supabase.from("neroxa_system_instances" as never).insert({organization_id:input.organizationId,name,slug,system_type:systemType,plan_id:input.planId||null,system_id:input.systemId||null,subscription_id:input.subscriptionId||null,status:"PROVISIONING"} as never).select("id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at").single();
+  if(error) throw new Error(error.message); return data as unknown as ImplementationInstance;
+}
+
 export async function updateImplementationInstance(input: {
   id: string;
   name: string;
@@ -81,6 +92,13 @@ export async function deleteImplementationInstance(id: string) {
   return data as { deleted: boolean; instance_id: string; status: InstanceStatus };
 }
 
+export async function createProvisioningJob(input: {
+  organizationId: string; systemInstanceId?: string | null; action: string; payload?: Record<string, unknown>;
+}) {
+  const {data,error}=await supabase.from("neroxa_provisioning_jobs" as never).insert({organization_id:input.organizationId,system_instance_id:input.systemInstanceId||null,action:input.action,payload:input.payload??{},status:"PENDING"} as never).select("*").single();
+  if(error) throw new Error(error.message); return data as unknown as ProvisioningJob;
+}
+
 export async function updateProvisioningJob(input: {
   id: string;
   status: ProvisioningStatus;
@@ -103,11 +121,7 @@ export async function updateImplementationInstanceStatus(input: { id: string; st
 }
 
 export async function retryProvisioningJob(job: ProvisioningJob) {
-  const { data, error } = await supabase.rpc("retry_neroxa_provisioning_job", {
-    p_job_id: job.id,
-  });
-  if (error) throw new Error(error.message);
-  return String(data);
+  return createProvisioningJob({organizationId:job.organization_id,systemInstanceId:job.system_instance_id,action:job.action,payload:job.payload});
 }
 
 export async function cancelProvisioningJob(jobId: string) {
