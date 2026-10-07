@@ -56,6 +56,7 @@ function MasterDominios() {
   const [working, setWorking] = useState<string | null>(null);
   const [dnsResult, setDnsResult] = useState<Record<string, { ok: boolean; message: string; records: { a: string[]; cname: string[]; nameservers: string[] } }>>({});
   const [error, setError] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<DomainStatus | "ALL">("ALL");
 
   async function load() {
     setLoading(true);
@@ -211,6 +212,7 @@ function MasterDominios() {
   }
 
   const canManage = canPerform(role, "manageSystems");
+  const visibleDomains = domains.filter((domain) => statusFilter === "ALL" || domain.status === statusFilter);
 
   return (
     <MasterShell>
@@ -246,17 +248,17 @@ function MasterDominios() {
             <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Carregando domínios…
             </div>
-          ) : domains.length === 0 ? (
+          ) : visibleDomains.length === 0 ? (
             <div className="p-10 text-center">
               <Globe2 className="mx-auto h-8 w-8 text-slate-300" />
               <p className="mt-3 text-sm font-medium text-foreground/80">Nenhum domínio cadastrado</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Cadastre um domínio na instância e ele aparecerá aqui para validação.
+                Ajuste o filtro ou cadastre um domínio na instância para iniciar a validação.
               </p>
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {domains.map((domain) => {
+              {visibleDomains.map((domain) => {
                 const disabled = working === domain.id || domain.instanceStatus === "ARCHIVED";
                 const canStart = canManage && !disabled && ["PENDING", "FAILED", "DISABLED"].includes(domain.status);
                 const canDisable = canManage && !disabled && domain.status === "VERIFIED" && !domain.is_primary;
