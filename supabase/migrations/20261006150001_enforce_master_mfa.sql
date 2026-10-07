@@ -21,7 +21,7 @@ language sql
 stable
 set search_path = public
 as $$
-  select coalesce((auth.jwt() ->> 'aal2') = 'aal2', false)
+  select coalesce((auth.jwt() ->> 'aal') = 'aal2', false)
     and exists (
       select 1
       from public.neroxa_platform_members m
