@@ -26,7 +26,8 @@ const emptyForm: Form = { name: "", slug: "", description: "", category: "SOLUTI
 function MasterProdutos() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
-  const [products, setProducts] = useState<NeroxaProduct[]>([]);\n  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [products, setProducts] = useState<NeroxaProduct[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [systems, setSystems] = useState<NeroxaSystem[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
@@ -140,12 +141,14 @@ function MasterProdutos() {
   if (authorized === false) return <MasterLogin />;
   if (authorized === null || loading) return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin" /></main>;
 
-  const filteredProducts = products.filter((product) => statusFilter === "ALL" || (statusFilter === "ACTIVE" ? product.active : !product.active));\n\n  return <MasterShell><div className="mx-auto min-w-0 max-w-[1250px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
+  const filteredProducts = products.filter((product) => statusFilter === "ALL" || (statusFilter === "ACTIVE" ? product.active : !product.active));
+
+  return <MasterShell><div className="mx-auto min-w-0 max-w-[1250px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
     <section><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Produtos</p><h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Produtos</h1><p className="mt-1 text-sm text-muted-foreground">Catálogo de soluções que a Neroxa comercializa e implanta.</p></section>
     {error && <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
     <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_390px]">
       <div className="space-y-4">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center"><div className="flex gap-2 overflow-x-auto pb-1">
           <button type="button" onClick={() => setSystemFilter("all")} className={systemFilter === "all" ? "shrink-0 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background" : "shrink-0 rounded-full bg-muted px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/80"}>Todos · {products.length}</button>
           {systems.filter(system => system.active).map(system => {
             const count = products.filter(product => product.system_id === system.id).length;
@@ -153,9 +156,9 @@ function MasterProdutos() {
             return <button key={system.id} type="button" onClick={() => setSystemFilter(system.id)} className={systemFilter === system.id ? "shrink-0 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background" : "shrink-0 rounded-full bg-muted px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/80"}>{system.name} · {count}</button>;
           })}
           {products.some(product => !product.system_id) && <button type="button" onClick={() => setSystemFilter("shared")} className={systemFilter === "shared" ? "shrink-0 rounded-full bg-foreground px-4 py-2 text-xs font-medium text-background" : "shrink-0 rounded-full bg-muted px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/80"}>Compartilháveis · {products.filter(product => !product.system_id).length}</button>}
-        </div>
+        </div><select aria-label="Filtrar produtos por status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "ALL" | "ACTIVE" | "INACTIVE")} className="h-9 w-full rounded-lg border border-border bg-card px-3 text-xs sm:w-auto"><option value="ALL">Todos os status</option><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option></select></div>
         {systemFilter === "all" ? systems.filter(system => system.active).map(system => {
-          const scopedProducts = products.filter(product => product.system_id === system.id);
+          const scopedProducts = products.filter(product => (statusFilter === "ALL" || (statusFilter === "ACTIVE" ? product.active : !product.active)) && product.system_id === system.id);
           if (!scopedProducts.length) return null;
           const open = expandedSystem === system.id;
           return <Card key={system.id} className="border-border bg-card shadow-soft">
@@ -167,9 +170,9 @@ function MasterProdutos() {
           </Card>;
         }) : null}
         {systemFilter !== "all" && <div className="space-y-3">
-          {products.filter(product => systemFilter === "shared" ? !product.system_id : product.system_id === systemFilter).map(product => <ProductCard key={product.id} product={product} systems={systems} productPlans={productPlans} expandedProduct={expandedProduct} setExpandedProduct={setExpandedProduct} editing={editing} startEdit={startEdit} remove={remove} role={role} form={form} setForm={setForm} plans={plans} selectedPlans={selectedPlans} setSelectedPlans={setSelectedPlans} saving={saving} reset={reset} save={save}/>)}
+          {products.filter(product => (statusFilter === "ALL" || (statusFilter === "ACTIVE" ? product.active : !product.active)) && (systemFilter === "shared" ? !product.system_id : product.system_id === systemFilter)).map(product => <ProductCard key={product.id} product={product} systems={systems} productPlans={productPlans} expandedProduct={expandedProduct} setExpandedProduct={setExpandedProduct} editing={editing} startEdit={startEdit} remove={remove} role={role} form={form} setForm={setForm} plans={plans} selectedPlans={selectedPlans} setSelectedPlans={setSelectedPlans} saving={saving} reset={reset} save={save}/>)}
         </div>}
-        {systemFilter === "all" && products.some(product => !product.system_id) && <Card className="border-border bg-card shadow-soft">
+        {systemFilter === "all" && products.some(product => (statusFilter === "ALL" || (statusFilter === "ACTIVE" ? product.active : !product.active)) && !product.system_id) && <Card className="border-border bg-card shadow-soft">
           <button type="button" className="flex w-full items-center justify-between gap-3 p-4 text-left sm:p-5" onClick={() => setExpandedSystem(expandedSystem === "shared" ? null : "shared")}>
             <div><p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Escopo</p><h2 className="mt-1 text-base font-semibold">Produtos compartilháveis</h2><p className="mt-1 text-xs text-muted-foreground">{products.filter(product => !product.system_id).length} produtos sem segmento específico</p></div>
             <span className="shrink-0 text-xs text-muted-foreground">{expandedSystem === "shared" ? "Recolher" : "Ver produtos"}</span>
@@ -230,7 +233,8 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 }
 
 function ProductDescription({ description }: { description: string }) {
-  const lines = description.split(/\r?\n|•/).map((line) => line.trim()).filter(Boolean);
+  const lines = description.split(/\r?
+|•/).map((line) => line.trim()).filter(Boolean);
   if (lines.length <= 1) return <p className="mt-3 text-sm leading-5 text-muted-foreground">{description}</p>;
   const [intro, ...resources] = lines;
   return <div className="mt-3 rounded-xl border border-border/60 bg-muted/50/70 p-3"><p className="text-xs font-semibold text-foreground/80">Recursos do produto</p><p className="mt-1.5 text-sm leading-5 text-muted-foreground">{intro}</p><ul className="mt-3 grid gap-2 sm:grid-cols-2">{resources.map((resource, index) => <li key={resource + index} className="flex min-w-0 items-start gap-2 text-sm leading-5 text-muted-foreground"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /><span className="break-words">{resource}</span></li>)}</ul></div>;
