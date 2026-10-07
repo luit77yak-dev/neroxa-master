@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock3, FolderKanban, Globe2, Loader2, Pencil, Play, Plus, RefreshCw, RotateCcw, Trash2, XCircle, Zap } from "lucide-react";
+import { CheckCircle2, Clock3, FolderKanban, Globe2, Loader2, Pencil, Play, RefreshCw, RotateCcw, Trash2, XCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getNeroxaPlatformAccess, listNeroxaClients, type NeroxaClient, type NeroxaPlatformRole } from "@/features/master/clients/services";
@@ -16,8 +16,6 @@ const statusClass: Record<ProvisioningStatus, string> = {
   PENDING: "bg-amber-50 text-amber-700", RUNNING: "bg-blue-50 text-blue-700", COMPLETED: "bg-success/10 text-success", FAILED: "bg-red-50 text-red-700", CANCELLED: "bg-muted text-muted-foreground",
 };
 const INSTANCE_STATUSES: InstanceStatus[] = ["PROVISIONING", "ACTIVE", "SUSPENDED", "ARCHIVED"];
-const SYSTEM_TYPES = ["DELIVERY", "FOOD", "CLINIC", "BEAUTY", "BARBER", "FITNESS", "CUSTOM"];
-
 function MasterImplantacao() {
   const params = typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
   const contextClientId = params?.get("clientId") ?? null;
@@ -35,14 +33,8 @@ function MasterImplantacao() {
   const [prepareName, setPrepareName] = useState("");
   const [prepareSlug, setPrepareSlug] = useState("");
   const [preparing, setPreparing] = useState(false);
-  const [instanceModal, setInstanceModal] = useState<"create" | null>(null);
   const [expandedInstance, setExpandedInstance] = useState<string | null>(null);
   const [editingInstance, setEditingInstance] = useState<ImplementationInstance | null>(null);
-  const [instanceName, setInstanceName] = useState("");
-  const [instanceSlug, setInstanceSlug] = useState("");
-  const [instanceType, setInstanceType] = useState("CUSTOM");
-  const [instanceOrganizationId, setInstanceOrganizationId] = useState(contextOrganizationId ?? "");
-  const [savingInstance, setSavingInstance] = useState(false);
 
   const load = async () => {
     setError(null);
