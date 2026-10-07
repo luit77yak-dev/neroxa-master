@@ -7,7 +7,6 @@ import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { isNeroxaStaff } from "@/features/master/clients/services";
 import { supabase } from "@/integrations/supabase/client";
 
-// Force a fresh route chunk after the Vercel deployment cache investigation.
 export const Route = createFileRoute("/master")({
   component: MasterOverviewPage,
 });
