@@ -87,6 +87,15 @@ function MasterClientsPage() {
 
   const selected = clients.find((client) => client.id === selectedId) ?? null;
 
+  const handleSelectClient = (clientId: string) => {
+    const scrollY = window.scrollY;
+    setSelectedId(clientId);
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollY, behavior: "auto" });
+      requestAnimationFrame(() => window.scrollTo({ top: scrollY, behavior: "auto" }));
+    });
+  };
+
   const loadClients = async (keepSelection = true) => {
     setLoading(true);
     setError(null);
@@ -387,7 +396,7 @@ function MasterClientsPage() {
                 <button
                   key={client.id}
                   type="button"
-                  onClick={() => setSelectedId(client.id)}
+                  onClick={() => handleSelectClient(client.id)}
                   className={`flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-muted/50 ${selectedId === client.id ? "bg-muted/50" : ""}`}
                 >
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground">
