@@ -37,7 +37,7 @@ const EMPTY_FORM: FormState = {
 };
 
 function MasterSistemas() {
-  const [systems, setSystems] = useState<NeroxaSystem[]>([]);
+  const [systems, setSystems] = useState<NeroxaSystem[]>([]);\n  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editing, setEditing] = useState<NeroxaSystem | null>(null);
   const [expandedSystem, setExpandedSystem] = useState<string | null>(null);
