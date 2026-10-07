@@ -26,7 +26,7 @@ const emptyForm: Form = { name: "", slug: "", description: "", category: "SOLUTI
 function MasterProdutos() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
-  const [products, setProducts] = useState<NeroxaProduct[]>([]);
+  const [products, setProducts] = useState<NeroxaProduct[]>([]);\n  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [systems, setSystems] = useState<NeroxaSystem[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlans, setSelectedPlans] = useState<string[]>([]);
@@ -140,7 +140,7 @@ function MasterProdutos() {
   if (authorized === false) return <MasterLogin />;
   if (authorized === null || loading) return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Loader2 className="h-7 w-7 animate-spin" /></main>;
 
-  return <MasterShell><div className="mx-auto min-w-0 max-w-[1250px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
+  const filteredProducts = products.filter((product) => statusFilter === "ALL" || (statusFilter === "ACTIVE" ? product.active : !product.active));\n\n  return <MasterShell><div className="mx-auto min-w-0 max-w-[1250px] space-y-5 overflow-x-hidden px-3 py-4 sm:px-6 sm:py-5">
     <section><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Gestão · Produtos</p><h1 className="mt-1 font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Produtos</h1><p className="mt-1 text-sm text-muted-foreground">Catálogo de soluções que a Neroxa comercializa e implanta.</p></section>
     {error && <Card className="border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</Card>}
     <div className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_390px]">
