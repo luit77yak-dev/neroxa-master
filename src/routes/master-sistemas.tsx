@@ -37,7 +37,8 @@ const EMPTY_FORM: FormState = {
 };
 
 function MasterSistemas() {
-  const [systems, setSystems] = useState<NeroxaSystem[]>([]);\n  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
+  const [systems, setSystems] = useState<NeroxaSystem[]>([]);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [editing, setEditing] = useState<NeroxaSystem | null>(null);
   const [expandedSystem, setExpandedSystem] = useState<string | null>(null);
@@ -166,7 +167,9 @@ function MasterSistemas() {
                 <p className="mt-1 text-sm text-muted-foreground">Cadastre o primeiro produto-base da Neroxa.</p>
               </div>
             ) : (
-              systems.map((system) => {
+              <>
+                <div className="mb-3 flex justify-end"><select aria-label="Filtrar sistemas por status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "ALL" | "ACTIVE" | "INACTIVE")} className="h-9 w-full rounded-lg border border-border bg-card px-3 text-xs sm:w-auto"><option value="ALL">Todos os status</option><option value="ACTIVE">Ativos</option><option value="INACTIVE">Inativos</option></select></div>
+                {systems.filter((system) => statusFilter === "ALL" || (statusFilter === "ACTIVE" ? system.active : !system.active)).map((system) => {
                 const expanded = expandedSystem === system.id || editing?.id === system.id;
                 return (
                   <article key={system.id} className="min-w-0 rounded-xl border border-border bg-card p-4 shadow-soft sm:p-5">
@@ -205,7 +208,8 @@ function MasterSistemas() {
                     )}
                   </article>
                 );
-              })
+                })}
+              </>
             )}
 
             <button
