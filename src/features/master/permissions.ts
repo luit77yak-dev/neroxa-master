@@ -9,6 +9,7 @@ export type MasterModule =
   | "subscriptions"
   | "finance"
   | "products"
+  | "catalog"
   | "implementation"
   | "domains"
   | "support"
@@ -23,6 +24,7 @@ const MODULE_ROLES: Record<MasterModule, NeroxaPlatformRole[]> = {
   subscriptions: ["SUPER_ADMIN", "ADMIN", "FINANCE"],
   finance: ["SUPER_ADMIN", "FINANCE"],
   products: ["SUPER_ADMIN", "ADMIN"],
+  catalog: ["SUPER_ADMIN", "ADMIN"],
   implementation: ["SUPER_ADMIN", "ADMIN", "SUPPORT"],
   domains: ["SUPER_ADMIN", "ADMIN", "SUPPORT"],
   support: ["SUPER_ADMIN", "ADMIN", "SUPPORT"],
@@ -40,6 +42,7 @@ export function canPerform(
     | "manageCommercial"
     | "managePlans"
     | "manageProducts"
+    | "manageCatalog"
     | "manageSubscriptions"
     | "manageFinance"
     | "manageSystems"
@@ -54,6 +57,7 @@ export function canPerform(
     manageCommercial: ["ADMIN"],
     managePlans: ["ADMIN"],
     manageProducts: ["ADMIN"],
+    manageCatalog: ["ADMIN"],
     manageSubscriptions: ["ADMIN", "FINANCE"],
     manageFinance: ["FINANCE"],
     manageSystems: ["ADMIN", "SUPPORT"],
@@ -80,6 +84,7 @@ export function moduleForPath(pathname: string): MasterModule {
   if (pathname === "/master-assinaturas") return "subscriptions";
   if (pathname === "/master-financeiro") return "finance";
   if (pathname === "/master-produtos") return "products";
+  if (pathname === "/master-catalogo") return "catalog";
   if (pathname === "/master-implantacao") return "implementation";
   if (pathname === "/master-dominios") return "domains";
   if (pathname === "/master-suporte") return "support";
