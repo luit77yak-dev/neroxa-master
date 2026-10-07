@@ -152,6 +152,7 @@ export interface FileRoutesByTo {
   '/master-implantacao': typeof MasterImplantacaoRoute
   '/master-planos': typeof MasterPlanosRoute
   '/master-produtos': typeof MasterProdutosRoute
+  '/master-catalogo': typeof MasterCatalogoRoute
   '/master-recovery': typeof MasterRecoveryRoute
   '/master-suporte': typeof MasterSuporteRoute
 }
@@ -170,6 +171,7 @@ export interface FileRoutesById {
   '/master-implantacao': typeof MasterImplantacaoRoute
   '/master-planos': typeof MasterPlanosRoute
   '/master-produtos': typeof MasterProdutosRoute
+  '/master-catalogo': typeof MasterCatalogoRoute
   '/master-recovery': typeof MasterRecoveryRoute
   '/master-suporte': typeof MasterSuporteRoute
 }
@@ -187,6 +189,8 @@ export interface FileRouteTypes {
     | '/master-implantacao'
     | '/master-planos'
     | '/master-produtos'
+    | '/master-catalogo'
+    | '/master-catalogo'
     | '/master-recovery'
     | '/master-sistemas'
     | '/master-suporte'
