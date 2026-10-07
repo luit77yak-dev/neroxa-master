@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { recordNeroxaAudit } from "@/features/master/clients/services";
-import type { FinanceOverview, InvoiceStatus, Payment } from "./types";
+import type { FinanceOverview, Invoice, InvoiceStatus, Payment } from "./types";
 
 type BillingRow = {
   id: string;
