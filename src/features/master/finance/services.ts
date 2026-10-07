@@ -35,7 +35,6 @@ export async function loadFinanceOverview(): Promise<FinanceOverview> {
 
   const rows = (billingResult.data ?? []) as unknown as BillingRow[];
   const subscriptionIds = [...new Set(rows.map((r) => r.subscription_id).filter(Boolean))] as string[];
-  const organizationIds = [...new Set(rows.map((r) => r.organization_id))];
   const [subscriptionsResult, auditsResult] = await Promise.all([
     subscriptionIds.length
       ? supabase.from("neroxa_subscriptions" as never)
@@ -140,11 +139,25 @@ export async function registerBillingPayment(id: string, paymentMethod: string, 
 }
 
 export async function updateBillingStatus(id: string, status: "CANCELLED" | "REFUNDED") {
-  if (!["CANCELLED","REFUNDED"].includes(status)) throw new Error("Status financeiro inválido para esta ação.");
-  const patch: Record<string, unknown> = { status, paid_at: null };
-  const { data, error } = await supabase.from("neroxa_billing_records" as never).update(patch as never).eq("id", id).select("id").maybeSingle();
+  if (status === "REFUNDED") {
+    throw new Error("Estorno só pode ser realizado após a integração com o gateway de pagamentos.");
+  }
+
+  const patch: Record<string, unknown> = { status: "CANCELLED", paid_at: null };
+  const { data, error } = await supabase.from("neroxa_billing_records" as never)
+    .update(patch as never)
+    .eq("id", id)
+    .in("status", ["PENDING", "OVERDUE"])
+    .select("id")
+    .maybeSingle();
   if (error) throw new Error(error.message);
-  if (!data) throw new Error("Fatura não encontrada ou sem permissão para alterar.");
-  await recordNeroxaAudit({ action:"BILLING_STATUS_CHANGED", resourceType:"BILLING_RECORD", resourceId:id, details:{status, source:"FINANCE_ADMIN"} });
+  if (!data) throw new Error("Cobrança não encontrada, já liquidada/cancelada ou sem permissão para cancelar.");
+
+  await recordNeroxaAudit({
+    action: "BILLING_STATUS_CHANGED",
+    resourceType: "BILLING_RECORD",
+    resourceId: id,
+    details: { status: "CANCELLED", source: "FINANCE_ADMIN" },
+  });
   return true;
 }
