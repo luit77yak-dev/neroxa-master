@@ -1426,6 +1426,10 @@ export type Database = {
         Args: { p_name: string; p_slug: string; p_subscription_id: string }
         Returns: string
       }
+      retry_neroxa_provisioning_job: {
+        Args: { p_job_id: string }
+        Returns: string
+      }
       record_neroxa_audit: {
         Args: {
           p_action: string

@@ -99,3 +99,58 @@ describe("updateImplementationInstanceStatus", () => {
     ).rejects.toThrow("Uma instância arquivada não pode ter o status alterado");
   });
 });
+
+describe("retryProvisioningJob", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("uses the controlled retry RPC", async () => {
+    rpc.mockResolvedValue({ data: "job-456", error: null });
+
+    const { retryProvisioningJob } = await import("./services");
+
+    await expect(
+      retryProvisioningJob({
+        id: "job-123",
+        organization_id: "org-123",
+        system_instance_id: "instance-123",
+        action: "PROVISION_INSTANCE",
+        status: "FAILED",
+        payload: { instance_id: "instance-123" },
+        error_message: "timeout",
+        started_at: null,
+        completed_at: null,
+        created_at: "2026-10-07T00:00:00Z",
+      }),
+    ).resolves.toBe("job-456");
+
+    expect(rpc).toHaveBeenCalledWith("retry_neroxa_provisioning_job", {
+      p_job_id: "job-123",
+    });
+  });
+
+  it("propagates retry RPC errors", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { message: "Somente jobs falhos ou cancelados podem ser tentados novamente" },
+    });
+
+    const { retryProvisioningJob } = await import("./services");
+
+    await expect(
+      retryProvisioningJob({
+        id: "job-123",
+        organization_id: "org-123",
+        system_instance_id: "instance-123",
+        action: "PROVISION_INSTANCE",
+        status: "FAILED",
+        payload: {},
+        error_message: "erro",
+        started_at: null,
+        completed_at: null,
+        created_at: "2026-10-07T00:00:00Z",
+      }),
+    ).rejects.toThrow("Somente jobs falhos ou cancelados podem ser tentados novamente");
+  });
+});
