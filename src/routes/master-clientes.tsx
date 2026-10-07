@@ -34,6 +34,7 @@ import {
 } from "@/features/master/clients/types";
 import {
   createNeroxaClient,
+  createNeroxaClientContact,
   isNeroxaStaff,
   listNeroxaClientContacts,
   listNeroxaClients,
@@ -64,6 +65,9 @@ function MasterClientsPage() {
   const [clients, setClients] = useState<NeroxaClient[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(routeContext.clientId);
   const [contacts, setContacts] = useState<NeroxaClientContact[]>([]);
+  const [showContactCreate, setShowContactCreate] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+  const [contactDraft, setContactDraft] = useState({ name: "", roleTitle: "", email: "", phone: "", whatsapp: "", isPrimary: false, notes: "" });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ClientStatus | "ALL">("ALL");
   const [loading, setLoading] = useState(true);
@@ -296,6 +300,35 @@ function MasterClientsPage() {
       setError(cause instanceof Error ? cause.message : "Não foi possível cadastrar o domínio.");
     } finally {
       setSavingDomain(false);
+    }
+  };
+
+  const handleCreateContact = async () => {
+    if (!selected || !contactDraft.name.trim()) {
+      setError("Informe o nome do contato.");
+      return;
+    }
+    setSavingContact(true);
+    try {
+      await createNeroxaClientContact({
+        clientId: selected.id,
+        name: contactDraft.name.trim(),
+        roleTitle: contactDraft.roleTitle.trim() || undefined,
+        email: contactDraft.email.trim() || undefined,
+        phone: contactDraft.phone.trim() || undefined,
+        whatsapp: contactDraft.whatsapp.trim() || undefined,
+        isPrimary: contactDraft.isPrimary,
+        notes: contactDraft.notes.trim() || undefined,
+      });
+      const refreshed = await listNeroxaClientContacts(selected.id);
+      setContacts(refreshed);
+      setContactDraft({ name: "", roleTitle: "", email: "", phone: "", whatsapp: "", isPrimary: false, notes: "" });
+      setShowContactCreate(false);
+      notify("Contato cadastrado com sucesso.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível cadastrar o contato.");
+    } finally {
+      setSavingContact(false);
     }
   };
 
@@ -573,20 +606,43 @@ function MasterClientsPage() {
                           </div>
           
                           <div className="rounded-xl border border-border bg-muted/50 p-4">
-                            <div className="flex items-center gap-2">
-                              <UserRound className="h-4 w-4 text-muted-foreground" />
-                              <p className="text-sm font-semibold">Contato principal</p>
-                            </div>
-                            {contacts[0] ? (
-                              <div className="mt-3 space-y-1 text-sm">
-                                <p className="font-medium">{contacts[0].name}</p>
-                                {contacts[0].role_title && <p className="text-xs text-muted-foreground">{contacts[0].role_title}</p>}
-                                {contacts[0].email && <p className="flex items-center gap-2 text-xs text-muted-foreground"><Mail className="h-3.5 w-3.5" />{contacts[0].email}</p>}
-                                {contacts[0].whatsapp && <p className="text-xs text-muted-foreground">WhatsApp: {contacts[0].whatsapp}</p>}
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <UserRound className="h-4 w-4 text-muted-foreground" />
+                                <p className="text-sm font-semibold">Contatos</p>
                               </div>
-                            ) : (
-                              <p className="mt-3 text-xs text-muted-foreground">Nenhum contato cadastrado ainda.</p>
+                              <Button size="sm" variant="outline" onClick={() => setShowContactCreate((value) => !value)}>
+                                <Plus className="h-4 w-4" /> {showContactCreate ? "Fechar" : "Adicionar contato"}
+                              </Button>
+                            </div>
+                            {showContactCreate && (
+                              <div className="mt-4 grid gap-3 border-t border-border/60 pt-4 sm:grid-cols-2">
+                                <Field label="Nome *"><input value={contactDraft.name} onChange={(e) => setContactDraft({ ...contactDraft, name: e.target.value })} placeholder="Nome do contato" /></Field>
+                                <Field label="Cargo"><input value={contactDraft.roleTitle} onChange={(e) => setContactDraft({ ...contactDraft, roleTitle: e.target.value })} placeholder="Ex.: Proprietário" /></Field>
+                                <Field label="E-mail"><input type="email" value={contactDraft.email} onChange={(e) => setContactDraft({ ...contactDraft, email: e.target.value })} placeholder="contato@empresa.com" /></Field>
+                                <Field label="Telefone"><input value={contactDraft.phone} onChange={(e) => setContactDraft({ ...contactDraft, phone: e.target.value })} placeholder="Telefone" /></Field>
+                                <Field label="WhatsApp"><input value={contactDraft.whatsapp} onChange={(e) => setContactDraft({ ...contactDraft, whatsapp: e.target.value })} placeholder="WhatsApp" /></Field>
+                                <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={contactDraft.isPrimary} onChange={(e) => setContactDraft({ ...contactDraft, isPrimary: e.target.checked })} /> Contato principal</label>
+                                <Field label="Observações"><textarea value={contactDraft.notes} onChange={(e) => setContactDraft({ ...contactDraft, notes: e.target.value })} rows={2} placeholder="Observações" /></Field>
+                                <div className="flex items-end"><Button className="w-full" onClick={() => void handleCreateContact()} disabled={savingContact}>{savingContact ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{savingContact ? "Salvando..." : "Salvar contato"}</Button></div>
+                              </div>
                             )}
+                            <div className="mt-4 space-y-2">
+                              {contacts.length ? contacts.map((contact) => (
+                                <div key={contact.id} className="rounded-lg border border-border bg-card p-3">
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium">{contact.name}</p>
+                                      {contact.role_title && <p className="text-xs text-muted-foreground">{contact.role_title}</p>}
+                                    </div>
+                                    {contact.is_primary && <span className="rounded-full border border-border bg-muted px-2 py-1 text-[10px] font-medium">Principal</span>}
+                                  </div>
+                                  {contact.email && <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
+                                  {contact.whatsapp && <p className="mt-1 text-xs text-muted-foreground">WhatsApp: {contact.whatsapp}</p>}
+                                  {contact.phone && <p className="mt-1 text-xs text-muted-foreground">Telefone: {contact.phone}</p>}
+                                </div>
+                              )) : <p className="mt-3 text-xs text-muted-foreground">Nenhum contato cadastrado ainda.</p>}
+                            </div>
                           </div>
                         </div>
                       </Card>
