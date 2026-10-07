@@ -29,6 +29,8 @@ function MasterImplantacao() {
   const [clients, setClients] = useState<NeroxaClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
+  const [instanceStatusFilter, setInstanceStatusFilter] = useState<InstanceStatus | "ALL">("ALL");
+  const [jobStatusFilter, setJobStatusFilter] = useState<ProvisioningStatus | "ALL">("ALL");
   const [error, setError] = useState<string | null>(null);
   const [prepareOpen, setPrepareOpen] = useState(Boolean(contextSubscriptionId));
   const [prepareName, setPrepareName] = useState("");
