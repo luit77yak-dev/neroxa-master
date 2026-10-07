@@ -33,6 +33,10 @@ function MasterImplantacao() {
   const [prepareName, setPrepareName] = useState("");
   const [prepareSlug, setPrepareSlug] = useState("");
   const [preparing, setPreparing] = useState(false);
+  const [instanceName, setInstanceName] = useState("");
+  const [instanceSlug, setInstanceSlug] = useState("");
+  const [instanceType, setInstanceType] = useState("CUSTOM");
+  const [savingInstance, setSavingInstance] = useState(false);
   const [expandedInstance, setExpandedInstance] = useState<string | null>(null);
   const [editingInstance, setEditingInstance] = useState<ImplementationInstance | null>(null);
 
@@ -105,8 +109,27 @@ function MasterImplantacao() {
     setInstanceName(instance.name);
     setInstanceSlug(instance.slug);
     setInstanceType(instance.system_type);
-    setInstanceOrganizationId(instance.organization_id);
     setError(null);
+  };
+
+  const saveInstance = async () => {
+    if (!editingInstance) return;
+    setSavingInstance(true);
+    setError(null);
+    try {
+      await updateImplementationInstance({
+        id: editingInstance.id,
+        name: instanceName,
+        slug: instanceSlug,
+        systemType: instanceType,
+      });
+      setEditingInstance(null);
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível salvar a instância.");
+    } finally {
+      setSavingInstance(false);
+    }
   };
 
   const removeInstance = async (instance: ImplementationInstance) => {
