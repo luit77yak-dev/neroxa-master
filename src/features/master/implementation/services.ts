@@ -121,7 +121,11 @@ export async function updateImplementationInstanceStatus(input: { id: string; st
 }
 
 export async function retryProvisioningJob(job: ProvisioningJob) {
-  return createProvisioningJob({organizationId:job.organization_id,systemInstanceId:job.system_instance_id,action:job.action,payload:job.payload});
+  const { data, error } = await supabase.rpc("retry_neroxa_provisioning_job", {
+    p_job_id: job.id,
+  });
+  if (error) throw new Error(error.message);
+  return String(data);
 }
 
 export async function cancelProvisioningJob(jobId: string) {
