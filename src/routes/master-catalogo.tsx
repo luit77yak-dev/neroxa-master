@@ -58,7 +58,14 @@ type ProductForm = {
   allowHalf: boolean;
 };
 
-const STOREFRONT_THEMES = [\n  { id: "neroxa-classic", label: "Neroxa Classic", description: "Visual original do Pizza Perfect Plate." },\n  { id: "neroxa-horizontal", label: "Neroxa Horizontal", description: "Cardápio com navegação e cards horizontais." },\n  { id: "neroxa-accordion", label: "Neroxa Accordion", description: "Categorias organizadas em blocos expansíveis." },\n  { id: "burger-club", label: "Burger Club", description: "Visual alternativo para hamburguerias e operações similares." },\n] as const;\n\nconst emptyProduct: ProductForm = {
+const STOREFRONT_THEMES = [
+  { id: "neroxa-classic", label: "Neroxa Classic", description: "Visual original do Pizza Perfect Plate." },
+  { id: "neroxa-horizontal", label: "Neroxa Horizontal", description: "Cardápio com navegação e cards horizontais." },
+  { id: "neroxa-accordion", label: "Neroxa Accordion", description: "Categorias organizadas em blocos expansíveis." },
+  { id: "burger-club", label: "Burger Club", description: "Visual alternativo para hamburguerias e operações similares." },
+] as const;
+
+const emptyProduct: ProductForm = {
   name: "", slug: "", categoryId: "", description: "", imageUrl: "", price: "0",
   sortOrder: "0", active: true, kind: "PIZZA", featured: false, available: true, allowHalf: false,
 };
@@ -91,7 +98,9 @@ function MasterCatalogo() {
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [productForm, setProductForm] = useState<ProductForm>(emptyProduct);
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);\n  const [storefrontTheme, setStorefrontTheme] = useState("neroxa-classic");\n  const [savingTheme, setSavingTheme] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [storefrontTheme, setStorefrontTheme] = useState("neroxa-classic");
+  const [savingTheme, setSavingTheme] = useState(false);
 
   const loadInstances = async () => {
     const { data, error } = await supabase.from("neroxa_system_instances" as never)
@@ -131,7 +140,21 @@ function MasterCatalogo() {
     });
   }, []);
 
-  useEffect(() => { if (instanceId) void loadCatalog(instanceId); }, [instanceId]);\n\n  const saveStorefrontTheme = async () => {\n    if (!canPerform(role, "manageCatalog") || !instance) return;\n    setSavingTheme(true); setError(null);\n    try {\n      const { error } = await supabase\n        .from("neroxa_storefront_settings" as never)\n        .upsert({ organization_id: instance.organization_id, storefront_theme: storefrontTheme, updated_at: new Date().toISOString() } as never, { onConflict: "organization_id" });\n      if (error) throw new Error(error.message);\n      await recordNeroxaAudit({ action: "UPDATE", resourceType: "STOREFRONT_SETTINGS", resourceId: instance.organization_id, details: { instance_id: instance.id, storefront_theme: storefrontTheme } });\n    } catch (cause) {\n      setError(cause instanceof Error ? cause.message : "Não foi possível salvar o tema da loja.");\n    } finally { setSavingTheme(false); }\n  };
+  useEffect(() => { if (instanceId) void loadCatalog(instanceId); }, [instanceId]);
+
+  const saveStorefrontTheme = async () => {
+    if (!canPerform(role, "manageCatalog") || !instance) return;
+    setSavingTheme(true); setError(null);
+    try {
+      const { error } = await supabase
+        .from("neroxa_storefront_settings" as never)
+        .upsert({ organization_id: instance.organization_id, storefront_theme: storefrontTheme, updated_at: new Date().toISOString() } as never, { onConflict: "organization_id" });
+      if (error) throw new Error(error.message);
+      await recordNeroxaAudit({ action: "UPDATE", resourceType: "STOREFRONT_SETTINGS", resourceId: instance.organization_id, details: { instance_id: instance.id, storefront_theme: storefrontTheme } });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível salvar o tema da loja.");
+    } finally { setSavingTheme(false); }
+  };
 
   const instance = instances.find((item) => item.id === instanceId);
   const productCounts = useMemo(() => new Map(categories.map((c) => [c.id, products.filter((p) => p.category_id === c.id).length])), [categories, products]);
