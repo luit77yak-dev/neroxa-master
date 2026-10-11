@@ -1,0 +1,54 @@
+name: Format Candidate Files
+
+on:
+  push:
+    branches:
+      - audit/store-isolation-candidate-20261011
+    paths:
+      - .github/workflows/format-candidate.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.ref == 'refs/heads/audit/store-isolation-candidate-20261011'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/store-isolation-candidate-20261011
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+      - run: npm ci
+      - name: Format only the five reported files
+        run: |
+          npx prettier --write \
+            audits/store-isolation-candidate-20261011.md \
+            audits/store-isolation-candidate.test.ts \
+            audits/store-isolation-rpc-cutover.md \
+            audits/storefront-instance-migration-plan.md \
+            src/routes/master-catalogo.tsx
+          npx prettier --check \
+            audits/store-isolation-candidate-20261011.md \
+            audits/store-isolation-candidate.test.ts \
+            audits/store-isolation-rpc-cutover.md \
+            audits/storefront-instance-migration-plan.md \
+            src/routes/master-catalogo.tsx
+      - name: Commit formatted files to candidate branch
+        run: |
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add -- \
+              audits/store-isolation-candidate-20261011.md \
+              audits/store-isolation-candidate.test.ts \
+              audits/store-isolation-rpc-cutover.md \
+              audits/storefront-instance-migration-plan.md \
+              src/routes/master-catalogo.tsx
+            git commit -m 'style: format A/B candidate files'
+            git push origin HEAD:audit/store-isolation-candidate-20261011
+          fi
