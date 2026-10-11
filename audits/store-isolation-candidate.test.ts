@@ -48,6 +48,18 @@ describe('store isolation candidate security gates', () => {
     expect(sql).toContain('has_instance_role(v_order.instance_id');
   });
 
+  it('guards child tenant fields and parent organization reassignment', () => {
+    const child = read('storefront-tenant-integrity.candidate.sql');
+    const parent = read('storefront-parent-instance-guard.candidate.sql');
+    for (const table of ['neroxa_storefront_settings', 'neroxa_storefront_delivery_zones', 'neroxa_orders']) {
+      expect(child).toContain('ON public.' + table);
+    }
+    expect(child).toContain('NEW.instance_id IS DISTINCT FROM OLD.instance_id');
+    expect(child).toContain('NEW.organization_id IS DISTINCT FROM OLD.organization_id');
+    expect(parent).toContain('BEFORE UPDATE OF organization_id');
+    expect(parent).toContain('NEW.organization_id IS DISTINCT FROM OLD.organization_id');
+  });
+
   it('blocks key cutover while unresolved records exist', () => {
     const sql = read('storefront-instance-phase2-cutover.candidate.sql');
     expect(sql).toContain('WHERE instance_id IS NULL');
