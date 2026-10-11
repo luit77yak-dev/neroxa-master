@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - audit/store-isolation-candidate-20261011
   workflow_dispatch:
 
 jobs:
@@ -26,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Format changed files on the PR branch
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/store-isolation-candidate-20261011'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/audit/store-isolation-candidate-20261011'
         shell: bash
         run: |
           git checkout "$GITHUB_HEAD_REF"
