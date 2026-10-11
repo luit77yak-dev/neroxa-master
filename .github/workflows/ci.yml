@@ -26,6 +26,12 @@ jobs:
           node-version: "22.x"
       - name: Install dependencies
         run: npm install
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
       - name: Format check (changed files only)
         shell: bash
         run: |
@@ -34,9 +40,3 @@ jobs:
           if [ -s /tmp/format-files ]; then
             xargs -d '\n' npx prettier --check < /tmp/format-files
           fi
-      - name: Lint
-        run: npm run lint
-      - name: Test
-        run: npm test
-      - name: Build
-        run: npm run build
