@@ -148,7 +148,7 @@ function MasterCatalogo() {
     try {
       const { error } = await supabase
         .from("neroxa_storefront_settings" as never)
-        .upsert({ organization_id: instance.organization_id, storefront_theme: storefrontTheme, updated_at: new Date().toISOString() } as never, { onConflict: "organization_id" });
+        .upsert({ organization_id: instance.organization_id, instance_id: instance.id, storefront_theme: storefrontTheme, updated_at: new Date().toISOString() } as never, { onConflict: "instance_id" });
       if (error) throw new Error(error.message);
       await recordNeroxaAudit({ action: "UPDATE", resourceType: "STOREFRONT_SETTINGS", resourceId: instance.organization_id, details: { instance_id: instance.id, storefront_theme: storefrontTheme } });
     } catch (cause) {
