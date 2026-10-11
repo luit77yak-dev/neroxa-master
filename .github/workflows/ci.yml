@@ -30,7 +30,7 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/audit/store-isolation-candidate-20261011'
         shell: bash
         run: |
-          git checkout "$GITHUB_HEAD_REF"
+          git checkout "$GITHUB_REF_NAME"
           git diff --name-only --diff-filter=ACMRT origin/main...HEAD |
             grep -E '\\.(ts|tsx|js|jsx|json|md|css|yml|yaml)
         shell: bash
@@ -54,7 +54,7 @@ jobs:
               git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
               git add -- $(cat /tmp/format-files)
               git commit -m 'style: format changed PR files'
-              git push origin HEAD:"$GITHUB_HEAD_REF"
+              git push origin HEAD:"$GITHUB_REF_NAME"
             fi
           fi
       - name: Format check (changed files only)
