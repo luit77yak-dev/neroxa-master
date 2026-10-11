@@ -1,0 +1,41 @@
+name: Isolated A-B Auth Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/store-isolation-candidate-20261011
+    paths:
+      - .github/workflows/isolated-ab-auth-smoke.yml
+
+permissions:
+  contents: read
+
+jobs:
+  auth-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start isolated Supabase services
+        run: supabase start
+      - name: Verify local Auth and PostgreSQL
+        shell: bash
+        run: |
+          set -euo pipefail
+          supabase status
+          eval "$(supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=' )"
+          test -n "${API_URL:-}"
+          test -n "${ANON_KEY:-}"
+          test -n "${SERVICE_ROLE_KEY:-}"
+          curl --fail --silent --show-error "${API_URL}/auth/v1/health" -H "apikey: ${ANON_KEY}" >/dev/null
+          curl --fail --silent --show-error "${API_URL}/rest/v1/" -H "apikey: ${ANON_KEY}" >/dev/null
+          echo "Local Supabase Auth and REST endpoints respond"
+      - name: Stop isolated services
+        if: always()
+        run: supabase stop --no-backup
