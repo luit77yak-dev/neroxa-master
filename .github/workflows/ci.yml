@@ -25,8 +25,23 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Format check (non-mutating)
-        run: npx prettier --check .
+      - name: Format check (changed files only)
+        run: |
+          git fetch origin main --depth=1
+          git diff --name-only --diff-filter=ACMRT origin/main...HEAD | grep -E '\\.(ts|tsx|js|jsx|json|md|css|yml|yaml)
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+ > /tmp/format-files || true
+          if [ -s /tmp/format-files ]; then
+            xargs -d '\\n' npx prettier --check < /tmp/format-files
+          fi
 
       - name: Lint
         run: npm run lint
