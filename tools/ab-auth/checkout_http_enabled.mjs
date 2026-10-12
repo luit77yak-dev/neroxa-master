@@ -28,8 +28,6 @@ const report = {
 let child;
 let logFd;
 let tmpConfig;
-let debugRouteFile;
-let debugRouteOriginal;
 const assert = (name, ok) => {
   const passed = !!ok;
   report.checks.push({ name, passed });
@@ -120,6 +118,15 @@ async function main(){
       if(!["127.0.0.1","::1"].includes(port.HostIp))
         throw new Error("PostgreSQL exposed outside loopback");
 
+  // The preceding integration deliberately filled A's 60/min bucket.
+  // Reset ONLY the isolated disposable quota counters before exercising HTTPS,
+  // otherwise an expected HTTP order could be rejected by a previous test.
+  report.stage="reset-disposable-quota";
+  run("docker",["exec","-i",db,"psql","-X","-q","-A","-t","-U","postgres",
+    "-d","postgres","-v","ON_ERROR_STOP=1","-c",
+    "TRUNCATE TABLE private.neroxa_checkout_quota_counters;"],{timeout:12_000});
+  assert("HTTP test starts with empty disposable quota counters",true);
+
   report.stage="tls";
   const keyFile=path.join(work,"checkout-ci-key.private.pem");
   const certFile=path.join(work,"checkout-ci-cert.private.pem");
@@ -159,30 +166,6 @@ async function main(){
   run("npm",["install","--no-audit","--no-fund"],{
     cwd:consumer,env,timeout:240_000,
   });
-  // Temporary test-only instrumentation in uncommitted, disposable consumer checkout.
-  // Only booleans are ever included in sanitized report.
-  debugRouteFile=path.join(consumer,"src/routes/api/checkout.ts");
-  debugRouteOriginal=fs.readFileSync(debugRouteFile,"utf8");
-  const anchor='        const { handlePrivateCheckout } = await import("@/server/checkout-gateway.server");';
-  if(!debugRouteOriginal.includes(anchor))throw new Error("Unexpected server route candidate");
-  const diag=String.raw`        const u = new URL(request.url);
-        const h = (request.headers.get("host")||"").toLowerCase();
-        console.log("NEROXA_HOST_DIAG=" + JSON.stringify({
-          urlHostExpected: u.hostname === "a.ab.invalid",
-          urlHasPort4173: u.port === "4173",
-          hostEqualsHostname: h === u.hostname,
-          hostEqualsHost: h === u.host,
-          hostEqualsDomain: h === "a.ab.invalid",
-          hostEqualsDomain443: h === "a.ab.invalid:443",
-          hostEqualsLoopback: ["localhost","127.0.0.1","[::1]"].includes(h),
-          hostHeaderPresent: h.length > 0,
-          originMatches: request.headers.get("origin") === u.origin,
-          fetchSiteSameOrigin: request.headers.get("sec-fetch-site") === "same-origin",
-          contentTypeJson: (request.headers.get("content-type")||"").startsWith("application/json"),
-          forwardedHostPresent: request.headers.has("x-forwarded-host")
-        }));
-`;
-  fs.writeFileSync(debugRouteFile, debugRouteOriginal.replace(anchor,diag+anchor));
   const logFile=path.join(work,"tanstack-https.private.log");
   logFd=fs.openSync(logFile,"w",0o600);
   child=spawn("npm",["run","dev","--","--config","vite.checkout-ci.config.ts",
@@ -208,11 +191,6 @@ async function main(){
     observedStatusCodes:[...seenStatus].sort(),
     observedRejectionCategories:[...seenReasons].sort(),
     devProcessExited:child.exitCode!==null,
-    adapterHostDiagnostics:(()=>{
-      const line=log.split("\n").find(x=>x.includes("NEROXA_HOST_DIAG="));
-      if(!line)return null;
-      try{return JSON.parse(line.split("NEROXA_HOST_DIAG=")[1]?.trim()??"");}catch{return null;}
-    })(),
     markers:{
       viteReady:log.includes("ready in"),
       viteLocalUrl:log.includes("Local:"),
@@ -336,7 +314,6 @@ catch(e){report.classification="REPROVADO";report.error={
 finally{
   if(child){child.kill("SIGTERM"); await sleep(200).catch(()=>{});}
   if(logFd!==undefined){try{fs.closeSync(logFd);}catch{}}
-  if(debugRouteFile&&debugRouteOriginal){try{fs.writeFileSync(debugRouteFile,debugRouteOriginal);}catch{}}
   if(tmpConfig){try{fs.rmSync(tmpConfig,{force:true});}catch{}}
   fs.mkdirSync(path.dirname(reportPath),{recursive:true});
   fs.writeFileSync(reportPath,JSON.stringify(report,null,2)+"\n");
