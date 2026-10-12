@@ -224,7 +224,10 @@ try {
     orderB = id(),
     zoneA = id(),
     zoneB = id();
+  // Only the postgres fixture transaction uses the existing official-writer guard context.
+  // No JWT or role is impersonated; HTTP assertions use fresh Auth-issued sessions.
   sql(`BEGIN;
+  SET LOCAL neroxa.implementation_write_path = 'official';
   INSERT INTO public.neroxa_organizations(id,legal_name,trade_name) VALUES(${literal(org)},'Organização fictícia A/B','AB fictícia');
   INSERT INTO public.neroxa_system_instances(id,organization_id,name,slug,system_type,status) VALUES(${literal(A)},${literal(org)},'Loja fictícia A','ab-a','DELIVERY','ACTIVE'),(${literal(B)},${literal(org)},'Loja fictícia B','ab-b','DELIVERY','ACTIVE');
   INSERT INTO public.neroxa_organization_members(organization_id,user_id,role) VALUES(${literal(org)},${literal(people.opA.id)},'OPERATOR'),(${literal(org)},${literal(people.opB.id)},'OPERATOR'),(${literal(org)},${literal(people.orgAdmin.id)},'ADMIN');
