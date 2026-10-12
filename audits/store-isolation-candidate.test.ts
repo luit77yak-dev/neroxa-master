@@ -5,6 +5,15 @@ import { resolve } from "node:path";
 const read = (name: string) => readFileSync(resolve(process.cwd(), "audits/sql", name), "utf8");
 
 describe("store isolation candidate security gates", () => {
+  it("hardens the failures observed in the real JWT matrix", () => {
+    const sql = read("store-isolation-runtime-hardening.candidate.sql");
+    expect(sql).toContain("(auth.jwt()->>'aal')='aal2'");
+    expect(sql).toContain("NEW.instance_id IS DISTINCT FROM OLD.instance_id");
+    expect(sql).toContain("REVOKE INSERT,UPDATE,DELETE");
+    expect(sql).toContain("instance members order items read");
+    expect(sql).toContain("instance members order history read");
+  });
+
   it("terminates every full RPC definition before the next CREATE", () => {
     const sql = read("storefront-rpcs-phase2.candidate.sql");
     const functions = sql.split("CREATE OR REPLACE FUNCTION").slice(1);

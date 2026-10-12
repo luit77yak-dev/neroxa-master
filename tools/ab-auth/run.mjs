@@ -241,6 +241,10 @@ try {
   INSERT INTO public.neroxa_orders(id,instance_id,organization_id,order_number,customer_name,customer_phone,fulfillment,payment_method,subtotal,total) VALUES(${literal(orderA)},${literal(A)},${literal(org)},1,'Cliente fictício A','00000000001','PICKUP','CASH',30,30),(${literal(orderB)},${literal(B)},${literal(org)},1,'Cliente fictício B','00000000002','PICKUP','CASH',40,40);
   INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,quantity,unit_price,line_total) VALUES(${literal(orderA)},${literal(productA)},'Produto fictício A',1,30,30),(${literal(orderB)},${literal(productB)},'Produto fictício B',1,40,40);
   INSERT INTO public.neroxa_order_status_history(order_id,to_status,note) VALUES(${literal(orderA)},'RECEIVED','Fixture fictícia'),(${literal(orderB)},'RECEIVED','Fixture fictícia');COMMIT;`);
+  // Test-only INVOKER probe verifies the database role/claims reached by actual JWT HTTP calls.
+  sql(`CREATE FUNCTION public.ab_runtime_identity() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path='' AS $$ SELECT jsonb_build_object('role',current_user,'uid',auth.uid(),'aal',auth.jwt()->>'aal','superuser',current_setting('is_superuser')) $$;
+  REVOKE ALL ON FUNCTION public.ab_runtime_identity() FROM PUBLIC,anon,service_role;
+  GRANT EXECUTE ON FUNCTION public.ab_runtime_identity() TO authenticated;`);
   const api = async (actor, resource, method = "GET", body) => {
     const token = actor === "anon" ? env.ANON_KEY : people[actor].token;
     const r = await fetch(url + "/rest/v1/" + resource, {
@@ -269,6 +273,19 @@ try {
   }
   if (!ready) throw new Error("PostgREST schema cache did not expose candidate schema");
   report.stage = "matrix";
+  for (const actor of Object.keys(people))
+    await test(
+      "JWT effective PostgreSQL identity",
+      actor,
+      () => rpc(actor, "ab_runtime_identity", {}),
+      [200],
+      (r) =>
+        r.role === "authenticated" &&
+        r.uid === people[actor].id &&
+        r.aal === "aal1" &&
+        r.superuser === "off",
+    );
+
   const tables = [
     ["neroxa_storefront_products", "id", productA, productB],
     ["neroxa_storefront_categories", "id", catA, catB],
@@ -316,14 +333,14 @@ try {
                 : { name: "Denied" },
           ),
         [200, 401, 403],
-        (r) => !Array.isArray(r) || r.length === 0,
+        (r) => (Array.isArray(r) ? r.length === 0 : !!r?.code),
       );
       await test(
         `${table} foreign DELETE`,
         actor,
         () => api(actor, `${table}?${key}=eq.${victim}`, "DELETE"),
         [200, 401, 403],
-        (r) => !Array.isArray(r) || r.length === 0,
+        (r) => (Array.isArray(r) ? r.length === 0 : !!r?.code),
       );
     }
     await test(
@@ -337,7 +354,7 @@ try {
           slug: id(),
           price: 1,
         }),
-      [401, 403],
+      [400, 401, 403],
       (r) => !!r.code,
     );
     await test(
@@ -345,7 +362,7 @@ try {
       actor,
       () => rpc(actor, "get_admin_orders", { p_instance_id: target }),
       [200, 401, 403],
-      (r) => !Array.isArray(r) || r.length === 0,
+      (r) => (Array.isArray(r) ? r.length === 0 : !!r?.code),
     );
     await test(
       "foreign status RPC",
@@ -384,6 +401,33 @@ try {
       }),
     [201],
     (r) => Array.isArray(r) && r.length === 1,
+  );
+  await test(
+    "org admin own settings UPDATE",
+    "orgAdmin",
+    () =>
+      api("orgAdmin", `neroxa_storefront_settings?instance_id=eq.${A}`, "PATCH", {
+        description: "Configuração fictícia atualizada",
+      }),
+    [200],
+    (r) => Array.isArray(r) && r.length === 1,
+  );
+  await test(
+    "org admin own zone UPDATE",
+    "orgAdmin",
+    () =>
+      api("orgAdmin", `neroxa_storefront_delivery_zones?id=eq.${zoneA}`, "PATCH", {
+        name: "Zona fictícia atualizada",
+      }),
+    [200],
+    (r) => Array.isArray(r) && r.length === 1,
+  );
+  await test(
+    "operator cannot write own catalog",
+    "opA",
+    () => api("opA", `neroxa_storefront_products?id=eq.${productA}`, "PATCH", { price: 1 }),
+    [200, 400, 403],
+    (r) => (Array.isArray(r) ? r.length === 0 : !!r?.code),
   );
   await test(
     "cross-store category rejected",
@@ -433,7 +477,7 @@ try {
       "opA",
       () => api("opA", `${table}?order_id=eq.${orderB}`),
       [200, 401, 403],
-      (r) => !Array.isArray(r) || r.length === 0,
+      (r) => (Array.isArray(r) ? r.length === 0 : !!r?.code),
     );
   }
   for (const store of ["a", "b"])
@@ -505,6 +549,34 @@ try {
     [200, 400, 403],
     (r) => r === null || !!r.code,
   );
+  if (created.status === 200 && created.body?.[0]?.order_id) {
+    await test(
+      "public append valid own product",
+      "anon",
+      () =>
+        rpc("anon", "append_public_order_items_with_payment", {
+          p_order_id: created.body[0].order_id,
+          p_customer_phone: "00000000003",
+          p_items: [{ product_id: productA, quantity: 1 }],
+          p_payment_method: "CASH",
+        }),
+      [200],
+      (r) => Array.isArray(r) && Number(r[0]?.total) === 60,
+    );
+    await test(
+      "public append rejects foreign product",
+      "anon",
+      () =>
+        rpc("anon", "append_public_order_items_with_payment", {
+          p_order_id: created.body[0].order_id,
+          p_customer_phone: "00000000003",
+          p_items: [{ product_id: productB, quantity: 1 }],
+          p_payment_method: "CASH",
+        }),
+      [400, 403],
+      (r) => !!r.code,
+    );
+  }
   await test(
     "public append rejects wrong contact",
     "anon",
@@ -526,7 +598,7 @@ try {
         description: "Denied AAL1",
       }),
     [200, 403],
-    (r) => !Array.isArray(r) || r.length === 0,
+    (r) => (Array.isArray(r) ? r.length === 0 : !!r?.code),
   );
   const aal1 = people.platform.token;
   const enrolled = await people.platform.client.auth.mfa.enroll({
@@ -548,6 +620,18 @@ try {
   if (JSON.parse(Buffer.from(people.platform.token.split(".")[1], "base64url")).aal !== "aal2")
     throw new Error("MFA did not issue real AAL2 token");
   tests.push({ name: "Auth TOTP challenge and real AAL2 JWT", actor: "platform", passed: true });
+  await test(
+    "AAL2 effective PostgreSQL identity",
+    "platform",
+    () => rpc("platform", "ab_runtime_identity", {}),
+    [200],
+    (r) =>
+      r.role === "authenticated" &&
+      r.uid === people.platform.id &&
+      r.aal === "aal2" &&
+      r.superuser === "off",
+  );
+
   for (const instance of [A, B])
     await test(
       "platform AAL2 instance read",
@@ -556,6 +640,13 @@ try {
       [200],
       (r) => Array.isArray(r) && r.length === 1,
     );
+  await test(
+    "platform AAL2 order RPC",
+    "platform",
+    () => rpc("platform", "get_admin_orders", { p_instance_id: B }),
+    [200],
+    (r) => Array.isArray(r) && r.some((o) => o.id === orderB),
+  );
   await test(
     "platform AAL2 product tenant reassignment denied",
     "platform",
@@ -579,8 +670,8 @@ try {
     "platform AAL2 order tenant reassignment denied",
     "platform",
     () => api("platform", `neroxa_orders?id=eq.${orderA}`, "PATCH", { instance_id: B }),
-    [400, 403],
-    (r) => !!r.code,
+    [200, 400, 403],
+    (r) => (Array.isArray(r) ? r.length === 0 : !!r?.code),
   );
   await test(
     "platform AAL2 settings reassignment denied",
