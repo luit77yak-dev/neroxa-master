@@ -158,12 +158,30 @@ async function main(){
   fs.closeSync(logFd);
   logFd=undefined;
   let ready=false;
+  const seenStatus=new Set();
   for(let i=0;i<60;i++){
     if(child.exitCode!==null)break;
     const r=await postLocal("a.ab.invalid",{});
+    seenStatus.add(r.status);
     if(r.status===400){ready=true;break;}
     await sleep(1000);
   }
+  // Whitelisted diagnostics only, never upload the server log or secret values.
+  const log=fs.existsSync(logFile)?fs.readFileSync(logFile,"utf8"):"";
+  report.httpProbe={
+    observedStatusCodes:[...seenStatus].sort(),
+    devProcessExited:child.exitCode!==null,
+    markers:{
+      viteReady:log.includes("ready in"),
+      viteLocalUrl:log.includes("Local:"),
+      moduleNotFound:log.includes("ERR_MODULE_NOT_FOUND"),
+      addressInUse:log.includes("EADDRINUSE"),
+      viteConfigError:log.includes("failed to load config"),
+      viteHostBlocked:log.includes("host is not allowed"),
+      sourceTransformError:log.includes("Internal Server Error"),
+      proxyError:log.includes("EACCES"),
+    },
+  };
   assert("Real local HTTPS TanStack checkout endpoint is enabled",ready);
 
   report.stage="http-real-backend";
