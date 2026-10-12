@@ -181,8 +181,8 @@ export async function validateSecurity({ security, url, check, psql, restoreDb }
           own
             ? r.status === 200 &&
                 Array.isArray(r.body) &&
-                (table.endsWith("delivery_zones") && shop === 1
-                  ? r.body.length === 0
+                (table.endsWith("delivery_zones")
+                  ? r.body.length === [2, 1, 1][shop]
                   : r.body.length > 0)
             : (r.status === 200 && Array.isArray(r.body) && r.body.length === 0) ||
                 r.status === 401 ||
