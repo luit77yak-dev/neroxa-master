@@ -76,6 +76,8 @@ jobs:
         run: test "$(git -C delivery-consumer rev-parse HEAD)" = "aea8e5816d490a94e4ba3550bc63dfcd8011e5e3"
       - name: Integrate real local checkout gateway and test direct RPC revocation
         run: node --experimental-strip-types tools/ab-auth/checkout_gateway_integration.mjs
+      - name: Test tokenized buyer amendments against disposable Auth and PostgreSQL
+        run: node tools/ab-auth/order_amendment_capability.mjs
       - name: Exercise enabled TanStack HTTPS checkout on disposable Supabase
         run: node tools/ab-auth/checkout_http_enabled.mjs
       - name: Sanitized evidence only
