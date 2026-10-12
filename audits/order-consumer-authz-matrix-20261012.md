@@ -56,6 +56,19 @@
 - PR #36/#33, versões publicadas, scripts de terceiros e webhooks podem continuar chamando RPCs antigas. Inventário estático do Master encontrou **ocorrências**, não todos os consumidores; não assumir cobertura total.
 - `VITE_NEROXA_CHECKOUT_GATEWAY` e as flags de servidor permanecem desligadas em produção até plano coordenado de cutover, reversão, suporte e proteção na borda.
 
+## Resultado de teste dos candidatos de bloqueio legado
+
+[Isolated A-B Auth Matrix — **38308754783**](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38308754783): **PASS** em banco descartável, Auth/JWT/PostgREST reais.
+
+- Matriz de isolamento anterior à revogação: **275/275** verificações.
+- Integração do gateway e ACL candidatas: **54/54**, incluindo cinco verificações novas:
+  - `EXECUTE=false` para `anon` e `authenticated` na RPC legada de complemento;
+  - `EXECUTE=true` para `service_role`, para futuro adaptador de servidor;
+  - tentativas REST diretas como `anon` e usuário autenticado recusadas por `SQLSTATE 42501`.
+- HTTP HTTPS real do TanStack, conectado ao mesmo Supabase descartável e com gateway habilitado: **30/30** verificações.
+- **Total 359/359 verificações aprovadas no ensaio local**, zero falhas; classificação de produção permanece inconclusiva.
+- A revogação de append no clone **interromperia o complemento legado**. Este teste comprova capacidade de bloquear bypass, **não** equivalência funcional de uma API de alteração com token, que ainda não existe na PR #37.
+
 ## Gates para retirar este NO-GO
 
 1. Homologar API de modificação com autorização exclusiva do comprador e `instance_id` validado no servidor; provar negação de replay, token ausente/errado/expirado e troca de instância, preços e status.
