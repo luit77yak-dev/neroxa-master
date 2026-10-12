@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
       AB_PROJECT: neroxa-ab-${{ github.run_id }}
       AB_NETWORK: neroxa-ab-${{ github.run_id }}
     steps:
@@ -57,7 +58,7 @@ jobs:
           echo "DOCKER_HOST=unix://$AB_WORKDIR/docker-loopback.sock" >> "$GITHUB_ENV"
       - name: Start real local PostgreSQL Auth and REST
         run: |
-          if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor,meta > "$AB_WORKDIR/start.private.log" 2>&1; then
+          if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit > "$AB_WORKDIR/start.private.log" 2>&1; then
             python3 tools/ab-auth/start_failure.py
             exit 1
           fi

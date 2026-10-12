@@ -4,8 +4,10 @@ No routing changes, no remote hosts, no credentials logged. Preserve upgraded st
 import json,os,pathlib,select,socket,socketserver,sys,urllib.parse
 
 def rewrite(data,project,name):
-    if not name.endswith('_'+project):raise ValueError('Unexpected container outside disposable project')
     v=json.loads(data)
+    bindings=v.get('HostConfig',{}).get('PortBindings',{})
+    if not bindings:return data  # CLI temporary utilities publish no ports; do not alter them.
+    if not name.endswith('_'+project) and v.get('Labels',{}).get('com.supabase.cli.project')!=project:raise ValueError('Unexpected container outside disposable project')
     for bindings in v.get('HostConfig',{}).get('PortBindings',{}).values():
         for binding in bindings or []:binding['HostIp']='127.0.0.1'
     return json.dumps(v,separators=(',',':')).encode()
