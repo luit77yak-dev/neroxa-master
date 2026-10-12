@@ -253,6 +253,17 @@ try {
     return { status: r.status, body: text ? JSON.parse(text) : null };
   };
   const rpc = (actor, fn, args) => api(actor, "rpc/" + fn, "POST", args);
+  sql("NOTIFY pgrst, 'reload schema';");
+  let ready = false;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    const probe = await api("opA", "neroxa_orders?select=id&limit=0");
+    if (probe.status !== 404 && !["PGRST202", "PGRST205"].includes(probe.body?.code)) {
+      ready = true;
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  if (!ready) throw new Error("PostgREST schema cache did not expose candidate schema");
   report.stage = "matrix";
   const tables = [
     ["neroxa_storefront_products", "id", productA, productB],
@@ -618,6 +629,7 @@ try {
   console.log("STOP at " + report.stage + ": " + report.error.message);
 } finally {
   fs.writeFileSync(path.join(out, "result.json"), JSON.stringify(report, null, 2) + "\n");
+  console.log("AB_SANITIZED_RESULT=" + JSON.stringify(report));
   console.log(
     JSON.stringify({
       classification: report.classification,

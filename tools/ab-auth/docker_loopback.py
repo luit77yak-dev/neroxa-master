@@ -29,7 +29,12 @@ class Handler(socketserver.StreamRequestHandler):
             if method=='POST' and parsed.path.endswith('/containers/create'):
                 size=int(lookup.get('content-length','0'))
                 if not 0<size<4*1024*1024:raise ValueError('Unsupported create body')
-                body=rewrite(self.rfile.read(size),self.server.project,urllib.parse.parse_qs(parsed.query).get('name',[''])[0])
+                chunks=[];remaining=size
+                while remaining:
+                    chunk=self.rfile.read(remaining)
+                    if not chunk:raise ValueError('Truncated body')
+                    chunks.append(chunk);remaining-=len(chunk)
+                body=rewrite(b''.join(chunks),self.server.project,urllib.parse.parse_qs(parsed.query).get('name',[''])[0])
                 headers=[(k,v) for k,v in headers if k.lower()!='content-length']+[('Content-Length',str(len(body)))]
             if lookup.get('upgrade','').lower()!='tcp':
                 headers=[(k,v) for k,v in headers if k.lower()!='connection']+[('Connection','close')]
@@ -46,7 +51,9 @@ class Handler(socketserver.StreamRequestHandler):
                         try:dest.shutdown(socket.SHUT_WR)
                         except OSError:pass
                     else:dest.sendall(data)
-        except Exception:
+        except Exception as e:
+            detail=str(e) if str(e) in ('Unexpected container outside disposable project','Unsupported create body','Truncated body') else 'detail withheld'
+            print('loopback-proxy failure: '+type(e).__name__+': '+detail,flush=True)
             try:self.request.sendall(b'HTTP/1.1 502 Bad Gateway\r\nConnection: close\r\nContent-Length: 0\r\n\r\n')
             except OSError:pass
         finally:
