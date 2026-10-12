@@ -18,6 +18,7 @@ O CI preparou PostgreSQL 17, Auth e PostgREST reais em rede de teste ligada apen
 O GitHub Actions fixou o código do Pizza Perfect Plate em SHA `aea8e5816d490a94e4ba3550bc63dfcd8011e5e3` e criou um certificado HTTPS temporário para `a.ab.invalid`, `b.ab.invalid`, `c.ab.invalid` e `unknown.ab.invalid`. Executou o **servidor de desenvolvimento real do TanStack**, ligado exclusivamente ao Supabase descartável, com `NEROXA_CHECKOUT_GATEWAY_ENABLED=true`, `VITE_NEROXA_CHECKOUT_GATEWAY=true` e segredo HMAC aleatório de teste, nunca salvo no repositório.
 
 O ensaio validou todos os caminhos:
+
 - `POST` real por HTTPS habilitado criou pedido na instância A, e outro na B da **mesma organização**, com IDs e preços corretos calculados no PostgreSQL.
 - Repetição da mesma chave de idempotência recuperou a identidade do mesmo pedido.
 - Alterar `instance_id` ou `organization_id` da loja, falsificar `Origin`, fornecer `Host` incompatível e acessar domínio sem cadastro foram rejeitados.
@@ -29,6 +30,7 @@ O ensaio validou todos os caminhos:
 ## Compatibilidade Host / Origin no TanStack
 
 O diagnóstico no runtime real mostrou que o TanStack pode remover completamente o cabeçalho `Host` da `Request` ao encaminhar a chamada, preservando `request.url` e `Origin`. A versão antiga exigia `Host` presente e recusava uma origem válida com HTTP 403. O consumidor agora verifica:
+
 1. HTTPS e hostname da `request.url`, rejeitando localhost e previews de provedores no gateway privilegiado.
 2. `Origin` obrigatório e **igual ao `request.url.origin` completo**, inclusive protocolo e porta.
 3. Se `Host` estiver **presente**, ele deve corresponder ao host exato (ou à normalização sem porta pelo adaptador), recusando porta explicitamente errada ou domínio diferente.
