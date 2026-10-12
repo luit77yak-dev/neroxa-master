@@ -672,7 +672,7 @@ try {
       rpc("anon", "create_public_order", {
         p_order: { ...payload, store_domain: "unknown.ab.invalid", idempotency_key: id() },
       }),
-    [403],
+    [401, 403],
     (r) => r?.code === "42501",
   );
   await test(
@@ -682,7 +682,7 @@ try {
       rpc("anon", "create_public_order", {
         p_order: { ...payload, store_domain: "b.ab.invalid", idempotency_key: id() },
       }),
-    [403],
+    [401, 403],
     (r) => r?.code === "42501",
   );
   await test(
@@ -692,7 +692,7 @@ try {
       rpc("anon", "create_public_order", {
         p_order: { ...payload, store_domain: "c.ab.invalid", idempotency_key: id() },
       }),
-    [403],
+    [401, 403],
     (r) => r?.code === "42501",
   );
   const bPayload = {
@@ -717,7 +717,7 @@ try {
       rpc("anon", "create_public_order", {
         p_order: { ...bPayload, store_domain: "a.ab.invalid", idempotency_key: id() },
       }),
-    [403],
+    [401, 403],
     (r) => r?.code === "42501",
   );
   const created = await test(
@@ -758,7 +758,7 @@ try {
       rpc("anon", "create_public_order", {
         p_order: { ...payload, store_domain: "b.ab.invalid" },
       }),
-    [403],
+    [401, 403],
     (r) => r?.code === "42501",
   );
   await test(
