@@ -72,8 +72,16 @@ async function postLocal(domain,payload,{origin,host,headers={}}={}) {
   if(proc.status!==0) return {status:0,body:null};
   const code=Number(proc.stdout.trim());
   let body=null;
-  try{body=JSON.parse(fs.readFileSync(resultFile,"utf8"));}catch{}
-  return {status:code,body};
+  const rawResponse=fs.readFileSync(resultFile,"utf8");
+  try{body=JSON.parse(rawResponse);}catch{}
+  const kind=
+    body?.error==="Domínio não autorizado para pedidos."?"gateway-protocol-or-domain":
+    body?.error==="Origem da solicitação inválida."?"gateway-host-or-origin":
+    rawResponse.includes("Blocked request")?"vite-host-blocked":
+    rawResponse.includes("Forbidden")?"generic-forbidden":
+    body?.error?"other-json-error":
+    "unknown";
+  return {status:code,body,kind};
 }
 async function localApi(local,route,method="GET",body) {
   const response=await fetch(new URL("/rest/v1/"+route,local.API_URL),{
@@ -159,10 +167,12 @@ async function main(){
   logFd=undefined;
   let ready=false;
   const seenStatus=new Set();
+  const seenReasons=new Set();
   for(let i=0;i<60;i++){
     if(child.exitCode!==null)break;
     const r=await postLocal("a.ab.invalid",{});
     seenStatus.add(r.status);
+    if(r.status===403)seenReasons.add(r.kind??"unknown");
     if(r.status===400){ready=true;break;}
     await sleep(1000);
   }
@@ -170,6 +180,7 @@ async function main(){
   const log=fs.existsSync(logFile)?fs.readFileSync(logFile,"utf8"):"";
   report.httpProbe={
     observedStatusCodes:[...seenStatus].sort(),
+    observedRejectionCategories:[...seenReasons].sort(),
     devProcessExited:child.exitCode!==null,
     markers:{
       viteReady:log.includes("ready in"),
