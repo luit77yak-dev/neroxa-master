@@ -44,5 +44,36 @@ try {
  check("phase2 atomic rollback preserved PK",sql("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='public.neroxa_storefront_settings'::regclass AND contype='p';").includes("organization_id"),"legacy PK should remain");
  check("phase2 preserves fixture counts",before===sql("SELECT (SELECT count(*) FROM public.neroxa_storefront_settings)::text || ':' || (SELECT count(*) FROM public.neroxa_storefront_delivery_zones)::text"),"no rows lost");
  check("phase2 leaves instance nullable",sql("SELECT attnotnull FROM pg_attribute WHERE attrelid='public.neroxa_storefront_settings'::regclass AND attname='instance_id';")==="f","NOT NULL cutover must not happen");
+ result.stage="manual-reconciliation";
+ const a1="b0000000-0000-4000-8000-000000000001",a2="b0000000-0000-4000-8000-000000000002";
+ const originalSettings=count("neroxa_storefront_settings"),originalZones=count("neroxa_storefront_delivery_zones");
+ // Explicit simulated business decision: legacy settings and both zones belong to A1.
+ // A2 gets an independent settings row; no zones or orders are copied.
+ sql(`BEGIN;
+ UPDATE public.neroxa_storefront_settings SET instance_id='${a1}' WHERE organization_id='${a}' AND instance_id IS NULL;
+ UPDATE public.neroxa_storefront_delivery_zones SET instance_id='${a1}' WHERE organization_id='${a}' AND instance_id IS NULL;
+ COMMIT;`);
+ check("A1 settings explicitly mapped",n("neroxa_storefront_settings",`organization_id='${a}' AND instance_id='${a1}'`)===1,"expected original settings assigned A1");
+ check("A1 zones explicitly mapped",n("neroxa_storefront_delivery_zones",`organization_id='${a}' AND instance_id='${a1}'`)===2,"both original zones assigned A1");
+ check("A2 zones not duplicated",n("neroxa_storefront_delivery_zones",`organization_id='${a}' AND instance_id='${a2}'`)===0,"no automatic zone copy");
+ check("all existing settings mapped",n("neroxa_storefront_settings","instance_id IS NULL")===0,"no unresolved settings");
+ check("all existing zones mapped",n("neroxa_storefront_delivery_zones","instance_id IS NULL")===0,"no unresolved zones");
+ check("no zone lost",count("neroxa_storefront_delivery_zones")===originalZones,"zones unchanged");
+ // Phase 2 must be tested before adding the second settings row, because the
+ // historical PK is organization_id. After cutover, A2 can receive its own row.
+ result.stage="resolved-phase2";
+ sql(phase2);
+ check("settings PK moved to instance",sql("SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='public.neroxa_storefront_settings'::regclass AND contype='p';").includes("instance_id"),"expected instance-scoped PK");
+ check("settings instance required",sql("SELECT attnotnull FROM pg_attribute WHERE attrelid='public.neroxa_storefront_settings'::regclass AND attname='instance_id';")==="t","expected NOT NULL");
+ check("zones instance required",sql("SELECT attnotnull FROM pg_attribute WHERE attrelid='public.neroxa_storefront_delivery_zones'::regclass AND attname='instance_id';")==="t","expected NOT NULL");
+ check("settings preserved through cutover",count("neroxa_storefront_settings")===originalSettings,"no lost settings");
+ // Use the legacy row as an explicit template, changing the store identity.
+ sql(`INSERT INTO public.neroxa_storefront_settings (organization_id,instance_id,description,hero_title,min_order_amount,delivery_enabled)
+ SELECT organization_id,'${a2}','Configuração própria da loja A2','Cardápio A2',min_order_amount,delivery_enabled
+ FROM public.neroxa_storefront_settings WHERE instance_id='${a1}';`);
+ check("two independent settings in same organization",n("neroxa_storefront_settings",`organization_id='${a}'`)===2,"expected A1 and A2 settings");
+ check("A2 independent settings",n("neroxa_storefront_settings",`organization_id='${a}' AND instance_id='${a2}'`)===1,"A2 settings created");
+ check("B1 retained",n("neroxa_storefront_settings",`organization_id='${b}' AND instance_id='${b1}'`)===1,"B1 settings unchanged");
+ check("zones remain with A1 and B1",count("neroxa_storefront_delivery_zones")===originalZones && n("neroxa_storefront_delivery_zones",`instance_id='${a2}'`)===0,"no zones duplicated");
  result.stage="done";result.status="PASS";
 } catch(e){result.error=String(e.message).slice(0,1000);process.exitCode=1;} finally {save();console.log(JSON.stringify(result,null,2));}
