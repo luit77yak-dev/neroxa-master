@@ -1,7 +1,12 @@
 import fs from "node:fs";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { prepareSecurity, startRestoredRest, validateSecurity } from "./restore_security.mjs";
+import {
+  prepareSecurity,
+  startRestoredRest,
+  startRestoredAuth,
+  validateSecurity,
+} from "./restore_security.mjs";
 
 const work = process.env.AB_WORKDIR;
 const project = process.env.AB_PROJECT;
@@ -16,7 +21,7 @@ for (const bindings of Object.values(inspect.HostConfig.PortBindings ?? {})) {
   }
 }
 // Use an attached stream only for short SQL commands. The private Docker
-// relay does not support streaming large COPY payloads through docker exec -i.
+// archive remains container-local: no binary dump traverses the relay.
 const run = (args, input) =>
   execFileSync("docker", ["exec", ...(input === undefined ? [] : ["-i"]), container, ...args], {
     ...(input === undefined ? {} : { input }),
@@ -55,8 +60,22 @@ const dumpPath = "/tmp/neroxa-restore-" + runId + ".dump";
 const out = "audits/rehearsal/results/restore-report.json";
 let cloneCreated = false;
 let restoredRest;
+let restoredAuth;
 let security;
 try {
+  evidence.versions = {
+    postgres: psql("postgres", "SELECT version();"),
+    pgDump: run(["pg_dump", "--version"]).trim(),
+    pgRestore: run(["pg_restore", "--version"]).trim(),
+    node: process.version,
+  };
+  check(
+    "PostgreSQL 17 client/server compatibility",
+    /PostgreSQL 17\./.test(evidence.versions.postgres) &&
+      /17\./.test(evidence.versions.pgDump) &&
+      /17\./.test(evidence.versions.pgRestore),
+  );
+  evidence.globalRoles = "shared disposable cluster, not restored by pg_dump";
   evidence.stage = "source-baseline";
   // Called only after historical_rehearsal.mjs has populated the disposable database.
   check(
@@ -194,18 +213,21 @@ SELECT 'table-grants|' || md5(coalesce(string_agg(grantee || ':' || table_schema
     psql("postgres", extra) === psql(restoreDb, extra),
   );
   evidence.stage = "restored-auth-matrix";
+  restoredAuth = await startRestoredAuth({ project, restoreDb, security, check });
   restoredRest = await startRestoredRest({ project, restoreDb });
   await validateSecurity({ security, url: restoredRest.url, check, psql, restoreDb });
   check("source data unchanged by target HTTP tests", sourceData === data("postgres"));
   evidence.stage = "done";
   evidence.status = "PASS";
 } catch (e) {
-  evidence.error = String(e.message).split("\n")[0].slice(0, 240);
+  // Log only the primary PostgreSQL error, never Command was/DETAIL/data.
+  const primary = String(e.stderr ?? "").match(/ERROR:\s*([^\n]+)/)?.[1];
+  evidence.error = primary ? primary.slice(0, 240) : String(e.message).split("\n")[0].slice(0, 240);
   process.exitCode = 1;
 } finally {
-  if (restoredRest) {
+  for (const resource of [restoredRest, restoredAuth].filter(Boolean)) {
     try {
-      execFileSync("docker", ["rm", "-f", restoredRest.name], { stdio: "pipe" });
+      execFileSync("docker", ["rm", "-f", resource.name], { stdio: "pipe" });
     } catch {
       evidence.cleanupError = "Restored REST container removal failed";
       process.exitCode = 1;
@@ -216,6 +238,11 @@ SELECT 'table-grants|' || md5(coalesce(string_agg(grantee || ':' || table_schema
     const restoreDb = "neroxa_restore_" + process.env.GITHUB_RUN_ID;
     try {
       psql("postgres", 'DROP DATABASE "' + restoreDb + '" WITH (FORCE);');
+      check(
+        "restore database removed",
+        psql("postgres", "SELECT count(*) FROM pg_database WHERE datname='" + restoreDb + "'") ===
+          "0",
+      );
     } catch (e) {
       evidence.cleanupError = String(e.message).slice(0, 200);
       process.exitCode = 1;

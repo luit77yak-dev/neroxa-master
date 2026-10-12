@@ -52,7 +52,7 @@ export async function prepareSecurity({ work, project, psql, check }) {
         claims.role === "authenticated" &&
         claims.aal === "aal1",
     );
-    people.push({ id: created.data.user.id, token });
+    people.push({ id: created.data.user.id, token, email, password });
   }
   // Historical rehearsal already applied phase1 and phase2 verbatim.
   for (const file of [
@@ -231,5 +231,77 @@ export async function validateSecurity({ security, url, check, psql, restoreDb }
           `SELECT count(*) FROM public.neroxa_order_status_history WHERE order_id=${lit(orders[shop])} AND to_status='CONFIRMED'`,
         ) === "1",
     );
+  }
+}
+
+export async function startRestoredAuth({ project, restoreDb, security, check }) {
+  const name = "neroxa_restore_auth_" + project;
+  const source = JSON.parse(docker(["inspect", "supabase_auth_" + project]))[0];
+  const env = source.Config.Env.filter((x) => x.startsWith("GOTRUE_")).map((x) => {
+    if (!x.startsWith("GOTRUE_DB_DATABASE_URL=")) return x;
+    const uri = new URL(x.slice("GOTRUE_DB_DATABASE_URL=".length));
+    uri.pathname = "/" + restoreDb;
+    return "GOTRUE_DB_DATABASE_URL=" + uri.toString();
+  });
+  if (!env.some((x) => x.startsWith("GOTRUE_DB_DATABASE_URL=")))
+    throw Error("Auth target database URI missing");
+  try {
+    docker([
+      "run",
+      "-d",
+      "--name",
+      name,
+      "--network",
+      Object.keys(source.NetworkSettings.Networks)[0],
+      "--label",
+      "com.supabase.cli.project=" + project,
+      "-p",
+      "127.0.0.1::9999",
+      ...env.flatMap((x) => ["-e", x]),
+      source.Config.Image,
+    ]);
+    const target = JSON.parse(docker(["inspect", name]))[0];
+    const binding = target.NetworkSettings.Ports["9999/tcp"]?.[0];
+    if (binding?.HostIp !== "127.0.0.1") throw Error("Restored Auth must bind loopback");
+    const url = "http://127.0.0.1:" + binding.HostPort;
+    let ready = false;
+    for (let n = 0; n < 30; n++) {
+      try {
+        ready = (await fetch(url + "/health")).ok;
+      } catch {
+        /* Readiness only. */
+      }
+      if (ready) break;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    check("restored GoTrue health", ready);
+    for (let i = 0; i < security.people.length; i++) {
+      const person = security.people[i];
+      const response = await fetch(url + "/token?grant_type=password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: person.email, password: person.password }),
+      });
+      const body = await response.json();
+      if (!response.ok || !body.access_token) throw Error("Restored Auth sign-in failed");
+      console.log("::add-mask::" + body.access_token);
+      const claims = JSON.parse(
+        Buffer.from(body.access_token.split(".")[1], "base64url").toString(),
+      );
+      check(
+        "restored Auth emits valid identity " + i,
+        claims.sub === person.id && claims.role === "authenticated" && claims.aal === "aal1",
+      );
+      person.token = body.access_token;
+      delete person.password;
+    }
+    return { name, url };
+  } catch {
+    try {
+      docker(["rm", "-f", name]);
+    } catch {
+      /* Workflow verifies cleanup. */
+    }
+    throw Error("Restored Auth validation failed (details withheld)");
   }
 }
