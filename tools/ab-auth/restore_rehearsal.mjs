@@ -25,8 +25,8 @@ const check = (name, ok) => {
   if (!ok) throw new Error(name);
 };
 const query = (db) => psql(db, `
-SELECT 'settings|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY t.organization_id::text), '')
-FROM (SELECT organization_id, description, hero_title, min_order_amount, delivery_enabled FROM public.neroxa_storefront_settings ORDER BY organization_id) t;
+SELECT 'settings|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY t.instance_id::text), '')
+FROM (SELECT instance_id, organization_id, description, hero_title, min_order_amount, delivery_enabled FROM public.neroxa_storefront_settings ORDER BY instance_id) t;
 SELECT 'zones|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY id::text), '')
 FROM (SELECT * FROM public.neroxa_storefront_delivery_zones ORDER BY id) t;
 SELECT 'instances|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY id::text), '')
