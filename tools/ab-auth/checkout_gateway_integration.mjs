@@ -20,7 +20,7 @@ const report = {
     "Real local PostgREST and SQL with imported Pizza gateway core, not the deployed TanStack route or Vercel edge.",
     "Host/Origin values in Request are simulated and not cryptographically attested.",
     "No production secrets, production SQL, live domain or live customer data used.",
-    "Rate limiting, abuse protection and live rollout sequencing are not validated.",
+    "Local PostgreSQL quotas are tested; Vercel/edge IP rate limits, abuse protection, quota retention and live rollout are not validated.",
   ],
 };
 
@@ -76,7 +76,7 @@ try {
   report.stage = "import-consumer";
   const source = path.resolve("delivery-consumer/src/server/checkout-gateway.ts");
   if (!fs.existsSync(source)) throw new Error("Pinned delivery consumer checkout gateway missing");
-  const { handleCheckoutRequest } = await import(pathToFileURL(source).href);
+  const { handleCheckoutRequest, CheckoutRateLimitError } = await import(pathToFileURL(source).href);
   assert("Pinned gateway core imported", typeof handleCheckoutRequest === "function");
 
   const rest = async (roleKey, bearer, route, method, body) => {
@@ -132,6 +132,7 @@ try {
   // and only in this isolated disposable PostgreSQL instance.
   report.stage = "revoke-in-disposable-clone";
   localSql(db, fs.readFileSync("audits/sql/checkout-public-rpc-revoke.release-gate.candidate.sql", "utf8"));
+  localSql(db, fs.readFileSync("audits/sql/checkout-durable-rate-limit.candidate.sql", "utf8"));
   localSql(db, "NOTIFY pgrst, 'reload schema';");
   assert("Anonymous direct RPC EXECUTE removed",
     localSql(db, "SELECT has_function_privilege('anon','public.create_public_order(jsonb)','EXECUTE');") === "f");
@@ -139,6 +140,12 @@ try {
     localSql(db, "SELECT has_function_privilege('authenticated','public.create_public_order(jsonb)','EXECUTE');") === "f");
   assert("Server-only service role RPC EXECUTE retained",
     localSql(db, "SELECT has_function_privilege('service_role','public.create_public_order(jsonb)','EXECUTE');") === "t");
+  assert("Anon cannot invoke quota RPC",
+    localSql(db, "SELECT has_function_privilege('anon','public.neroxa_checkout_reserve_quota(uuid,text)','EXECUTE');") === "f");
+  assert("Authenticated cannot invoke quota RPC",
+    localSql(db, "SELECT has_function_privilege('authenticated','public.neroxa_checkout_reserve_quota(uuid,text)','EXECUTE');") === "f");
+  assert("Service role can invoke quota RPC",
+    localSql(db, "SELECT has_function_privilege('service_role','public.neroxa_checkout_reserve_quota(uuid,text)','EXECUTE');") === "t");
 
   const newOrder = (alias, key = crypto.randomUUID()) => ({
     instance_id: contexts[alias].instance_id,
@@ -186,6 +193,10 @@ try {
   assert("Authenticated direct create RPC denied",
     [401,403].includes(authenticated.status) && authenticated.body?.code === "42501");
 
+  const fingerprint = (context, phone) => crypto.createHmac("sha256", "disposable-local-only-quota-hmac-secret")
+    .update(context.instance_id + ":" + phone.replace(/\\D/g, ""))
+    .digest("hex");
+
   // Exercise the exact cross-repository gateway core against real local
   // PostgREST with service_role, as the server-only adapter is designed to do.
   report.stage = "gateway-real-PostgREST";
@@ -195,6 +206,18 @@ try {
       const out = await service("rpc/get_public_storefront_context", "POST", {p_domain: domain});
       if (out.status !== 200) throw new Error("Local context RPC failed");
       return Array.isArray(out.body) ? (out.body[0] ?? null) : null;
+    },
+    reserveQuota: async (context, phone) => {
+      const out = await service("rpc/neroxa_checkout_reserve_quota", "POST", {
+        p_instance_id: context.instance_id,
+        p_contact_fingerprint: fingerprint(context, phone),
+      });
+      if (out.status === 429 && out.body?.code === "PT429") {
+        throw new CheckoutRateLimitError("quota exceeded");
+      }
+      if (out.status !== 200 || out.body !== true) {
+        throw new Error("Disposable quota service failed");
+      }
     },
     createOrder: async (payload) => {
       const out = await service("rpc/create_public_order", "POST", {p_order: payload});
@@ -263,11 +286,67 @@ try {
   assert("Exactly one new order in B", late.b === ordersBefore.b + 1);
   assert("Other-organization shop C unaffected", late.c === ordersBefore.c);
 
+  report.stage = "atomic-durable-quota";
+  // One fingerprint, twelve concurrent independent workers (PostgREST HTTP).
+  // Only five may reserve the same contact bucket; failed reservations must
+  // roll back the simultaneous store counter increment.
+  const concurrentFingerprint = crypto.createHash("sha256").update("parallel-quota-probe").digest("hex");
+  const requestQuota = (instance_id, digest) => service(
+    "rpc/neroxa_checkout_reserve_quota", "POST",
+    { p_instance_id: instance_id, p_contact_fingerprint: digest },
+  );
+  const probes = await Promise.all(Array.from({ length: 12 },
+    () => requestQuota(contexts.a.instance_id, concurrentFingerprint)));
+  assert("Exactly five quota reservations under concurrent requests",
+    probes.filter(p => p.status === 200 && p.body === true).length === 5);
+  assert("Other seven concurrent requests receive 429",
+    probes.filter(p => p.status === 429 && p.body?.code === "PT429").length === 7);
+  const hits = localSql(db,
+    "SELECT attempts FROM private.neroxa_checkout_quota_counters " +
+    "WHERE instance_id='" + contexts.a.instance_id + "'::uuid AND scope='contact' " +
+    "AND identity_hash='" + concurrentFingerprint + "' ORDER BY window_start DESC LIMIT 1;");
+  assert("Durable contact quota counter persisted at five", hits === "5");
+  const otherShop = await requestQuota(contexts.b.instance_id, concurrentFingerprint);
+  assert("Another store has an independent contact quota", otherShop.status === 200 &&
+    otherShop.body === true);
+  const external = await requestQuota(contexts.c.instance_id, concurrentFingerprint);
+  assert("Other organization has independent quota", external.status === 200 &&
+    external.body === true);
+
+  // Fill only the store-wide bucket in this discarded DB. The contact
+  // fingerprints are synthetic one-off strings; no customer PII is stored.
+  const storeBucketBefore = Number(localSql(db,
+    "SELECT attempts FROM private.neroxa_checkout_quota_counters " +
+    "WHERE instance_id='" + contexts.a.instance_id + "'::uuid AND scope='store' " +
+    "ORDER BY window_start DESC LIMIT 1;"));
+  assert("Store bucket populated before saturation", Number.isInteger(storeBucketBefore) &&
+    storeBucketBefore >= 1 && storeBucketBefore < 60);
+  const fillStatement = `DO $fill$ DECLARE idx int; BEGIN
+    FOR idx IN ${storeBucketBefore + 1}..60 LOOP
+      PERFORM public.neroxa_checkout_reserve_quota(
+        '${contexts.a.instance_id}'::uuid,
+        md5(idx::text || ':fixture') || md5(idx::text || ':local')
+      );
+    END LOOP;
+  END $fill$;`;
+  localSql(db, fillStatement);
+  const maxed = await requestQuota(contexts.a.instance_id,
+    crypto.createHash("sha256").update("blocked-on-store-wide-quota").digest("hex"));
+  assert("Store-wide quota denies after 60 attempts", maxed.status === 429 &&
+    maxed.body?.code === "PT429");
+  const storeBucketAfter = Number(localSql(db,
+    "SELECT attempts FROM private.neroxa_checkout_quota_counters " +
+    "WHERE instance_id='" + contexts.a.instance_id + "'::uuid AND scope='store' " +
+    "ORDER BY window_start DESC LIMIT 1;"));
+  assert("Rejected quota attempt did not increment store bucket", storeBucketAfter === 60);
+
   report.summary = {
     checksPassed: report.checks.filter(x => x.passed).length,
     checksFailed: report.checks.filter(x => !x.passed).length,
     consumer: "Pizza Perfect Plate pinned checkout-gateway.ts",
     rpcBypassDenied: true,
+    durableQuotaSimultaneousRequests: 12,
+    durableQuotaEnforced: true,
     gatewayOrders: 2,
     rollbackOrDeploymentProven: false,
   };
