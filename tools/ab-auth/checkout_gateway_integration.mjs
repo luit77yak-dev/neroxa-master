@@ -194,7 +194,7 @@ try {
     [401,403].includes(authenticated.status) && authenticated.body?.code === "42501");
 
   const fingerprint = (context, phone) => crypto.createHmac("sha256", "disposable-local-only-quota-hmac-secret")
-    .update(context.instance_id + ":" + phone.replace(/\\D/g, ""))
+    .update(context.instance_id + ":" + phone.replace(/[^0-9]/g, ""))
     .digest("hex");
 
   // Exercise the exact cross-repository gateway core against real local
