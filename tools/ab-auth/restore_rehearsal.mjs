@@ -25,8 +25,8 @@ const check = (name, ok) => {
   if (!ok) throw new Error(name);
 };
 const query = (db) => psql(db, `
-SELECT 'settings|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY organization_id::text), '')
-FROM (SELECT organization_id, description, hero_title, min_order_amount, delivery_enabled FROM public.neroxa_storefront_settings ORDER BY organization_id) t;
+SELECT 'settings|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY instance_id::text), '')
+FROM (SELECT organization_id, description, hero_title, min_order_amount, delivery_enabled FROM public.neroxa_storefront_settings ORDER BY instance_id) t;
 SELECT 'zones|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY id::text), '')
 FROM (SELECT * FROM public.neroxa_storefront_delivery_zones ORDER BY id) t;
 SELECT 'instances|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY id::text), '')
@@ -43,7 +43,7 @@ try {
   // The source database is already cut over: snapshot the post-cutover state, then
   // mutate it deliberately and restore its dump into a separate disposable database.
   const baseline = query("postgres");
-  const dump = run(["pg_dump", "-U", "postgres", "-d", "postgres", "--schema=public", "--no-owner", "--no-acl", "--format=plain"]);
+  const dump = run(["pg_dump", "-U", "postgres", "-d", "postgres", "--schema=public", "--no-owner", "--format=plain"]);
   const dumpHash = hash(dump);
   evidence.dumpSha256 = dumpHash;
   check("nonempty logical dump", dump.length > 1000);
@@ -60,7 +60,7 @@ try {
     if (!/^[a-z0-9_]+$/.test(ext)) throw new Error("Unexpected extension");
     psql(restoreDb, 'CREATE EXTENSION IF NOT EXISTS "' + ext + '" CASCADE;');
   }
-  psql(restoreDb, dump);
+  // Restore fails closed if any dependency, ACL or object cannot be recreated.\n  psql(restoreDb, dump);\n  const catalog = (db) => psql(db, `\nSELECT 'tables|' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r';\nSELECT 'policies|' || count(*) FROM pg_policies WHERE schemaname='public';\nSELECT 'triggers|' || count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND NOT t.tgisinternal;\nSELECT 'constraints|' || count(*) FROM pg_constraint k JOIN pg_namespace n ON n.oid=k.connamespace WHERE n.nspname='public';\nSELECT 'grants|' || coalesce(md5(string_agg(grantee || ':' || table_name || ':' || privilege_type, ',' ORDER BY grantee,table_name,privilege_type)), '') FROM information_schema.role_table_grants WHERE table_schema='public';\n`);\n  check("restored structural and table grants fingerprint", hash(catalog(restoreDb)) === hash(catalog("postgres")));
   check("restored fixture checksum", hash(query(restoreDb)) === hash(baseline));
   check("restored settings PK by instance", psql(restoreDb, "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='public.neroxa_storefront_settings'::regclass AND contype='p'").includes("instance_id"));
   evidence.stage = "done";
