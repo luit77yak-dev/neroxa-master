@@ -5,6 +5,13 @@ import { resolve } from "node:path";
 const read = (name: string) => readFileSync(resolve(process.cwd(), "audits/sql", name), "utf8");
 
 describe("store isolation candidate security gates", () => {
+  it("terminates every full RPC definition before the next CREATE", () => {
+    const sql = read("storefront-rpcs-phase2.candidate.sql");
+    const functions = sql.split("CREATE OR REPLACE FUNCTION").slice(1);
+    expect(functions).toHaveLength(4);
+    for (const definition of functions) expect(definition.trim()).toMatch(/\$function\$;$/);
+  });
+
   it("removes organization-wide product and category policies", () => {
     const sql = read("store-isolation-policies.candidate.sql");
     for (const name of [

@@ -56,7 +56,7 @@ begin
  update public.neroxa_orders set subtotal=v_subtotal,total=v_total,updated_at=now() where id=v_order_id;
  insert into public.neroxa_order_status_history(order_id,to_status,note) values(v_order_id,'RECEIVED','Pedido criado pelo site');
  order_id:=v_order_id;order_number:=v_number;total:=v_total;return next;
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.get_public_storefront_catalog(p_domain text)
@@ -146,7 +146,7 @@ begin
     'settings', v_settings, 'delivery_zones', v_zones, 'addon_groups', v_addon_groups
   );
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.calculate_public_order_line_price(p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb)
@@ -215,7 +215,7 @@ begin
  end loop;
 
  return v_base+v_crust+v_addons+v_complements;
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION public.update_admin_order_status(p_order_id uuid, p_status text, p_note text DEFAULT NULL::text)
@@ -243,4 +243,4 @@ begin
  values(p_order_id,v_old,p_status,auth.uid(),nullif(trim(p_note),''));
  return v_order;
 end;
-$function$
+$function$;

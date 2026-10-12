@@ -194,6 +194,7 @@ try {
     "store-isolation-prerequisites.assert.sql",
   ]) {
     const text = fs.readFileSync("audits/sql/" + file, "utf8");
+    report.currentMigration = file;
     sql(text);
     report.migrations.push({
       file,
