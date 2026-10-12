@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
-      AB_WORKDIR: ${{ runner.temp }}/neroxa-ab-${{ github.run_id }}
       AB_PROJECT: neroxa-ab-${{ github.run_id }}
       AB_NETWORK: neroxa-ab-${{ github.run_id }}
     steps:
@@ -36,6 +35,8 @@ jobs:
           version: 2.120.0
       - name: Preflight and platform-only configuration
         run: |
+          export AB_WORKDIR="$RUNNER_TEMP/neroxa-ab-$GITHUB_RUN_ID"
+          echo "AB_WORKDIR=$AB_WORKDIR" >> "$GITHUB_ENV"
           test "$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1)" -gt 8589934592
           mkdir -m 700 "$AB_WORKDIR"
           supabase init --workdir "$AB_WORKDIR"
