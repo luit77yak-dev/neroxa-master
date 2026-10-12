@@ -52,6 +52,17 @@ describe("store isolation candidate security gates", () => {
     expect(sql).not.toContain("order by i.created_at limit 1");
   });
 
+  it("requires a verified catalog domain consistent with the target instance", () => {
+    const sql = read("storefront-rpcs-phase2.candidate.sql");
+    expect(sql).toContain("p_order->>'store_domain'");
+    expect(sql).toContain("public.get_public_storefront_context(v_store_domain)");
+    expect(sql).toContain("ctx.organization_id=v_org");
+    expect(sql).toContain("v_domain_instance IS DISTINCT FROM v_instance");
+    expect(sql.indexOf("v_domain_instance IS DISTINCT FROM v_instance")).toBeLessThan(
+      sql.indexOf("if nullif(p_order->>'idempotency_key','') is not null then"),
+    );
+  });
+
   it("scopes catalog settings and zones by instance", () => {
     const sql = read("storefront-rpcs-phase2.candidate.sql");
     expect(sql).toContain("s.instance_id = v_instance");
