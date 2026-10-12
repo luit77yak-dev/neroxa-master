@@ -4,16 +4,14 @@
 
 ## Comparação read-only entre snapshot 09/10 e Master atual
 
-| Componente | Histórico | Atual | Diferenças |
-| --- | ---: | ---: | ---: |
-| Colunas: nomes, posições, `format_type`, default, nulidade, identity, generated | 438 | 438 | 0 |
-| Relações: tipo, proprietário, RLS, FORCE RLS, views, ACL como conjuntos | 34 | 34 | 0 |
-| Funções: proprietário, EXECUTE ACL, argumentos, resultados, volatilidade, SECURITY DEFINER, `proconfig` | 50 | 50 | 0 |
-| Constraints: nomes, `pg_get_constraintdef(oid,true)`, validação | 145 | 145 | 0 |
-| Triggers: nomes, `pg_get_triggerdef(oid,true)` | 22 | 22 | 0 |
-| Default ACL do schema public (owner/tipo/grantees) | 6 | 6 | 0 |
-| Extensions: nome, schema, versão | 5 | 5 | 0 |
-| Enums: nome, labels, owner, ACL | 10 | 10 | 0 |
+- **Colunas:** 438 históricas e 438 atuais, zero diferenças.
+- **Relações e ACLs:** 34 históricas e 34 atuais, zero diferenças.
+- **Funções, configurações e ACLs:** 50 históricas e 50 atuais, zero diferenças.
+- **Constraints:** 145 históricas e 145 atuais, zero diferenças com DDL `pretty=true`.
+- **Triggers:** 22 históricos e 22 atuais, zero diferenças com DDL `pretty=true`.
+- **Default ACL em `public`:** seis entradas históricas e atuais, zero diferenças.
+- **Extensões:** cinco históricas e atuais, zero diferenças.
+- **Enums:** dez históricos e atuais, zero diferenças.
 
 **Importante:** 46 divergências anteriores de constraints e quatro de triggers desaparecem quando a consulta atual usa o **mesmo parâmetro de formatação** (`pretty=true`) do snapshot. A equivalência textual do DDL reconstruído **não** substitui teste de regressão ou reconciliação completa dos dados.
 
@@ -21,10 +19,8 @@ O catálogo de índices, policies, dependências indiretas e consumidores perman
 
 ## Diagnóstico de dados históricos reais — apenas agregados
 
-| Dados | Total | Organização sem instância | Organização com uma instância | Com múltiplas |
-| --- | ---: | ---: | ---: | ---: |
-| Configurações `neroxa_storefront_settings` | 5 | **1** | 4 | 0 |
-| Zonas `neroxa_storefront_delivery_zones` | 1 | 0 | 1 | 0 |
+- **Configurações:** cinco linhas, quatro com exatamente uma instância, uma sem instância, zero organizações com várias instâncias.
+- **Áreas de entrega:** uma linha, com exatamente uma instância associada.
 
 **Bloqueio material:** o backfill conservador da fase 1 não resolve a configuração de uma organização que não tem instância associada. A fase 2 deve impedir o cutover com essa linha não reconciliada. Não atribuir automaticamente nem apagar dados. Reexaminar esse agregado imediatamente antes de qualquer migração, pois produção pode mudar.
 
@@ -53,7 +49,7 @@ Consulta de FKs declaradas apontando para a relação `public.neroxa_storefront_
 - Fixture: `audits/sql/post-cutover-recovery.fixture.sql`, aplicada **após** a fase 2 e **antes** do backup lógico no job histórico.
 - Modificação em `tools/ab-auth/historical_rehearsal.mjs` afirma settings divergentes A1/A2, preservação de B1, zona exclusiva A2, dois pedidos fictícios com itens/histórico e incompatibilidade de downgrade ingênuo da PK para `organization_id`.
 - `tools/ab-auth/restore_rehearsal.mjs` compara digests de **todas** as tabelas/sequências do clone (não apenas settings/zones) e verifica integridade de FKs, objetos, ACLs e Auth no banco restaurado.
-- Primeira execução **38261107334 falhou** na matriz REST por uma expectativa legada que exigia A2 sem zona. Os dados/restauração, 10 categorias estruturais e 88 FKs passaram; **o run como um todo não passou**. A expectativa foi corrigida em `tools/ab-auth/restore_security.mjs`, passando a exigir contagem exata de zonas 2/1/1 (A1/A2/B1). **Resultado da nova execução deve ser conferido antes de declarar PASS**.
+- Primeira execução **38261107334 falhou** na matriz REST por uma expectativa legada que exigia A2 sem zona. Os dados/restauração, 10 categorias estruturais e 88 FKs passaram; **o run como um todo não passou**. A expectativa foi corrigida em `tools/ab-auth/restore_security.mjs`, passando a exigir contagem exata de zonas 2/1/1 (A1/A2/B1). **Nova execução 38261570628: PASS**. A etapa histórica, o restore lógico, a matriz REST/JWT/RLS, os digests de 85 tabelas e sequências, 88 FKs e dez categorias de fingerprints passaram. Execução A/B Auth isolada 38261570549 também concluiu com sucesso.
 
 ## Limites e decisão
 
@@ -62,4 +58,4 @@ Consulta de FKs declaradas apontando para a relação `public.neroxa_storefront_
 - Reconciliar a configuração real sem instância e testar o checkout do Pizza Perfect Plate contra o novo contrato antes de qualquer release.
 - Consumidores externos adicionais, deploys ativos, chaves por domínio confiável e plano de contingência operacional exigem validação específica.
 
-**Decisão:** PR #37 draft; produção READ-ONLY; release **NO-GO** até CI novo aprovado, consumidores corrigidos e reconciliação de dados históricos autorizada.
+**Decisão:** PR #37 draft; produção READ-ONLY; release **NO-GO** até consumidores corrigidos, catálogo operacional de dependências completo e reconciliação de dados históricos autorizada. A prova de recuperação pós-cutover em clone foi aprovada (run 38261570628); downgrade de PK e recuperação entre clusters distintos NÃO foram demonstrados.
