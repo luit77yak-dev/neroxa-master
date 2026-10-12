@@ -52,8 +52,8 @@ function run(command,args,opts={}) {
     " (exit "+p.status+")");
   return p.stdout.trim();
 }
-async function postLocal(domain,payload,{origin,host,headers={}}={}) {
-  const url="https://"+domain+":4173/api/checkout";
+async function postLocal(domain,payload,{origin,host,headers={},apiPath="/api/checkout"}={}) {
+  const url="https://"+domain+":4173"+apiPath;
   const resultFile=path.join(work,"checkout-response.private.json");
   const requestArgs=[
     "--silent","--noproxy","*","--insecure","--max-time","8",
@@ -64,7 +64,7 @@ async function postLocal(domain,payload,{origin,host,headers={}}={}) {
     "--header","Origin: "+(origin??"https://"+domain+":4173"),
     ...Object.entries(headers).map(([name,value])=>["--header",name+": "+value]).flat(),
     ...(host?["--header","Host: "+host]:[]),
-    "--data-raw",JSON.stringify({p_order:payload}),
+    "--data-raw",JSON.stringify(apiPath==="/api/order-amend"?payload:{p_order:payload}),
     "--output",resultFile,"--write-out","%{http_code}",url,
   ];
   const proc=spawnSync("curl",requestArgs,{encoding:"utf8",timeout:11_000,
@@ -147,6 +147,8 @@ async function main(){
     VITE_SUPABASE_PUBLISHABLE_KEY:local.ANON_KEY,
     NEROXA_CHECKOUT_GATEWAY_ENABLED:"true",
     VITE_NEROXA_CHECKOUT_GATEWAY:"true",
+    NEROXA_CHECKOUT_AMENDMENTS_ENABLED:"true",
+    VITE_NEROXA_CHECKOUT_AMENDMENTS:"true",
     NEROXA_CHECKOUT_RATE_LIMIT_SECRET:crypto.randomBytes(48).toString("hex"),
   };
   // Temporary, uncommitted config only. The HTTPS requirement of the gateway
@@ -249,10 +251,17 @@ async function main(){
   assert("HTTP checkout prices are not client supplied",
     Number(a.body.total)===Number(shops.a.product.price) &&
     Number(b.body.total)===Number(shops.b.product.price));
+  assert("HTTPS checkout issues a buyer-only capability to new A order",
+    /^[A-Za-z0-9_-]{43}$/.test(a.body.amendment_token??""));
+  assert("HTTPS checkout issues independent buyer capability in B",
+    /^[A-Za-z0-9_-]{43}$/.test(b.body.amendment_token??"") &&
+    a.body.amendment_token!==b.body.amendment_token);
 
   const same=await postLocal("b.ab.invalid",bOrder);
   assert("HTTP retry reuses idempotent order",same.status===200&&
     same.body?.order_id===b.body.order_id);
+  assert("HTTPS checkout replay never reissues buyer capability",
+    !Object.hasOwn(same.body??{},"amendment_token"));
   const mismatch=await postLocal("a.ab.invalid",order("b","00000000223"));
   assert("HTTP route forbids cross-store order body",mismatch.status===403);
   const mismatchedOrigin=await postLocal("a.ab.invalid",order("a","00000000112"),{
@@ -284,6 +293,88 @@ async function main(){
   });
   assert("HTTP gateway refuses other shop product in SQL",mixed.status===503);
 
+  report.stage="http-buyer-amendments";
+  const amend=(alias,data,extras={})=>postLocal(alias+".ab.invalid",data,{
+    apiPath:"/api/order-amend",...extras
+  });
+  const newAppend=(alias,id,secret,key=crypto.randomUUID(),productId)=>{
+    return {
+      instance_id:shops[alias].context.instance_id,
+      order_id:id,token:secret,request_key:key,
+      items:[{product_id:productId??shops[alias].product.id,
+        quantity:1,unit_price:0.01}]
+    };
+  };
+  const aToken=a.body.amendment_token,bToken=b.body.amendment_token;
+  const baselineItems=await localApi(local,"neroxa_order_items?order_id=eq."+
+    a.body.order_id+"&select=id");
+  assert("HTTPS before-addition item count A",baselineItems.status===200&&
+    Array.isArray(baselineItems.body));
+  const appendKey=crypto.randomUUID();
+  const appendPayload=newAppend("a",a.body.order_id,aToken,appendKey);
+  const acceptedAppend=await amend("a",appendPayload);
+  assert("HTTP token-authorized item forgotten appends in store A",
+    acceptedAppend.status===200 &&
+    acceptedAppend.body?.payment_state==="NOT_SETTLED");
+  assert("HTTPS amendment price server-owned",
+    Number(acceptedAppend.body?.added_amount)===Number(shops.a.product.price));
+  const retryAppend=await amend("a",appendPayload);
+  assert("HTTP idempotent amendment replay does not add twice",
+    retryAppend.status===200 &&
+    Number(retryAppend.body?.total)===Number(acceptedAppend.body?.total));
+  const afterAmendLines=await localApi(local,"neroxa_order_items?order_id=eq."+
+    a.body.order_id+"&select=id");
+  assert("HTTP replays added exactly one item",
+    afterAmendLines.status===200&&
+    afterAmendLines.body.length===baselineItems.body.length+1);
+
+  const stolen=await amend("a",newAppend("a",a.body.order_id,
+    crypto.randomBytes(32).toString("base64url")));
+  assert("HTTP amendment denies wrong buyer secret",stolen.status===403);
+  const switched=await amend("b",newAppend("a",a.body.order_id,aToken));
+  assert("HTTP amendment denies cross-store host even with correct token",
+    switched.status===403);
+  const foreignProduct=await amend("a",newAppend("a",a.body.order_id,
+    aToken,crypto.randomUUID(),shops.b.product.id));
+  assert("HTTP amendment rejects foreign product at PostgreSQL",foreignProduct.status===409);
+  const mismatchedAmendOrigin=await amend("a",newAppend("a",a.body.order_id,aToken),{
+    origin:"https://b.ab.invalid:4173"
+  });
+  assert("HTTP amendment rejects cross-site Origin",mismatchedAmendOrigin.status===403);
+
+  const bLineBefore=await localApi(local,"neroxa_order_items?order_id=eq."+
+    b.body.order_id+"&select=id");
+  assert("HTTP before-addition item count B",bLineBefore.status===200);
+  const bStatuses=[];
+  for(let i=0;i<6;i++){
+    const res=await amend("b",newAppend("b",b.body.order_id,bToken));
+    bStatuses.push(res.status);
+  }
+  assert("Buyer token allows five HTTPS amendments with durable quota",
+    bStatuses.slice(0,5).every(code=>code===200));
+  assert("Sixth buyer amendment receives HTTP 429",bStatuses[5]===429);
+  const bLineAfter=await localApi(local,"neroxa_order_items?order_id=eq."+
+    b.body.order_id+"&select=id");
+  assert("Rate-limited buyer cannot add sixth extra line",
+    bLineAfter.status===200 &&
+    bLineAfter.body.length===bLineBefore.body.length+5);
+
+  const directAppend=await fetch(new URL(
+    "/rest/v1/rpc/neroxa_append_order_items_with_capability",local.API_URL
+  ),{method:"POST",headers:{
+    apikey:local.ANON_KEY,
+    Authorization:"Bearer "+local.ANON_KEY,
+    "Content-Type":"application/json"
+  },body:JSON.stringify({
+    p_instance_id:shops.a.context.instance_id,
+    p_order_id:a.body.order_id,
+    p_token:aToken,
+    p_request_key:crypto.randomUUID(),
+    p_items:[{product_id:shops.a.product.id,quantity:1}]
+  })});
+  assert("Public PostgREST direct-token amendment bypass forbidden",
+    [401,403].includes(directAppend.status));
+
   const after={};
   for(const alias of ["a","b","c"]){
     const result=await localApi(local,"neroxa_orders?instance_id=eq."+
@@ -304,6 +395,9 @@ async function main(){
     directRpcBeforeHttp:"revoked in isolated stack by preceding integration",
     localOrdersCreated:7,
     sixContactAttemptsDenied:true,
+    buyerTokenIssuedOnlyOnNewOrder:true,
+    buyerAmendmentEndpointTested:true,
+    amendmentRateLimitVerified:true,
   };
 }
 try{await main();}
