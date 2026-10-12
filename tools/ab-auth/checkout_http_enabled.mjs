@@ -99,7 +99,7 @@ async function main(){
   if(!["127.0.0.1","localhost"].includes(parsed.hostname)||
       !local.ANON_KEY||!local.SERVICE_ROLE_KEY)
     throw new Error("Expected loopback-only disposable Supabase credentials");
-  if(!fs.existsSync(path.join(consumer,"package-lock.json"))||
+  if(!fs.existsSync(path.join(consumer,"package.json"))||
      !fs.existsSync(path.join(consumer,"src/routes/api/checkout.ts")))
     throw new Error("Pinned checkout consumer files absent");
 
@@ -146,7 +146,7 @@ async function main(){
       JSON.stringify(certFile)+')}}}\n'+
     '});\n');
   // Avoid echoing environment or any generated keys in job logs.
-  run("npm",["ci","--no-audit","--no-fund"],{
+  run("npm",["install","--no-audit","--no-fund"],{
     cwd:consumer,env,timeout:240_000,
   });
   const logFile=path.join(work,"tanstack-https.private.log");
