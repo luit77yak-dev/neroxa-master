@@ -5,12 +5,12 @@ on:
     branches:
       - audit/store-isolation-candidate-20261011
     paths:
-      - 'tools/ab-auth/inventory_consumers.py'
-      - '.github/workflows/legacy-consumer-inventory.yml'
+      - "tools/ab-auth/inventory_consumers.py"
+      - ".github/workflows/legacy-consumer-inventory.yml"
   pull_request:
     paths:
-      - 'tools/ab-auth/inventory_consumers.py'
-      - '.github/workflows/legacy-consumer-inventory.yml'
+      - "tools/ab-auth/inventory_consumers.py"
+      - ".github/workflows/legacy-consumer-inventory.yml"
 permissions:
   contents: read
 jobs:
@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - name: Scan repository sources only
         run: python3 tools/ab-auth/inventory_consumers.py
       - name: Upload read-only inventory
