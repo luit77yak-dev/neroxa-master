@@ -25,9 +25,10 @@ Este procedimento **não conecta ao Master de produção**. Execute somente em u
 - Lint, testes e build passam no CI.
 - Nenhum resultado será marcado como **PASSOU** antes da execução e coleta de evidências.
 
-## Bloqueios atuais
+## Estado atualizado em 2026-10-12
 
-- O ambiente de execução do assistente não tem PostgreSQL, Docker ou Supabase CLI, e a resolução DNS do registro de pacotes falhou.
-- Não há cópia isolada verificada do schema Master nem JWTs locais emitidos.
-- Os scripts candidatos ainda precisam de checagem de dependências e de ordem de cutover.
-- **Não aplicar em produção.**
+O workflow isolado foi executado com PostgreSQL17, Auth real, JWTs locais, PostgREST e TOTP: **165/165 checks passaram** na execução [38193749209](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38193749209).
+
+O procedimento acima é histórico. A implementação automatizada usa diretório temporário **sem as migrations incompletas do repositório**, CLI2.120.0, portas loopback e o catálogo estrutural completo capturado em2026-10-09. Nunca executar supabase start no diretório original para declarar a cadeia de migrations aprovada.
+
+Ver [relatório real e limitações](ab-auth-validation-20261012.md), [resultado por cenário](ab-auth/evidence/final-matrix.json) e `tools/ab-auth/run.mjs`. A implantação permanece INCONCLUSIVA por drift/proveniência, cutover de dados/consumidores legados e gestão auditada de grants. Não se usa fixture mínima nem auth.uid/JWT fake como prova.

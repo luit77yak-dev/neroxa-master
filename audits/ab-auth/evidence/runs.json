@@ -1,0 +1,46 @@
+{
+  "scope": "GitHub Actions isolated VMs; no production access or deployment",
+  "runs": [
+    {
+      "id": 38185141182,
+      "result": "failed: repo migrations missing organizations foundation"
+    },
+    {
+      "id": 38189702504,
+      "result": "invalid runner context at job env; corrected"
+    },
+    {
+      "id": 38189766273,
+      "result": "stopped: non-loopback bind before users/schema tests"
+    },
+    {
+      "id": 38190378358,
+      "result": "stopped: public ECR rate limit; no further retries on ECR"
+    },
+    {
+      "id": 38190970011,
+      "result": "5 real Auth sign-ins; full baseline; candidate RPC missing semicolons"
+    },
+    {
+      "id": 38191371377,
+      "result": "full candidate replay; fixture official writer guard honored next revision"
+    },
+    {
+      "id": 38191784261,
+      "result": "140 PASS, 13 marked FAIL (6 expectations, 7 access/integrity failures)"
+    },
+    {
+      "id": 38192641676,
+      "result": "164 PASS, append 42702 FAIL"
+    },
+    {
+      "id": 38193277323,
+      "result": "160 PASS; 5 new probe RPC cache readiness failures"
+    },
+    {
+      "id": 38193749209,
+      "result": "165 PASS, 0 FAIL; cleanup successful",
+      "sha": "8ee9b6b253413b6b77100a5b863821937d3f0ee3"
+    }
+  ]
+}
