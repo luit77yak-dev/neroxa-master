@@ -45,6 +45,16 @@ jobs:
           test ! -f "$AB_WORKDIR/supabase/seed.sql"
           test ! -f "$AB_WORKDIR/supabase/.temp/project-ref"
           docker network create --driver bridge --opt com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$AB_NETWORK" >/dev/null
+      - name: Private Docker relay enforces loopback binds
+        run: |
+          python3 tools/ab-auth/docker_loopback.py > "$AB_WORKDIR/proxy.private.log" 2>&1 &
+          echo "$!" > "$AB_WORKDIR/proxy.pid"
+          for attempt in $(seq 1 30); do
+            test -S "$AB_WORKDIR/docker-loopback.sock" && break
+            sleep 1
+          done
+          test -S "$AB_WORKDIR/docker-loopback.sock"
+          echo "DOCKER_HOST=unix://$AB_WORKDIR/docker-loopback.sock" >> "$GITHUB_ENV"
       - name: Start real local PostgreSQL Auth and REST
         run: |
           supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor,meta > "$AB_WORKDIR/start.private.log" 2>&1
@@ -66,3 +76,4 @@ jobs:
             supabase stop --workdir "$AB_WORKDIR" --no-backup
           fi
           docker network rm "$AB_NETWORK" 2>/dev/null || true
+          if [ -f "$AB_WORKDIR/proxy.pid" ]; then kill "$(cat "$AB_WORKDIR/proxy.pid")" 2>/dev/null || true; fi
