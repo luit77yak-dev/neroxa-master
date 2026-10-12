@@ -252,6 +252,13 @@ try {
   INSERT INTO public.neroxa_system_domains(system_instance_id,domain,status) VALUES(${literal(A)},'a.ab.invalid','VERIFIED'),(${literal(B)},'b.ab.invalid','VERIFIED');
   INSERT INTO public.neroxa_orders(id,instance_id,organization_id,order_number,customer_name,customer_phone,fulfillment,payment_method,subtotal,total) VALUES(${literal(orderA)},${literal(A)},${literal(org)},1,'Cliente fictício A','00000000001','PICKUP','CASH',30,30),(${literal(orderB)},${literal(B)},${literal(org)},1,'Cliente fictício B','00000000002','PICKUP','CASH',40,40);
   INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,quantity,unit_price,line_total) VALUES(${literal(orderA)},${literal(productA)},'Produto fictício A',1,30,30),(${literal(orderB)},${literal(productB)},'Produto fictício B',1,40,40);
+  INSERT INTO public.neroxa_storefront_categories(id,instance_id,name,slug) VALUES(${literal(catC)},${literal(C)},'Categoria fictícia C','cat-c');
+  INSERT INTO public.neroxa_storefront_products(id,instance_id,category_id,name,slug,price) VALUES(${literal(productC)},${literal(C)},${literal(catC)},'Produto fictício C','product-c',50);
+  INSERT INTO public.neroxa_storefront_settings(organization_id,instance_id,payment_methods) VALUES(${literal(orgC)},${literal(C)},ARRAY['CASH']);
+  INSERT INTO public.neroxa_storefront_delivery_zones(id,organization_id,instance_id,name,neighborhoods,delivery_fee) VALUES(${literal(zoneC)},${literal(orgC)},${literal(C)},'Zona C',ARRAY['Bairro fictício C'],9);
+  INSERT INTO public.neroxa_system_domains(system_instance_id,domain,status) VALUES(${literal(C)},'c.ab.invalid','VERIFIED');
+  INSERT INTO public.neroxa_orders(id,instance_id,organization_id,order_number,customer_name,customer_phone,fulfillment,payment_method,subtotal,total) VALUES(${literal(orderC)},${literal(C)},${literal(orgC)},1,'Cliente fictício C','00000000004','PICKUP','CASH',50,50);
+  INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,quantity,unit_price,line_total) VALUES(${literal(orderC)},${literal(productC)},'Produto fictício C',1,50,50);
   INSERT INTO public.neroxa_order_status_history(order_id,to_status,note) VALUES(${literal(orderA)},'RECEIVED','Fixture fictícia'),(${literal(orderB)},'RECEIVED','Fixture fictícia');COMMIT;`);
   // Test-only INVOKER probe verifies the database role/claims reached by actual JWT HTTP calls.
   sql(`CREATE FUNCTION public.ab_runtime_identity() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path='' AS $$ SELECT jsonb_build_object('role',current_user,'uid',auth.uid(),'aal',auth.jwt()->>'aal','superuser',current_setting('is_superuser')) $$;
