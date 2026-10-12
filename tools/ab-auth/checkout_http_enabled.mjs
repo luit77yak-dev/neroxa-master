@@ -26,7 +26,7 @@ const report = {
   ],
 };
 let child;
-let logStream;
+let logFd;
 let tmpConfig;
 const assert = (name, ok) => {
   const passed = !!ok;
@@ -150,11 +150,13 @@ async function main(){
     cwd:consumer,env,timeout:240_000,
   });
   const logFile=path.join(work,"tanstack-https.private.log");
-  logStream=fs.createWriteStream(logFile,{flags:"w",mode:0o600});
+  logFd=fs.openSync(logFile,"w",0o600);
   child=spawn("npm",["run","dev","--","--config","vite.checkout-ci.config.ts",
     "--host","127.0.0.1","--port","4173"],{
-    cwd:consumer,env,stdio:["ignore",logStream,logStream],detached:false,
+    cwd:consumer,env,stdio:["ignore",logFd,logFd],detached:false,
   });
+  fs.closeSync(logFd);
+  logFd=undefined;
   let ready=false;
   for(let i=0;i<60;i++){
     if(child.exitCode!==null)break;
@@ -273,7 +275,7 @@ catch(e){report.classification="REPROVADO";report.error={
 };}
 finally{
   if(child){child.kill("SIGTERM"); await sleep(200).catch(()=>{});}
-  if(logStream) logStream.end();
+  if(logFd!==undefined){try{fs.closeSync(logFd);}catch{}}
   if(tmpConfig){try{fs.rmSync(tmpConfig,{force:true});}catch{}}
   fs.mkdirSync(path.dirname(reportPath),{recursive:true});
   fs.writeFileSync(reportPath,JSON.stringify(report,null,2)+"\n");
