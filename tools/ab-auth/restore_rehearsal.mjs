@@ -61,12 +61,13 @@ try {
     psql(restoreDb, 'CREATE EXTENSION IF NOT EXISTS "' + ext + '" CASCADE;');
   }
   // Restore fails closed if any dependency, ACL or object cannot be recreated.
-  // Extensions may recreate public after the initial cleanup. PostgreSQL already
-  // owns that schema in the target; omit only its duplicate CREATE statement.
-  const schemaDeclaration = /^CREATE SCHEMA public;\\s*$/gm;
+  // pg_dump may declare public even though extension setup has already created it.
+  // Remove only the exact standalone CREATE SCHEMA statement, never arbitrary SQL.
+  const schemaDeclaration = /^CREATE SCHEMA (?:"public"|public);[ \\t]*\\r?$/gm;
   const occurrences = [...dump.matchAll(schemaDeclaration)].length;
-  check("exactly one public schema declaration in dump", occurrences === 1);
-  const restoreSql = dump.replace(schemaDeclaration, "-- public schema already provisioned by extensions");
+  evidence.publicSchemaDeclarations = occurrences;
+  check("at most one public schema declaration in dump", occurrences <= 1);
+  const restoreSql = dump.replace(schemaDeclaration, "-- public schema already provisioned");
   psql(restoreDb, restoreSql);
   const catalog = (db) => psql(db, `
 SELECT 'tables|' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r';
