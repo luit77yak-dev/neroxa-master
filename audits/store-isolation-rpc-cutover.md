@@ -1,6 +1,7 @@
 # RPC cutover and compatibility checklist (Draft PR #37)
 
 ## Safe rollout order
+
 1. Add nullable instance_id and backfill only unambiguous organizations.
 2. Update frontend writes to send explicit instance_id and reads to scope instance_id.
 3. Refactor public catalog to read settings/zones by resolved domain instance; no org fallback when >1 instance.
@@ -11,6 +12,7 @@
 8. Recheck EXECUTE grants on SECURITY DEFINER RPCs, including public order status and append-item paths.
 
 ## A/B fixture contract
+
 - One organization O; active instances A and B with different domains.
 - Users ua, ub, uadmin, outsider, with valid auth JWTs.
 - Both ua and ub belong to O, but instance membership only ua->A and ub->B.
@@ -24,6 +26,7 @@
 - Real tests must run with Supabase Auth JWT claims and isolated database, not superuser SQL sessions.
 
 ## Blockers
+
 - Settings organization_id PK must be replaced to support two rows in one org.
 - Zone and settings FK must verify organization_id corresponds to instance organization.
 - Full RPC definitions must be preserved before replacement; this PR does not yet replace them.

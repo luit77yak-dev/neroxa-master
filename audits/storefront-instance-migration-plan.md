@@ -1,6 +1,7 @@
 # Configurações, zonas e RPCs — plano de migração bloqueado para produção
 
 ## Evidências do Master (2026-10-11)
+
 - `neroxa_storefront_settings` possui PK `organization_id`, sem `instance_id`.
 - `neroxa_storefront_delivery_zones` possui `organization_id`, sem `instance_id`.
 - `create_public_order` resolve a primeira instância ativa da organização. Isto é ambíguo com duas lojas.
@@ -10,6 +11,7 @@
 - `append_public_order_items_with_payment` e `get_public_order_status` são SECURITY DEFINER; revisão de autenticação do pedido, taxa de tentativa, permissões EXECUTE e invariantes de itens é necessária.
 
 ## Migração proposta — duas fases, sem DDL executado
+
 1. Introduzir `instance_id` nullable em settings e zones, FK para instâncias; criar índices adequados e restrição de unicidade `settings(instance_id)` para valores não nulos.
 2. Determinar instância de cada linha histórica: organizações com uma única instância são candidatas ao backfill; organizações com múltiplas instâncias exigem decisão explícita de atribuição ou duplicação controlada. Não inferir por ordem de criação.
 3. Atualizar todos os leitores/escritores e RPCs para `instance_id`. Em `create_public_order`, resolver instância por domínio confiável ou ID validado contra organização/domínio; não escolher primeira ativa.
@@ -19,6 +21,7 @@
 7. Revisar funções e tipos gerados do frontend antes de habilitar NOT NULL e remover compatibilidade legada.
 
 ## Gates
+
 - Nenhuma linha sem instance_id após backfill.
 - Nenhuma duplicação indevida de settings por instância.
 - Nenhuma zona de A aparece no catálogo de B.
