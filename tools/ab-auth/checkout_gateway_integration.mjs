@@ -133,6 +133,10 @@ try {
   report.stage = "revoke-in-disposable-clone";
   localSql(db, fs.readFileSync("audits/sql/checkout-public-rpc-revoke.release-gate.candidate.sql", "utf8"));
   localSql(db, fs.readFileSync("audits/sql/checkout-durable-rate-limit.candidate.sql", "utf8"));
+  // Stage revocation of the buyer-amendment RPC only after the historical
+  // anonymous test matrix completed; THIS CLONE HAS NO TOKEN REPLACEMENT.
+  // This demonstrates no-bypass ACLs, not operational release compatibility.
+  localSql(db, fs.readFileSync("audits/sql/legacy-order-append-no-bypass.release-gate.candidate.sql", "utf8"));
   localSql(db, "NOTIFY pgrst, 'reload schema';");
   assert("Anonymous direct RPC EXECUTE removed",
     localSql(db, "SELECT has_function_privilege('anon','public.create_public_order(jsonb)','EXECUTE');") === "f");
@@ -140,6 +144,12 @@ try {
     localSql(db, "SELECT has_function_privilege('authenticated','public.create_public_order(jsonb)','EXECUTE');") === "f");
   assert("Server-only service role RPC EXECUTE retained",
     localSql(db, "SELECT has_function_privilege('service_role','public.create_public_order(jsonb)','EXECUTE');") === "t");
+  assert("Anonymous legacy public amendment EXECUTE removed",
+    localSql(db, "SELECT has_function_privilege('anon','public.append_public_order_items_with_payment(uuid,text,jsonb,text)','EXECUTE');") === "f");
+  assert("Authenticated legacy public amendment EXECUTE removed",
+    localSql(db, "SELECT has_function_privilege('authenticated','public.append_public_order_items_with_payment(uuid,text,jsonb,text)','EXECUTE');") === "f");
+  assert("Server-only amendment EXECUTE retained for later token gateway",
+    localSql(db, "SELECT has_function_privilege('service_role','public.append_public_order_items_with_payment(uuid,text,jsonb,text)','EXECUTE');") === "t");
   assert("Anon cannot invoke quota RPC",
     localSql(db, "SELECT has_function_privilege('anon','public.neroxa_checkout_reserve_quota(uuid,text)','EXECUTE');") === "f");
   assert("Authenticated cannot invoke quota RPC",
@@ -171,6 +181,15 @@ try {
     assert("Anonymous direct create RPC denied for " + alias,
       [401,403].includes(denied.status) && denied.body?.code === "42501");
   }
+  const deniedAppendAnon = await anonymous("rpc/append_public_order_items_with_payment", "POST", {
+    p_order_id: crypto.randomUUID(),
+    p_customer_phone: "00000000001",
+    p_items: [{ product_id: products.a.id, quantity: 1 }],
+    p_payment_method: "CASH",
+  });
+  assert("Anonymous phone-only append bypass denied by PostgREST",
+    [401,403].includes(deniedAppendAnon.status) &&
+    deniedAppendAnon.body?.code === "42501");
   // Actual PostgREST Auth user created only in the ephemeral local stack.
   const admin = createClient(apiUrl.toString(), env.SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -192,6 +211,16 @@ try {
     "rpc/create_public_order", "POST", { p_order: newOrder("a") });
   assert("Authenticated direct create RPC denied",
     [401,403].includes(authenticated.status) && authenticated.body?.code === "42501");
+  const deniedAppendAuth = await rest(env.ANON_KEY, signed.data.session.access_token,
+    "rpc/append_public_order_items_with_payment", "POST", {
+      p_order_id: crypto.randomUUID(),
+      p_customer_phone: "00000000001",
+      p_items: [{ product_id: products.a.id, quantity: 1 }],
+      p_payment_method: "CASH",
+    });
+  assert("Authenticated phone-only append bypass denied by PostgREST",
+    [401,403].includes(deniedAppendAuth.status) &&
+    deniedAppendAuth.body?.code === "42501");
 
   const fingerprint = (context, phone) => crypto.createHmac("sha256", "disposable-local-only-quota-hmac-secret")
     .update(context.instance_id + ":" + phone.replace(/[^0-9]/g, ""))
