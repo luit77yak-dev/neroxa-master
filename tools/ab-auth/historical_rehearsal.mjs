@@ -248,6 +248,54 @@ try {
       n("neroxa_storefront_delivery_zones", `instance_id='${a2}'`) === 0,
     "no zones duplicated",
   );
+  // Post-cutover writes are synthetic and local only. Logical restore must
+  // preserve them together with their relationships and the whole database.
+  result.stage = "post-cutover-writes";
+  sql(fs.readFileSync("audits/sql/post-cutover-recovery.fixture.sql", "utf8"));
+  check(
+    "A1 post-cutover settings",
+    n("neroxa_storefront_settings", `instance_id='${a1}' AND hero_title='After cutover A1' AND min_order_amount=21`) === 1,
+    "A1 kept its independent configuration",
+  );
+  check(
+    "A2 post-cutover settings",
+    n("neroxa_storefront_settings", `instance_id='${a2}' AND hero_title='After cutover A2' AND min_order_amount=42`) === 1,
+    "A2 kept its independent configuration",
+  );
+  check(
+    "B1 settings unaffected by A writes",
+    n("neroxa_storefront_settings", `instance_id='${b1}' AND hero_title='Cardápio legado B'`) === 1,
+    "third shop unchanged",
+  );
+  check(
+    "A2 synthetic zone isolated",
+    n("neroxa_storefront_delivery_zones", `instance_id='${a2}' AND name='Synthetic A2 Zone'`) === 1 &&
+      n("neroxa_storefront_delivery_zones", `instance_id='${a1}'`) === 2 &&
+      n("neroxa_storefront_delivery_zones", `instance_id='${b1}'`) === 1,
+    "only A2 receives the new zone",
+  );
+  check(
+    "post-cutover orders from two shops",
+    n("neroxa_orders", `instance_id='${a1}' AND total=21`) === 1 &&
+      n("neroxa_orders", `instance_id='${a2}' AND total=42`) === 1,
+    "distinct order identities and prices",
+  );
+  check(
+    "post-cutover order items and status history",
+    count("neroxa_order_items") === 2 && count("neroxa_order_status_history") === 2,
+    "two synthetic orders, items, and history rows",
+  );
+  check(
+    "post-cutover order organization matches instance",
+    Number(sql("SELECT count(*) FROM public.neroxa_orders o JOIN public.neroxa_system_instances i ON i.id=o.instance_id WHERE o.organization_id<>i.organization_id;")) === 0,
+    "zero tenant mismatch",
+  );
+  check(
+    "unsafe legacy organization PK would collide",
+    Number(sql("SELECT count(*) FROM (SELECT organization_id FROM public.neroxa_storefront_settings GROUP BY organization_id HAVING count(*) > 1) x;")) === 1,
+    "direct key downgrade would lose one store's settings",
+  );
+  result.postCutover = { syntheticOrders: 2, syntheticItems: 2, syntheticHistory: 2, syntheticNewZones: 1 };
   result.stage = "done";
   result.status = "PASS";
 } catch (e) {
