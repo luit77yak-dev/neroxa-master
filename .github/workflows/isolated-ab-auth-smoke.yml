@@ -69,11 +69,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: luit77yak-dev/pizza-perfect-plate
-          ref: aea8e5816d490a94e4ba3550bc63dfcd8011e5e3
+          ref: 4b1f2dd2a885471693fd8dcfac69e3ca940226bc
           path: delivery-consumer
           persist-credentials: false
       - name: Verify pinned delivery commit
-        run: test "$(git -C delivery-consumer rev-parse HEAD)" = "aea8e5816d490a94e4ba3550bc63dfcd8011e5e3"
+        run: test "$(git -C delivery-consumer rev-parse HEAD)" = "4b1f2dd2a885471693fd8dcfac69e3ca940226bc"
       - name: Integrate real local checkout gateway and test direct RPC revocation
         run: node --experimental-strip-types tools/ab-auth/checkout_gateway_integration.mjs
       - name: Test tokenized buyer amendments against disposable Auth and PostgreSQL
