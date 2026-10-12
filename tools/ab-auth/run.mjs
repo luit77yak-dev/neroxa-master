@@ -602,6 +602,7 @@ try {
   const cPayload = {
     organization_id: orgC,
     instance_id: C,
+    store_domain: "c.ab.invalid",
     customer_name: "Cliente fictício C",
     customer_phone: "00000000005",
     fulfillment: "PICKUP",
@@ -644,6 +645,7 @@ try {
   const payload = {
     organization_id: org,
     instance_id: A,
+    store_domain: "a.ab.invalid",
     customer_name: "Cliente inteiramente fictício",
     customer_phone: "00000000003",
     fulfillment: "PICKUP",
@@ -651,6 +653,73 @@ try {
     idempotency_key: id(),
     items: [{ product_id: productA, quantity: 1, unit_price: 1 }],
   };
+  // Verified domain association is enforced in the PostgreSQL candidate.
+  // These are consistency checks, NOT trusted request-origin attestation.
+  await test(
+    "checkout rejects missing catalog domain",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...payload, store_domain: "", idempotency_key: id() },
+      }),
+    [400],
+    (r) => r?.code === "22023",
+  );
+  await test(
+    "checkout rejects unknown catalog domain",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...payload, store_domain: "unknown.ab.invalid", idempotency_key: id() },
+      }),
+    [403],
+    (r) => r?.code === "42501",
+  );
+  await test(
+    "checkout rejects other instance domain in same organization",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...payload, store_domain: "b.ab.invalid", idempotency_key: id() },
+      }),
+    [403],
+    (r) => r?.code === "42501",
+  );
+  await test(
+    "checkout rejects domain from another organization",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...payload, store_domain: "c.ab.invalid", idempotency_key: id() },
+      }),
+    [403],
+    (r) => r?.code === "42501",
+  );
+  const bPayload = {
+    ...payload,
+    instance_id: B,
+    store_domain: "b.ab.invalid",
+    customer_name: "Cliente fictício B",
+    idempotency_key: id(),
+    items: [{ product_id: productB, quantity: 1, unit_price: 1 }],
+  };
+  await test(
+    "checkout accepts second store in same organization",
+    "anon",
+    () => rpc("anon", "create_public_order", { p_order: bPayload }),
+    [200],
+    (r) => Array.isArray(r) && Number(r[0]?.total) === 40,
+  );
+  await test(
+    "checkout rejects forged first-store domain for second store",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...bPayload, store_domain: "a.ab.invalid", idempotency_key: id() },
+      }),
+    [403],
+    (r) => r?.code === "42501",
+  );
   const created = await test(
     "public checkout server price",
     "anon",
@@ -681,6 +750,16 @@ try {
       }),
     [400],
     (r) => !!r.code,
+  );
+  await test(
+    "wrong domain cannot replay idempotent order",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...payload, store_domain: "b.ab.invalid" },
+      }),
+    [403],
+    (r) => r?.code === "42501",
   );
   await test(
     "public idempotent retry",
