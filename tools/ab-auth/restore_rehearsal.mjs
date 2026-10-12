@@ -43,27 +43,24 @@ try {
   // The source database is already cut over: snapshot the post-cutover state, then
   // mutate it deliberately and restore its dump into a separate disposable database.
   const baseline = query("postgres");
-  const dump = run(["pg_dump", "-U", "postgres", "-d", "postgres", "--schema=public", "--no-owner", "--format=plain"]);
+  // Dump the entire disposable database, including Supabase-managed Auth and
+  // extension dependencies. A public-only dump cannot restore auth.uid() etc.
+  // Preserve OWNER and ACL statements so permissions can be checked on restore.
+  check("source local Auth schema exists", psql("postgres", "SELECT count(*) FROM pg_namespace WHERE nspname='auth';") === "1");
+  const dump = run(["pg_dump", "-U", "postgres", "-d", "postgres", "--format=plain"]);
   const dumpHash = hash(dump);
   evidence.dumpSha256 = dumpHash;
+  evidence.dumpScope = "complete local disposable Supabase database (Auth, public, dependencies, owners, ACLs)";
   check("nonempty logical dump", dump.length > 1000);
   const restoreDb = "neroxa_restore_" + process.env.GITHUB_RUN_ID;
   check("safe restore database name", /^neroxa_restore_[0-9]+$/.test(restoreDb));
   evidence.stage = "separate-restore-database";
   psql("postgres", 'CREATE DATABASE "' + restoreDb + '";');
   cloneCreated = true;
-  // The disposable PostgreSQL database already contains the public schema.
-  // Keep it for extensions; strip only the duplicate declaration from pg_dump.
-  // Never drop a schema belonging to the source database.
+  // A fresh database includes public; pg_dump also declares it.
+  // Keep the target public schema and omit only that duplicate declaration.
+  // All other schemas and extensions (including auth) come from this complete dump.
   check("target public schema exists", psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='public';") === "1");
-  // Recreate extensions using only this disposable cluster.
-  // pg_dump --schema=public omits Auth/private managed objects, so restore only
-  // the app schema. A fresh database has the same platform roles but not extensions.
-  const extensions = psql("postgres", "SELECT extname FROM pg_extension WHERE extname NOT IN ('plpgsql');").split("\n").filter(Boolean);
-  for (const ext of extensions) {
-    if (!/^[a-z0-9_-]+$/.test(ext)) throw new Error("Unexpected extension: " + ext);
-    psql(restoreDb, 'CREATE EXTENSION IF NOT EXISTS "' + ext + '" CASCADE;');
-  }
   // Restore fails closed if any dependency, ACL or object cannot be recreated.
   // pg_dump may declare public even though extension setup has already created it.
   // Remove only the exact standalone CREATE SCHEMA statement, never arbitrary SQL.
@@ -73,6 +70,7 @@ try {
   check("exactly one public schema declaration in dump", occurrences === 1);
   const restoreSql = dump.replace(schemaDeclaration, "-- public schema already provisioned");
   psql(restoreDb, restoreSql);
+  check("Supabase Auth schema restored", psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='auth';") === "1");
   const catalog = (db) => psql(db, `
 SELECT 'tables|' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r';
 SELECT 'policies|' || count(*) FROM pg_policies WHERE schemaname='public';
