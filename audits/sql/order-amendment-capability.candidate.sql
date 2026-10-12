@@ -177,6 +177,16 @@ BEGIN
       RAISE EXCEPTION 'Invalid item quantity' USING ERRCODE='22023';
     END IF;
 
+    -- Give cross-store product attempts a deterministic invalid-input SQLSTATE
+    -- rather than leaking the calculation helper's internal P0001 error.
+    IF NOT EXISTS (
+      SELECT 1 FROM public.neroxa_storefront_products p
+      WHERE p.id=nullif(v_item->>'product_id','')::uuid
+        AND p.instance_id=p_instance_id AND p.active
+    ) THEN
+      RAISE EXCEPTION 'Product not available in this store' USING ERRCODE='22023';
+    END IF;
+
     v_price:=public.calculate_public_order_line_price(
       p_instance_id,
       nullif(v_item->>'product_id','')::uuid,
