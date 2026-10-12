@@ -240,7 +240,8 @@ try{
     contexts.c.instance_id+"'::uuid;"));
 
   // Token lifetime and revocation: test-only database updates, never remote.
-  sql(db,"UPDATE private.neroxa_order_amendment_capabilities SET expires_at=clock_timestamp()-interval '1 second' WHERE order_id='"+
+  // Simulate a capability issued two hours ago; preserve CHECK expires > issued.
+  sql(db,"UPDATE private.neroxa_order_amendment_capabilities SET created_at=clock_timestamp()-interval '3 hours', expires_at=clock_timestamp()-interval '1 second' WHERE order_id='"+
     a.order_id+"'::uuid;");
   const expired=await append("a",a.order_id,aToken,crypto.randomUUID(),p);
   check("Expired token refused",expired.data?.code==="42501");
