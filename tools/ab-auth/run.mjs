@@ -309,6 +309,69 @@ try {
         r.superuser === "off",
     );
 
+  // Three-tenant Auth/JWT/PostgREST matrix: C belongs to another organization.
+  const cTables = [
+    ["neroxa_storefront_products", "id", productC],
+    ["neroxa_storefront_categories", "id", catC],
+    ["neroxa_orders", "id", orderC],
+    ["neroxa_storefront_settings", "instance_id", C],
+    ["neroxa_storefront_delivery_zones", "id", zoneC],
+  ];
+  for (const actor of ["opA", "opB", "opC", "orgAdmin", "outsider", "anon"]) {
+    for (const [table, key, record] of cTables) {
+      const own = actor === "opC";
+      await test(
+        table + " SELECT C",
+        actor,
+        () => api(actor, table + "?" + key + "=eq." + record),
+        [200, 401, 403],
+        (body) => own ? Array.isArray(body) && body.length === 1
+          : Array.isArray(body) ? body.length === 0 : !!body?.code,
+      );
+      if (!own) {
+        await test(
+          table + " foreign C UPDATE",
+          actor,
+          () => api(actor, table + "?" + key + "=eq." + record, "PATCH",
+            table === "neroxa_orders" ? { notes: "Denied C" }
+            : table === "neroxa_storefront_settings" ? { description: "Denied C" }
+            : { name: "Denied C" }),
+          [200, 401, 403],
+          (body) => Array.isArray(body) ? body.length === 0 : !!body?.code,
+        );
+        await test(
+          table + " foreign C DELETE",
+          actor,
+          () => api(actor, table + "?" + key + "=eq." + record, "DELETE"),
+          [200, 401, 403],
+          (body) => Array.isArray(body) ? body.length === 0 : !!body?.code,
+        );
+      }
+    }
+  }
+  for (const [table, key, record] of [
+    ["neroxa_storefront_products", "id", productA],
+    ["neroxa_storefront_categories", "id", catA],
+    ["neroxa_orders", "id", orderA],
+    ["neroxa_storefront_settings", "instance_id", A],
+    ["neroxa_storefront_delivery_zones", "id", zoneA],
+  ]) {
+    await test(table + " C cannot read A", "opC",
+      () => api("opC", table + "?" + key + "=eq." + record),
+      [200, 401, 403],
+      (body) => Array.isArray(body) ? body.length === 0 : !!body?.code);
+  }
+  await test("C operator cannot use A admin RPC", "opC",
+    () => rpc("opC", "get_admin_orders", { p_instance_id: A }),
+    [200, 401, 403],
+    (body) => Array.isArray(body) ? body.length === 0 : !!body?.code);
+  await test("A operator cannot use C admin RPC", "opA",
+    () => rpc("opA", "get_admin_orders", { p_instance_id: C }),
+    [200, 401, 403],
+    (body) => Array.isArray(body) ? body.length === 0 : !!body?.code);
+  await test("C operator own admin orders", "opC",
+    () => rpc("opC", "get_admin_orders", { p_instance_id: C }),
+    [200], (body) => Array.isArray(body) && body.some((o) => o.id === orderC));
   const tables = [
     ["neroxa_storefront_products", "id", productA, productB],
     ["neroxa_storefront_categories", "id", catA, catB],
