@@ -1,5 +1,5 @@
 """Real PG17 archive/comparator regression; NOT a Supabase/Auth compatibility test."""
-import pathlib, subprocess, time, unittest, uuid, tempfile, os, hashlib, shutil
+import pathlib, subprocess, time, unittest, uuid, tempfile, os, hashlib, shutil, re
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 class RestoreRegression(unittest.TestCase):
@@ -14,6 +14,8 @@ class RestoreRegression(unittest.TestCase):
                 time.sleep(1)
             cls.sql('postgres', '''CREATE TABLE public.fixture(id integer PRIMARY KEY, instance_id uuid NOT NULL, value text);
                 INSERT INTO public.fixture VALUES(1,'00000000-0000-4000-8000-000000000001','fictitious');
+                CREATE TABLE public.fixture_child(id integer PRIMARY KEY, parent_id integer REFERENCES public.fixture(id));
+                INSERT INTO public.fixture_child VALUES(1,1);
                 ALTER TABLE public.fixture ENABLE ROW LEVEL SECURITY;
                 CREATE POLICY fixture_read ON public.fixture FOR SELECT USING (id=1);
                 CREATE FUNCTION public.fixture_fn() RETURNS integer LANGUAGE sql SECURITY DEFINER SET search_path='' AS $$SELECT 1$$;''')
@@ -41,14 +43,21 @@ class RestoreRegression(unittest.TestCase):
         self.command(['docker','exec',self.container,'pg_restore','-U','postgres','-d','restored','--exit-on-error','--single-transaction','/tmp/fixture.dump'])
         # Internal PostgreSQL "char" must be cast before string concatenation.
         self.sql('restored', "SELECT 'trigger|' || tgenabled::text FROM pg_trigger;")
+        script=(ROOT/'tools/ab-auth/restore_rehearsal.mjs').read_text()
+        catalog=re.search(r'const catalog =.*?`(.*?)`',script,re.S).group(1).replace('\\\\','\\')
+        self.assertEqual(self.sql('postgres',catalog),self.sql('restored',catalog))
         data=(ROOT/'tools/ab-auth/restore_data.sql').read_text()
         props=(ROOT/'tools/ab-auth/restore_properties.sql').read_text()
         self.assertEqual(self.sql('postgres',data),self.sql('restored',data))
         self.assertEqual(self.sql('postgres',props),self.sql('restored',props))
+        integrity=(ROOT/'tools/ab-auth/restore_integrity.sql').read_text()
+        self.assertTrue(self.sql('restored',integrity).endswith('|0'))
         self.sql('restored',"UPDATE public.fixture SET instance_id='00000000-0000-4000-8000-000000000002';")
         self.assertNotEqual(self.sql('postgres',data),self.sql('restored',data))
         self.sql('restored','ALTER FUNCTION public.fixture_fn() SECURITY INVOKER;')
         self.assertNotEqual(self.sql('postgres',props),self.sql('restored',props))
+        self.sql('restored', 'CREATE TABLE public.orphan_fixture(parent_id integer); INSERT INTO public.orphan_fixture VALUES(999); ALTER TABLE public.orphan_fixture ADD CONSTRAINT bad_fk FOREIGN KEY(parent_id) REFERENCES public.fixture(id) NOT VALID;')
+        self.assertIn('orphan_fixture.bad_fk|1',self.sql('restored',integrity))
         # Repeated invocation uses a fresh destination, never overlays a restored DB.
         self.sql('postgres','DROP DATABASE restored;')
 

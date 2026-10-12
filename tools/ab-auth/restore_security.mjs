@@ -116,7 +116,7 @@ export async function startRestoredRest({ project, restoreDb }) {
     const target = JSON.parse(docker(["inspect", name]))[0];
     const binding = target.NetworkSettings.Ports["3000/tcp"]?.[0];
     if (binding?.HostIp !== "127.0.0.1") throw Error("Target REST must bind loopback");
-    return { name, url: "http://127.0.0.1:" + binding.HostPort };
+    return { name, url: "http://127.0.0.1:" + binding.HostPort, image: original.Config.Image };
   } catch {
     try {
       docker(["rm", "-f", name]);
@@ -237,7 +237,9 @@ export async function validateSecurity({ security, url, check, psql, restoreDb }
 export async function startRestoredAuth({ project, restoreDb, security, check }) {
   const name = "neroxa_restore_auth_" + project;
   const source = JSON.parse(docker(["inspect", "supabase_auth_" + project]))[0];
-  const env = source.Config.Env.filter((x) => x.startsWith("GOTRUE_")).map((x) => {
+  const env = source.Config.Env.filter(
+    (x) => x.startsWith("GOTRUE_") || x.startsWith("API_EXTERNAL_URL="),
+  ).map((x) => {
     if (!x.startsWith("GOTRUE_DB_DATABASE_URL=")) return x;
     const uri = new URL(x.slice("GOTRUE_DB_DATABASE_URL=".length));
     uri.pathname = "/" + restoreDb;
@@ -295,7 +297,7 @@ export async function startRestoredAuth({ project, restoreDb, security, check })
       person.token = body.access_token;
       delete person.password;
     }
-    return { name, url };
+    return { name, url, image: source.Config.Image };
   } catch {
     try {
       docker(["rm", "-f", name]);
