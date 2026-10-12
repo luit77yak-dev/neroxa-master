@@ -52,7 +52,11 @@ try {
   evidence.stage = "separate-restore-database";
   psql("postgres", 'CREATE DATABASE "' + restoreDb + '";');
   cloneCreated = true;
-  // Fresh PostgreSQL databases include public by default; the dump recreates it.\n  // Drop only the empty schema in the newly created disposable restore database.\n  psql(restoreDb, "DROP SCHEMA IF EXISTS public CASCADE;");\n  // Recreate roles and extensions from the disposable Supabase platform, never production.
+  // The disposable PostgreSQL database already contains the public schema.
+  // Keep it for extensions; strip only the duplicate declaration from pg_dump.
+  // Never drop a schema belonging to the source database.
+  check("target public schema exists", psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='public';") === "1");
+  // Recreate extensions using only this disposable cluster.
   // pg_dump --schema=public omits Auth/private managed objects, so restore only
   // the app schema. A fresh database has the same platform roles but not extensions.
   const extensions = psql("postgres", "SELECT extname FROM pg_extension WHERE extname NOT IN ('plpgsql');").split("\n").filter(Boolean);
@@ -63,10 +67,10 @@ try {
   // Restore fails closed if any dependency, ACL or object cannot be recreated.
   // pg_dump may declare public even though extension setup has already created it.
   // Remove only the exact standalone CREATE SCHEMA statement, never arbitrary SQL.
-  const schemaDeclaration = /^CREATE SCHEMA (?:"public"|public);[ \\t]*\\r?$/gm;
+  const schemaDeclaration = /^CREATE SCHEMA (?:"public"|public);[ \t]*\r?$/gm;
   const occurrences = [...dump.matchAll(schemaDeclaration)].length;
   evidence.publicSchemaDeclarations = occurrences;
-  check("at most one public schema declaration in dump", occurrences <= 1);
+  check("exactly one public schema declaration in dump", occurrences === 1);
   const restoreSql = dump.replace(schemaDeclaration, "-- public schema already provisioned");
   psql(restoreDb, restoreSql);
   const catalog = (db) => psql(db, `
