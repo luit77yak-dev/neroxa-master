@@ -132,7 +132,7 @@ try {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const people = {};
-  for (const alias of ["opA", "opB", "orgAdmin", "platform", "outsider"]) {
+  for (const alias of ["opA", "opB", "opC", "orgAdmin", "platform", "outsider"]) {
     const password = crypto.randomBytes(24).toString("base64url");
     const email = `${alias.toLowerCase()}-${project}@ab.invalid`;
     const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
