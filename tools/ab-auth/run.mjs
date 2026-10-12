@@ -266,8 +266,12 @@ try {
   sql("NOTIFY pgrst, 'reload schema';");
   let ready = false;
   for (let attempt = 0; attempt < 30; attempt++) {
-    const probe = await api("opA", "neroxa_orders?select=id&limit=0");
-    if (probe.status !== 404 && !["PGRST202", "PGRST205"].includes(probe.body?.code)) {
+    const probe = await rpc("opA", "ab_runtime_identity", {});
+    if (
+      probe.status === 200 &&
+      probe.body?.role === "authenticated" &&
+      probe.body?.uid === people.opA.id
+    ) {
       ready = true;
       break;
     }
