@@ -28,8 +28,6 @@ const report = {
 let child;
 let logFd;
 let tmpConfig;
-let debugRouteFile;
-let debugRouteOriginal;
 const assert = (name, ok) => {
   const passed = !!ok;
   report.checks.push({ name, passed });
@@ -159,24 +157,6 @@ async function main(){
   run("npm",["install","--no-audit","--no-fund"],{
     cwd:consumer,env,timeout:240_000,
   });
-  // Diagnostic-only instrumentation of the disposable checkout route.
-  // Logs BOOLEAN match signals only. The production gateway core is untouched.
-  debugRouteFile=path.join(consumer,"src/routes/api/checkout.ts");
-  debugRouteOriginal=fs.readFileSync(debugRouteFile,"utf8");
-  const insertion='        const { handlePrivateCheckout } = await import("@/server/checkout-gateway.server");';
-  if(!debugRouteOriginal.includes(insertion))throw new Error("Unexpected candidate HTTP handler");
-  const diagnostic=String.raw`        const u = new URL(request.url);
-        console.log("NEROXA_CI_HOST_MATCH=" + JSON.stringify({
-          https: u.protocol === "https:",
-          hasExpectedHostname: u.hostname === "a.ab.invalid",
-          hasPort4173: u.port === "4173",
-          hostMatches: request.headers.get("host") === u.host,
-          originMatches: request.headers.get("origin") === u.origin,
-          hostHeaderHasPort: (request.headers.get("host") || "").endsWith(":4173"),
-          originHeaderHasPort: (request.headers.get("origin") || "").endsWith(":4173")
-        }));
-`;
-  fs.writeFileSync(debugRouteFile,debugRouteOriginal.replace(insertion,diagnostic+insertion));
   const logFile=path.join(work,"tanstack-https.private.log");
   logFd=fs.openSync(logFile,"w",0o600);
   child=spawn("npm",["run","dev","--","--config","vite.checkout-ci.config.ts",
@@ -198,14 +178,7 @@ async function main(){
   }
   // Whitelisted diagnostics only, never upload the server log or secret values.
   const log=fs.existsSync(logFile)?fs.readFileSync(logFile,"utf8"):"";
-  const diagnosticLine=log.split("\n").find(x=>x.includes("NEROXA_CI_HOST_MATCH="));
-  let hostDiagnostics=null;
-  try{
-    const payload=diagnosticLine?.split("NEROXA_CI_HOST_MATCH=")[1]?.trim();
-    if(payload)hostDiagnostics=JSON.parse(payload);
-  }catch{}
   report.httpProbe={
-    hostDiagnostics,
     observedStatusCodes:[...seenStatus].sort(),
     observedRejectionCategories:[...seenReasons].sort(),
     devProcessExited:child.exitCode!==null,
@@ -332,7 +305,6 @@ catch(e){report.classification="REPROVADO";report.error={
 finally{
   if(child){child.kill("SIGTERM"); await sleep(200).catch(()=>{});}
   if(logFd!==undefined){try{fs.closeSync(logFd);}catch{}}
-  if(debugRouteFile && debugRouteOriginal){try{fs.writeFileSync(debugRouteFile,debugRouteOriginal);}catch{}}
   if(tmpConfig){try{fs.rmSync(tmpConfig,{force:true});}catch{}}
   fs.mkdirSync(path.dirname(reportPath),{recursive:true});
   fs.writeFileSync(reportPath,JSON.stringify(report,null,2)+"\n");
