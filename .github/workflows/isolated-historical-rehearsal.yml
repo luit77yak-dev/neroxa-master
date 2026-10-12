@@ -12,6 +12,7 @@ on:
       - tools/ab-auth/restore_data.sql
       - tools/ab-auth/restore_properties.sql
       - tools/ab-auth/restore_integrity.sql
+      - tools/ab-auth/restore_extension_acl.sql
       - audits/sql/historical-two-store-rehearsal.fixture.sql
       - audits/sql/storefront-instance-phase1.candidate.sql
       - audits/sql/storefront-instance-phase2-cutover.candidate.sql

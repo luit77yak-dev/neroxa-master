@@ -86,6 +86,11 @@ try {
   // into a separate disposable database; never mutate the source.
   security = await prepareSecurity({ work, project, psql, check });
   const baseline = query("postgres");
+  const extensionAcl = psql(
+    "postgres",
+    fs.readFileSync("tools/ab-auth/restore_extension_acl.sql", "utf8"),
+  );
+  evidence.extensionAclSha256 = hash(extensionAcl);
   // Dump the entire disposable database, including Supabase-managed Auth and
   // extension dependencies. A public-only dump cannot restore auth.uid() etc.
   // Preserve OWNER and ACL statements so permissions can be checked on restore.
@@ -155,6 +160,15 @@ try {
     "--single-transaction",
     dumpPath,
   ]);
+  run(
+    ["psql", "-XqAt", "-U", "supabase_admin", "-d", restoreDb, "-v", "ON_ERROR_STOP=1"],
+    extensionAcl,
+  );
+  check("extension bootstrap ACL supplement restored", true);
+  check(
+    "archive hash unchanged after restore",
+    run(["sha256sum", dumpPath]).trim().split(" ")[0] === evidence.dumpSha256,
+  );
   check(
     "Supabase Auth schema restored",
     psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='auth';") === "1",
