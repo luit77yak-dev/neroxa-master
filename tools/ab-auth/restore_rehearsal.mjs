@@ -30,7 +30,7 @@ const check = (name, ok) => {
 };
 const query = (db) => psql(db, `
 SELECT 'settings|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY t.instance_id::text), '')
-FROM (SELECT instance_id, organization_id, description, hero_title, min_order_amount, delivery_enabled FROM public.neroxa_storefront_settings ORDER BY instance_id) t;
+FROM (SELECT * FROM public.neroxa_storefront_settings ORDER BY instance_id) t;
 SELECT 'zones|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY id::text), '')
 FROM (SELECT * FROM public.neroxa_storefront_delivery_zones ORDER BY id) t;
 SELECT 'instances|' || coalesce(string_agg(row_to_json(t)::text, E'\\n' ORDER BY id::text), '')
@@ -58,7 +58,9 @@ try {
   // Large plain SQL over docker exec -i breaks the private Docker transport.
   evidence.stage = "archive-in-disposable-container";
   run(["pg_dump", "-U", "postgres", "-d", "postgres", "--format=custom", "--file", dumpPath]);
-  evidence.dumpSha256 = run(["sha256sum", dumpPath]).trim().split(/\\s+/)[0];
+  evidence.dumpSha256 = run(["sha256sum", dumpPath]).trim().split(" ")[0];
+  check("valid archive SHA-256", /^[a-f0-9]{64}$/.test(evidence.dumpSha256));
+  run(["chmod", "600", dumpPath]);
   evidence.dumpScope = "complete local disposable Supabase database (Auth, public, dependencies, owners, ACLs)";
   evidence.dumpFormat = "PostgreSQL custom archive, container-local";
   check("nonempty local logical archive", Number(run(["stat", "-c", "%s", dumpPath]).trim()) > 1000);
