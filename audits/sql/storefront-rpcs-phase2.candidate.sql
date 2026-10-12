@@ -1,7 +1,9 @@
 -- ISOLATED TEST CANDIDATE: full functions preserved from Master schema inspection.
 -- Depends on phase 2 settings/zones cutover and membership foundation.
--- Public order caller must supply instance_id from trusted resolved storefront domain;
--- validate origin/domain binding in application before release.
+-- Public order must carry instance_id AND the catalog domain. The database
+-- checks their consistency against VERIFIED domain mappings and active instances.
+-- IMPORTANT: a client-supplied domain is NOT an authenticated request origin.
+-- A trusted server ingress/gateway is still required before release.
 -- Never deploy directly to production.
 
 CREATE OR REPLACE FUNCTION public.create_public_order(p_order jsonb)
@@ -12,6 +14,8 @@ CREATE OR REPLACE FUNCTION public.create_public_order(p_order jsonb)
 AS $function$
 declare
  v_org uuid:=nullif(p_order->>'organization_id','')::uuid;
+ v_store_domain text:=nullif(lower(trim(trailing '.' from trim(coalesce(p_order->>'store_domain','')))),'');
+ v_domain_instance uuid;
  v_instance uuid; v_order_id uuid; v_number bigint;
  v_subtotal numeric(12,2):=0; v_delivery_fee numeric(12,2):=0; v_total numeric(12,2);
  v_fulfillment text:=coalesce(p_order->>'fulfillment','DELIVERY'); v_payment text:=coalesce(p_order->>'payment_method','PIX');
@@ -20,6 +24,17 @@ begin
  if v_org is null or v_phone='' or trim(coalesce(p_order->>'customer_name',''))='' then raise exception 'Dados do cliente incompletos'; end if;
  select i.id into v_instance from public.neroxa_system_instances i where i.id=nullif(p_order->>'instance_id','')::uuid and i.organization_id=v_org and i.status='ACTIVE';
  if v_instance is null then raise exception 'Loja ativa não encontrada'; end if;
+ -- Validate before idempotent replay: a retry for the wrong domain must fail, too.
+ if v_store_domain is null then
+  raise exception 'Dominio da loja obrigatorio' USING ERRCODE='22023';
+ end if;
+ select ctx.instance_id into v_domain_instance
+ from public.get_public_storefront_context(v_store_domain) ctx
+ where ctx.organization_id=v_org
+ limit 1;
+ if v_domain_instance IS DISTINCT FROM v_instance then
+  raise exception 'Dominio nao corresponde a loja' USING ERRCODE='42501';
+ end if;
  if nullif(p_order->>'idempotency_key','') is not null then
   select o.id,o.order_number,o.total into v_order_id,v_number,v_total from public.neroxa_orders o where o.instance_id=v_instance and o.idempotency_key=(p_order->>'idempotency_key')::uuid;
   if v_order_id is not null then order_id:=v_order_id;order_number:=v_number;total:=v_total;return next;return;end if;
