@@ -65,6 +65,17 @@ jobs:
           supabase status --workdir "$AB_WORKDIR" -o env > "$AB_WORKDIR/status.private.env"
       - name: Rebuild historical catalog and run JWT matrix
         run: node tools/ab-auth/run.mjs
+      - name: Checkout pinned Pizza Perfect Plate gateway source
+        uses: actions/checkout@v4
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 2dec40f30cbc9b9d8089d768fe2a945f67f4603a
+          path: delivery-consumer
+          persist-credentials: false
+      - name: Verify pinned delivery commit
+        run: test "$(git -C delivery-consumer rev-parse HEAD)" = "2dec40f30cbc9b9d8089d768fe2a945f67f4603a"
+      - name: Integrate real local checkout gateway and test direct RPC revocation
+        run: node --experimental-strip-types tools/ab-auth/checkout_gateway_integration.mjs
       - name: Sanitized evidence only
         if: always()
         uses: actions/upload-artifact@v4
