@@ -15,6 +15,7 @@ class RestoreRegression(unittest.TestCase):
             cls.sql('postgres', '''CREATE ROLE fixture_reader NOLOGIN; CREATE EXTENSION pgcrypto; CREATE EXTENSION citext;
                 REVOKE EXECUTE ON FUNCTION public.gen_random_bytes(integer) FROM PUBLIC;
                 GRANT EXECUTE ON FUNCTION public.gen_random_bytes(integer) TO fixture_reader;
+                CREATE SEQUENCE public.fixture_seq START 7 INCREMENT 2 CACHE 10; SELECT nextval('public.fixture_seq');
                 CREATE TABLE public.fixture(id integer PRIMARY KEY, instance_id uuid NOT NULL, value text);
                 INSERT INTO public.fixture VALUES(1,'00000000-0000-4000-8000-000000000001','fictitious');
                 CREATE TABLE public.fixture_child(id integer PRIMARY KEY, parent_id integer REFERENCES public.fixture(id));

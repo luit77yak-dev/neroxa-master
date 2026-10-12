@@ -9,7 +9,11 @@ BEGIN
  AND (NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.classid='pg_class'::regclass AND d.objid=c.oid AND d.deptype='e')
  OR EXISTS (SELECT 1 FROM pg_extension e WHERE c.oid=ANY(e.extconfig)))
  ORDER BY n.nspname,c.relname LOOP
+ IF r.relkind='S' THEN
+ EXECUTE format('SELECT last_value::text || '':'' || is_called::text FROM %I.%I',r.nspname,r.relname) INTO v;
+ ELSE
  EXECUTE format('SELECT count(*)::text || '':'' || md5(coalesce(string_agg(to_jsonb(t)::text, E''\n'' ORDER BY to_jsonb(t)::text), '''')) FROM %I.%I t',r.nspname,r.relname) INTO v;
+ END IF;
  INSERT INTO restore_data_digest VALUES ((CASE WHEN r.relkind='S' THEN 'sequence|' ELSE 'table|' END)||r.nspname||'.'||r.relname,v);
  END LOOP;
 END $$;
