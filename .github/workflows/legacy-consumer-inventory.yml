@@ -1,0 +1,31 @@
+name: Legacy storefront consumer inventory
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - audit/store-isolation-candidate-20261011
+    paths:
+      - 'tools/ab-auth/inventory_consumers.py'
+      - '.github/workflows/legacy-consumer-inventory.yml'
+  pull_request:
+    paths:
+      - 'tools/ab-auth/inventory_consumers.py'
+      - '.github/workflows/legacy-consumer-inventory.yml'
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Scan repository sources only
+        run: python3 tools/ab-auth/inventory_consumers.py
+      - name: Upload read-only inventory
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-consumers-inventory
+          path: audits/legacy-consumers-inventory.generated.json
+          if-no-files-found: error
