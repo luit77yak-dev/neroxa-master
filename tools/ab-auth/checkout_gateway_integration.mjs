@@ -286,6 +286,29 @@ try {
   assert("Exactly one new order in B", late.b === ordersBefore.b + 1);
   assert("Other-organization shop C unaffected", late.c === ordersBefore.c);
 
+  report.stage = "gateway-real-quota-429";
+  // The sixth order attempt from a new synthetic contact must never reach
+  // the privileged order RPC. This tests the gateway's actual HTTP 429,
+  // not only direct invocation of the PostgreSQL quota function.
+  const limitedPhone = "00000000999";
+  const beforeLimited = await service("neroxa_orders?instance_id=eq." +
+    encodeURIComponent(contexts.b.instance_id) + "&select=id");
+  assert("Read B orders before gateway quota probe",
+    beforeLimited.status === 200 && Array.isArray(beforeLimited.body));
+  const limitedStatuses = [];
+  for (let i = 0; i < 6; i++) {
+    const payload = {...newOrder("b"), customer_phone: limitedPhone};
+    const response = await handleCheckoutRequest(makeRequest("b", payload), deps);
+    limitedStatuses.push(response.status);
+  }
+  assert("Five B gateway order requests accepted in ten-minute contact window",
+    limitedStatuses.slice(0, 5).every(x => x === 200));
+  assert("Sixth B gateway request blocked with HTTP 429", limitedStatuses[5] === 429);
+  const afterLimited = await service("neroxa_orders?instance_id=eq." +
+    encodeURIComponent(contexts.b.instance_id) + "&select=id");
+  assert("429 prevented creation of a sixth B order",
+    afterLimited.status === 200 && afterLimited.body.length === beforeLimited.body.length + 5);
+
   report.stage = "atomic-durable-quota";
   // One fingerprint, twelve concurrent independent workers (PostgREST HTTP).
   // Only five may reserve the same contact bucket; failed reservations must
