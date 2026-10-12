@@ -165,7 +165,7 @@ async function main(){
   debugRouteOriginal=fs.readFileSync(debugRouteFile,"utf8");
   const anchor='        const { handlePrivateCheckout } = await import("@/server/checkout-gateway.server");';
   if(!debugRouteOriginal.includes(anchor))throw new Error("Unexpected server route candidate");
-  const diag=String.raw\`        const u = new URL(request.url);
+  const diag=String.raw`        const u = new URL(request.url);
         const h = (request.headers.get("host")||"").toLowerCase();
         console.log("NEROXA_HOST_DIAG=" + JSON.stringify({
           urlHostExpected: u.hostname === "a.ab.invalid",
@@ -181,7 +181,7 @@ async function main(){
           contentTypeJson: (request.headers.get("content-type")||"").startsWith("application/json"),
           forwardedHostPresent: request.headers.has("x-forwarded-host")
         }));
-\`;
+`;
   fs.writeFileSync(debugRouteFile, debugRouteOriginal.replace(anchor,diag+anchor));
   const logFile=path.join(work,"tanstack-https.private.log");
   logFd=fs.openSync(logFile,"w",0o600);
