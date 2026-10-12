@@ -4,12 +4,12 @@
 
 ## Evidências verificadas
 
-| Consumidor | Evidência | Avaliação |
-| --- | --- | --- |
-| `src/routes/master-catalogo.tsx` | Consultas de categorias/produtos filtram por `instance_id` (linhas ~174, 180); configurações fazem `upsert` com `onConflict: "instance_id"` (linhas ~214–221). | Compatível em princípio com a PK por instância; testar execução e grants. |
-| `tools/ab-auth/run.mjs` | Fixtures A1/A2/C1 e testes de Auth/JWT/PostgREST, checkout e administração. | Exercita caminhos candidatos, não representa todos os consumidores externos. |
-| `tools/ab-auth/historical_rehearsal.mjs` | Rejeição atômica da fase 2 com A unresolved (linhas ~43–46); mapeamento explícito, mudança de PK e criação de settings A2 (linhas ~53–77). | Prova transacional no clone, não restauração de backup. |
-| `audits/master-catalog-compatibility-20261012.md` | Comparação de objetos históricos e atuais; equivalência de tipos/ACLs/dependências ainda não certificada. | Gate permanece inconclusivo. |
+| Consumidor                                        | Evidência                                                                                                                                                      | Avaliação                                                                    |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `src/routes/master-catalogo.tsx`                  | Consultas de categorias/produtos filtram por `instance_id` (linhas ~174, 180); configurações fazem `upsert` com `onConflict: "instance_id"` (linhas ~214–221). | Compatível em princípio com a PK por instância; testar execução e grants.    |
+| `tools/ab-auth/run.mjs`                           | Fixtures A1/A2/C1 e testes de Auth/JWT/PostgREST, checkout e administração.                                                                                    | Exercita caminhos candidatos, não representa todos os consumidores externos. |
+| `tools/ab-auth/historical_rehearsal.mjs`          | Rejeição atômica da fase 2 com A unresolved (linhas ~43–46); mapeamento explícito, mudança de PK e criação de settings A2 (linhas ~53–77).                     | Prova transacional no clone, não restauração de backup.                      |
+| `audits/master-catalog-compatibility-20261012.md` | Comparação de objetos históricos e atuais; equivalência de tipos/ACLs/dependências ainda não certificada.                                                      | Gate permanece inconclusivo.                                                 |
 
 ## Riscos ainda abertos
 
