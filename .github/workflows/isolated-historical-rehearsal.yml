@@ -8,6 +8,9 @@ on:
       - .github/workflows/isolated-historical-rehearsal.yml
       - tools/ab-auth/historical_rehearsal.mjs
       - tools/ab-auth/restore_rehearsal.mjs
+      - tools/ab-auth/restore_security.mjs
+      - tools/ab-auth/restore_data.sql
+      - tools/ab-auth/restore_properties.sql
       - audits/sql/historical-two-store-rehearsal.fixture.sql
       - audits/sql/storefront-instance-phase1.candidate.sql
       - audits/sql/storefront-instance-phase2-cutover.candidate.sql
@@ -83,5 +86,6 @@ jobs:
           if [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
             supabase stop --workdir "$AB_WORKDIR" --no-backup
           fi
-          docker network rm "$AB_NETWORK" 2>/dev/null || true
+          test -z "$(docker ps -aq --filter "label=com.supabase.cli.project=$AB_PROJECT")"
+          docker network rm "$AB_NETWORK"
           if [ -f "$AB_WORKDIR/proxy.pid" ]; then kill "$(cat "$AB_WORKDIR/proxy.pid")" 2>/dev/null || true; fi
