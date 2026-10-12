@@ -98,8 +98,8 @@ SELECT 'extensions|' || md5(coalesce(string_agg(e.extname || ':' || e.extversion
 FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace;
 SELECT 'table-grants|' || md5(coalesce(string_agg(grantee || ':' || table_schema || ':' || table_name || ':' || privilege_type, E'\\n' ORDER BY grantee,table_schema,table_name,privilege_type), '')) FROM information_schema.role_table_grants WHERE table_schema NOT LIKE 'pg_%' AND table_schema <> 'information_schema';
 `);
-  const sourceCatalog = catalog("postgres").split("\\n");
-  const restoredCatalog = catalog(restoreDb).split("\\n");
+  const sourceCatalog = catalog("postgres").split("\n");
+  const restoredCatalog = catalog(restoreDb).split("\n");
   const categories = ["schemas","relations","columns","policies","triggers","constraints","indexes","functions","extensions","table-grants"];
   check("structural fingerprint category count", sourceCatalog.length === categories.length && restoredCatalog.length === categories.length);
   for (let index = 0; index < categories.length; index++) {
