@@ -77,14 +77,34 @@ try {
   evidence.stage = "restore-archive";
   run(["pg_restore", "-U", "postgres", "-d", restoreDb, "--format=custom", "--clean", "--if-exists", "--exit-on-error", "--single-transaction", dumpPath]);
   check("Supabase Auth schema restored", psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='auth';") === "1");
+  // Each fingerprint compares object identity and definitions, not just totals.
+  // Include Supabase Auth and all non-system schemas from the same local stack.
   const catalog = (db) => psql(db, `
-SELECT 'tables|' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r';
-SELECT 'policies|' || count(*) FROM pg_policies WHERE schemaname='public';
-SELECT 'triggers|' || count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND NOT t.tgisinternal;
-SELECT 'constraints|' || count(*) FROM pg_constraint k JOIN pg_namespace n ON n.oid=k.connamespace WHERE n.nspname='public';
-SELECT 'grants|' || coalesce(md5(string_agg(grantee || ':' || table_name || ':' || privilege_type, ',' ORDER BY grantee,table_name,privilege_type)), '') FROM information_schema.role_table_grants WHERE table_schema='public';
+SELECT 'schemas|' || md5(coalesce(string_agg(n.nspname || ':' || pg_get_userbyid(n.nspowner) || ':' || coalesce(n.nspacl::text,'null'), E'\\n' ORDER BY n.nspname), ''))
+FROM pg_namespace n WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
+SELECT 'relations|' || md5(coalesce(string_agg(n.nspname || '.' || c.relname || ':' || c.relkind::text || ':' || pg_get_userbyid(c.relowner) || ':' || coalesce(c.relacl::text,'null') || ':' || c.relrowsecurity::text || ':' || c.relforcerowsecurity::text, E'\\n' ORDER BY n.nspname,c.relname), ''))
+FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
+SELECT 'columns|' || md5(coalesce(string_agg(n.nspname || '.' || c.relname || '.' || a.attname || ':' || format_type(a.atttypid,a.atttypmod) || ':' || a.attnotnull::text || ':' || coalesce(pg_get_expr(d.adbin,d.adrelid),'null'), E'\\n' ORDER BY n.nspname,c.relname,a.attnum), ''))
+FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum WHERE a.attnum>0 AND NOT a.attisdropped AND n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
+SELECT 'policies|' || md5(coalesce(string_agg(to_jsonb(p)::text, E'\\n' ORDER BY schemaname,tablename,policyname), '')) FROM pg_policies p;
+SELECT 'triggers|' || md5(coalesce(string_agg(n.nspname || '.' || c.relname || '.' || t.tgname || ':' || pg_get_triggerdef(t.oid) || ':' || t.tgenabled, E'\\n' ORDER BY n.nspname,c.relname,t.tgname), ''))
+FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE NOT t.tgisinternal AND n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
+SELECT 'constraints|' || md5(coalesce(string_agg(n.nspname || '.' || k.conname || ':' || pg_get_constraintdef(k.oid) || ':' || k.convalidated::text, E'\\n' ORDER BY n.nspname,k.conname), ''))
+FROM pg_constraint k JOIN pg_namespace n ON n.oid=k.connamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
+SELECT 'indexes|' || md5(coalesce(string_agg(to_jsonb(i)::text, E'\\n' ORDER BY schemaname,tablename,indexname), '')) FROM pg_indexes i WHERE schemaname NOT LIKE 'pg_%' AND schemaname <> 'information_schema';
+SELECT 'functions|' || md5(coalesce(string_agg(n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || '):' || pg_get_userbyid(p.proowner) || ':' || coalesce(p.proacl::text,'null') || ':' || p.prosrc, E'\\n' ORDER BY n.nspname,p.proname,pg_get_function_identity_arguments(p.oid)), ''))
+FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
+SELECT 'extensions|' || md5(coalesce(string_agg(e.extname || ':' || e.extversion || ':' || n.nspname, E'\\n' ORDER BY e.extname), ''))
+FROM pg_extension e JOIN pg_namespace n ON n.oid=e.extnamespace;
+SELECT 'table-grants|' || md5(coalesce(string_agg(grantee || ':' || table_schema || ':' || table_name || ':' || privilege_type, E'\\n' ORDER BY grantee,table_schema,table_name,privilege_type), '')) FROM information_schema.role_table_grants WHERE table_schema NOT LIKE 'pg_%' AND table_schema <> 'information_schema';
 `);
-  check("restored structural and table grants fingerprint", hash(catalog(restoreDb)) === hash(catalog("postgres")));
+  const sourceCatalog = catalog("postgres").split("\\n");
+  const restoredCatalog = catalog(restoreDb).split("\\n");
+  const categories = ["schemas","relations","columns","policies","triggers","constraints","indexes","functions","extensions","table-grants"];
+  check("structural fingerprint category count", sourceCatalog.length === categories.length && restoredCatalog.length === categories.length);
+  for (let index = 0; index < categories.length; index++) {
+    check("restored " + categories[index] + " fingerprint", sourceCatalog[index] === restoredCatalog[index] && sourceCatalog[index].startsWith(categories[index] + "|"));
+  }
   check("restored fixture checksum", hash(query(restoreDb)) === hash(baseline));
   check("restored settings PK by instance", psql(restoreDb, "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='public.neroxa_storefront_settings'::regclass AND contype='p'").includes("instance_id"));
   evidence.stage = "done";
