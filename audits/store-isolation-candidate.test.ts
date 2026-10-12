@@ -12,6 +12,7 @@ describe("store isolation candidate security gates", () => {
     expect(sql).toContain("REVOKE INSERT,UPDATE,DELETE");
     expect(sql).toContain("instance members order items read");
     expect(sql).toContain("instance members order history read");
+    expect(sql).toContain("subtotal=o.subtotal+v_add,total=o.total+v_add");
   });
 
   it("terminates every full RPC definition before the next CREATE", () => {

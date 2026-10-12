@@ -213,6 +213,7 @@ try {
     });
   }
   report.stage = "fixtures";
+  const sharedSystem = id();
   const org = id(),
     A = id(),
     B = id(),
@@ -229,7 +230,8 @@ try {
   sql(`BEGIN;
   SET LOCAL neroxa.implementation_write_path = 'official';
   INSERT INTO public.neroxa_organizations(id,legal_name,trade_name) VALUES(${literal(org)},'Organização fictícia A/B','AB fictícia');
-  INSERT INTO public.neroxa_system_instances(id,organization_id,name,slug,system_type,status) VALUES(${literal(A)},${literal(org)},'Loja fictícia A','ab-a','DELIVERY','ACTIVE'),(${literal(B)},${literal(org)},'Loja fictícia B','ab-b','DELIVERY','ACTIVE');
+  INSERT INTO public.neroxa_systems(id,name,slug,system_type) VALUES(${literal(sharedSystem)},'Sistema Delivery inteiramente fictício','ab-system','DELIVERY');
+  INSERT INTO public.neroxa_system_instances(id,organization_id,system_id,name,slug,system_type,status) VALUES(${literal(A)},${literal(org)},${literal(sharedSystem)},'Loja fictícia A','ab-a','DELIVERY','ACTIVE'),(${literal(B)},${literal(org)},${literal(sharedSystem)},'Loja fictícia B','ab-b','DELIVERY','ACTIVE');
   INSERT INTO public.neroxa_organization_members(organization_id,user_id,role) VALUES(${literal(org)},${literal(people.opA.id)},'OPERATOR'),(${literal(org)},${literal(people.opB.id)},'OPERATOR'),(${literal(org)},${literal(people.orgAdmin.id)},'ADMIN');
   INSERT INTO public.neroxa_instance_members(instance_id,user_id,role) VALUES(${literal(A)},${literal(people.opA.id)},'OPERATOR'),(${literal(B)},${literal(people.opB.id)},'OPERATOR'),(${literal(A)},${literal(people.orgAdmin.id)},'ADMIN');
   INSERT INTO public.neroxa_platform_members(user_id,role) VALUES(${literal(people.platform.id)},'ADMIN');
@@ -713,7 +715,14 @@ try {
     (r) => !!r.code,
   );
   report.classification = failureCode ? "REPROVADO" : "INCONCLUSIVO";
-  report.identities = Object.keys(people);
+  report.identities = Object.entries(people).map(([alias, p]) => ({
+    alias,
+    authUserId: p.id,
+    organizationRole:
+      alias === "orgAdmin" ? "ADMIN" : ["opA", "opB"].includes(alias) ? "OPERATOR" : null,
+    instanceScope: alias === "opB" ? "B" : ["opA", "orgAdmin"].includes(alias) ? "A" : null,
+    platformRole: alias === "platform" ? "ADMIN" : null,
+  }));
   report.successes = tests.filter((t) => t.passed).length;
   report.failures = tests.filter((t) => !t.passed).length;
   report.note =

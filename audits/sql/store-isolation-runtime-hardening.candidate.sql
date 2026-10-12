@@ -39,4 +39,29 @@ CREATE TRIGGER neroxa_product_instance_immutable BEFORE UPDATE OF instance_id
  ON public.neroxa_storefront_products FOR EACH ROW EXECUTE FUNCTION public.neroxa_keep_store_instance();
 CREATE TRIGGER neroxa_category_instance_immutable BEFORE UPDATE OF instance_id
  ON public.neroxa_storefront_categories FOR EACH ROW EXECUTE FUNCTION public.neroxa_keep_store_instance();
+-- 42702 observed on successful append: qualify columns, keep API and price semantics.
+CREATE OR REPLACE FUNCTION public.append_public_order_items_with_payment(p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text)
+ RETURNS TABLE(order_id uuid, order_number bigint, subtotal numeric, total numeric)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare v_order public.neroxa_orders;v_item jsonb;v_qty int;v_unit numeric;v_add numeric:=0;
+begin
+ select * into v_order from public.neroxa_orders where id=p_order_id and regexp_replace(customer_phone,'\\D','','g')=regexp_replace(trim(p_customer_phone),'\\D','','g');
+ if not found then raise exception 'Pedido não encontrado';end if;
+ if v_order.status not in ('RECEIVED','CONFIRMED','PREPARING','READY') then raise exception 'Este pedido não aceita novos itens';end if;
+ for v_item in select * from jsonb_array_elements(coalesce(p_items,'[]'::jsonb)) loop
+  v_qty:=greatest(1,coalesce((v_item->>'quantity')::int,1));
+  v_unit:=public.calculate_public_order_line_price(v_order.instance_id,nullif(v_item->>'product_id','')::uuid,nullif(v_item->>'second_product_id','')::uuid,nullif(v_item->>'size_id',''),nullif(v_item->>'crust_id',''),coalesce(v_item->'addons','[]'::jsonb),coalesce(v_item->'complements','[]'::jsonb));
+  insert into public.neroxa_order_items(order_id,product_id,product_name,product_image_url,second_product_id,is_half,addons,complements,quantity,notes,unit_price,line_total)
+  select v_order.id,p.id,p.name,p.image_url,nullif(v_item->>'second_product_id','')::uuid,coalesce((v_item->>'is_half')::boolean,false),coalesce(v_item->'addons','[]'::jsonb),coalesce(v_item->'complements','[]'::jsonb),v_qty,nullif(v_item->>'notes',''),v_unit,v_unit*v_qty
+  from public.neroxa_storefront_products p where p.id=nullif(v_item->>'product_id','')::uuid and p.instance_id=v_order.instance_id and p.active;
+  if not found then raise exception 'Produto não disponível';end if;
+  v_add:=v_add+v_unit*v_qty;
+ end loop;
+ update public.neroxa_orders as o set subtotal=o.subtotal+v_add,total=o.total+v_add,payment_method=coalesce(p_payment_method,o.payment_method),updated_at=now() where o.id=v_order.id returning o.* into v_order;
+ order_id:=v_order.id;order_number:=v_order.order_number;subtotal:=v_order.subtotal;total:=v_order.total;return next;
+end $function$
+;
 COMMIT;
