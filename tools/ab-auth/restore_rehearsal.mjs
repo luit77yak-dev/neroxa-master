@@ -14,8 +14,12 @@ for (const bindings of Object.values(inspect.HostConfig.PortBindings ?? {})) {
     if (binding.HostIp !== "127.0.0.1") throw new Error("Database exposed beyond loopback");
   }
 }
-const run = (args, input) => execFileSync("docker", ["exec", "-i", container, ...args], {
-  input, encoding: "utf8", maxBuffer: 32 * 1024 * 1024,
+// Use an attached stream only for short SQL commands. The private Docker
+// relay does not support streaming large COPY payloads through docker exec -i.
+const run = (args, input) => execFileSync("docker", ["exec", ...(input === undefined ? [] : ["-i"]), container, ...args], {
+  ...(input === undefined ? {} : { input }),
+  encoding: "utf8",
+  maxBuffer: 32 * 1024 * 1024,
 });
 const psql = (database, sql) => run(["psql", "-X", "-q", "-A", "-t", "-v", "ON_ERROR_STOP=1", "-U", "postgres", "-d", database], sql).trim();
 const hash = (value) => crypto.createHash("sha256").update(value).digest("hex");
@@ -34,6 +38,9 @@ FROM (SELECT * FROM public.neroxa_system_instances ORDER BY id) t;
 SELECT 'pk|' || pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='public.neroxa_storefront_settings'::regclass AND contype='p';
 SELECT 'counts|' || (SELECT count(*) FROM public.neroxa_storefront_settings) || ':' || (SELECT count(*) FROM public.neroxa_storefront_delivery_zones);
 `);
+const runId = process.env.GITHUB_RUN_ID;
+if (!/^[0-9]+$/.test(runId ?? "")) throw new Error("Safe CI run ID required");
+const dumpPath = "/tmp/neroxa-restore-" + runId + ".dump";
 const out = "audits/rehearsal/results/restore-report.json";
 let cloneCreated = false;
 try {
@@ -47,31 +54,26 @@ try {
   // extension dependencies. A public-only dump cannot restore auth.uid() etc.
   // Preserve OWNER and ACL statements so permissions can be checked on restore.
   check("source local Auth schema exists", psql("postgres", "SELECT count(*) FROM pg_namespace WHERE nspname='auth';") === "1");
-  const dump = run(["pg_dump", "-U", "postgres", "-d", "postgres", "--format=plain"]);
-  const dumpHash = hash(dump);
-  evidence.dumpSha256 = dumpHash;
+  // Keep the complete custom-format archive INSIDE the disposable DB container.
+  // Large plain SQL over docker exec -i breaks the private Docker transport.
+  evidence.stage = "archive-in-disposable-container";
+  run(["pg_dump", "-U", "postgres", "-d", "postgres", "--format=custom", "--file", dumpPath]);
+  evidence.dumpSha256 = run(["sha256sum", dumpPath]).trim().split(/\\s+/)[0];
   evidence.dumpScope = "complete local disposable Supabase database (Auth, public, dependencies, owners, ACLs)";
-  check("nonempty logical dump", dump.length > 1000);
+  evidence.dumpFormat = "PostgreSQL custom archive, container-local";
+  check("nonempty local logical archive", Number(run(["stat", "-c", "%s", dumpPath]).trim()) > 1000);
   const restoreDb = "neroxa_restore_" + process.env.GITHUB_RUN_ID;
   check("safe restore database name", /^neroxa_restore_[0-9]+$/.test(restoreDb));
   evidence.stage = "separate-restore-database";
   psql("postgres", 'CREATE DATABASE "' + restoreDb + '";');
   cloneCreated = true;
-  // A fresh database includes public; pg_dump also declares it.
-  // Keep the target public schema and omit only that duplicate declaration.
-  // All other schemas and extensions (including auth) come from this complete dump.
+  // A fresh DB has public; pg_restore manages dependencies and schema order.
+  // Keep the restore database separate from the source of the historical test.
   check("target public schema exists", psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='public';") === "1");
-  // Restore fails closed if any dependency, ACL or object cannot be recreated.
-  // pg_dump may declare public even though extension setup has already created it.
-  // Remove only the exact standalone CREATE SCHEMA statement, never arbitrary SQL.
-  const schemaDeclaration = /^CREATE SCHEMA (?:"public"|public);[ \t]*\r?$/gm;
-  const occurrences = [...dump.matchAll(schemaDeclaration)].length;
-  evidence.publicSchemaDeclarations = occurrences;
-  // pg_dump may omit CREATE SCHEMA public entirely when dumping the built-in
-  // schema. Zero or one is valid; multiple declarations indicate a bad dump.
-  check("zero or one public schema declaration in dump", occurrences <= 1);
-  const restoreSql = dump.replace(schemaDeclaration, "-- public schema already provisioned");
-  psql(restoreDb, restoreSql);
+  // Use pg_restore within the disposable container; fail atomically on ANY
+  // SQL error. Archive restore handles extensions and schema ordering.
+  evidence.stage = "restore-archive";
+  run(["pg_restore", "-U", "postgres", "-d", restoreDb, "--format=custom", "--clean", "--if-exists", "--exit-on-error", "--single-transaction", dumpPath]);
   check("Supabase Auth schema restored", psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='auth';") === "1");
   const catalog = (db) => psql(db, `
 SELECT 'tables|' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r';
@@ -95,6 +97,9 @@ SELECT 'grants|' || coalesce(md5(string_agg(grantee || ':' || table_name || ':' 
     try { psql("postgres", 'DROP DATABASE "' + restoreDb + '" WITH (FORCE);'); }
     catch (e) { evidence.cleanupError = String(e.message).slice(0,200); process.exitCode = 1; }
   }
+  // Remove only this run's disposable archive; never export it as CI evidence.
+  try { run(["rm", "-f", dumpPath]); }
+  catch (e) { evidence.archiveCleanupError = String(e.message).slice(0,200); process.exitCode = 1; }
   fs.mkdirSync("audits/rehearsal/results", { recursive: true });
   fs.writeFileSync(out, JSON.stringify(evidence, null, 2) + "\n");
   console.log(JSON.stringify(evidence, null, 2));
