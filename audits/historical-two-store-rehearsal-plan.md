@@ -5,6 +5,7 @@
 ## Fixture
 
 `audits/sql/historical-two-store-rehearsal.fixture.sql` cria:
+
 - Organização A: duas instâncias ACTIVE (A1 e A2), **uma** configuração legada compartilhada e duas zonas legadas sem instância.
 - Organização B: uma instância ACTIVE (B1), uma configuração e uma zona legadas.
 - UUIDs fictícios determinísticos; nenhuma associação com clientes reais.

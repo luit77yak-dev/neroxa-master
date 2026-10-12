@@ -4,15 +4,15 @@
 
 ## Resultados verificados
 
-| Categoria | Captura | Master atual | Identidade dos objetos |
-| --- | ---: | ---: | --- |
-| Relações públicas (tabelas/views) | 34 | 34 | mesmos nomes |
-| Colunas públicas | 438 | 438 | mesmos nomes |
-| Funções public + private | 50 | 50 | mesmos nomes e definições SQL textuais |
-| Políticas RLS públicas | 99 | 99 | mesmos nomes, expressões e comandos |
-| Triggers públicos | 22 | 22 | mesmos nomes |
-| Índices públicos | 121 | 121 | mesmos nomes e definições |
-| Constraints públicas | 145 | 145 | mesmos nomes |
+| Categoria                         | Captura | Master atual | Identidade dos objetos                 |
+| --------------------------------- | ------: | -----------: | -------------------------------------- |
+| Relações públicas (tabelas/views) |      34 |           34 | mesmos nomes                           |
+| Colunas públicas                  |     438 |          438 | mesmos nomes                           |
+| Funções public + private          |      50 |           50 | mesmos nomes e definições SQL textuais |
+| Políticas RLS públicas            |      99 |           99 | mesmos nomes, expressões e comandos    |
+| Triggers públicos                 |      22 |           22 | mesmos nomes                           |
+| Índices públicos                  |     121 |          121 | mesmos nomes e definições              |
+| Constraints públicas              |     145 |          145 | mesmos nomes                           |
 
 **Correção da contagem:** a captura contém 48 funções em `public` e 2 em `private`; o Master também contém 48 + 2. Não há duas funções ausentes. Cinco diferenças iniciais de assinatura foram causadas por inclusão/omissão de valores DEFAULT em formatos distintos, não por funções adicionais.
 
