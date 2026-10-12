@@ -14,7 +14,7 @@
 
 ## Evidência real, sem tocar na produção
 
-[Workflow Isolated A-B Auth Matrix — **38273435746**](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38273435746):
+[Workflow Isolated A-B Auth Matrix — **38273960408**](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38273960408):
 
 - Matriz histórica Auth/JWT/RLS: **275 PASS, 0 FAIL**.
 - Integração do gateway importado do Pizza Perfect Plate com PostgREST e SQL reais em cluster local: **45 PASS, 0 FAIL**.
@@ -22,6 +22,7 @@
 - Contador persistido ficou exatamente em 5; o mesmo fingerprint pôde ser reservado independentemente em outra loja da mesma organização e em loja de outra organização.
 - Saturação do bucket global da loja no ambiente de teste: a tentativa seguinte a 60 requisições foi negada por HTTP 429, sem incrementar o contador.
 - `anon` e `authenticated` não têm EXECUTE na RPC de cotas; a criação pública direta foi revogada **apenas no clone** e seu bypass testado; gateway continuou criando pedidos válidos.
+- Foi exercitado o **gateway real conectado ao PostgREST descartável** com um telefone fictício novo: cinco pedidos aceitos, sexto recusado com **HTTP 429** e comprovação de que nenhuma sexta linha de pedido foi criada.
 
 O workflow ainda classifica `productionCompatibility:false`; isso é correto. A autorização de produção permanece **NO-GO**.
 
