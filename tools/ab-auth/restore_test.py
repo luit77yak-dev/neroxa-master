@@ -1,5 +1,5 @@
 """Real PG17 archive/comparator regression; NOT a Supabase/Auth compatibility test."""
-import pathlib, subprocess, time, unittest, uuid
+import pathlib, subprocess, time, unittest, uuid, tempfile, os, hashlib, shutil
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 class RestoreRegression(unittest.TestCase):
@@ -39,6 +39,8 @@ class RestoreRegression(unittest.TestCase):
         toc=self.command(['docker','exec',self.container,'pg_restore','-l','/tmp/fixture.dump'])
         if any(' SCHEMA - public ' in l for l in toc.splitlines()): self.sql('restored','DROP SCHEMA public;')
         self.command(['docker','exec',self.container,'pg_restore','-U','postgres','-d','restored','--exit-on-error','--single-transaction','/tmp/fixture.dump'])
+        # Internal PostgreSQL "char" must be cast before string concatenation.
+        self.sql('restored', "SELECT 'trigger|' || tgenabled::text FROM pg_trigger;")
         data=(ROOT/'tools/ab-auth/restore_data.sql').read_text()
         props=(ROOT/'tools/ab-auth/restore_properties.sql').read_text()
         self.assertEqual(self.sql('postgres',data),self.sql('restored',data))
@@ -49,5 +51,28 @@ class RestoreRegression(unittest.TestCase):
         self.assertNotEqual(self.sql('postgres',props),self.sql('restored',props))
         # Repeated invocation uses a fresh destination, never overlays a restored DB.
         self.sql('postgres','DROP DATABASE restored;')
+
+    def test_docker_relay_preserves_binary_exec_stream(self):
+        work=tempfile.mkdtemp(prefix='neroxa-relay-unit-')
+        relay=None
+        try:
+            env=os.environ.copy()
+            env.update(AB_WORKDIR=work,AB_PROJECT='neroxa-rehearsal-123456789')
+            relay=subprocess.Popen(['python3',str(ROOT/'tools/ab-auth/docker_loopback.py')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            socket_path=pathlib.Path(work)/'docker-loopback.sock'
+            for _ in range(30):
+                if socket_path.exists(): break
+                time.sleep(0.1)
+            self.assertTrue(socket_path.exists())
+            env['DOCKER_HOST']='unix://'+str(socket_path)
+            for key in ['DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH']: env.pop(key,None)
+            payload=bytes(range(256))*4096
+            result=subprocess.run(['docker','exec','-i',self.container,'sha256sum'],env=env,input=payload,capture_output=True,check=True)
+            self.assertEqual(result.stdout.decode().split()[0],hashlib.sha256(payload).hexdigest())
+        finally:
+            if relay:
+                relay.terminate()
+                relay.wait(timeout=5)
+            shutil.rmtree(work)
 
 if __name__ == '__main__': unittest.main()

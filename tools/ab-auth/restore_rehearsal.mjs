@@ -172,7 +172,7 @@ FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname NOT 
 SELECT 'columns|' || md5(coalesce(string_agg(n.nspname || '.' || c.relname || '.' || a.attname || ':' || format_type(a.atttypid,a.atttypmod) || ':' || a.attnotnull::text || ':' || coalesce(pg_get_expr(d.adbin,d.adrelid),'null'), E'\\n' ORDER BY n.nspname,c.relname,a.attnum), ''))
 FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum WHERE a.attnum>0 AND NOT a.attisdropped AND n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
 SELECT 'policies|' || md5(coalesce(string_agg(to_jsonb(p)::text, E'\\n' ORDER BY schemaname,tablename,policyname), '')) FROM pg_policies p;
-SELECT 'triggers|' || md5(coalesce(string_agg(n.nspname || '.' || c.relname || '.' || t.tgname || ':' || pg_get_triggerdef(t.oid) || ':' || t.tgenabled, E'\\n' ORDER BY n.nspname,c.relname,t.tgname), ''))
+SELECT 'triggers|' || md5(coalesce(string_agg(n.nspname || '.' || c.relname || '.' || t.tgname || ':' || pg_get_triggerdef(t.oid) || ':' || t.tgenabled::text, E'\\n' ORDER BY n.nspname,c.relname,t.tgname), ''))
 FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE NOT t.tgisinternal AND n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
 SELECT 'constraints|' || md5(coalesce(string_agg(n.nspname || '.' || k.conname || ':' || pg_get_constraintdef(k.oid) || ':' || k.convalidated::text, E'\\n' ORDER BY n.nspname,k.conname), ''))
 FROM pg_constraint k JOIN pg_namespace n ON n.oid=k.connamespace WHERE n.nspname NOT LIKE 'pg_%' AND n.nspname <> 'information_schema';
