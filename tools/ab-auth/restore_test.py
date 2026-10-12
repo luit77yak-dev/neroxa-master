@@ -12,7 +12,10 @@ class RestoreRegression(unittest.TestCase):
             for _ in range(30):
                 if 'PostgreSQL init process complete' in subprocess.run(['docker','logs',cls.container],capture_output=True,text=True).stdout and subprocess.run(['docker','exec',cls.container,'pg_isready','-U','postgres'],capture_output=True).returncode == 0: break
                 time.sleep(1)
-            cls.sql('postgres', '''CREATE TABLE public.fixture(id integer PRIMARY KEY, instance_id uuid NOT NULL, value text);
+            cls.sql('postgres', '''CREATE ROLE fixture_reader NOLOGIN; CREATE EXTENSION pgcrypto; CREATE EXTENSION citext;
+                REVOKE EXECUTE ON FUNCTION public.gen_random_bytes(integer) FROM PUBLIC;
+                GRANT EXECUTE ON FUNCTION public.gen_random_bytes(integer) TO fixture_reader;
+                CREATE TABLE public.fixture(id integer PRIMARY KEY, instance_id uuid NOT NULL, value text);
                 INSERT INTO public.fixture VALUES(1,'00000000-0000-4000-8000-000000000001','fictitious');
                 CREATE TABLE public.fixture_child(id integer PRIMARY KEY, parent_id integer REFERENCES public.fixture(id));
                 INSERT INTO public.fixture_child VALUES(1,1);
@@ -41,6 +44,9 @@ class RestoreRegression(unittest.TestCase):
         toc=self.command(['docker','exec',self.container,'pg_restore','-l','/tmp/fixture.dump'])
         if any(' SCHEMA - public ' in l for l in toc.splitlines()): self.sql('restored','DROP SCHEMA public;')
         self.command(['docker','exec',self.container,'pg_restore','-U','postgres','-d','restored','--exit-on-error','--single-transaction','/tmp/fixture.dump'])
+        supplement=self.sql('postgres',(ROOT/'tools/ab-auth/restore_extension_acl.sql').read_text())
+        self.sql('restored',supplement)
+        self.sql('restored',supplement)  # Controlled ACL metadata replay is idempotent.
         # Internal PostgreSQL "char" must be cast before string concatenation.
         self.sql('restored', "SELECT 'trigger|' || tgenabled::text FROM pg_trigger;")
         script=(ROOT/'tools/ab-auth/restore_rehearsal.mjs').read_text()

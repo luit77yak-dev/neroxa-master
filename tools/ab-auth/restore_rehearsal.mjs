@@ -57,6 +57,7 @@ SELECT 'counts|' || (SELECT count(*) FROM public.neroxa_storefront_settings) || 
 const runId = process.env.GITHUB_RUN_ID;
 if (!/^[0-9]+$/.test(runId ?? "")) throw new Error("Safe CI run ID required");
 const dumpPath = "/tmp/neroxa-restore-" + runId + ".dump";
+const aclPath = "/tmp/neroxa-restore-" + runId + ".acl.sql";
 const out = "audits/rehearsal/results/restore-report.json";
 let cloneCreated = false;
 let restoredRest;
@@ -86,11 +87,12 @@ try {
   // into a separate disposable database; never mutate the source.
   security = await prepareSecurity({ work, project, psql, check });
   const baseline = query("postgres");
-  const extensionAcl = psql(
-    "postgres",
+  run(
+    ["psql", "-XqAt", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-o", aclPath],
     fs.readFileSync("tools/ab-auth/restore_extension_acl.sql", "utf8"),
   );
-  evidence.extensionAclSha256 = hash(extensionAcl);
+  run(["chmod", "600", aclPath]);
+  evidence.extensionAclSha256 = run(["sha256sum", aclPath]).trim().split(" ")[0];
   // Dump the entire disposable database, including Supabase-managed Auth and
   // extension dependencies. A public-only dump cannot restore auth.uid() etc.
   // Preserve OWNER and ACL statements so permissions can be checked on restore.
@@ -160,9 +162,21 @@ try {
     "--single-transaction",
     dumpPath,
   ]);
-  run(
-    ["psql", "-XqAt", "-U", "supabase_admin", "-d", restoreDb, "-v", "ON_ERROR_STOP=1"],
-    extensionAcl,
+  run([
+    "psql",
+    "-XqAt",
+    "-U",
+    "supabase_admin",
+    "-d",
+    restoreDb,
+    "-v",
+    "ON_ERROR_STOP=1",
+    "-f",
+    aclPath,
+  ]);
+  check(
+    "extension ACL companion hash unchanged",
+    run(["sha256sum", aclPath]).trim().split(" ")[0] === evidence.extensionAclSha256,
   );
   check("extension bootstrap ACL supplement restored", true);
   check(
@@ -299,7 +313,7 @@ SELECT 'table-grants|' || md5(coalesce(string_agg(grantee || ':' || table_schema
   }
   // Remove only this run's disposable archive; never export it as CI evidence.
   try {
-    run(["rm", "-f", dumpPath]);
+    run(["rm", "-f", dumpPath, aclPath]);
   } catch (e) {
     evidence.archiveCleanupError = String(e.message).slice(0, 200);
     process.exitCode = 1;

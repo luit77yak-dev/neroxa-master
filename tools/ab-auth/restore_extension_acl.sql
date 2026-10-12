@@ -14,7 +14,7 @@ WITH objects AS (
  AND EXISTS(SELECT 1 FROM pg_depend d WHERE d.classid='pg_proc'::regclass AND d.objid=p.oid AND d.deptype='e')
  UNION ALL
  SELECT 'TYPE',format('%I.%I',n.nspname,t.typname),t.typowner,t.typacl,'T'::"char"
- FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname NOT LIKE 'pg_%'
+ FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname NOT LIKE 'pg_%' AND t.typcategory<>'A'
  AND EXISTS(SELECT 1 FROM pg_depend d WHERE d.classid='pg_type'::regclass AND d.objid=t.oid AND d.deptype='e')
 ), metadata AS (
  SELECT o.*, (SELECT string_agg(format('%I',rolname),', ' ORDER BY rolname) FROM pg_roles) AS recipients,
