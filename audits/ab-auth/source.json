@@ -1,0 +1,12 @@
+{
+  "kind": "complete captured application catalog, not historical CREATE provenance",
+  "captured_at": "2026-10-09T18:21:56.532556+00:00",
+  "source_commit": "9da05c8b6f36069b99fec5d10069f371577326cb",
+  "sha256": "e7ed111d73ec8d63b514db8c39059d6b87ae97be74d54e0d682d38bc0e4cf858",
+  "relations": 34,
+  "columns": 438,
+  "functions": 50,
+  "policies": 99,
+  "production_equivalence": "NOT established; historical capture only",
+  "managed_defaults": "supabase_admin defaults recorded, not rewritten"
+}

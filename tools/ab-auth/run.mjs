@@ -1,0 +1,630 @@
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import { execFileSync } from "node:child_process";
+import { createClient } from "@supabase/supabase-js";
+
+const out = path.resolve("audits/ab-auth/results");
+fs.mkdirSync(out, { recursive: true });
+const report = {
+  classification: "INCONCLUSIVO",
+  stage: "platform",
+  source: "Full historical Master catalog 2026-10-09, no customer rows",
+  productionCompatibility: false,
+  tests: [],
+  migrations: [],
+  limitations: [
+    "Historical catalog is not current production schema proof.",
+    "Managed supabase_admin default privileges are recorded, not modified.",
+    "Supabase Auth/PostgREST version and runtime differ from production; no production credentials used.",
+  ],
+};
+let failureCode = 0;
+const work = process.env.AB_WORKDIR;
+const project = process.env.AB_PROJECT;
+const db = `supabase_db_${project}`;
+const sql = (text) => {
+  try {
+    return execFileSync(
+      "docker",
+      [
+        "exec",
+        "-i",
+        db,
+        "psql",
+        "-X",
+        "-q",
+        "-A",
+        "-t",
+        "-U",
+        "postgres",
+        "-d",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+      ],
+      { input: text, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
+    ).trim();
+  } catch (e) {
+    const msg = String(e.stderr ?? "").match(/ERROR:\s*([^\n]+)/)?.[1] ?? "SQL failed";
+    const error = new Error(msg.slice(0, 240));
+    error.stage = report.stage;
+    throw error;
+  }
+};
+const id = () => crypto.randomUUID();
+const literal = (v) => "'" + String(v).replaceAll("'", "''") + "'";
+const tests = report.tests;
+async function test(name, actor, request, expected, predicate) {
+  const r = await request();
+  const passed = expected.includes(r.status) && predicate(r.body);
+  tests.push({ name, actor, passed, http: r.status, sqlstate: r.body?.code ?? null });
+  console.log(`${passed ? "PASS" : "FAIL"} ${name} [${actor}] HTTP ${r.status}`);
+  if (!passed) failureCode = 1;
+  return r;
+}
+function totp(secret) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const c of secret.toUpperCase().replaceAll("=", "")) {
+    const n = alphabet.indexOf(c);
+    if (n < 0) throw new Error("Invalid local TOTP secret");
+    bits += n.toString(2).padStart(5, "0");
+  }
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000)));
+  const h = crypto.createHmac("sha1", Buffer.from(bytes)).update(counter).digest();
+  const p = h[19] & 15;
+  return ((h.readUInt32BE(p) & 0x7fffffff) % 1000000).toString().padStart(6, "0");
+}
+try {
+  if (!work || !project || !project.startsWith("neroxa-ab-"))
+    throw new Error("Explicit disposable context required");
+  const inspected = JSON.parse(execFileSync("docker", ["inspect", db], { encoding: "utf8" }))[0];
+  for (const binds of Object.values(inspected.HostConfig.PortBindings ?? {}))
+    for (const b of binds ?? [])
+      if (b.HostIp !== "127.0.0.1") throw new Error("Non-loopback published database port");
+  const platformContainers = JSON.parse(
+    execFileSync("docker", ["ps", "--format", "{{json .}}"], { encoding: "utf8" })
+      .trim()
+      .split("\n")
+      .map((x) => x)
+      .join("\n")
+      .split("\n")
+      .filter(Boolean)
+      .map((x) => JSON.parse(x))
+      .map((x) => JSON.stringify(x))
+      .join(",")
+      .replace(/^/, "[")
+      .replace(/$/, "]"),
+  );
+  for (const c of platformContainers.filter((x) => x.Names?.endsWith("_" + project))) {
+    const i = JSON.parse(execFileSync("docker", ["inspect", c.Names], { encoding: "utf8" }))[0];
+    for (const binds of Object.values(i.HostConfig.PortBindings ?? {}))
+      for (const b of binds ?? [])
+        if (!["127.0.0.1", "::1"].includes(b.HostIp)) throw new Error("Non-loopback platform bind");
+  }
+  report.versions = {
+    cli: execFileSync("supabase", ["--version"], { encoding: "utf8" }).trim(),
+    postgres: sql("SELECT version();"),
+    node: process.version,
+    images: platformContainers
+      .filter((x) => x.Names?.endsWith("_" + project))
+      .map((x) => ({ name: x.Names, image: x.Image })),
+  };
+  const env = {};
+  for (const l of fs.readFileSync(path.join(work, "status.private.env"), "utf8").split("\n")) {
+    const m = l.match(/^([A-Z_]+)="(.*)"$/);
+    if (m) env[m[1]] = m[2];
+  }
+  const url = env.API_URL;
+  if (!url || !["127.0.0.1", "localhost"].includes(new URL(url).hostname))
+    throw new Error("Only local API accepted");
+  for (const key of ["ANON_KEY", "SERVICE_ROLE_KEY"]) {
+    if (!env[key]) throw new Error("Local status key missing");
+    console.log("::add-mask::" + env[key]);
+  }
+  const health = await fetch(url + "/auth/v1/health");
+  if (!health.ok) throw new Error("Real Auth health failed");
+  const admin = createClient(url, env.SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const people = {};
+  for (const alias of ["opA", "opB", "orgAdmin", "platform", "outsider"]) {
+    const password = crypto.randomBytes(24).toString("base64url");
+    const email = `${alias.toLowerCase()}-${project}@ab.invalid`;
+    const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+    if (created.error) throw new Error("Local Auth create user failed");
+    const client = createClient(url, env.ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const signed = await client.auth.signInWithPassword({ email, password });
+    if (signed.error || !signed.data.session) throw new Error("Local Auth login failed");
+    const token = signed.data.session.access_token;
+    console.log("::add-mask::" + token);
+    const claims = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString());
+    if (
+      claims.sub !== created.data.user.id ||
+      claims.role !== "authenticated" ||
+      claims.aal !== "aal1"
+    )
+      throw new Error("JWT is not an Auth issued authenticated AAL1 identity");
+    people[alias] = { id: created.data.user.id, token, client };
+    tests.push({ name: "Auth sign-in and JWT identity", actor: alias, passed: true });
+  }
+  report.stage = "baseline";
+  const baseline = path.join(work, "baseline.sql");
+  execFileSync("python3", ["tools/ab-auth/build_schema.py", baseline], { stdio: "inherit" });
+  sql(fs.readFileSync(baseline, "utf8"));
+  report.baseline = {
+    relations: Number(
+      sql(
+        "SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname LIKE 'neroxa_%' AND c.relkind IN ('r','v');",
+      ),
+    ),
+    functions: Number(
+      sql(
+        "SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','private') AND p.prokind='f';",
+      ),
+    ),
+    policies: Number(
+      sql("SELECT count(*) FROM pg_policies WHERE schemaname IN ('public','private');"),
+    ),
+  };
+  if (
+    report.baseline.relations !== 34 ||
+    report.baseline.functions !== 50 ||
+    report.baseline.policies !== 99
+  )
+    throw new Error("Complete snapshot object count mismatch");
+  report.stage = "candidates";
+  for (const file of [
+    "instance-membership-foundation.candidate.sql",
+    "storefront-instance-phase1.candidate.sql",
+    "store-product-category-guard.candidate.sql",
+    "storefront-tenant-integrity.candidate.sql",
+    "storefront-parent-instance-guard.candidate.sql",
+    "store-isolation-policies.candidate.sql",
+    "storefront-instance-phase2-cutover.candidate.sql",
+    "storefront-settings-zones-rls.candidate.sql",
+    "storefront-admin-rpc.candidate.sql",
+    "storefront-rpcs-phase2.candidate.sql",
+    "store-isolation-prerequisites.assert.sql",
+  ]) {
+    const text = fs.readFileSync("audits/sql/" + file, "utf8");
+    sql(text);
+    report.migrations.push({
+      file,
+      sha256: crypto.createHash("sha256").update(text).digest("hex"),
+      applied: true,
+    });
+  }
+  const extra = "audits/sql/store-isolation-runtime-hardening.candidate.sql";
+  if (fs.existsSync(extra)) {
+    const text = fs.readFileSync(extra, "utf8");
+    sql(text);
+    report.migrations.push({
+      file: path.basename(extra),
+      sha256: crypto.createHash("sha256").update(text).digest("hex"),
+      applied: true,
+    });
+  }
+  report.stage = "fixtures";
+  const org = id(),
+    A = id(),
+    B = id(),
+    catA = id(),
+    catB = id(),
+    productA = id(),
+    productB = id(),
+    orderA = id(),
+    orderB = id(),
+    zoneA = id(),
+    zoneB = id();
+  sql(`BEGIN;
+  INSERT INTO public.neroxa_organizations(id,legal_name,trade_name) VALUES(${literal(org)},'Organização fictícia A/B','AB fictícia');
+  INSERT INTO public.neroxa_system_instances(id,organization_id,name,slug,system_type,status) VALUES(${literal(A)},${literal(org)},'Loja fictícia A','ab-a','DELIVERY','ACTIVE'),(${literal(B)},${literal(org)},'Loja fictícia B','ab-b','DELIVERY','ACTIVE');
+  INSERT INTO public.neroxa_organization_members(organization_id,user_id,role) VALUES(${literal(org)},${literal(people.opA.id)},'OPERATOR'),(${literal(org)},${literal(people.opB.id)},'OPERATOR'),(${literal(org)},${literal(people.orgAdmin.id)},'ADMIN');
+  INSERT INTO public.neroxa_instance_members(instance_id,user_id,role) VALUES(${literal(A)},${literal(people.opA.id)},'OPERATOR'),(${literal(B)},${literal(people.opB.id)},'OPERATOR'),(${literal(A)},${literal(people.orgAdmin.id)},'ADMIN');
+  INSERT INTO public.neroxa_platform_members(user_id,role) VALUES(${literal(people.platform.id)},'ADMIN');
+  INSERT INTO public.neroxa_storefront_categories(id,instance_id,name,slug) VALUES(${literal(catA)},${literal(A)},'Categoria fictícia A','cat-a'),(${literal(catB)},${literal(B)},'Categoria fictícia B','cat-b');
+  INSERT INTO public.neroxa_storefront_products(id,instance_id,category_id,name,slug,price) VALUES(${literal(productA)},${literal(A)},${literal(catA)},'Produto fictício A','product-a',30),(${literal(productB)},${literal(B)},${literal(catB)},'Produto fictício B','product-b',40);
+  INSERT INTO public.neroxa_storefront_settings(organization_id,instance_id,payment_methods) VALUES(${literal(org)},${literal(A)},ARRAY['CASH']),(${literal(org)},${literal(B)},ARRAY['CASH']);
+  INSERT INTO public.neroxa_storefront_delivery_zones(id,organization_id,instance_id,name,neighborhoods,delivery_fee) VALUES(${literal(zoneA)},${literal(org)},${literal(A)},'Zona A',ARRAY['Bairro fictício A'],5),(${literal(zoneB)},${literal(org)},${literal(B)},'Zona B',ARRAY['Bairro fictício B'],7);
+  INSERT INTO public.neroxa_system_domains(system_instance_id,domain,status) VALUES(${literal(A)},'a.ab.invalid','VERIFIED'),(${literal(B)},'b.ab.invalid','VERIFIED');
+  INSERT INTO public.neroxa_orders(id,instance_id,organization_id,order_number,customer_name,customer_phone,fulfillment,payment_method,subtotal,total) VALUES(${literal(orderA)},${literal(A)},${literal(org)},1,'Cliente fictício A','00000000001','PICKUP','CASH',30,30),(${literal(orderB)},${literal(B)},${literal(org)},1,'Cliente fictício B','00000000002','PICKUP','CASH',40,40);
+  INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,quantity,unit_price,line_total) VALUES(${literal(orderA)},${literal(productA)},'Produto fictício A',1,30,30),(${literal(orderB)},${literal(productB)},'Produto fictício B',1,40,40);
+  INSERT INTO public.neroxa_order_status_history(order_id,to_status,note) VALUES(${literal(orderA)},'RECEIVED','Fixture fictícia'),(${literal(orderB)},'RECEIVED','Fixture fictícia');COMMIT;`);
+  const api = async (actor, resource, method = "GET", body) => {
+    const token = actor === "anon" ? env.ANON_KEY : people[actor].token;
+    const r = await fetch(url + "/rest/v1/" + resource, {
+      method,
+      headers: {
+        apikey: env.ANON_KEY,
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
+    const text = await r.text();
+    return { status: r.status, body: text ? JSON.parse(text) : null };
+  };
+  const rpc = (actor, fn, args) => api(actor, "rpc/" + fn, "POST", args);
+  report.stage = "matrix";
+  const tables = [
+    ["neroxa_storefront_products", "id", productA, productB],
+    ["neroxa_storefront_categories", "id", catA, catB],
+    ["neroxa_orders", "id", orderA, orderB],
+    ["neroxa_storefront_settings", "instance_id", A, B],
+    ["neroxa_storefront_delivery_zones", "id", zoneA, zoneB],
+  ];
+  for (const actor of ["opA", "opB", "orgAdmin", "outsider", "anon"])
+    for (const [table, key, a, b] of tables) {
+      for (const [store, record] of [
+        ["A", a],
+        ["B", b],
+      ]) {
+        const own =
+          ((actor === "opA" || actor === "orgAdmin") && store === "A") ||
+          (actor === "opB" && store === "B");
+        await test(
+          `${table} SELECT ${store}`,
+          actor,
+          () => api(actor, `${table}?${key}=eq.${record}`),
+          [200, 401, 403],
+          (r) => (own ? Array.isArray(r) && r.length === 1 : !Array.isArray(r) || r.length === 0),
+        );
+      }
+    }
+  for (const actor of ["opA", "opB", "orgAdmin", "outsider", "anon"]) {
+    const foreign = actor === "opB" ? "A" : "B";
+    const target = foreign === "A" ? A : B;
+    const targetP = foreign === "A" ? productA : productB;
+    const targetCat = foreign === "A" ? catA : catB;
+    for (const [table, key, record] of tables) {
+      const victim = foreign === "A" ? record : tables.find((x) => x[0] === table)[3];
+      await test(
+        `${table} foreign UPDATE`,
+        actor,
+        () =>
+          api(
+            actor,
+            `${table}?${key}=eq.${victim}`,
+            "PATCH",
+            table === "neroxa_orders"
+              ? { notes: "Fictitious unauthorized change" }
+              : table === "neroxa_storefront_settings"
+                ? { description: "Denied" }
+                : { name: "Denied" },
+          ),
+        [200, 401, 403],
+        (r) => !Array.isArray(r) || r.length === 0,
+      );
+      await test(
+        `${table} foreign DELETE`,
+        actor,
+        () => api(actor, `${table}?${key}=eq.${victim}`, "DELETE"),
+        [200, 401, 403],
+        (r) => !Array.isArray(r) || r.length === 0,
+      );
+    }
+    await test(
+      "foreign product INSERT",
+      actor,
+      () =>
+        api(actor, "neroxa_storefront_products", "POST", {
+          instance_id: target,
+          category_id: targetCat,
+          name: "Denied",
+          slug: id(),
+          price: 1,
+        }),
+      [401, 403],
+      (r) => !!r.code,
+    );
+    await test(
+      "foreign admin RPC",
+      actor,
+      () => rpc(actor, "get_admin_orders", { p_instance_id: target }),
+      [200, 401, 403],
+      (r) => !Array.isArray(r) || r.length === 0,
+    );
+    await test(
+      "foreign status RPC",
+      actor,
+      () =>
+        rpc(actor, "update_admin_order_status", {
+          p_order_id: foreign === "A" ? orderA : orderB,
+          p_status: "CONFIRMED",
+        }),
+      [400, 401, 403],
+      (r) => !!r.code,
+    );
+    await test(
+      "self grant rejected",
+      actor,
+      () =>
+        api(actor, "neroxa_instance_members", "POST", {
+          instance_id: target,
+          user_id: people[actor]?.id ?? people.outsider.id,
+          role: "ADMIN",
+        }),
+      [401, 403],
+      (r) => !!r.code,
+    );
+  }
+  await test(
+    "org admin scoped own product INSERT",
+    "orgAdmin",
+    () =>
+      api("orgAdmin", "neroxa_storefront_products", "POST", {
+        instance_id: A,
+        category_id: catA,
+        name: "Produto novo fictício",
+        slug: id(),
+        price: 35,
+      }),
+    [201],
+    (r) => Array.isArray(r) && r.length === 1,
+  );
+  await test(
+    "cross-store category rejected",
+    "orgAdmin",
+    () =>
+      api("orgAdmin", "neroxa_storefront_products", "POST", {
+        instance_id: A,
+        category_id: catB,
+        name: "Denied",
+        slug: id(),
+        price: 1,
+      }),
+    [400, 401, 403],
+    (r) => !!r.code,
+  );
+  await test(
+    "own order admin read",
+    "opA",
+    () => rpc("opA", "get_admin_orders", { p_instance_id: A }),
+    [200],
+    (r) => Array.isArray(r) && r.some((o) => o.id === orderA),
+  );
+  await test(
+    "own order status RPC",
+    "opA",
+    () => rpc("opA", "update_admin_order_status", { p_order_id: orderA, p_status: "CONFIRMED" }),
+    [200],
+    (r) => r?.id === orderA && r?.status === "CONFIRMED",
+  );
+  await test(
+    "own direct order mutation rejected",
+    "opA",
+    () => api("opA", `neroxa_orders?id=eq.${orderA}`, "PATCH", { total: 1 }),
+    [401, 403],
+    (r) => !!r.code,
+  );
+  for (const table of ["neroxa_order_items", "neroxa_order_status_history"]) {
+    await test(
+      table + " own read",
+      "opA",
+      () => api("opA", `${table}?order_id=eq.${orderA}`),
+      [200],
+      (r) => Array.isArray(r) && r.length > 0,
+    );
+    await test(
+      table + " foreign read",
+      "opA",
+      () => api("opA", `${table}?order_id=eq.${orderB}`),
+      [200, 401, 403],
+      (r) => !Array.isArray(r) || r.length === 0,
+    );
+  }
+  for (const store of ["a", "b"])
+    await test(
+      "public catalog " + store,
+      "anon",
+      () => rpc("anon", "get_public_storefront_catalog", { p_domain: store + ".ab.invalid" }),
+      [200],
+      (r) =>
+        r?.context?.instance_id === (store === "a" ? A : B) &&
+        r.products.every((p) => p.id !== (store === "a" ? productB : productA)),
+    );
+  const payload = {
+    organization_id: org,
+    instance_id: A,
+    customer_name: "Cliente inteiramente fictício",
+    customer_phone: "00000000003",
+    fulfillment: "PICKUP",
+    payment_method: "CASH",
+    idempotency_key: id(),
+    items: [{ product_id: productA, quantity: 1, unit_price: 1 }],
+  };
+  const created = await test(
+    "public checkout server price",
+    "anon",
+    () => rpc("anon", "create_public_order", { p_order: payload }),
+    [200],
+    (r) => Array.isArray(r) && r.length === 1 && Number(r[0].total) === 30,
+  );
+  await test(
+    "public checkout rejects foreign product",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: {
+          ...payload,
+          idempotency_key: id(),
+          items: [{ product_id: productB, quantity: 1 }],
+        },
+      }),
+    [400],
+    (r) => !!r.code,
+  );
+  await test(
+    "public checkout rejects organization mismatch",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...payload, organization_id: id(), idempotency_key: id() },
+      }),
+    [400],
+    (r) => !!r.code,
+  );
+  await test(
+    "public idempotent retry",
+    "anon",
+    () => rpc("anon", "create_public_order", { p_order: payload }),
+    [200],
+    (r) => Array.isArray(r) && r[0]?.order_id === created.body?.[0]?.order_id,
+  );
+  await test(
+    "public tracking rejects wrong contact",
+    "anon",
+    () =>
+      rpc("anon", "get_public_order_status", {
+        p_order_id: orderB,
+        p_customer_phone: "00000000099",
+      }),
+    [200, 400, 403],
+    (r) => r === null || !!r.code,
+  );
+  await test(
+    "public append rejects wrong contact",
+    "anon",
+    () =>
+      rpc("anon", "append_public_order_items_with_payment", {
+        p_order_id: orderB,
+        p_customer_phone: "00000000099",
+        p_items: [{ product_id: productA, quantity: 1 }],
+        p_payment_method: "CASH",
+      }),
+    [400, 403],
+    (r) => !!r.code,
+  );
+  await test(
+    "platform AAL1 settings denied",
+    "platform",
+    () =>
+      api("platform", `neroxa_storefront_settings?instance_id=eq.${B}`, "PATCH", {
+        description: "Denied AAL1",
+      }),
+    [200, 403],
+    (r) => !Array.isArray(r) || r.length === 0,
+  );
+  const aal1 = people.platform.token;
+  const enrolled = await people.platform.client.auth.mfa.enroll({
+    factorType: "totp",
+    friendlyName: "AB synthetic TOTP",
+  });
+  if (enrolled.error) throw new Error("Real Auth TOTP enrollment failed");
+  const challenge = await people.platform.client.auth.mfa.challenge({ factorId: enrolled.data.id });
+  if (challenge.error) throw new Error("Real Auth MFA challenge failed");
+  const verified = await people.platform.client.auth.mfa.verify({
+    factorId: enrolled.data.id,
+    challengeId: challenge.data.id,
+    code: totp(enrolled.data.totp.secret),
+  });
+  if (verified.error) throw new Error("Real Auth MFA verify failed");
+  const session = await people.platform.client.auth.getSession();
+  people.platform.token = session.data.session.access_token;
+  console.log("::add-mask::" + people.platform.token);
+  if (JSON.parse(Buffer.from(people.platform.token.split(".")[1], "base64url")).aal !== "aal2")
+    throw new Error("MFA did not issue real AAL2 token");
+  tests.push({ name: "Auth TOTP challenge and real AAL2 JWT", actor: "platform", passed: true });
+  for (const instance of [A, B])
+    await test(
+      "platform AAL2 instance read",
+      "platform",
+      () => api("platform", `neroxa_system_instances?id=eq.${instance}`),
+      [200],
+      (r) => Array.isArray(r) && r.length === 1,
+    );
+  await test(
+    "platform AAL2 product tenant reassignment denied",
+    "platform",
+    () =>
+      api("platform", `neroxa_storefront_products?id=eq.${productA}`, "PATCH", {
+        instance_id: B,
+        category_id: catB,
+      }),
+    [400, 403],
+    (r) => !!r.code,
+  );
+  await test(
+    "platform AAL2 category reassignment denied",
+    "platform",
+    () =>
+      api("platform", `neroxa_storefront_categories?id=eq.${catA}`, "PATCH", { instance_id: B }),
+    [400, 403],
+    (r) => !!r.code,
+  );
+  await test(
+    "platform AAL2 order tenant reassignment denied",
+    "platform",
+    () => api("platform", `neroxa_orders?id=eq.${orderA}`, "PATCH", { instance_id: B }),
+    [400, 403],
+    (r) => !!r.code,
+  );
+  await test(
+    "platform AAL2 settings reassignment denied",
+    "platform",
+    () =>
+      api("platform", `neroxa_storefront_settings?instance_id=eq.${A}`, "PATCH", {
+        instance_id: B,
+      }),
+    [400, 403],
+    (r) => !!r.code,
+  );
+  await test(
+    "platform AAL2 zone reassignment denied",
+    "platform",
+    () =>
+      api("platform", `neroxa_storefront_delivery_zones?id=eq.${zoneA}`, "PATCH", {
+        instance_id: B,
+      }),
+    [400, 403],
+    (r) => !!r.code,
+  );
+  await test(
+    "platform AAL2 parent org reassignment denied",
+    "platform",
+    () => api("platform", `neroxa_system_instances?id=eq.${A}`, "PATCH", { organization_id: id() }),
+    [400, 403],
+    (r) => !!r.code,
+  );
+  people.platform.token = aal1;
+  await test(
+    "platform AAL1 membership grant rejected",
+    "platform",
+    () =>
+      api("platform", "neroxa_platform_members", "POST", {
+        user_id: people.outsider.id,
+        role: "ADMIN",
+      }),
+    [401, 403],
+    (r) => !!r.code,
+  );
+  report.classification = failureCode ? "REPROVADO" : "INCONCLUSIVO";
+  report.identities = Object.keys(people);
+  report.successes = tests.filter((t) => t.passed).length;
+  report.failures = tests.filter((t) => !t.passed).length;
+  report.note =
+    "Real Auth/JWT/PostgREST matrix on historical full catalog. Production release remains unapproved even if this matrix passes.";
+} catch (e) {
+  failureCode = 1;
+  report.error = { stage: report.stage, message: String(e.message).slice(0, 240) };
+  console.log("STOP at " + report.stage + ": " + report.error.message);
+} finally {
+  fs.writeFileSync(path.join(out, "result.json"), JSON.stringify(report, null, 2) + "\n");
+  console.log(
+    JSON.stringify({
+      classification: report.classification,
+      stage: report.stage,
+      passed: tests.filter((t) => t.passed).length,
+      failed: tests.filter((t) => !t.passed).length,
+    }),
+  );
+}
+process.exitCode = failureCode;
