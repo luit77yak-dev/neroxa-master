@@ -52,7 +52,7 @@ try {
   evidence.stage = "separate-restore-database";
   psql("postgres", 'CREATE DATABASE "' + restoreDb + '";');
   cloneCreated = true;
-  // Recreate roles and extensions from the disposable Supabase platform, never production.
+  // Fresh PostgreSQL databases include public by default; the dump recreates it.\n  // Drop only the empty schema in the newly created disposable restore database.\n  psql(restoreDb, "DROP SCHEMA IF EXISTS public CASCADE;");\n  // Recreate roles and extensions from the disposable Supabase platform, never production.
   // pg_dump --schema=public omits Auth/private managed objects, so restore only
   // the app schema. A fresh database has the same platform roles but not extensions.
   const extensions = psql("postgres", "SELECT extname FROM pg_extension WHERE extname NOT IN ('plpgsql');").split("\n").filter(Boolean);
