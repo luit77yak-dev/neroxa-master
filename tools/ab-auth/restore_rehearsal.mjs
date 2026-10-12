@@ -127,11 +127,27 @@ try {
   evidence.publicSchemaBootstrap = publicDeclarations.length ? "archive" : "template0";
   // Use pg_restore within the disposable container; fail atomically on ANY
   // SQL error. Archive restore handles extensions and schema ordering.
+  check(
+    "native disposable restore executor is superuser",
+    run([
+      "psql",
+      "-XqAt",
+      "-U",
+      "supabase_admin",
+      "-d",
+      restoreDb,
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-c",
+      "SELECT current_user='supabase_admin' AND current_setting('is_superuser')='on'",
+    ]).trim() === "t",
+  );
+  evidence.restoreExecutor = "supabase_admin via local container socket; no role grants modified";
   evidence.stage = "restore-archive";
   run([
     "pg_restore",
     "-U",
-    "postgres",
+    "supabase_admin",
     "-d",
     restoreDb,
     "--format=custom",
@@ -212,6 +228,13 @@ SELECT 'table-grants|' || md5(coalesce(string_agg(grantee || ':' || table_schema
     "complete function properties, defaults, column ACL and roles",
     psql("postgres", extra) === psql(restoreDb, extra),
   );
+  const integritySql = fs.readFileSync("tools/ab-auth/restore_integrity.sql", "utf8");
+  const integrity = psql(restoreDb, integritySql);
+  check(
+    "all restored foreign keys have zero orphans",
+    integrity.split("\n").every((line) => line.endsWith("|0")),
+  );
+  evidence.foreignKeysChecked = integrity.split("\n").length;
   evidence.stage = "restored-auth-matrix";
   restoredAuth = await startRestoredAuth({ project, restoreDb, security, check });
   restoredRest = await startRestoredRest({ project, restoreDb });
