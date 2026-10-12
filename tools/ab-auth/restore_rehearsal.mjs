@@ -57,10 +57,19 @@ try {
   // the app schema. A fresh database has the same platform roles but not extensions.
   const extensions = psql("postgres", "SELECT extname FROM pg_extension WHERE extname NOT IN ('plpgsql');").split("\n").filter(Boolean);
   for (const ext of extensions) {
-    if (!/^[a-z0-9_]+$/.test(ext)) throw new Error("Unexpected extension");
+    if (!/^[a-z0-9_-]+$/.test(ext)) throw new Error("Unexpected extension: " + ext);
     psql(restoreDb, 'CREATE EXTENSION IF NOT EXISTS "' + ext + '" CASCADE;');
   }
-  // Restore fails closed if any dependency, ACL or object cannot be recreated.\n  psql(restoreDb, dump);\n  const catalog = (db) => psql(db, `\nSELECT 'tables|' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r';\nSELECT 'policies|' || count(*) FROM pg_policies WHERE schemaname='public';\nSELECT 'triggers|' || count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND NOT t.tgisinternal;\nSELECT 'constraints|' || count(*) FROM pg_constraint k JOIN pg_namespace n ON n.oid=k.connamespace WHERE n.nspname='public';\nSELECT 'grants|' || coalesce(md5(string_agg(grantee || ':' || table_name || ':' || privilege_type, ',' ORDER BY grantee,table_name,privilege_type)), '') FROM information_schema.role_table_grants WHERE table_schema='public';\n`);\n  check("restored structural and table grants fingerprint", hash(catalog(restoreDb)) === hash(catalog("postgres")));
+  // Restore fails closed if any dependency, ACL or object cannot be recreated.
+  psql(restoreDb, dump);
+  const catalog = (db) => psql(db, `
+SELECT 'tables|' || count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r';
+SELECT 'policies|' || count(*) FROM pg_policies WHERE schemaname='public';
+SELECT 'triggers|' || count(*) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND NOT t.tgisinternal;
+SELECT 'constraints|' || count(*) FROM pg_constraint k JOIN pg_namespace n ON n.oid=k.connamespace WHERE n.nspname='public';
+SELECT 'grants|' || coalesce(md5(string_agg(grantee || ':' || table_name || ':' || privilege_type, ',' ORDER BY grantee,table_name,privilege_type)), '') FROM information_schema.role_table_grants WHERE table_schema='public';
+`);
+  check("restored structural and table grants fingerprint", hash(catalog(restoreDb)) === hash(catalog("postgres")));
   check("restored fixture checksum", hash(query(restoreDb)) === hash(baseline));
   check("restored settings PK by instance", psql(restoreDb, "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid='public.neroxa_storefront_settings'::regclass AND contype='p'").includes("instance_id"));
   evidence.stage = "done";
