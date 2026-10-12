@@ -40,8 +40,8 @@ try {
   evidence.stage = "source-baseline";
   // Called only after historical_rehearsal.mjs has populated the disposable database.
   check("historical rehearsal report passed", JSON.parse(fs.readFileSync("audits/rehearsal/results/report.json", "utf8")).status === "PASS");
-  // The source database is already cut over: snapshot the post-cutover state, then
-  // mutate it deliberately and restore its dump into a separate disposable database.
+  // The source database is already cut over. Snapshot it and restore the dump
+  // into a separate disposable database; never mutate the source.
   const baseline = query("postgres");
   // Dump the entire disposable database, including Supabase-managed Auth and
   // extension dependencies. A public-only dump cannot restore auth.uid() etc.
@@ -67,7 +67,9 @@ try {
   const schemaDeclaration = /^CREATE SCHEMA (?:"public"|public);[ \t]*\r?$/gm;
   const occurrences = [...dump.matchAll(schemaDeclaration)].length;
   evidence.publicSchemaDeclarations = occurrences;
-  check("exactly one public schema declaration in dump", occurrences === 1);
+  // pg_dump may omit CREATE SCHEMA public entirely when dumping the built-in
+  // schema. Zero or one is valid; multiple declarations indicate a bad dump.
+  check("zero or one public schema declaration in dump", occurrences <= 1);
   const restoreSql = dump.replace(schemaDeclaration, "-- public schema already provisioned");
   psql(restoreDb, restoreSql);
   check("Supabase Auth schema restored", psql(restoreDb, "SELECT count(*) FROM pg_namespace WHERE nspname='auth';") === "1");
