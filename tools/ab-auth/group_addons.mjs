@@ -211,6 +211,40 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
     (await create(order(optionalLine))).status === 400,
   );
   sql(`UPDATE public.neroxa_storefront_addon_groups SET min_selections=0 WHERE id=${q(optional)};`);
+  const delivery = {
+    ...order(),
+    fulfillment: "DELIVERY",
+    address_street: "Rua fictícia",
+    address_number: "S/N",
+    address_neighborhood: "Bairro fictício A",
+    delivery_fee: 0.01,
+    expected_total: 79.5,
+  };
+  const delivered = await create(delivery);
+  check(
+    "delivery zone fee is server authoritative",
+    delivered.status === 200 && delivered.data[0].total === 79.5,
+  );
+  check(
+    "zone from sibling shop cannot reduce fee",
+    (
+      await create({
+        ...delivery,
+        idempotency_key: crypto.randomUUID(),
+        address_neighborhood: "Bairro fictício B",
+      })
+    ).status === 400,
+  );
+  sql(
+    `UPDATE public.neroxa_storefront_delivery_zones SET delivery_fee=6 WHERE instance_id=${q(A.instance_id)};`,
+  );
+  check(
+    "changed delivery fee requires new total consent",
+    (await create({ ...delivery, idempotency_key: crypto.randomUUID() })).status === 409,
+  );
+  sql(
+    `UPDATE public.neroxa_storefront_delivery_zones SET delivery_fee=5 WHERE instance_id=${q(A.instance_id)};`,
+  );
   const snapshot = sql(
     `SELECT selection_snapshot::text FROM public.neroxa_order_items WHERE order_id=${q(id)};`,
   );
