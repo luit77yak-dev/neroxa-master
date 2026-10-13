@@ -55,7 +55,9 @@ let server,
   context,
   complete = false,
   lost = null,
-  drop = false;
+  drop = false,
+  checkoutPosts = 0,
+  originalPayload = null;
 const api = async (resource, body) => {
   const r = await fetch(env.API_URL + "/rest/v1/" + resource, {
     method: "PATCH",
@@ -69,7 +71,7 @@ const api = async (resource, body) => {
   });
   return { status: r.status, data: await r.json() };
 };
-const fixture = path.join(consumer, "h03.client.fixture.ts"),
+const fixture = path.join(consumer, "h03.isolated.fixture.ts"),
   config = path.join(consumer, "vite.h03.config.ts");
 try {
   fs.writeFileSync(
@@ -124,8 +126,12 @@ try {
         ["a.ab.invalid", "b.ab.invalid", "c.ab.invalid"].includes(u.hostname) &&
         u.port === "4173"
       ) {
+        if (u.pathname === "/api/checkout" && r.method() === "POST") {
+          checkoutPosts++;
+        }
         if (drop && u.pathname === "/api/checkout" && r.method() === "POST") {
-          drop = false;
+          originalPayload = r.postDataJSON().p_order;
+          ((drop = false), (checkoutPosts = 0), (originalPayload = null));
           const response = await route.fetch();
           check("lost-response transport actually persisted via HTTPS", response.status() === 200);
           lost = await response.json();
@@ -171,7 +177,7 @@ try {
       if (await header.isVisible()) await header.click();
       else await page.locator(".ppp-floating-cart button").click();
     }
-    await page.getByRole("button", { name: /Finalizar/ }).click();
+    await page.getByRole("button", { name: "Continuar para checkout", exact: true }).click();
   };
   const customer = async () => {
     await page.getByLabel(/Nome/).fill("Cliente H04 fictício");
@@ -184,6 +190,28 @@ try {
   const before = Number(
     sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${A.instance_id}'`),
   );
+  const priorPosts = checkoutPosts;
+  await page.evaluate(() => {
+    window.__h03StorageSet = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key.startsWith("neroxa:checkout-intent:"))
+        throw new DOMException("Synthetic storage denied", "SecurityError");
+      return window.__h03StorageSet.call(this, key, value);
+    };
+  });
+  await page.getByRole("button", { name: /(?:Enviar pedido|Recuperar tentativa) R\$/ }).click();
+  await page.getByRole("alert").filter({ hasText: "Armazenamento indisponível" }).waitFor();
+  check(
+    "blocked browser storage sends zero checkout HTTP requests",
+    checkoutPosts === priorPosts &&
+      Number(
+        sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${A.instance_id}'`),
+      ) === before,
+  );
+  await page.evaluate(() => {
+    Storage.prototype.setItem = window.__h03StorageSet;
+    delete window.__h03StorageSet;
+  });
   const update = await api("neroxa_storefront_products?id=eq." + A.p, { price: 35 });
   check(
     "real authenticated owner price update",
@@ -244,6 +272,41 @@ try {
         A.instance_id,
       )) === priorKey,
   );
+  const secondPage = await context.newPage();
+  await secondPage.goto("https://a.ab.invalid:4173/", { waitUntil: "networkidle" });
+  const replayInTab = (tab) =>
+    tab.evaluate(async (payload) => {
+      const { withDurableCheckoutIntent } =
+        await import("/src/core/delivery/durable-checkout-intent.ts");
+      return withDurableCheckoutIntent(
+        payload.instance_id,
+        payload,
+        async (wire, resolve) => {
+          const response = await fetch("/api/checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ p_order: wire }),
+          });
+          if (!response.ok) throw Error("Native tab replay failed: " + response.status);
+          const result = await response.json();
+          if (result.snapshot?.instance_id !== payload.instance_id)
+            throw Error("Wrong tab instance");
+          resolve();
+          return { id: result.order_id, key: wire.idempotency_key };
+        },
+        { storage: localStorage, locks: navigator.locks },
+      );
+    }, originalPayload);
+  const tabResults = await Promise.all([replayInTab(page), replayInTab(secondPage)]);
+  check(
+    "two actual browser tabs replay same key with one database order",
+    tabResults.every((r) => r.id === lost.order_id && r.key === priorKey) &&
+      Number(
+        sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${A.instance_id}'`),
+      ) ===
+        before + 1,
+  );
+  await secondPage.close();
   check(
     "client PII absent from localStorage",
     await page.evaluate(() =>
