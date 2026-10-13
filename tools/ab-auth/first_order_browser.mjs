@@ -147,7 +147,7 @@ try {
       }
       if (
         u.origin === new URL(env.API_URL).origin &&
-        (u.pathname === "/rest/v1/" || (u.pathname === "/rest/v1/" || u.pathname.startsWith("/auth/v1/")) ||
+        (u.pathname === "/rest/v1/" || u.pathname.startsWith("/auth/v1/") ||
           [
             "get_public_storefront_catalog",
             "get_admin_orders",
