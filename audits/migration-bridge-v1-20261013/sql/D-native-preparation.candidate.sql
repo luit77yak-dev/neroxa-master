@@ -7,6 +7,7 @@ DO $$ BEGIN
  THEN RAISE EXCEPTION 'BRIDGE_REAL_AUTH_REQUIRED'; END IF;
  IF pg_has_role('anon','postgres','MEMBER') OR pg_has_role('authenticated','service_role','MEMBER')
  THEN RAISE EXCEPTION 'BRIDGE_ROLE_ESCALATION'; END IF;
+ IF has_schema_privilege('anon','public','CREATE') OR has_schema_privilege('authenticated','public','CREATE') THEN RAISE EXCEPTION 'BRIDGE_UNTRUSTED_SCHEMA_CREATE'; END IF;
 END $$;
 DO $$ BEGIN IF current_setting('app.bridge_consumers_frozen',true) IS DISTINCT FROM 'yes' THEN RAISE EXCEPTION 'BRIDGE_FROZEN_CONSUMERS_REQUIRED'; END IF; END $$;
 CREATE SCHEMA IF NOT EXISTS private AUTHORIZATION postgres;
@@ -143,7 +144,6 @@ begin
 end $function$
 ;
 REVOKE ALL ON FUNCTION "public"."calculate_public_order_line_price"(p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb) FROM PUBLIC,anon,authenticated,service_role;
-GRANT EXECUTE ON FUNCTION "public"."calculate_public_order_line_price"(p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb) TO PUBLIC;
 GRANT EXECUTE ON FUNCTION "public"."calculate_public_order_line_price"(p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb) TO "postgres";
 GRANT EXECUTE ON FUNCTION "public"."calculate_public_order_line_price"(p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb) TO "anon";
 GRANT EXECUTE ON FUNCTION "public"."calculate_public_order_line_price"(p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb) TO "authenticated";
@@ -408,7 +408,6 @@ end;
 $function$
 ;
 REVOKE ALL ON FUNCTION "public"."guard_neroxa_implementation_write_path"() FROM PUBLIC,anon,authenticated,service_role;
-GRANT EXECUTE ON FUNCTION "public"."guard_neroxa_implementation_write_path"() TO PUBLIC;
 GRANT EXECUTE ON FUNCTION "public"."guard_neroxa_implementation_write_path"() TO "postgres";
 GRANT EXECUTE ON FUNCTION "public"."guard_neroxa_implementation_write_path"() TO "anon";
 GRANT EXECUTE ON FUNCTION "public"."guard_neroxa_implementation_write_path"() TO "authenticated";
@@ -485,7 +484,6 @@ end;
 $function$
 ;
 REVOKE ALL ON FUNCTION "public"."neroxa_set_updated_at"() FROM PUBLIC,anon,authenticated,service_role;
-GRANT EXECUTE ON FUNCTION "public"."neroxa_set_updated_at"() TO PUBLIC;
 GRANT EXECUTE ON FUNCTION "public"."neroxa_set_updated_at"() TO "postgres";
 GRANT EXECUTE ON FUNCTION "public"."neroxa_set_updated_at"() TO "anon";
 GRANT EXECUTE ON FUNCTION "public"."neroxa_set_updated_at"() TO "authenticated";
@@ -497,7 +495,6 @@ CREATE OR REPLACE FUNCTION public.reset_neroxa_domain_verification_on_change()
 AS $function$ begin if new.domain is distinct from old.domain then new.status := 'PENDING'::public.neroxa_domain_status; new.verified_at := null; end if; return new; end; $function$
 ;
 REVOKE ALL ON FUNCTION "public"."reset_neroxa_domain_verification_on_change"() FROM PUBLIC,anon,authenticated,service_role;
-GRANT EXECUTE ON FUNCTION "public"."reset_neroxa_domain_verification_on_change"() TO PUBLIC;
 GRANT EXECUTE ON FUNCTION "public"."reset_neroxa_domain_verification_on_change"() TO "postgres";
 GRANT EXECUTE ON FUNCTION "public"."reset_neroxa_domain_verification_on_change"() TO "anon";
 GRANT EXECUTE ON FUNCTION "public"."reset_neroxa_domain_verification_on_change"() TO "authenticated";
@@ -514,7 +511,6 @@ end;
 $function$
 ;
 REVOKE ALL ON FUNCTION "public"."set_neroxa_systems_updated_at"() FROM PUBLIC,anon,authenticated,service_role;
-GRANT EXECUTE ON FUNCTION "public"."set_neroxa_systems_updated_at"() TO PUBLIC;
 GRANT EXECUTE ON FUNCTION "public"."set_neroxa_systems_updated_at"() TO "postgres";
 GRANT EXECUTE ON FUNCTION "public"."set_neroxa_systems_updated_at"() TO "anon";
 GRANT EXECUTE ON FUNCTION "public"."set_neroxa_systems_updated_at"() TO "authenticated";
@@ -539,7 +535,6 @@ end;
 $function$
 ;
 REVOKE ALL ON FUNCTION "public"."sync_domains_with_instance_status"() FROM PUBLIC,anon,authenticated,service_role;
-GRANT EXECUTE ON FUNCTION "public"."sync_domains_with_instance_status"() TO PUBLIC;
 GRANT EXECUTE ON FUNCTION "public"."sync_domains_with_instance_status"() TO "postgres";
 GRANT EXECUTE ON FUNCTION "public"."sync_domains_with_instance_status"() TO "anon";
 GRANT EXECUTE ON FUNCTION "public"."sync_domains_with_instance_status"() TO "authenticated";

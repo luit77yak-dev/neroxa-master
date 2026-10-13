@@ -202,6 +202,11 @@ try {
     );
   });
   sql(seed + "COMMIT;");
+  report.functionComparisons = JSON.parse(
+    sql(
+      "SELECT jsonb_agg(jsonb_build_object('name',p.proname,'body_md5',md5(p.prosrc),'definition_md5',md5(pg_get_functiondef(p.oid)),'config',p.proconfig,'acl',p.proacl::text[],'arguments',pg_get_function_arguments(p.oid),'result',pg_get_function_result(p.oid))) FROM pg_proc p WHERE p.pronamespace='public'::regnamespace AND p.prokind='f';",
+    ),
+  );
   check(
     "faithful source preflight",
     Boolean(sql("BEGIN;" + context + phases.A.sql + "SELECT true;ROLLBACK;")),

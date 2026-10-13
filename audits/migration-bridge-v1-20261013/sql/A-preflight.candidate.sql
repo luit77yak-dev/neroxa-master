@@ -8,6 +8,7 @@ DO $$ BEGIN
  THEN RAISE EXCEPTION 'BRIDGE_REAL_AUTH_REQUIRED'; END IF;
  IF pg_has_role('anon','postgres','MEMBER') OR pg_has_role('authenticated','service_role','MEMBER')
  THEN RAISE EXCEPTION 'BRIDGE_ROLE_ESCALATION'; END IF;
+ IF has_schema_privilege('anon','public','CREATE') OR has_schema_privilege('authenticated','public','CREATE') THEN RAISE EXCEPTION 'BRIDGE_UNTRUSTED_SCHEMA_CREATE'; END IF;
 END $$;
 DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname LIKE 'neroxa_%' AND c.relkind='r' AND NOT(c.relname=ANY(ARRAY['neroxa_order_items','neroxa_order_status_history','neroxa_orders','neroxa_organization_members','neroxa_organizations','neroxa_platform_members','neroxa_storefront_delivery_zones','neroxa_storefront_products','neroxa_storefront_settings','neroxa_system_domains','neroxa_system_instances','neroxa_systems']))) OR to_regclass('private.delivery_order_capabilities') IS NOT NULL OR to_regclass('public.neroxa_delivery_instance_grants') IS NOT NULL OR to_regclass('private.delivery_append_requests') IS NOT NULL THEN RAISE EXCEPTION 'BRIDGE_UNREVIEWED_EIGHT_SQL_PROFILE'; END IF; END $$;
 DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_class WHERE oid=to_regclass('public.neroxa_system_instances') AND relkind='r' AND pg_get_userbyid(relowner)='postgres' AND relrowsecurity=false AND relacl::text[] IS NOT DISTINCT FROM ARRAY['postgres=arwdDxtm/postgres','anon=arwdDxtm/postgres','authenticated=arwdDxtm/postgres','service_role=arwdDxtm/postgres']::text[]) THEN RAISE EXCEPTION 'BRIDGE_RELATION_DRIFT'; END IF; END $$;
@@ -212,6 +213,7 @@ DO $$ BEGIN
  OR EXISTS(SELECT 1 FROM public.neroxa_order_items x LEFT JOIN public.neroxa_orders o ON o.id=x.order_id WHERE o.id IS NULL)
  OR EXISTS(SELECT 1 FROM public.neroxa_order_status_history x LEFT JOIN public.neroxa_orders o ON o.id=x.order_id WHERE o.id IS NULL)
  OR EXISTS(SELECT 1 FROM public.neroxa_order_items x JOIN public.neroxa_orders o ON o.id=x.order_id JOIN public.neroxa_storefront_products p ON p.id=x.product_id WHERE p.instance_id<>o.instance_id)
+ OR EXISTS(SELECT 1 FROM public.neroxa_order_items x JOIN public.neroxa_orders o ON o.id=x.order_id JOIN public.neroxa_storefront_products p ON p.id=x.second_product_id WHERE p.instance_id<>o.instance_id)
  OR EXISTS(SELECT 1 FROM public.neroxa_orders WHERE total<>subtotal+delivery_fee)
  OR EXISTS(SELECT 1 FROM public.neroxa_orders o WHERE subtotal IS DISTINCT FROM (SELECT sum(line_total) FROM public.neroxa_order_items x WHERE x.order_id=o.id))
  THEN RAISE EXCEPTION 'BRIDGE_HISTORICAL_INTEGRITY'; END IF;

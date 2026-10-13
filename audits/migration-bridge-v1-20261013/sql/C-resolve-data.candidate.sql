@@ -7,6 +7,7 @@ DO $$ BEGIN
  THEN RAISE EXCEPTION 'BRIDGE_REAL_AUTH_REQUIRED'; END IF;
  IF pg_has_role('anon','postgres','MEMBER') OR pg_has_role('authenticated','service_role','MEMBER')
  THEN RAISE EXCEPTION 'BRIDGE_ROLE_ESCALATION'; END IF;
+ IF has_schema_privilege('anon','public','CREATE') OR has_schema_privilege('authenticated','public','CREATE') THEN RAISE EXCEPTION 'BRIDGE_UNTRUSTED_SCHEMA_CREATE'; END IF;
 END $$;
 DO $$ BEGIN IF current_setting('app.bridge_resolution',true) IS NULL OR current_setting('app.bridge_resolution',true)='' THEN RAISE EXCEPTION 'BRIDGE_EXPLICIT_RESOLUTION_REQUIRED'; END IF; END $$;
 ALTER TABLE public."neroxa_order_items" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();

@@ -92,35 +92,35 @@
     {
       "phase": "A",
       "path": "audits/migration-bridge-v1-20261013/sql/A-preflight.candidate.sql",
-      "sha256": "674c1760e6555bbd13e204864f5b635c880a2a97c8761e39ddab1808ef4d08c3",
+      "sha256": "d8ed6d98991f11fd66762d3ea8aaa6fceaf165794bb11f630714db4753556d08",
       "repeat": "read-only",
       "requires": null
     },
     {
       "phase": "B",
       "path": "audits/migration-bridge-v1-20261013/sql/B-expand.candidate.sql",
-      "sha256": "c842a5a1d98423e3d7255f1384d0a36ac74af899dceebb558eeb92b28e4ee297",
+      "sha256": "e6362231c8b23ced8d280158fc4535dcbdd8e56f1db05f008164870bcd893f51",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "A"
     },
     {
       "phase": "C",
       "path": "audits/migration-bridge-v1-20261013/sql/C-resolve-data.candidate.sql",
-      "sha256": "f4636e977efbcf097e68c71961d5967222725a3ebc813e93cbe8f09915b1a4f1",
+      "sha256": "19c6d164718eb08524eb91c019348581720dde2dd5efb053ad316dff4a3d22c1",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "B"
     },
     {
       "phase": "D",
       "path": "audits/migration-bridge-v1-20261013/sql/D-native-preparation.candidate.sql",
-      "sha256": "d2d09b61184e3866c49f0ad31dcfa3f3fc00bd9693eaf8c2d11b0b60b09442f9",
+      "sha256": "0dbb7719e52cf4e3dabeca860f4210fb60dfa80cdda9f5f9fcc11dc107c34ae1",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "C"
     },
     {
       "phase": "E",
       "path": "audits/migration-bridge-v1-20261013/sql/E-cutover-gate.candidate.sql",
-      "sha256": "cb3c3dd0ac0804ec8f4c5fbb64034352264e1b9c0974ddffd1dc18e75afdd000",
+      "sha256": "67831d554d801d4a0a204839653cc2e1e8faba7eb9d9a88b395cb702a3e58a7d",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "D plus all native candidates and browser substitutes verified"
     }

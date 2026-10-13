@@ -22,6 +22,7 @@ def acl(kind,obj,entries,source=False):
  for a in entries or []:
   role,rights=a.split('=',1);rights=rights.split('/')[0];role='PUBLIC' if not role else q(role)
   for c in rights:
+   if not source and kind=='FUNCTION' and role=='PUBLIC':continue
    if not source and role in ('"anon"','"authenticated"') and c in 'Dxtm':continue
    if c!='*':out.append(f'GRANT {priv[c]} ON {kind} {obj} TO {role}'+(' WITH GRANT OPTION' if c+'*' in rights else '')+';')
  return out
@@ -33,6 +34,7 @@ GUARD="""DO $$ BEGIN
  THEN RAISE EXCEPTION 'BRIDGE_REAL_AUTH_REQUIRED'; END IF;
  IF pg_has_role('anon','postgres','MEMBER') OR pg_has_role('authenticated','service_role','MEMBER')
  THEN RAISE EXCEPTION 'BRIDGE_ROLE_ESCALATION'; END IF;
+ IF has_schema_privilege('anon','public','CREATE') OR has_schema_privilege('authenticated','public','CREATE') THEN RAISE EXCEPTION 'BRIDGE_UNTRUSTED_SCHEMA_CREATE'; END IF;
 END $$;"""
 A=['-- A: strict read-only preflight; no writes, no application permission changes.',GUARD]
 A+= ["DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relname LIKE 'neroxa_%' AND c.relkind='r' AND NOT(c.relname=ANY(ARRAY["+','.join(lit(x) for x in sorted(oldcols) if oldcols[x])+ "]))) OR to_regclass('private.delivery_order_capabilities') IS NOT NULL OR to_regclass('public.neroxa_delivery_instance_grants') IS NOT NULL OR to_regclass('private.delivery_append_requests') IS NOT NULL THEN RAISE EXCEPTION 'BRIDGE_UNREVIEWED_EIGHT_SQL_PROFILE'; END IF; END $$;"]
@@ -56,6 +58,7 @@ A.append("""DO $$ BEGIN
  OR EXISTS(SELECT 1 FROM public.neroxa_order_items x LEFT JOIN public.neroxa_orders o ON o.id=x.order_id WHERE o.id IS NULL)
  OR EXISTS(SELECT 1 FROM public.neroxa_order_status_history x LEFT JOIN public.neroxa_orders o ON o.id=x.order_id WHERE o.id IS NULL)
  OR EXISTS(SELECT 1 FROM public.neroxa_order_items x JOIN public.neroxa_orders o ON o.id=x.order_id JOIN public.neroxa_storefront_products p ON p.id=x.product_id WHERE p.instance_id<>o.instance_id)
+ OR EXISTS(SELECT 1 FROM public.neroxa_order_items x JOIN public.neroxa_orders o ON o.id=x.order_id JOIN public.neroxa_storefront_products p ON p.id=x.second_product_id WHERE p.instance_id<>o.instance_id)
  OR EXISTS(SELECT 1 FROM public.neroxa_orders WHERE total<>subtotal+delivery_fee)
  OR EXISTS(SELECT 1 FROM public.neroxa_orders o WHERE subtotal IS DISTINCT FROM (SELECT sum(line_total) FROM public.neroxa_order_items x WHERE x.order_id=o.id))
  THEN RAISE EXCEPTION 'BRIDGE_HISTORICAL_INTEGRITY'; END IF;

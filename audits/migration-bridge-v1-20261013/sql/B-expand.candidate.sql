@@ -7,6 +7,7 @@ DO $$ BEGIN
  THEN RAISE EXCEPTION 'BRIDGE_REAL_AUTH_REQUIRED'; END IF;
  IF pg_has_role('anon','postgres','MEMBER') OR pg_has_role('authenticated','service_role','MEMBER')
  THEN RAISE EXCEPTION 'BRIDGE_ROLE_ESCALATION'; END IF;
+ IF has_schema_privilege('anon','public','CREATE') OR has_schema_privilege('authenticated','public','CREATE') THEN RAISE EXCEPTION 'BRIDGE_UNTRUSTED_SCHEMA_CREATE'; END IF;
 END $$;
 CREATE SCHEMA neroxa_bridge; REVOKE ALL ON SCHEMA neroxa_bridge FROM PUBLIC,anon,authenticated,service_role;
 CREATE TABLE neroxa_bridge.journal(stage text PRIMARY KEY,sha256 text NOT NULL CHECK(length(sha256)=64),completed_at timestamptz NOT NULL DEFAULT now());

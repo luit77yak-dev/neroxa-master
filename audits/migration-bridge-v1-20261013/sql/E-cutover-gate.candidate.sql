@@ -17,3 +17,10 @@ END $$;
 -- Phone is not proof; never invent a buyer capability for a historical order.
 REVOKE ALL ON FUNCTION public.get_public_order_status(uuid,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.get_public_order_status(uuid,text) TO service_role;
+
+-- Each signature keeps its explicit role grants. PUBLIC never supplies execution implicitly.
+DO $$ DECLARE f record; BEGIN
+ FOR f IN SELECT p.oid::regprocedure::text sig FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
+ WHERE n.nspname IN ('public','private','neroxa_private') AND p.prokind='f'
+ LOOP EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC',f.sig); END LOOP;
+END $$;
