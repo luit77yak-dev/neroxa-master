@@ -1,0 +1,23 @@
+[
+  {
+    "marker": "DISPOSABLE_CHECKOUT_GATEWAY_RESULT=",
+    "classification": "INCONCLUSIVO",
+    "stage": "done",
+    "passed": 54,
+    "failed": 0
+  },
+  {
+    "marker": "DISPOSABLE_AMENDMENT_CAPABILITY_RESULT=",
+    "classification": "INCONCLUSIVO",
+    "stage": "done",
+    "passed": 43,
+    "failed": 0
+  },
+  {
+    "marker": "DISPOSABLE_ENABLED_HTTP_CHECKOUT=",
+    "classification": "INCONCLUSIVO",
+    "stage": "done",
+    "passed": 47,
+    "failed": 0
+  }
+]
