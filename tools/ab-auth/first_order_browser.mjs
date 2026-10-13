@@ -590,7 +590,7 @@ try {
   const requestCount = checkoutPosts;
   await customerPage.evaluate(() => localStorage.clear());
   const tryWithoutVault = async () => {
-    const close=customerPage.getByRole('button',{name:'Fechar acompanhamento',exact:true});
+    const close=customerPage.getByRole('dialog',{name:/Acompanhar pedido #/}).getByRole('button',{name:'Fechar',exact:true}).first();
     if(await close.isVisible())await close.click();
     await customerPage.getByRole('button').filter({has:customerPage.getByRole('heading',{name:'Pizza H03 a',exact:true})}).click();
     await customerPage.getByText('Grande',{exact:true}).click();
