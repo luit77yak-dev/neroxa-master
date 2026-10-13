@@ -136,7 +136,7 @@ try {
         }
         if (drop && u.pathname === "/api/checkout" && r.method() === "POST") {
           originalPayload = r.postDataJSON().p_order;
-          ((drop = false), (checkoutPosts = 0), (originalPayload = null));
+          drop = false;
           const response = await route.fetch();
           check("lost-response transport actually persisted via HTTPS", response.status() === 200);
           lost = await response.json();
