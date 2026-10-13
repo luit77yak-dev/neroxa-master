@@ -89,6 +89,7 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
     payment_method: "CASH",
     items: [item],
     subtotal: 0.01,
+    expected_total: item.expected_unit_price * item.quantity,
   });
   const create = (p) => rpc("create_public_order", { p_order: p });
   const p = order();

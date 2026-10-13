@@ -589,7 +589,7 @@ async function main() {
     quantity: 1,
     expected_unit_price: 47.25,
   };
-  const go = { ...order("b", "00000000333"), items: [gl] };
+  const go = { ...order("b", "00000000333"), items: [gl], expected_total: 47.25 };
   const stale = await postLocal("b.ab.invalid", {
     ...go,
     items: [{ ...gl, expected_unit_price: 0.01 }],

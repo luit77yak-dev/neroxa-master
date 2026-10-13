@@ -47,6 +47,7 @@ BEGIN
   option_id:=opt->>'id';
   IF option_id NOT IN ('tamanho','borda') THEN RAISE EXCEPTION 'Preparation option contract pending' USING ERRCODE='22023'; END IF;
   choice_id:=nullif(p_item->>CASE WHEN option_id='tamanho' THEN 'size_id' ELSE 'crust_id' END,'');
+  IF opt->>'active'='false' THEN IF choice_id IS NOT NULL OR opt->>'required'='true' THEN RAISE EXCEPTION 'Inactive option' USING ERRCODE='22023'; END IF; CONTINUE; END IF;
   IF choice_id IS NULL THEN
    IF opt->>'required'='true' THEN RAISE EXCEPTION 'Required option missing' USING ERRCODE='22023'; END IF;
    CONTINUE;
@@ -62,7 +63,7 @@ BEGIN
  IF (nullif(p_item->>'size_id','') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(options) o WHERE o->>'option_id'='tamanho')) OR (nullif(p_item->>'crust_id','') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda')) THEN RAISE EXCEPTION 'Unknown option' USING ERRCODE='22023'; END IF;
  IF jsonb_typeof(p_item->'expected_unit_price') IS DISTINCT FROM 'number' THEN RAISE EXCEPTION 'Price acknowledgement required' USING ERRCODE='22023'; END IF;
  IF (p_item->>'expected_unit_price')::numeric IS DISTINCT FROM unit THEN RAISE EXCEPTION 'Price changed; review catalog' USING ERRCODE='PT409'; END IF;
- RETURN jsonb_build_object('product_id',p.id,'product_name',p.name,'product_image_url',p.image_url,'quantity',qty,'unit_price',unit,'line_total',unit*qty,'addons',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',x->'addon_id','group_id',x->'group_id','name',x->'name','price',x->'unit_price','quantity',1,'entity_type','ADDON','selection_contract','GROUP_ADDONS_V1')),'[]'::jsonb) FROM jsonb_array_elements(snaps) x),'selection_snapshot',jsonb_build_object('version',1,'contract','GROUP_ADDONS_V1','pricing_rule','BASE_PLUS_DELTAS_V1','instance_id',p_instance,'product_id',p.id,'product_name',p.name,'base_price',p.price,'quantity',qty,'options',options,'groups',groups,'addons',snaps,'unit_price',unit,'line_total',unit*qty));
+ RETURN jsonb_build_object('product_id',p.id,'product_name',p.name,'product_image_url',p.image_url,'size_name',(SELECT o->>'name' FROM jsonb_array_elements(options) o WHERE o->>'option_id'='tamanho'),'crust_name',(SELECT o->>'name' FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda'),'crust_price',coalesce((SELECT (o->>'price_delta')::numeric FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda'),0),'quantity',qty,'unit_price',unit,'line_total',unit*qty,'addons',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',x->'addon_id','group_id',x->'group_id','name',x->'name','price',x->'unit_price','quantity',1,'entity_type','ADDON','selection_contract','GROUP_ADDONS_V1')),'[]'::jsonb) FROM jsonb_array_elements(snaps) x),'selection_snapshot',jsonb_build_object('version',1,'contract','GROUP_ADDONS_V1','pricing_rule','BASE_PLUS_DELTAS_V1','instance_id',p_instance,'product_id',p.id,'product_name',p.name,'base_price',p.price,'quantity',qty,'options',options,'groups',groups,'addons',snaps,'unit_price',unit,'line_total',unit*qty));
 END $group$;
 REVOKE ALL ON FUNCTION private.neroxa_prepare_group_item(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
 CREATE OR REPLACE FUNCTION public.create_public_order(p_order jsonb)
@@ -127,8 +128,8 @@ begin
   IF v_item->>'selection_contract'='GROUP_ADDONS_V1' THEN
    v_prepared:=private.neroxa_prepare_group_item(v_instance,v_item);
    v_qty:=(v_prepared->>'quantity')::integer;v_unit:=(v_prepared->>'unit_price')::numeric;
-   INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,product_image_url,quantity,notes,unit_price,line_total,addons,selection_snapshot)
-   VALUES(v_order_id,(v_prepared->>'product_id')::uuid,v_prepared->>'product_name',v_prepared->>'product_image_url',v_qty,nullif(v_item->>'notes',''),v_unit,v_unit*v_qty,v_prepared->'addons',v_prepared->'selection_snapshot');
+   INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,product_image_url,quantity,notes,unit_price,line_total,addons,selection_snapshot,size_name,crust_name,crust_price)
+   VALUES(v_order_id,(v_prepared->>'product_id')::uuid,v_prepared->>'product_name',v_prepared->>'product_image_url',v_qty,nullif(v_item->>'notes',''),v_unit,v_unit*v_qty,v_prepared->'addons',v_prepared->'selection_snapshot',v_prepared->>'size_name',v_prepared->>'crust_name',(v_prepared->>'crust_price')::numeric);
   ELSE
    IF EXISTS(SELECT 1 FROM public.neroxa_storefront_product_addon_groups l WHERE l.product_id=(v_item->>'product_id')::uuid) THEN RAISE EXCEPTION 'Product requires explicit grouped contract' USING ERRCODE='22023'; END IF;
      IF v_item ? 'group_addon_ids' OR (v_item ? 'selection_contract' AND v_item->>'selection_contract'<>'LEGACY_PRODUCT_V1') THEN RAISE EXCEPTION 'Selection contract mismatch' USING ERRCODE='22023'; END IF;
@@ -144,6 +145,10 @@ begin
   v_subtotal:=v_subtotal+v_unit*v_qty;
  end loop;
  v_total:=v_subtotal+v_delivery_fee;
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(p_order->'items') x WHERE x->>'selection_contract'='GROUP_ADDONS_V1') THEN
+  IF jsonb_typeof(p_order->'expected_total') IS DISTINCT FROM 'number' THEN RAISE EXCEPTION 'Total acknowledgement required' USING ERRCODE='22023'; END IF;
+  IF (p_order->>'expected_total')::numeric IS DISTINCT FROM v_total THEN RAISE EXCEPTION 'Total changed; review order' USING ERRCODE='PT409'; END IF;
+ END IF;
  update public.neroxa_orders set subtotal=v_subtotal,total=v_total,updated_at=now() where id=v_order_id;
  insert into public.neroxa_order_status_history(order_id,to_status,note) values(v_order_id,'RECEIVED','Pedido criado pelo site');
  order_id:=v_order_id;order_number:=v_number;total:=v_total;return next;
