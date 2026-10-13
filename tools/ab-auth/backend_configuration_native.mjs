@@ -1,6 +1,7 @@
 // Negative configuration/build checks and public-key binding on the real disposable stack.
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {pathToFileURL} from 'node:url';
 const work=process.env.AB_WORKDIR;
@@ -11,8 +12,8 @@ const {testBackend,assertServerBackend,ensureTestBackendKey,configuredStoreDomai
 const buildEnv={...process.env,VITE_NEROXA_BACKEND_MODE:'homologation',VITE_NEROXA_TEST_BACKEND_URL:env.API_URL,VITE_NEROXA_TEST_PROJECT_REF:'local-disposable',VITE_NEROXA_TEST_PUBLISHABLE_KEY:env.ANON_KEY,VITE_SUPABASE_URL:env.API_URL,VITE_SUPABASE_PUBLISHABLE_KEY:env.ANON_KEY,NEROXA_BACKEND_MODE:'homologation',NEROXA_TEST_PROJECT_REF:'local-disposable',SUPABASE_URL:env.API_URL,SUPABASE_PUBLISHABLE_KEY:env.ANON_KEY,NEROXA_DELIVERY_BACKEND_URL:env.API_URL};
 const checks=[];const check=(name,passed)=>{checks.push({name,passed});if(!passed)throw Error(name);console.log('PASS '+name);};
 const config=testBackend(buildEnv);assertServerBackend(config,buildEnv);
-await ensureTestBackendKey(config);check('native Auth accepts configured public key at sole allowed backend',true);
-let denied=false;try{await ensureTestBackendKey(testBackend({...buildEnv,VITE_NEROXA_TEST_PUBLISHABLE_KEY:'sb_publishable_'+ 'z'.repeat(32),VITE_SUPABASE_PUBLISHABLE_KEY:undefined}));}catch{denied=true;}check('real native Kong/Auth rejects foreign opaque key before catalog or order',denied);
+await ensureTestBackendKey(config);check('native PostgREST validates signed public key at sole allowed backend',true);
+let denied=false;try{await ensureTestBackendKey(testBackend({...buildEnv,VITE_NEROXA_TEST_PUBLISHABLE_KEY:env.ANON_KEY.split('.').slice(0,2).join('.')+'.'+crypto.randomBytes(32).toString('base64url'),VITE_SUPABASE_PUBLISHABLE_KEY:undefined}));}catch{denied=true;}check('real native PostgREST rejects foreign signature before catalog or order',denied);
 for(const [name,patch] of [['private origin',{SUPABASE_URL:'https://iefaoaqzltvpfabyeelj.supabase.co'}],['private project',{NEROXA_TEST_PROJECT_REF:'foreign'}],['private mode',{NEROXA_BACKEND_MODE:undefined}],['private public-key',{SUPABASE_PUBLISHABLE_KEY:'foreign'}]]){
  let blocked=false;try{assertServerBackend(config,{...buildEnv,...patch});}catch{blocked=true;}check(name+' divergence denies SSR and privilege context',blocked);
 }
