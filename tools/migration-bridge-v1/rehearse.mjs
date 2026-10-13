@@ -336,6 +336,7 @@ try {
 } catch (e) {
   report.classification = "REPROVADO";
   report.error = String(e.message).slice(0, 200);
+  console.error(report.error);
   process.exitCode = 1;
 } finally {
   fs.writeFileSync(
