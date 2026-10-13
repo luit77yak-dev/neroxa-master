@@ -47,8 +47,9 @@ const sql = (s) => {
       ],
       { input: s, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
     ).trim();
-  } catch {
-    throw Error("BRIDGE_SQL_FAILED");
+  } catch (e) {
+    const line = String(e.stderr ?? "").match(/ERROR:\s*([^\n]+)/)?.[1] ?? "unknown";
+    throw Error("BRIDGE_SQL_FAILED: " + line.slice(0, 160));
   }
 };
 const quote = (s) => "'" + String(s).replaceAll("'", "''") + "'";
@@ -87,7 +88,9 @@ const digests = () =>
     sandbox.relations.map((t) => {
       const cols = sandbox.columns
         .filter((c) => c.table === t.name)
-        .map((c) => 't."' + c.name + '"');
+        .map((c) =>
+          c.type.startsWith("numeric") ? 'trim_scale(t."' + c.name + '")' : 't."' + c.name + '"',
+        );
       return [
         t.name,
         sql(

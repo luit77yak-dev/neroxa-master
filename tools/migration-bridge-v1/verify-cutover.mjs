@@ -62,7 +62,9 @@ try {
   for (const table of ["neroxa_orders", "neroxa_order_items", "neroxa_order_status_history"]) {
     const columns = source.columns
       .filter((c) => c.table === table)
-      .map((c) => 't."' + c.name + '"')
+      .map((c) =>
+        c.type.startsWith("numeric") ? 'trim_scale(t."' + c.name + '")' : 't."' + c.name + '"',
+      )
       .join(",");
     const ids = privateState.orders.map(q).join(",");
     const where = table === "neroxa_orders" ? "t.id" : "t.order_id";
