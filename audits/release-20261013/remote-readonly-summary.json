@@ -19,7 +19,7 @@
     "billing_records": 1,
     "plan_missing": false,
     "plan_inactive": false,
-    "period_expired": false
+    "expired_periods_detected": 0
   },
   "production_delivery_deployment": {
     "sha": "47e7d8aef66b0c458ed6f423cebeba99abfcc7a8",

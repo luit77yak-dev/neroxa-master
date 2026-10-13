@@ -41,7 +41,7 @@ Novo `audits/sql/admin-order-rpc-acl.release-gate.candidate.sql`: confere assina
 
 ## Configuração histórica — decisão humana necessária
 
-Reverificado em SELECT: uma linha sem instância, active=true, organização CANCELLED, assinatura TRIAL, zero membros ativos e domínios; plano existente/ativo e período não expirado; **um contrato ACTIVE/SIGNED e um registro de faturamento**. Nenhum UUID, nome, documento ou valor de cliente exportado.
+Reverificado em SELECT: uma linha sem instância, active=true, organização CANCELLED, assinatura TRIAL, zero membros ativos e domínios; plano existente/ativo e zero períodos vencidos detectados pela consulta (datas ausentes não comprovam validade); **um contrato ACTIVE/SIGNED e um registro de faturamento**. Nenhum UUID, nome, documento ou valor de cliente exportado.
 
 As entidades têm ciclos próprios; não escolher qual estado prevalece por suposição. Alternativas revisáveis:
 
