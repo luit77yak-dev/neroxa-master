@@ -262,7 +262,7 @@ try {
   const submittedBefore = checkoutPosts;
   await page.getByLabel(/Rua/).fill("");
   await page.getByRole("button", { name: /Enviar pedido R\$/ }).click();
-  await page.getByRole("alert").filter({ hasText: "Informe rua" }).waitFor();
+  await page.getByRole("alert").filter({ hasText: /informe rua/i }).waitFor();
   check("delivery area alone cannot bypass required street", checkoutPosts === submittedBefore);
   await page.getByLabel(/Rua/).fill("Rua Entrega fictícia");
   await screenshot(page, "checkout");
