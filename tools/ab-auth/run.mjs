@@ -212,6 +212,13 @@ try {
       applied: true,
     });
   }
+  const adminAcl = "audits/sql/admin-order-rpc-acl.release-gate.candidate.sql";
+  sql(fs.readFileSync(adminAcl, "utf8"));
+  report.migrations.push({
+    file: path.basename(adminAcl),
+    sha256: crypto.createHash("sha256").update(fs.readFileSync(adminAcl)).digest("hex"),
+    applied: true,
+  });
   report.stage = "fixtures";
   const sharedSystem = id();
   const org = id(),
@@ -325,26 +332,37 @@ try {
         actor,
         () => api(actor, table + "?" + key + "=eq." + record),
         [200, 401, 403],
-        (body) => own ? Array.isArray(body) && body.length === 1
-          : Array.isArray(body) ? body.length === 0 : !!body?.code,
+        (body) =>
+          own
+            ? Array.isArray(body) && body.length === 1
+            : Array.isArray(body)
+              ? body.length === 0
+              : !!body?.code,
       );
       if (!own) {
         await test(
           table + " foreign C UPDATE",
           actor,
-          () => api(actor, table + "?" + key + "=eq." + record, "PATCH",
-            table === "neroxa_orders" ? { notes: "Denied C" }
-            : table === "neroxa_storefront_settings" ? { description: "Denied C" }
-            : { name: "Denied C" }),
+          () =>
+            api(
+              actor,
+              table + "?" + key + "=eq." + record,
+              "PATCH",
+              table === "neroxa_orders"
+                ? { notes: "Denied C" }
+                : table === "neroxa_storefront_settings"
+                  ? { description: "Denied C" }
+                  : { name: "Denied C" },
+            ),
           [200, 401, 403],
-          (body) => Array.isArray(body) ? body.length === 0 : !!body?.code,
+          (body) => (Array.isArray(body) ? body.length === 0 : !!body?.code),
         );
         await test(
           table + " foreign C DELETE",
           actor,
           () => api(actor, table + "?" + key + "=eq." + record, "DELETE"),
           [200, 401, 403],
-          (body) => Array.isArray(body) ? body.length === 0 : !!body?.code,
+          (body) => (Array.isArray(body) ? body.length === 0 : !!body?.code),
         );
       }
     }
@@ -356,22 +374,35 @@ try {
     ["neroxa_storefront_settings", "instance_id", A],
     ["neroxa_storefront_delivery_zones", "id", zoneA],
   ]) {
-    await test(table + " C cannot read A", "opC",
+    await test(
+      table + " C cannot read A",
+      "opC",
       () => api("opC", table + "?" + key + "=eq." + record),
       [200, 401, 403],
-      (body) => Array.isArray(body) ? body.length === 0 : !!body?.code);
+      (body) => (Array.isArray(body) ? body.length === 0 : !!body?.code),
+    );
   }
-  await test("C operator cannot use A admin RPC", "opC",
+  await test(
+    "C operator cannot use A admin RPC",
+    "opC",
     () => rpc("opC", "get_admin_orders", { p_instance_id: A }),
     [200, 401, 403],
-    (body) => Array.isArray(body) ? body.length === 0 : !!body?.code);
-  await test("A operator cannot use C admin RPC", "opA",
+    (body) => (Array.isArray(body) ? body.length === 0 : !!body?.code),
+  );
+  await test(
+    "A operator cannot use C admin RPC",
+    "opA",
     () => rpc("opA", "get_admin_orders", { p_instance_id: C }),
     [200, 401, 403],
-    (body) => Array.isArray(body) ? body.length === 0 : !!body?.code);
-  await test("C operator own admin orders", "opC",
+    (body) => (Array.isArray(body) ? body.length === 0 : !!body?.code),
+  );
+  await test(
+    "C operator own admin orders",
+    "opC",
     () => rpc("opC", "get_admin_orders", { p_instance_id: C }),
-    [200], (body) => Array.isArray(body) && body.some((o) => o.id === orderC));
+    [200],
+    (body) => Array.isArray(body) && body.some((o) => o.id === orderC),
+  );
   const tables = [
     ["neroxa_storefront_products", "id", productA, productB],
     ["neroxa_storefront_categories", "id", catA, catB],
@@ -577,27 +608,46 @@ try {
         r.products.every((p) => p.id !== (store === "a" ? productB : productA)),
     );
   // Public catalog must resolve C's domain without leaking A/B catalog rows.
-  await test("public catalog C isolated", "anon",
+  await test(
+    "public catalog C isolated",
+    "anon",
     () => rpc("anon", "get_public_storefront_catalog", { p_domain: "c.ab.invalid" }),
     [200],
-    (body) => body?.context?.instance_id === C &&
+    (body) =>
+      body?.context?.instance_id === C &&
       Array.isArray(body.products) &&
       body.products.some((p) => p.id === productC) &&
-      body.products.every((p) => p.id !== productA && p.id !== productB));
-  await test("cross-organization status RPC denied", "opA",
+      body.products.every((p) => p.id !== productA && p.id !== productB),
+  );
+  await test(
+    "cross-organization status RPC denied",
+    "opA",
     () => rpc("opA", "update_admin_order_status", { p_order_id: orderC, p_status: "CONFIRMED" }),
-    [400, 401, 403], (body) => !!body?.code);
-  await test("C operator own order status RPC", "opC",
+    [400, 401, 403],
+    (body) => !!body?.code,
+  );
+  await test(
+    "C operator own order status RPC",
+    "opC",
     () => rpc("opC", "update_admin_order_status", { p_order_id: orderC, p_status: "CONFIRMED" }),
-    [200], (body) => body?.id === orderC && body?.status === "CONFIRMED");
+    [200],
+    (body) => body?.id === orderC && body?.status === "CONFIRMED",
+  );
   for (const table of ["neroxa_order_items", "neroxa_order_status_history"]) {
-    await test(table + " C own read", "opC",
+    await test(
+      table + " C own read",
+      "opC",
       () => api("opC", table + "?order_id=eq." + orderC),
-      [200], (body) => Array.isArray(body) && body.length > 0);
-    await test(table + " A cannot read C", "opA",
+      [200],
+      (body) => Array.isArray(body) && body.length > 0,
+    );
+    await test(
+      table + " A cannot read C",
+      "opA",
       () => api("opA", table + "?order_id=eq." + orderC),
       [200, 401, 403],
-      (body) => Array.isArray(body) ? body.length === 0 : !!body?.code);
+      (body) => (Array.isArray(body) ? body.length === 0 : !!body?.code),
+    );
   }
   const cPayload = {
     organization_id: orgC,
@@ -610,37 +660,71 @@ try {
     idempotency_key: id(),
     items: [{ product_id: productC, quantity: 1, unit_price: 1 }],
   };
-  const cCreated = await test("C checkout calculates server price", "anon",
+  const cCreated = await test(
+    "C checkout calculates server price",
+    "anon",
     () => rpc("anon", "create_public_order", { p_order: cPayload }),
-    [200], (body) => Array.isArray(body) && body.length === 1 && Number(body[0].total) === 50);
-  await test("C checkout idempotent retry", "anon",
+    [200],
+    (body) => Array.isArray(body) && body.length === 1 && Number(body[0].total) === 50,
+  );
+  await test(
+    "C checkout idempotent retry",
+    "anon",
     () => rpc("anon", "create_public_order", { p_order: cPayload }),
-    [200], (body) => Array.isArray(body) &&
-      body[0]?.order_id === cCreated.body?.[0]?.order_id);
-  await test("C checkout rejects A product", "anon",
-    () => rpc("anon", "create_public_order", {
-      p_order: { ...cPayload, idempotency_key: id(),
-        items: [{ product_id: productA, quantity: 1 }] },
-    }), [400, 403], (body) => !!body?.code);
-  await test("C checkout rejects organization mismatch", "anon",
-    () => rpc("anon", "create_public_order", {
-      p_order: { ...cPayload, organization_id: org, idempotency_key: id() },
-    }), [400, 403], (body) => !!body?.code);
+    [200],
+    (body) => Array.isArray(body) && body[0]?.order_id === cCreated.body?.[0]?.order_id,
+  );
+  await test(
+    "C checkout rejects A product",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: {
+          ...cPayload,
+          idempotency_key: id(),
+          items: [{ product_id: productA, quantity: 1 }],
+        },
+      }),
+    [400, 403],
+    (body) => !!body?.code,
+  );
+  await test(
+    "C checkout rejects organization mismatch",
+    "anon",
+    () =>
+      rpc("anon", "create_public_order", {
+        p_order: { ...cPayload, organization_id: org, idempotency_key: id() },
+      }),
+    [400, 403],
+    (body) => !!body?.code,
+  );
   if (cCreated.status === 200 && cCreated.body?.[0]?.order_id) {
-    await test("C append forgotten item recalculates total", "anon",
-      () => rpc("anon", "append_public_order_items_with_payment", {
-        p_order_id: cCreated.body[0].order_id,
-        p_customer_phone: cPayload.customer_phone,
-        p_items: [{ product_id: productC, quantity: 1 }],
-        p_payment_method: "CASH",
-      }), [200], (body) => Array.isArray(body) && Number(body[0]?.total) === 100);
-    await test("C append rejects A product", "anon",
-      () => rpc("anon", "append_public_order_items_with_payment", {
-        p_order_id: cCreated.body[0].order_id,
-        p_customer_phone: cPayload.customer_phone,
-        p_items: [{ product_id: productA, quantity: 1 }],
-        p_payment_method: "CASH",
-      }), [400, 403], (body) => !!body?.code);
+    await test(
+      "C append forgotten item recalculates total",
+      "anon",
+      () =>
+        rpc("anon", "append_public_order_items_with_payment", {
+          p_order_id: cCreated.body[0].order_id,
+          p_customer_phone: cPayload.customer_phone,
+          p_items: [{ product_id: productC, quantity: 1 }],
+          p_payment_method: "CASH",
+        }),
+      [200],
+      (body) => Array.isArray(body) && Number(body[0]?.total) === 100,
+    );
+    await test(
+      "C append rejects A product",
+      "anon",
+      () =>
+        rpc("anon", "append_public_order_items_with_payment", {
+          p_order_id: cCreated.body[0].order_id,
+          p_customer_phone: cPayload.customer_phone,
+          p_items: [{ product_id: productA, quantity: 1 }],
+          p_payment_method: "CASH",
+        }),
+      [400, 403],
+      (body) => !!body?.code,
+    );
   }
   const payload = {
     organization_id: org,

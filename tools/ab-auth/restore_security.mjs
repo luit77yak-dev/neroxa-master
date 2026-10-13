@@ -69,6 +69,11 @@ export async function prepareSecurity({ work, project, psql, check }) {
     psql("postgres", fs.readFileSync(`audits/sql/${file}.candidate.sql`, "utf8"));
     check("security candidate " + file, true);
   }
+  psql(
+    "postgres",
+    fs.readFileSync("audits/sql/admin-order-rpc-acl.release-gate.candidate.sql", "utf8"),
+  );
+  check("admin RPC anon execution explicitly revoked", true);
   let sql = "BEGIN; SET LOCAL neroxa.implementation_write_path='official';";
   for (let i = 0; i < 3; i++) {
     sql += `INSERT INTO public.neroxa_organization_members(organization_id,user_id,role) VALUES(${lit(organizations[i])},${lit(people[i].id)},'OPERATOR');
