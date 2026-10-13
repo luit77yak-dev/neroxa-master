@@ -17,7 +17,7 @@ CREATE OR REPLACE FUNCTION private.neroxa_requires_group_contract(p_instance uui
 LANGUAGE sql STABLE SECURITY INVOKER SET search_path='' AS $requires$
  SELECT EXISTS(SELECT 1 FROM public.neroxa_storefront_products p WHERE p.id=p_product AND p.instance_id=p_instance AND (
  EXISTS(SELECT 1 FROM public.neroxa_storefront_product_addon_groups l WHERE l.product_id=p.id)
- OR EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(p.metadata->'options','[]')) opt WHERE opt->>'required'='true')
+ OR EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(nullif(p.metadata->'options','null'::jsonb),'[]'::jsonb)) opt WHERE opt->>'required'='true')
  ));
 $requires$;
 REVOKE ALL ON FUNCTION private.neroxa_requires_group_contract(uuid,uuid) FROM PUBLIC,anon,authenticated,service_role;
@@ -56,8 +56,8 @@ BEGIN
   IF n<greatest(g.min_selections,CASE WHEN g.required THEN 1 ELSE 0 END) OR n>g.max_selections THEN RAISE EXCEPTION 'Group selection limits' USING ERRCODE='22023'; END IF;
   groups:=groups||jsonb_build_array(jsonb_build_object('group_id',g.id,'name',g.name,'required',g.required,'min',g.min_selections,'max',g.max_selections));
  END LOOP;
- IF EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(p.metadata->'options','[]')) o GROUP BY o->>'id' HAVING count(*)>1) THEN RAISE EXCEPTION 'Ambiguous option groups' USING ERRCODE='22023'; END IF;
- FOR opt IN SELECT value FROM jsonb_array_elements(coalesce(p.metadata->'options','[]')) LOOP
+ IF EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(nullif(p.metadata->'options','null'::jsonb),'[]'::jsonb)) o GROUP BY o->>'id' HAVING count(*)>1) THEN RAISE EXCEPTION 'Ambiguous option groups' USING ERRCODE='22023'; END IF;
+ FOR opt IN SELECT value FROM jsonb_array_elements(coalesce(nullif(p.metadata->'options','null'::jsonb),'[]'::jsonb)) LOOP
   option_id:=opt->>'id';
   IF option_id NOT IN ('tamanho','borda') THEN RAISE EXCEPTION 'Preparation option contract pending' USING ERRCODE='22023'; END IF;
   choice_id:=nullif(p_item->>CASE WHEN option_id='tamanho' THEN 'size_id' ELSE 'crust_id' END,'');
