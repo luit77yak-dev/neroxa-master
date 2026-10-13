@@ -233,8 +233,8 @@ try {
     .filter({ has: page.getByRole("heading", { name: "Pizza H03 a", exact: true }) })
     .click();
   await page.getByText("Grande", { exact: true }).click();
-  await page.getByText("Recheada", { exact: true }).click();
   await page.getByRole("button", { name: /Próxima etapa/ }).click();
+  await page.getByRole("button", { name: /^Recheada/ }).click();
   await page.getByText("Pago H03", { exact: false }).click();
   await page.getByText("Opcional pago fictício", { exact: false }).click();
   await screenshot(page, "configurator");
@@ -351,8 +351,30 @@ try {
     ignoreHTTPSErrors: true,
     viewport: { width: 390, height: 844 },
   });
+  let holdList = false,
+    failList = false,
+    releaseList,
+    heldList;
+  let heldReady = new Promise((resolve) => (heldList = resolve));
   await operatorContext.route("**/*", async (route) => {
     const u = new URL(route.request().url());
+    if (u.origin === new URL(env.API_URL).origin && u.pathname.endsWith("/rpc/get_admin_orders")) {
+      if (failList) {
+        failList = false;
+        return route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ message: "Falha fictícia de transporte" }),
+        });
+      }
+      if (holdList && route.request().postDataJSON()?.p_instance_id === A.instance_id) {
+        holdList = false;
+        const response = await route.fetch();
+        heldList();
+        await new Promise((resolve) => (releaseList = resolve));
+        return route.fulfill({ response });
+      }
+    }
     if (
       (u.hostname === "a.ab.invalid" && u.port === "4173") ||
       u.origin === new URL(env.API_URL).origin
@@ -385,6 +407,34 @@ try {
         .isVisible(),
     );
     await screenshot(panel, "panel");
+    holdList = true;
+    await panel.getByRole("button", { name: "Atualizar", exact: true }).click();
+    await heldReady;
+    await panel.getByLabel("Instância", { exact: true }).fill(fixtures[1].instance_id);
+    await panel.getByText("Nenhum pedido encontrado.", { exact: true }).waitFor();
+    releaseList();
+    await new Promise((r) => setTimeout(r, 1000));
+    check(
+      "delayed A1 response cannot populate A2 panel",
+      (await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).count()) ===
+        0 && (await panel.getByRole("region", { name: "Itens do pedido" }).count()) === 0,
+    );
+    await panel.getByLabel("Instância", { exact: true }).fill(A.instance_id);
+    await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).waitFor();
+    failList = true;
+    await panel.getByRole("button", { name: "Atualizar", exact: true }).click();
+    await panel.getByRole("alert").waitFor();
+    check(
+      "backend list failure clears stale private orders",
+      (await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).count()) ===
+        0,
+    );
+    await panel.getByRole("button", { name: "Atualizar", exact: true }).click();
+    await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).click();
+    await panel
+      .getByRole("region", { name: "Itens do pedido" })
+      .getByText("2 × Pizza H03 a", { exact: true })
+      .waitFor();
     const priorHistory = Number(
       sql(
         `SELECT count(*) FROM public.neroxa_order_status_history WHERE order_id='${lost.order_id}'`,

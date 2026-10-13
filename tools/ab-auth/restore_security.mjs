@@ -119,9 +119,20 @@ export async function prepareSecurity({ work, project, psql, check }) {
   const groupProduct = crypto.randomUUID(),
     group = crypto.randomUUID(),
     addon = crypto.randomUUID();
+  const metadata = {
+    kind: "PIZZA",
+    options: [
+      { id: "tamanho", required: true, choices: [{ id: "grande", name: "Grande", price: 5 }] },
+      { id: "borda", choices: [{ id: "recheada", name: "Recheada", price: 2 }] },
+    ],
+  };
   psql(
     "postgres",
-    `INSERT INTO public.neroxa_storefront_products(id,instance_id,category_id,name,slug,price,metadata) VALUES('${groupProduct}','${instances[0]}','${categories[0]}','Pizza GROUP restore','group-restore',30,'{"kind":"PIZZA","options":[{"id":"tamanho","required":true,"choices":[{"id":"grande","name":"Grande","price":5}]},{"id":"borda","choices":[{"id":"recheada","name":"Recheada","price":2}]}]'); INSERT INTO public.neroxa_storefront_addon_groups(id,instance_id,name,required,min_selections,max_selections) VALUES('${group}','${instances[0]}','Obrigatório restore',true,1,1); INSERT INTO public.neroxa_storefront_addons(id,group_id,name,price_delta) VALUES('${addon}','${group}','Adicional GROUP restore',3); INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) VALUES('${groupProduct}','${group}',0);`,
+    `INSERT INTO public.neroxa_system_domains(system_instance_id,domain,status) VALUES('${instances[0]}','group-restore-a1.invalid','VERIFIED');`,
+  );
+  psql(
+    "postgres",
+    `INSERT INTO public.neroxa_storefront_products(id,instance_id,category_id,name,slug,price,metadata) VALUES('${groupProduct}','${instances[0]}','${categories[0]}','Pizza GROUP restore','group-restore',30,${lit(JSON.stringify(metadata))}); INSERT INTO public.neroxa_storefront_addon_groups(id,instance_id,name,required,min_selections,max_selections) VALUES('${group}','${instances[0]}','Obrigatório restore',true,1,1); INSERT INTO public.neroxa_storefront_addons(id,group_id,name,price_delta) VALUES('${addon}','${group}','Adicional GROUP restore',3); INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) VALUES('${groupProduct}','${group}',0);`,
   );
   const zone = JSON.parse(
     psql(
@@ -132,7 +143,7 @@ export async function prepareSecurity({ work, project, psql, check }) {
   const payload = {
     organization_id: organizations[0],
     instance_id: instances[0],
-    store_domain: "recovery-a1.invalid",
+    store_domain: "group-restore-a1.invalid",
     customer_name: "Cliente GROUP restore fictício",
     customer_phone: "00000000008",
     fulfillment: "DELIVERY",
