@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { freezeSource, resumeTarget, rollForward } from "./operational_recovery.mjs";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
 import {
@@ -86,6 +87,7 @@ try {
   // The source database is already cut over. Snapshot it and restore the dump
   // into a separate disposable database; never mutate the source.
   security = await prepareSecurity({ work, project, psql, check });
+  await freezeSource({ psql, security, check });
   const baseline = query("postgres");
   run(
     ["psql", "-XqAt", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-o", aclPath],
@@ -278,7 +280,9 @@ SELECT 'table-grants|' || md5(coalesce(string_agg(grantee || ':' || table_schema
   restoredAuth = await startRestoredAuth({ project, restoreDb, security, check });
   restoredRest = await startRestoredRest({ project, restoreDb });
   evidence.restoredServices = { authImage: restoredAuth.image, restImage: restoredRest.image };
+  await resumeTarget({ psql, security, url: restoredRest.url, restoreDb, check });
   await validateSecurity({ security, url: restoredRest.url, check, psql, restoreDb });
+  await rollForward({ psql, security, url: restoredRest.url, restoreDb, check });
   check("source data unchanged by target HTTP tests", sourceData === data("postgres"));
   evidence.stage = "done";
   evidence.status = "PASS";
