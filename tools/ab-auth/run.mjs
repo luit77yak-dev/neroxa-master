@@ -220,6 +220,8 @@ try {
     applied: true,
   });
   sql(fs.readFileSync("audits/sql/group-addons-pricing.candidate.sql", "utf8"));
+  sql(fs.readFileSync("audits/sql/store-availability.candidate.sql", "utf8"));
+  sql(fs.readFileSync("audits/sql/checkout-recovery.candidate.sql", "utf8"));
   report.stage = "fixtures";
   const sharedSystem = id();
   const org = id(),
@@ -268,6 +270,11 @@ try {
   INSERT INTO public.neroxa_orders(id,instance_id,organization_id,order_number,customer_name,customer_phone,fulfillment,payment_method,subtotal,total) VALUES(${literal(orderC)},${literal(C)},${literal(orgC)},1,'Cliente fictício C','00000000004','PICKUP','CASH',50,50);
   INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,quantity,unit_price,line_total) VALUES(${literal(orderC)},${literal(productC)},'Produto fictício C',1,50,50);
   INSERT INTO public.neroxa_order_status_history(order_id,to_status,note) VALUES(${literal(orderA)},'RECEIVED','Fixture fictícia'),(${literal(orderB)},'RECEIVED','Fixture fictícia');COMMIT;`);
+  // Explicit fictional shop configuration only, not a migration default/backfill.
+  for (const instance of [A, B, C])
+    sql(
+      `INSERT INTO public.neroxa_storefront_availability(instance_id,enabled,timezone) VALUES(${literal(instance)},true,'America/Sao_Paulo'); INSERT INTO public.neroxa_storefront_weekly_hours(instance_id,weekday,opens_at,closes_at) SELECT ${literal(instance)},d,'00:00'::time,'24:00'::time FROM generate_series(0,6) d;`,
+    );
   // Test-only INVOKER probe verifies the database role/claims reached by actual JWT HTTP calls.
   sql(`CREATE FUNCTION public.ab_runtime_identity() RETURNS jsonb LANGUAGE sql STABLE SECURITY INVOKER SET search_path='' AS $$ SELECT jsonb_build_object('role',current_user,'uid',auth.uid(),'aal',auth.jwt()->>'aal','superuser',current_setting('is_superuser')) $$;
   REVOKE ALL ON FUNCTION public.ab_runtime_identity() FROM PUBLIC,anon,service_role;

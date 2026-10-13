@@ -100,6 +100,7 @@ try {
   const migration = fs.readFileSync("audits/sql/order-amendment-capability.candidate.sql", "utf8");
   sql(db, migration);
   sql(db, fs.readFileSync("audits/sql/group-addons-capability.candidate.sql", "utf8"));
+  sql(db, fs.readFileSync("audits/sql/store-availability-capability.candidate.sql", "utf8"));
   sql(db, "NOTIFY pgrst, 'reload schema';");
   check(
     "Anonymous capability registration EXECUTE disabled",

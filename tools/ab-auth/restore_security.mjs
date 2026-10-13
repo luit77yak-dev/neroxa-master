@@ -89,6 +89,14 @@ export async function prepareSecurity({ work, project, psql, check }) {
   GRANT EXECUTE ON FUNCTION public.restore_runtime_identity() TO authenticated; COMMIT;`;
   psql("postgres", sql);
   psql("postgres", fs.readFileSync("audits/sql/group-addons-pricing.candidate.sql", "utf8"));
+  psql("postgres", fs.readFileSync("audits/sql/store-availability.candidate.sql", "utf8"));
+  psql("postgres",fs.readFileSync("audits/sql/checkout-recovery.candidate.sql","utf8"));
+  for (const instance of instances)
+    psql(
+      "postgres",
+      `INSERT INTO public.neroxa_storefront_availability(instance_id,enabled,timezone) VALUES(${lit(instance)},true,'America/Sao_Paulo'); INSERT INTO public.neroxa_storefront_weekly_hours(instance_id,weekday,opens_at,closes_at) SELECT ${lit(instance)},d,'00:00'::time,'24:00'::time FROM generate_series(0,6) d;`,
+    );
+
   // New fictitious fixture slot only: no reinterpretation of historical customer data.
   psql(
     "postgres",
