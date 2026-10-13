@@ -182,7 +182,8 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
   );
   check(
     "text size snapshot, authoritative name/price",
-    JSON.parse(snapshot).options[0].choice_id === "grande" &&
+    JSON.parse(snapshot).version === 2 &&
+      JSON.parse(snapshot).options[0].choice_id === "grande" &&
       JSON.parse(snapshot).unit_price === 37.25,
   );
   sql(

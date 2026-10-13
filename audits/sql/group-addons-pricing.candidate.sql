@@ -1,5 +1,10 @@
 -- REVIEW ONLY; depends on full phase2 + runtime hardening. Never remote-install automatically.
 BEGIN;
+DO $preflight$
+BEGIN
+ IF to_regprocedure('public.create_public_order(jsonb)') IS NULL OR to_regprocedure('public.get_public_storefront_context(text)') IS NULL OR to_regprocedure('extensions.digest(bytea,text)') IS NULL THEN RAISE EXCEPTION 'Grouped pricing prerequisites missing'; END IF;
+ IF (SELECT format_type(a.atttypid,a.atttypmod) FROM pg_catalog.pg_attribute a WHERE a.attrelid='public.neroxa_order_items'::regclass AND a.attname='size_id' AND NOT a.attisdropped) IS DISTINCT FROM 'uuid' THEN RAISE EXCEPTION 'Unexpected historical option identity'; END IF;
+END $preflight$;
 CREATE TABLE private.neroxa_group_order_intents (
  order_id uuid PRIMARY KEY REFERENCES public.neroxa_orders(id) ON DELETE CASCADE,
  payload_sha256 text NOT NULL CHECK (payload_sha256 ~ '^[0-9a-f]{64}$')
@@ -7,6 +12,7 @@ CREATE TABLE private.neroxa_group_order_intents (
 ALTER TABLE private.neroxa_group_order_intents ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON private.neroxa_group_order_intents FROM PUBLIC,anon,authenticated,service_role;
 ALTER TABLE public.neroxa_order_items ADD COLUMN IF NOT EXISTS selection_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb;
+DO $snapshot_type$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_attribute WHERE attrelid='public.neroxa_order_items'::regclass AND attname='selection_snapshot' AND atttypid='jsonb'::regtype AND attnotnull AND NOT attisdropped) THEN RAISE EXCEPTION 'Unexpected snapshot column; stop instead of coercing history'; END IF; END $snapshot_type$;
 CREATE OR REPLACE FUNCTION private.neroxa_prepare_group_item(p_instance uuid,p_item jsonb) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $group$
 DECLARE
@@ -63,7 +69,7 @@ BEGIN
  IF (nullif(p_item->>'size_id','') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(options) o WHERE o->>'option_id'='tamanho')) OR (nullif(p_item->>'crust_id','') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda')) THEN RAISE EXCEPTION 'Unknown option' USING ERRCODE='22023'; END IF;
  IF jsonb_typeof(p_item->'expected_unit_price') IS DISTINCT FROM 'number' THEN RAISE EXCEPTION 'Price acknowledgement required' USING ERRCODE='22023'; END IF;
  IF (p_item->>'expected_unit_price')::numeric IS DISTINCT FROM unit THEN RAISE EXCEPTION 'Price changed; review catalog' USING ERRCODE='PT409'; END IF;
- RETURN jsonb_build_object('product_id',p.id,'product_name',p.name,'product_image_url',p.image_url,'size_name',(SELECT o->>'name' FROM jsonb_array_elements(options) o WHERE o->>'option_id'='tamanho'),'crust_name',(SELECT o->>'name' FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda'),'crust_price',coalesce((SELECT (o->>'price_delta')::numeric FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda'),0),'quantity',qty,'unit_price',unit,'line_total',unit*qty,'addons',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',x->'addon_id','group_id',x->'group_id','name',x->'name','price',x->'unit_price','quantity',1,'entity_type','ADDON','selection_contract','GROUP_ADDONS_V1')),'[]'::jsonb) FROM jsonb_array_elements(snaps) x),'selection_snapshot',jsonb_build_object('version',1,'contract','GROUP_ADDONS_V1','pricing_rule','BASE_PLUS_DELTAS_V1','instance_id',p_instance,'product_id',p.id,'product_name',p.name,'base_price',p.price,'quantity',qty,'options',options,'groups',groups,'addons',snaps,'unit_price',unit,'line_total',unit*qty));
+ RETURN jsonb_build_object('product_id',p.id,'product_name',p.name,'product_image_url',p.image_url,'size_name',(SELECT o->>'name' FROM jsonb_array_elements(options) o WHERE o->>'option_id'='tamanho'),'crust_name',(SELECT o->>'name' FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda'),'crust_price',coalesce((SELECT (o->>'price_delta')::numeric FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda'),0),'quantity',qty,'unit_price',unit,'line_total',unit*qty,'addons',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',x->'addon_id','group_id',x->'group_id','name',x->'name','price',x->'unit_price','quantity',1,'entity_type','ADDON','selection_contract','GROUP_ADDONS_V1')),'[]'::jsonb) FROM jsonb_array_elements(snaps) x),'selection_snapshot',jsonb_build_object('version',2,'contract','GROUP_ADDONS_V1','pricing_rule','BASE_PLUS_DELTAS_V1','instance_id',p_instance,'product_id',p.id,'product_name',p.name,'base_price',p.price,'quantity',qty,'options',options,'groups',groups,'addons',snaps,'unit_price',unit,'line_total',unit*qty));
 END $group$;
 REVOKE ALL ON FUNCTION private.neroxa_prepare_group_item(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
 CREATE OR REPLACE FUNCTION public.create_public_order(p_order jsonb)
