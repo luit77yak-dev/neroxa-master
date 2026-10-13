@@ -56,6 +56,7 @@ let server,
   complete = false,
   lost = null,
   drop = false,
+  dropBefore = false,
   checkoutPosts = 0,
   originalPayload = null;
 const api = async (resource, body) => {
@@ -129,6 +130,10 @@ try {
         if (u.pathname === "/api/checkout" && r.method() === "POST") {
           checkoutPosts++;
         }
+        if (dropBefore && u.pathname === "/api/checkout" && r.method() === "POST") {
+          dropBefore = false;
+          return route.abort();
+        }
         if (drop && u.pathname === "/api/checkout" && r.method() === "POST") {
           originalPayload = r.postDataJSON().p_order;
           ((drop = false), (checkoutPosts = 0), (originalPayload = null));
@@ -156,10 +161,10 @@ try {
   await page.goto("https://a.ab.invalid:4173/", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Pizza H03 a", exact: true }).waitFor();
   check("real scoped catalog renders", true);
-  const add = async () => {
+  const add = async (productName = "Pizza H03 a") => {
     await page
       .getByRole("button")
-      .filter({ has: page.getByRole("heading", { name: "Pizza H03 a", exact: true }) })
+      .filter({ has: page.getByRole("heading", { name: productName, exact: true }) })
       .click();
     await page.getByRole("button", { name: /Próxima etapa/ }).click();
     await page.getByText("Gratuito H03", { exact: false }).click();
@@ -350,6 +355,53 @@ try {
     .getByText("Seu pedido foi confirmado e vai entrar na preparação.", { exact: false })
     .waitFor({ timeout: 60000 });
   check("private proof tracking reflects backend status", true);
+  page = await context.newPage();
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("https://b.ab.invalid:4173/", { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: "Pizza H03 b", exact: true }).waitFor();
+  await add("Pizza H03 b");
+  await checkout();
+  await customer();
+  const B = fixtures[1],
+    beforeB = Number(
+      sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${B.instance_id}'`),
+    );
+  dropBefore = true;
+  await page.getByRole("button", { name: /Enviar pedido R\$/ }).click();
+  await page.getByRole("alert").waitFor();
+  check(
+    "timeout before transport creates no database order",
+    Number(
+      sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${B.instance_id}'`),
+    ) === beforeB,
+  );
+  const pendingB = await page.evaluate(
+    (instance) => JSON.parse(localStorage.getItem("neroxa:checkout-intent:v1:" + instance)).key,
+    B.instance_id,
+  );
+  await page.getByRole("button", { name: /Recuperar tentativa R\$/ }).dblclick();
+  await page.getByRole("dialog", { name: /Acompanhar pedido #/ }).waitFor();
+  check(
+    "double click after pre-persistence timeout creates one order with same key",
+    Number(
+      sql(
+        `SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${B.instance_id}' AND idempotency_key='${pendingB}'`,
+      ),
+    ) === 1 &&
+      Number(
+        sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${B.instance_id}'`),
+      ) ===
+        beforeB + 1,
+  );
+  check(
+    "browser A1 and A2 intentions remain independent",
+    pendingB !== priorKey &&
+      (await page.evaluate(
+        (instance) => localStorage.getItem("neroxa:checkout-intent:v1:" + instance) === null,
+        A.instance_id,
+      )),
+  );
   check("no browser JavaScript exceptions", errors.length === 0);
   complete = true;
 } finally {

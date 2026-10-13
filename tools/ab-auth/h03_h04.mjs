@@ -199,6 +199,41 @@ try {
   sql(
     `UPDATE public.neroxa_storefront_availability SET enabled=true WHERE instance_id=${q(A.instance_id)}`,
   );
+  const amendmentToken = crypto.randomBytes(32).toString("base64url");
+  check(
+    "fixture buyer capability registered privately",
+    (
+      await rpc("neroxa_register_order_amendment_capability", {
+        p_instance_id: A.instance_id,
+        p_order_id: oid,
+        p_checkout_key: request.idempotency_key,
+        p_token_sha256: crypto.createHash("sha256").update(amendmentToken).digest("hex"),
+      })
+    ).data === true,
+  );
+  const priorItems = sql(`SELECT count(*) FROM public.neroxa_order_items WHERE order_id=${q(oid)}`);
+  sql(
+    `UPDATE public.neroxa_storefront_availability SET enabled=false WHERE instance_id=${q(A.instance_id)}`,
+  );
+  check(
+    "closed store rejects valid private append capability",
+    (
+      await rpc("neroxa_append_order_items_with_capability", {
+        p_instance_id: A.instance_id,
+        p_order_id: oid,
+        p_token: amendmentToken,
+        p_request_key: crypto.randomUUID(),
+        p_items: request.items,
+      })
+    ).status === 423,
+  );
+  check(
+    "closed append preserves historical items",
+    sql(`SELECT count(*) FROM public.neroxa_order_items WHERE order_id=${q(oid)}`) === priorItems,
+  );
+  sql(
+    `UPDATE public.neroxa_storefront_availability SET enabled=true WHERE instance_id=${q(A.instance_id)}`,
+  );
   const recovered = await rpc("neroxa_recover_group_order", {
     p_instance_id: A.instance_id,
     p_checkout_key: request.idempotency_key,
@@ -339,6 +374,32 @@ try {
   check(
     "absent availability never opens",
     sql(`SELECT private.neroxa_store_is_open('${crypto.randomUUID()}',${at})`) === "f",
+  );
+  sql(
+    `DELETE FROM public.neroxa_storefront_weekly_hours WHERE instance_id=${q(C.instance_id)}; DELETE FROM public.neroxa_storefront_availability WHERE instance_id=${q(C.instance_id)};`,
+  );
+  const absentCatalog = (await rpc("get_public_storefront_catalog", { p_domain: C.domain })).data;
+  check(
+    "existing shop with absent configuration publishes closed",
+    absentCatalog.availability.configured === false && absentCatalog.availability.open === false,
+  );
+  check(
+    "client open flag cannot bypass missing server configuration",
+    (
+      await rpc("create_public_order", {
+        p_order: { ...body(C), availability: { open: true }, timezone: "UTC" },
+      })
+    ).status === 423,
+  );
+  sql(
+    `INSERT INTO public.neroxa_storefront_availability VALUES(${q(C.instance_id)},true,'America/Sao_Paulo'); INSERT INTO public.neroxa_storefront_weekly_hours SELECT ${q(C.instance_id)},d,'00:00'::time,'24:00'::time FROM generate_series(0,6) d; DELETE FROM public.neroxa_storefront_weekly_hours WHERE instance_id=${q(B.instance_id)};`,
+  );
+  check(
+    "existing configuration without windows stays closed",
+    (await rpc("create_public_order", { p_order: body(B) })).status === 423,
+  );
+  sql(
+    `INSERT INTO public.neroxa_storefront_weekly_hours SELECT ${q(B.instance_id)},d,'00:00'::time,'24:00'::time FROM generate_series(0,6) d;`,
   );
   const readFingerprint = crypto.randomBytes(32).toString("hex");
   // Keep the HTTP burst away from a fixed-window boundary; never freeze the server clock.
