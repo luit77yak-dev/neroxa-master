@@ -236,55 +236,81 @@ try {
   const containers = JSON.parse(
     execFileSync("docker", ["inspect", "supabase_auth_" + project], { encoding: "utf8" }),
   );
-  const authConfig = Object.fromEntries(
-    containers[0].Config.Env.map((e) => {
-      const separator = e.indexOf("=");
-      return [e.slice(0, separator), e.slice(separator + 1)];
-    }),
-  );
-  const parts = actors.token.split("."),
-    header = JSON.parse(Buffer.from(parts[0], "base64url"));
-  const claims = JSON.parse(Buffer.from(parts[1], "base64url"));
-  claims.exp = Math.floor(Date.now() / 1000) - 30;
-  const originalBody = parts[0] + "." + parts[1],
-    body = parts[0] + "." + Buffer.from(JSON.stringify(claims)).toString("base64url");
-  let signature,
-    verified = false;
-  if (header.alg === "HS256" && authConfig.GOTRUE_JWT_SECRET) {
-    const expected = crypto
-      .createHmac("sha256", authConfig.GOTRUE_JWT_SECRET)
-      .update(originalBody)
-      .digest();
-    verified = expected.equals(Buffer.from(parts[2], "base64url"));
-    signature = crypto.createHmac("sha256", authConfig.GOTRUE_JWT_SECRET).update(body).digest();
-  } else if (["ES256", "RS256", "EdDSA"].includes(header.alg)) {
-    const raw = JSON.parse(authConfig.GOTRUE_JWT_KEYS ?? "null");
-    const entries = Array.isArray(raw) ? raw : (raw?.keys ?? []);
-    const jwk = entries.map((e) => e.key ?? e).find((k) => k.kid === header.kid && k.d);
-    if (!jwk)
-      throw Error(
-        "Disposable private signer unavailable for " +
-          header.alg +
-          "; JWT configuration names: " +
-          Object.keys(authConfig)
-            .filter((k) => k.includes("JWT"))
-            .join(","),
-      );
-    const key = crypto.createPrivateKey({ key: jwk, format: "jwk" }),
-      pub = crypto.createPublicKey(key);
-    const algorithm = header.alg === "EdDSA" ? null : "sha256";
-    const signOptions = header.alg === "ES256" ? { key, dsaEncoding: "ieee-p1363" } : key;
-    const verifyOptions = header.alg === "ES256" ? { key: pub, dsaEncoding: "ieee-p1363" } : pub;
-    verified = crypto.verify(
-      algorithm,
-      Buffer.from(originalBody),
-      verifyOptions,
-      Buffer.from(parts[2], "base64url"),
+  // Ask native GoTrue to issue a genuinely short-lived credential; never forge a positive auth identity or downgrade signing.
+  const original = containers[0],
+    name = "neroxa_expiry_auth_" + project,
+    network = Object.keys(original.NetworkSettings.Networks)[0];
+  const replicaEnv = original.Config.Env.filter(
+    (e) => e.startsWith("GOTRUE_") || e.startsWith("API_EXTERNAL_URL="),
+  ).filter((e) => !e.startsWith("GOTRUE_JWT_EXP="));
+  replicaEnv.push("GOTRUE_JWT_EXP=2");
+  let expired;
+  try {
+    execFileSync(
+      "docker",
+      [
+        "run",
+        "-d",
+        "--name",
+        name,
+        "--network",
+        network,
+        "--label",
+        "com.supabase.cli.project=" + project,
+        "-p",
+        "127.0.0.1::9999",
+        ...replicaEnv.flatMap((e) => ["-e", e]),
+        original.Config.Image,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
     );
-    signature = crypto.sign(algorithm, Buffer.from(body), signOptions);
-  } else throw Error("Unsupported disposable JWT signing contract: " + header.alg);
-  check("original GoTrue signature verified with native " + header.alg, verified);
-  const expired = body + "." + signature.toString("base64url");
+    const target = JSON.parse(execFileSync("docker", ["inspect", name], { encoding: "utf8" }))[0],
+      binding = target.NetworkSettings.Ports["9999/tcp"][0];
+    if (binding.HostIp !== "127.0.0.1") throw Error("Loopback required");
+    const url = "http://127.0.0.1:" + binding.HostPort;
+    let ready = false;
+    for (let n = 0; n < 20; n++) {
+      try {
+        ready = (await fetch(url + "/health")).ok;
+      } catch {}
+      if (ready) break;
+      await new Promise((r) => setTimeout(r, 300));
+    }
+    if (!ready) throw Error("Native expiry Auth not ready");
+    const signed = await fetch(url + "/token?grant_type=password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: actors.email, password: actors.password }),
+      }),
+      session = await signed.json();
+    if (!signed.ok || !session.access_token || session.expires_in > 10)
+      throw Error("Native short lease unavailable");
+    const claims = JSON.parse(Buffer.from(session.access_token.split(".")[1], "base64url")),
+      existing = JSON.parse(Buffer.from(actors.token.split(".")[1], "base64url"));
+    check(
+      "native GoTrue itself issues short-lived credential for real owner",
+      claims.sub === existing.sub &&
+        claims.role === "authenticated" &&
+        claims.exp - claims.iat <= 10,
+    );
+    const healthy = await rpc(
+      "get_admin_orders",
+      { p_instance_id: a.f.instance_id },
+      session.access_token,
+    );
+    check("short-lived native token authorized before expiry", healthy.status === 200);
+    const wait = Math.max(0, claims.exp - Math.floor(Date.now() / 1000) + 1);
+    await new Promise((r) => setTimeout(r, wait * 1000));
+    expired = session.access_token;
+  } catch {
+    throw Error(
+      "Native short-lived Auth rehearsal failed; credentials and container config withheld",
+    );
+  } finally {
+    try {
+      execFileSync("docker", ["rm", "-f", name], { stdio: "ignore" });
+    } catch {}
+  }
   fs.writeFileSync(work + "/expired.identity.private.json", JSON.stringify({ token: expired }), {
     mode: 0o600,
   });
