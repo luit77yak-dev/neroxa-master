@@ -62,7 +62,7 @@ BEGIN
  IF (nullif(p_item->>'size_id','') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(options) o WHERE o->>'option_id'='tamanho')) OR (nullif(p_item->>'crust_id','') IS NOT NULL AND NOT EXISTS(SELECT 1 FROM jsonb_array_elements(options) o WHERE o->>'option_id'='borda')) THEN RAISE EXCEPTION 'Unknown option' USING ERRCODE='22023'; END IF;
  IF jsonb_typeof(p_item->'expected_unit_price') IS DISTINCT FROM 'number' THEN RAISE EXCEPTION 'Price acknowledgement required' USING ERRCODE='22023'; END IF;
  IF (p_item->>'expected_unit_price')::numeric IS DISTINCT FROM unit THEN RAISE EXCEPTION 'Price changed; review catalog' USING ERRCODE='PT409'; END IF;
- RETURN jsonb_build_object('product_id',p.id,'product_name',p.name,'product_image_url',p.image_url,'quantity',qty,'unit_price',unit,'line_total',unit*qty,'addons',snaps,'selection_snapshot',jsonb_build_object('version',1,'contract','GROUP_ADDONS_V1','pricing_rule','BASE_PLUS_DELTAS_V1','instance_id',p_instance,'product_id',p.id,'product_name',p.name,'base_price',p.price,'quantity',qty,'options',options,'groups',groups,'addons',snaps,'unit_price',unit,'line_total',unit*qty));
+ RETURN jsonb_build_object('product_id',p.id,'product_name',p.name,'product_image_url',p.image_url,'quantity',qty,'unit_price',unit,'line_total',unit*qty,'addons',(SELECT coalesce(jsonb_agg(jsonb_build_object('id',x->'addon_id','group_id',x->'group_id','name',x->'name','price',x->'unit_price','quantity',1,'entity_type','ADDON','selection_contract','GROUP_ADDONS_V1')),'[]'::jsonb) FROM jsonb_array_elements(snaps) x),'selection_snapshot',jsonb_build_object('version',1,'contract','GROUP_ADDONS_V1','pricing_rule','BASE_PLUS_DELTAS_V1','instance_id',p_instance,'product_id',p.id,'product_name',p.name,'base_price',p.price,'quantity',qty,'options',options,'groups',groups,'addons',snaps,'unit_price',unit,'line_total',unit*qty));
 END $group$;
 REVOKE ALL ON FUNCTION private.neroxa_prepare_group_item(uuid,jsonb) FROM PUBLIC,anon,authenticated,service_role;
 CREATE OR REPLACE FUNCTION public.create_public_order(p_order jsonb)
@@ -286,6 +286,7 @@ begin
  if not found then raise exception 'Pedido não encontrado';end if;
  if v_order.status not in ('RECEIVED','CONFIRMED','PREPARING','READY') then raise exception 'Este pedido não aceita novos itens';end if;
  for v_item in select * from jsonb_array_elements(coalesce(p_items,'[]'::jsonb)) loop
+  IF v_item ? 'group_addon_ids' OR v_item->>'selection_contract'='GROUP_ADDONS_V1' OR EXISTS(SELECT 1 FROM public.neroxa_storefront_product_addon_groups l WHERE l.product_id=(v_item->>'product_id')::uuid) THEN RAISE EXCEPTION 'Grouped append requires private capability' USING ERRCODE='22023'; END IF;
   v_qty:=greatest(1,coalesce((v_item->>'quantity')::int,1));
   v_unit:=public.calculate_public_order_line_price(v_order.instance_id,nullif(v_item->>'product_id','')::uuid,nullif(v_item->>'second_product_id','')::uuid,nullif(v_item->>'size_id',''),nullif(v_item->>'crust_id',''),coalesce(v_item->'addons','[]'::jsonb),coalesce(v_item->'complements','[]'::jsonb));
   insert into public.neroxa_order_items(order_id,product_id,product_name,product_image_url,second_product_id,is_half,addons,complements,quantity,notes,unit_price,line_total)
