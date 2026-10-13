@@ -16,6 +16,8 @@ class Tests(unittest.TestCase):
  def test_hash_tamper(self):self.m['sequence'][0]['sha256']='0'*64;self.assertRaises(ValueError,verify,self.m)
  def test_path(self):self.m['sequence'][0]['path']='../../private';self.assertRaises(ValueError,verify,self.m)
  def test_remote(self):self.m['remoteExecutionAuthorized']=True;self.assertRaises(ValueError,verify,self.m)
+ def test_regprocedure_uses_types_only(self):
+  s=(R/self.m['sequence'][0]['path']).read_text();self.assertNotIn('to_regprocedure(\'public.create_public_order(p_order',s)
  def test_preflight_readonly(self):
   s=(R/self.m['sequence'][0]['path']).read_text();self.assertNotIn('ALTER TABLE',s);self.assertNotIn('INSERT INTO',s)
  def test_no_permission_defaults(self):

@@ -49,7 +49,7 @@ for collection,select,expr in [('constraints','pg_constraint k JOIN pg_class c O
 A.append("DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename LIKE 'neroxa_%') OR EXISTS(SELECT 1 FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid WHERE c.relnamespace='public'::regnamespace AND c.relname LIKE 'neroxa_%' AND NOT t.tgisinternal) THEN RAISE EXCEPTION 'BRIDGE_POLICY_TRIGGER_DRIFT'; END IF; END $$;")
 A.append("DO $$ BEGIN IF (SELECT count(*) FROM pg_proc WHERE pronamespace='public'::regnamespace AND prokind='f')<>8 THEN RAISE EXCEPTION 'BRIDGE_FUNCTION_OVERLOAD'; END IF; END $$;")
 for f in LIVE['functions']:
- sig=f['schema']+'.'+f['name']+'('+f['signature']+')'
+ sig=f['schema']+'.'+f['name']+'('+re.sub(r'\bp_\w+\s+','',f['signature'])+')'
  A.append(f"DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_proc WHERE oid=to_regprocedure({lit(sig)}) AND md5(prosrc)={lit(f['body_md5'])} AND md5(pg_get_functiondef(oid))={lit(f['definition_md5'])} AND pg_get_userbyid(proowner)='postgres' AND prosecdef={'true' if f['definer'] else 'false'} AND proacl::text[] IS NOT DISTINCT FROM ARRAY["+','.join(lit(a) for a in f['acl'])+"]::text[]) THEN RAISE EXCEPTION 'BRIDGE_FUNCTION_DRIFT'; END IF; END $$;")
 A.append("""DO $$ BEGIN
  IF EXISTS(SELECT 1 FROM public.neroxa_orders o LEFT JOIN public.neroxa_system_instances i ON i.id=o.instance_id WHERE i.id IS NULL OR i.organization_id IS DISTINCT FROM o.organization_id)

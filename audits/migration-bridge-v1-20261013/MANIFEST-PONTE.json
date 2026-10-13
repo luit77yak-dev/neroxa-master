@@ -92,7 +92,7 @@
     {
       "phase": "A",
       "path": "audits/migration-bridge-v1-20261013/sql/A-preflight.candidate.sql",
-      "sha256": "9b885e5e05a4371dc4fd6ec52438572598caa673b07888597710747963148486",
+      "sha256": "674c1760e6555bbd13e204864f5b635c880a2a97c8761e39ddab1808ef4d08c3",
       "repeat": "read-only",
       "requires": null
     },
