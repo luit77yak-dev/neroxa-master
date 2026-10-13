@@ -368,9 +368,13 @@ try {
   fs.writeFileSync(path.join(work, "h03-fixtures.private.json"), JSON.stringify(fixtures), {
     mode: 0o600,
   });
-  fs.writeFileSync(path.join(work, "h03-actor.private.json"), JSON.stringify({ token }), {
-    mode: 0o600,
-  });
+  fs.writeFileSync(
+    path.join(work, "h03-actor.private.json"),
+    JSON.stringify({ token, email, password }),
+    {
+      mode: 0o600,
+    },
+  );
   check(
     "absent availability never opens",
     sql(`SELECT private.neroxa_store_is_open('${crypto.randomUUID()}',${at})`) === "f",

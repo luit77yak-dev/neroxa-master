@@ -23,7 +23,8 @@
     "deploymentEnabled": {
       "audit/store-isolation-candidate-20261011": false,
       "audit/group-addons-v1-20261013": false,
-      "audit/h03-h04-20261013": false
+      "audit/h03-h04-20261013": false,
+      "audit/first-complete-order-20261013": false
     }
   }
 }

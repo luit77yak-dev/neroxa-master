@@ -222,6 +222,9 @@ try {
   sql(fs.readFileSync("audits/sql/group-addons-pricing.candidate.sql", "utf8"));
   sql(fs.readFileSync("audits/sql/store-availability.candidate.sql", "utf8"));
   sql(fs.readFileSync("audits/sql/checkout-recovery.candidate.sql", "utf8"));
+  sql(fs.readFileSync("audits/sql/checkout-reconciliation.candidate.sql", "utf8"));
+  sql(fs.readFileSync("audits/sql/operational-order-detail.candidate.sql", "utf8"));
+  sql(fs.readFileSync("audits/sql/operational-order-transitions.candidate.sql", "utf8"));
   report.stage = "fixtures";
   const sharedSystem = id();
   const org = id(),

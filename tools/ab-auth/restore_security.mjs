@@ -90,7 +90,13 @@ export async function prepareSecurity({ work, project, psql, check }) {
   psql("postgres", sql);
   psql("postgres", fs.readFileSync("audits/sql/group-addons-pricing.candidate.sql", "utf8"));
   psql("postgres", fs.readFileSync("audits/sql/store-availability.candidate.sql", "utf8"));
-  psql("postgres",fs.readFileSync("audits/sql/checkout-recovery.candidate.sql","utf8"));
+  psql("postgres", fs.readFileSync("audits/sql/checkout-recovery.candidate.sql", "utf8"));
+  psql("postgres", fs.readFileSync("audits/sql/checkout-reconciliation.candidate.sql", "utf8"));
+  psql("postgres", fs.readFileSync("audits/sql/operational-order-detail.candidate.sql", "utf8"));
+  psql(
+    "postgres",
+    fs.readFileSync("audits/sql/operational-order-transitions.candidate.sql", "utf8"),
+  );
   for (const instance of instances)
     psql(
       "postgres",
@@ -110,7 +116,75 @@ export async function prepareSecurity({ work, project, psql, check }) {
     WHERE order_id=${lit(orders[2])}; COMMIT;`,
   );
   check("normalized fixture snapshot present before backup", true);
-  return { people, env }; // JWTs stay only in memory, never in artifacts.
+  const groupProduct = crypto.randomUUID(),
+    group = crypto.randomUUID(),
+    addon = crypto.randomUUID();
+  psql(
+    "postgres",
+    `INSERT INTO public.neroxa_storefront_products(id,instance_id,category_id,name,slug,price,metadata) VALUES('${groupProduct}','${instances[0]}','${categories[0]}','Pizza GROUP restore','group-restore',30,'{"kind":"PIZZA","options":[{"id":"tamanho","required":true,"choices":[{"id":"grande","name":"Grande","price":5}]},{"id":"borda","choices":[{"id":"recheada","name":"Recheada","price":2}]}]'); INSERT INTO public.neroxa_storefront_addon_groups(id,instance_id,name,required,min_selections,max_selections) VALUES('${group}','${instances[0]}','Obrigatório restore',true,1,1); INSERT INTO public.neroxa_storefront_addons(id,group_id,name,price_delta) VALUES('${addon}','${group}','Adicional GROUP restore',3); INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) VALUES('${groupProduct}','${group}',0);`,
+  );
+  const zone = JSON.parse(
+    psql(
+      "postgres",
+      `SELECT jsonb_build_object('name',neighborhoods[1],'fee',delivery_fee) FROM public.neroxa_storefront_delivery_zones WHERE instance_id='${instances[0]}' AND active ORDER BY id LIMIT 1`,
+    ),
+  );
+  const payload = {
+    organization_id: organizations[0],
+    instance_id: instances[0],
+    store_domain: "recovery-a1.invalid",
+    customer_name: "Cliente GROUP restore fictício",
+    customer_phone: "00000000008",
+    fulfillment: "DELIVERY",
+    payment_method: "CASH",
+    address_street: "Rua restore fictícia",
+    address_number: "100",
+    address_neighborhood: zone.name,
+    idempotency_key: crypto.randomUUID(),
+    client_cart_reference: "c".repeat(64),
+    expected_total: 80 + Number(zone.fee),
+    items: [
+      {
+        selection_contract: "GROUP_ADDONS_V1",
+        product_id: groupProduct,
+        group_addon_ids: [addon],
+        size_id: "grande",
+        crust_id: "recheada",
+        quantity: 2,
+        expected_unit_price: 40,
+      },
+    ],
+  };
+  const created = JSON.parse(
+    psql(
+      "postgres",
+      `SELECT to_jsonb(r) FROM public.create_public_order(${lit(JSON.stringify(payload))}::jsonb) r`,
+    ),
+  );
+  psql("postgres", "NOTIFY pgrst,'reload schema'");
+  const authStatus = await fetch(env.API_URL + "/rest/v1/rpc/update_admin_order_status", {
+    method: "POST",
+    headers: {
+      apikey: env.ANON_KEY,
+      Authorization: "Bearer " + people[0].token,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      p_order_id: created.order_id,
+      p_status: "CONFIRMED",
+      p_note: "GROUP restore fictício",
+    }),
+  });
+  check("source real Auth confirms GROUP before backup", authStatus.status === 200);
+  const lease = psql(
+    "postgres",
+    `SELECT payload_sha256||'|'||recovery_expires_at::text FROM private.neroxa_group_order_intents WHERE order_id='${created.order_id}'`,
+  );
+  check(
+    "real GROUP delivery and intent populated before backup",
+    created.total === payload.expected_total && lease.length > 64,
+  );
+  return { people, env, groupOrder: { payload, id: created.order_id, lease } }; // Synthetic proof stays in private process memory.
 }
 
 export async function startRestoredRest({ project, restoreDb }) {
@@ -181,6 +255,82 @@ export async function validateSecurity({ security, url, check, psql, restoreDb }
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   check("restored PostgREST verifies real Auth JWT", ready);
+  const g = security.groupOrder;
+  check(
+    "restored GROUP intention hash and lease unchanged",
+    psql(
+      restoreDb,
+      `SELECT payload_sha256||'|'||recovery_expires_at::text FROM private.neroxa_group_order_intents WHERE order_id='${g.id}'`,
+    ) === g.lease,
+  );
+  const serviceRpc = async (name, body) => {
+    const r = await fetch(url + "/rpc/" + name, {
+      method: "POST",
+      headers: {
+        apikey: security.env.ANON_KEY,
+        Authorization: "Bearer " + security.env.SERVICE_ROLE_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    return { status: r.status, data: await r.json() };
+  };
+  const proof = {
+    p_instance_id: g.payload.instance_id,
+    p_checkout_key: g.payload.idempotency_key,
+    p_order: g.payload,
+  };
+  const recovered = await serviceRpc("neroxa_recover_group_order", proof);
+  check(
+    "restored service recovery proves GROUP snapshot and money",
+    recovered.status === 200 &&
+      recovered.data.order_id === g.id &&
+      Number(recovered.data.total) === g.payload.expected_total &&
+      recovered.data.items[0].selectionSnapshot?.contract === "GROUP_ADDONS_V1",
+  );
+  const beforeGroup = psql(
+    restoreDb,
+    `SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${g.payload.instance_id}'`,
+  );
+  const retryGroup = await serviceRpc("create_public_order", { p_order: g.payload });
+  check(
+    "restored GROUP retry returns same ID without duplicate",
+    retryGroup.status === 200 &&
+      retryGroup.data[0].order_id === g.id &&
+      psql(
+        restoreDb,
+        `SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${g.payload.instance_id}'`,
+      ) === beforeGroup,
+  );
+  const invalid = await serviceRpc("neroxa_recover_group_order", {
+    ...proof,
+    p_instance_id: instances[1],
+  });
+  check("restored GROUP proof cannot cross sibling instance", invalid.status === 403);
+  const edited = await serviceRpc("create_public_order", {
+    p_order: { ...g.payload, expected_total: 1 },
+  });
+  check("restored GROUP changed payload is rejected", edited.status === 400);
+  const detail = await request(0, "rpc/get_admin_order_detail", "POST", {
+    p_instance_id: g.payload.instance_id,
+    p_order_id: g.id,
+  });
+  check(
+    "restored real Auth operator reads GROUP delivery detail",
+    detail.status === 200 &&
+      detail.body.order.id === g.id &&
+      detail.body.items[0].quantity === 2 &&
+      Number(detail.body.items[0].line_total) === 80,
+  );
+  const foreignDetail = await request(1, "rpc/get_admin_order_detail", "POST", {
+    p_instance_id: g.payload.instance_id,
+    p_order_id: g.id,
+  });
+  check(
+    "restored sibling operator cannot read GROUP details",
+    foreignDetail.status === 200 && foreignDetail.body === null,
+  );
+
   for (let actor = 0; actor < 5; actor++) {
     if (actor < 4) {
       const r = await request(actor, "rpc/restore_runtime_identity", "POST", {});
