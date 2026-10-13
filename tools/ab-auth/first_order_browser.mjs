@@ -320,11 +320,22 @@ try {
   });
   let holdList = false,
     failList = false,
+    expireActor = false,
     releaseList,
     heldList;
   let heldReady = new Promise((resolve) => (heldList = resolve));
   await operatorContext.route("**/*", async (route) => {
     const u = new URL(route.request().url());
+    if (
+      expireActor &&
+      u.origin === new URL(env.API_URL).origin &&
+      u.pathname.endsWith("/auth/v1/user")
+    ) {
+      const expired = JSON.parse(fs.readFileSync(work + "/expired.identity.private.json", "utf8"));
+      return route.continue({
+        headers: { ...route.request().headers(), authorization: "Bearer " + expired.token },
+      });
+    }
     if (u.origin === new URL(env.API_URL).origin && u.pathname.endsWith("/rpc/get_admin_orders")) {
       if (failList) {
         return route.fulfill({
@@ -500,6 +511,16 @@ try {
         ) ===
           initialOrders + 1,
     );
+    expireActor = true;
+    await panel.getByRole("button", { name: "Atualizar", exact: true }).click();
+    await panel.getByLabel("Senha", { exact: true }).waitFor();
+    check(
+      "genuine GoTrue expiry denial removes operational session and data",
+      (await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).count()) ===
+        0,
+    );
+    expireActor = false;
+    await login(users[0]);
     for (const [index, instance] of [
       [1, fixtures[1]],
       [2, fixtures[2]],
@@ -534,6 +555,7 @@ try {
       check("foreign identity cannot fence A1 " + index, deniedFence.code === "42501");
     }
     await panel.getByRole("button", { name: "Sair", exact: true }).click();
+    await panel.getByLabel("Senha", { exact: true }).waitFor();
     check(
       "session ended clears operational data",
       await panel.getByLabel("Senha", { exact: true }).isVisible(),

@@ -246,6 +246,9 @@ try {
   claims.exp = Math.floor(Date.now() / 1000) - 30;
   const body = parts[0] + "." + Buffer.from(JSON.stringify(claims)).toString("base64url");
   const expired = body + "." + crypto.createHmac("sha256", secret).update(body).digest("base64url");
+  fs.writeFileSync(work + "/expired.identity.private.json", JSON.stringify({ token: expired }), {
+    mode: 0o600,
+  });
   const expiredResult = await rpc("get_admin_orders", { p_instance_id: a.f.instance_id }, expired);
   check("real PostgREST rejects signed local expired identity", expiredResult.status === 401);
   complete = true;
