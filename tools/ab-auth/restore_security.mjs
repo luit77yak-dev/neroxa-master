@@ -88,6 +88,20 @@ export async function prepareSecurity({ work, project, psql, check }) {
   REVOKE ALL ON FUNCTION public.restore_runtime_identity() FROM PUBLIC,anon,service_role;
   GRANT EXECUTE ON FUNCTION public.restore_runtime_identity() TO authenticated; COMMIT;`;
   psql("postgres", sql);
+  psql("postgres", fs.readFileSync("audits/sql/group-addons-pricing.candidate.sql", "utf8"));
+  // New fictitious fixture slot only: no reinterpretation of historical customer data.
+  psql(
+    "postgres",
+    `BEGIN; SET LOCAL neroxa.implementation_write_path='official';
+    INSERT INTO public.neroxa_storefront_addon_groups(id,instance_id,name,required,min_selections,max_selections)
+    VALUES('ab000000-0000-4000-8000-000000000001',${lit(instances[2])},'Grupo restore fictício',true,1,1);
+    INSERT INTO public.neroxa_storefront_addons(id,group_id,name,price_delta)
+    VALUES('ac000000-0000-4000-8000-000000000001','ab000000-0000-4000-8000-000000000001','Adicional restore gratuito',0);
+    INSERT INTO public.neroxa_storefront_product_addon_groups VALUES(${lit(products[2])},'ab000000-0000-4000-8000-000000000001',0);
+    UPDATE public.neroxa_order_items SET selection_snapshot=private.neroxa_prepare_group_item(${lit(instances[2])},jsonb_build_object('selection_contract','GROUP_ADDONS_V1','product_id',${lit(products[2])},'group_addon_ids',jsonb_build_array('ac000000-0000-4000-8000-000000000001'),'quantity',1,'expected_unit_price',30))->'selection_snapshot'
+    WHERE order_id=${lit(orders[2])}; COMMIT;`,
+  );
+  check("normalized fixture snapshot present before backup", true);
   return { people, env }; // JWTs stay only in memory, never in artifacts.
 }
 
