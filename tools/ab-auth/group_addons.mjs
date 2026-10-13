@@ -51,6 +51,7 @@ const rpc = async (name, body, key = env.SERVICE_ROLE_KEY, token = key) => {
   return { status: r.status, data: await r.json() };
 };
 const fixtures = {};
+let completed = false;
 try {
   for (const [i, alias] of ["a", "b", "c"].entries()) {
     const ctx = await rpc("get_public_storefront_context", { p_domain: alias + ".ab.invalid" });
@@ -305,9 +306,10 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
       sql("SELECT count(*) FROM public.neroxa_order_items WHERE selection_snapshot='{}'::jsonb"),
     ) > 0,
   );
+  completed = true;
 } finally {
   const report = {
-    classification: checks.every((c) => c.passed) ? "PASS_ISOLATED" : "FAIL",
+    classification: completed && checks.every((c) => c.passed) ? "PASS_ISOLATED" : "FAIL",
     productionApproved: false,
     checks,
     passed: checks.filter((c) => c.passed).length,

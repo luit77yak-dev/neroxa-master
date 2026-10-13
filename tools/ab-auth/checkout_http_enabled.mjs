@@ -222,6 +222,7 @@ async function main() {
   report.stage = "start-real-tanstack";
   const env = {
     ...process.env,
+    NEROXA_DELIVERY_BACKEND_URL: local.API_URL,
     SUPABASE_URL: local.API_URL,
     SUPABASE_SERVICE_ROLE_KEY: local.SERVICE_ROLE_KEY,
     SUPABASE_PUBLISHABLE_KEY: local.ANON_KEY,
@@ -570,7 +571,7 @@ async function main() {
   assert("HTTP causes no C orders", after.c === before.c);
 
   report.stage = "http-group-addons";
-  const rich = await localApi(local, "rpc/get_public_storefront_catalog", {
+  const rich = await localApi(local, "rpc/get_public_storefront_catalog", "POST", {
     p_domain: "b.ab.invalid",
   });
   assert(
@@ -634,7 +635,8 @@ async function main() {
     actualHttpRoute: true,
     tls: "ephemeral self-signed on loopback",
     directRpcBeforeHttp: "revoked in isolated stack by preceding integration",
-    localOrdersCreated: 7,
+    localOrdersCreated: 8,
+    groupedCheckoutAndAppend: true,
     sixContactAttemptsDenied: true,
     buyerTokenIssuedOnlyOnNewOrder: true,
     buyerAmendmentEndpointTested: true,
