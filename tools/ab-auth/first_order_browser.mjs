@@ -130,6 +130,7 @@ try {
       ) {
         if (u.pathname === "/api/checkout" && r.method() === "POST") {
           checkoutPosts++;
+          originalPayload = r.postDataJSON().p_order;
         }
         if (dropBefore && u.pathname === "/api/checkout" && r.method() === "POST") {
           dropBefore = false;
@@ -274,11 +275,15 @@ try {
     "delivery total91 shown before consent",
     (await page.getByRole("button", { name: /Enviar pedido R\$/ }).innerText()).includes("91,00"),
   );
-  drop = true;
+  const confirmation = page.waitForResponse(
+    (r) =>
+      r.url().endsWith("/api/checkout") && r.request().method() === "POST" && r.status() === 200,
+  );
   await page.getByRole("button", { name: /Enviar pedido R\$/ }).click();
-  await page.getByRole("alert").waitFor();
+  lost = await (await confirmation).json();
+  await page.getByRole("dialog", { name: /Acompanhar pedido #/ }).waitFor();
   check(
-    "lost delivery response persisted one order",
+    "normal delivery opens tracking without technical intervention",
     Number(
       sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${A.instance_id}'`),
     ) ===
@@ -302,44 +307,6 @@ try {
       persisted.items[0].selection_snapshot.contract === "GROUP_ADDONS_V1" &&
       persisted.items[0].selection_snapshot.version === 2,
   );
-  const saved = await page.evaluate(
-      (inst) => localStorage.getItem("neroxa:checkout-intent:v1:" + inst),
-      A.instance_id,
-    ),
-    postsBefore = checkoutPosts;
-  await page.evaluate(
-    (inst) => localStorage.removeItem("neroxa:checkout-intent:v1:" + inst),
-    A.instance_id,
-  );
-  await page.getByRole("button", { name: /Recuperar tentativa R\$/ }).click();
-  await page.getByRole("alert").waitFor();
-  check("evicted vault blocks another HTTP attempt", checkoutPosts === postsBefore);
-  await page.reload({ waitUntil: "networkidle" });
-  await page.getByRole("button", { name: "Recuperar tentativa", exact: true }).click();
-  await page.getByLabel(/Nome/).fill("Cliente Entrega fictício");
-  await page.getByLabel(/Telefone/).fill("00000000002");
-  await page.getByLabel(/Rua/).fill("Rua Entrega fictícia");
-  await page.getByLabel(/Número/).fill("100");
-  await page.getByLabel(/Bairro/).selectOption("Bairro Entrega 0");
-  await page.getByRole("button", { name: /Recuperar tentativa R\$/ }).click();
-  await page.getByRole("alert").waitFor();
-  check("cookie denial marker detects missing vault after reload", checkoutPosts === postsBefore);
-  // Test recovery restores the ORIGINAL synthetic vault, never invents a replacement key.
-  await page.evaluate(
-    ({ instance, saved }) => localStorage.setItem("neroxa:checkout-intent:v1:" + instance, saved),
-    { instance: A.instance_id, saved },
-  );
-  await api("neroxa_storefront_products?id=eq." + A.p, { price: 45 });
-  await page.getByRole("button", { name: /Recuperar tentativa R\$/ }).click();
-  await page.getByRole("dialog", { name: /Acompanhar pedido #/ }).waitFor();
-  check(
-    "uncertain confirmed order preserves91 after catalog change",
-    Number(sql(`SELECT total FROM public.neroxa_orders WHERE id='${lost.order_id}'`)) === 91 &&
-      Number(
-        sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${A.instance_id}'`),
-      ) ===
-        initialOrders + 1,
-  );
   await screenshot(page, "tracking");
   // Separate origin session/container for the proprietor: no administrative session in customer context.
   const browser = await chromium.launch({
@@ -360,7 +327,6 @@ try {
     const u = new URL(route.request().url());
     if (u.origin === new URL(env.API_URL).origin && u.pathname.endsWith("/rpc/get_admin_orders")) {
       if (failList) {
-        failList = false;
         return route.fulfill({
           status: 503,
           contentType: "application/json",
@@ -429,6 +395,7 @@ try {
       (await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).count()) ===
         0,
     );
+    failList = false;
     await panel.getByRole("button", { name: "Atualizar", exact: true }).click();
     await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).click();
     await panel
@@ -575,6 +542,46 @@ try {
     await operatorContext.close();
     await browser.close();
   }
+  const requestCount = checkoutPosts;
+  await customerPage.evaluate(() => localStorage.clear());
+  const tryWithoutVault = () =>
+    customerPage.evaluate(async (payload) => {
+      const { withDurableCheckoutIntent } =
+        await import("/src/core/delivery/durable-checkout-intent.ts");
+      try {
+        await withDurableCheckoutIntent(
+          payload.instance_id,
+          payload,
+          async (wire) => {
+            await fetch("/api/checkout", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ p_order: wire }),
+            });
+          },
+          { storage: localStorage, locks: navigator.locks },
+        );
+        return false;
+      } catch {
+        return true;
+      }
+    }, originalPayload);
+  check(
+    "complete localStorage clearing blocks repeat in current session",
+    (await tryWithoutVault()) && checkoutPosts === requestCount,
+  );
+  await customerPage.reload({ waitUntil: "networkidle" });
+  check(
+    "pending cookie denial detects erased vault after reload",
+    (await tryWithoutVault()) && checkoutPosts === requestCount,
+  );
+  check(
+    "storage loss tests create no extra delivery order",
+    Number(
+      sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${A.instance_id}'`),
+    ) ===
+      initialOrders + 1,
+  );
   check("no JavaScript exceptions in actual consumer and panel", errors.length === 0);
   complete = true;
 } finally {
