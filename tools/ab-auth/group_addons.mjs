@@ -177,6 +177,40 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
     "forged final total rejected",
     (await create({ ...order(), expected_total: 0.01 })).status === 409,
   );
+  sql(
+    `UPDATE public.neroxa_storefront_products SET metadata=jsonb_set(metadata,'{options}',metadata->'options'||'[ {"id":"borda","required":false,"choices":[{"id":"recheada","name":"Borda recheada fictícia","price":1.50}]} ]'::jsonb) WHERE id=${q(A.p)};`,
+  );
+  const crustOrder = await create(
+    order({ ...line(), crust_id: "recheada", expected_unit_price: 38.75 }),
+  );
+  check(
+    "text crust delta calculated authoritatively",
+    crustOrder.status === 200 && crustOrder.data[0].total === 77.5,
+  );
+  check(
+    "crust name/delta snapshot retained",
+    sql(
+      `SELECT crust_name||':'||crust_price::text FROM public.neroxa_order_items WHERE order_id=${q(crustOrder.data[0].order_id)};`,
+    ) === "Borda recheada fictícia:1.50",
+  );
+  check(
+    "invalid crust denied",
+    (await create(order({ ...line(), crust_id: "invalida" }))).status === 400,
+  );
+  sql(`UPDATE public.neroxa_storefront_addon_groups SET active=false WHERE id=${q(A.g)};`);
+  check("inactive required group denied", (await create(order())).status === 400);
+  sql(
+    `UPDATE public.neroxa_storefront_addon_groups SET active=true WHERE id=${q(A.g)};UPDATE public.neroxa_storefront_products SET metadata=jsonb_set(metadata,'{kind}','"COMBO"'::jsonb) WHERE id=${q(A.p)};`,
+  );
+  check("undefined combo contract denied in SQL", (await create(order())).status === 400);
+  sql(
+    `UPDATE public.neroxa_storefront_products SET metadata=jsonb_set(metadata,'{kind}','"PIZZA"'::jsonb) WHERE id=${q(A.p)};UPDATE public.neroxa_storefront_addon_groups SET min_selections=1 WHERE id=${q(optional)};`,
+  );
+  check(
+    "optional flag does not bypass positive minimum",
+    (await create(order(optionalLine))).status === 400,
+  );
+  sql(`UPDATE public.neroxa_storefront_addon_groups SET min_selections=0 WHERE id=${q(optional)};`);
   const snapshot = sql(
     `SELECT selection_snapshot::text FROM public.neroxa_order_items WHERE order_id=${q(id)};`,
   );
