@@ -22,7 +22,8 @@ const A = fixtures[0];
 const { chromium } = createRequire(import.meta.url)(process.env.BROWSER_MODULE);
 const consumer = path.resolve("delivery-consumer");
 const checks = [],
-  errors = [];
+  errors = [],
+  blockedOrigins = new Set();
 const check = (name, ok) => {
   checks.push({ name, passed: !!ok });
   console.log((ok ? "PASS " : "FAIL ") + name);
@@ -77,7 +78,7 @@ try {
   );
   fs.writeFileSync(
     config,
-    `import {defineConfig} from '@lovable.dev/vite-tanstack-config';import {readFileSync} from 'node:fs';export default defineConfig({tanstackStart:{server:{entry:'server'}},vite:{resolve:{alias:{'@/integrations/storefront-backend/client':${JSON.stringify(fixture)}}},server:{host:'127.0.0.1',port:4173,strictPort:true,allowedHosts:['a.ab.invalid','b.ab.invalid','c.ab.invalid'],https:{key:readFileSync(${JSON.stringify(work + "/checkout-ci-key.private.pem")}),cert:readFileSync(${JSON.stringify(work + "/checkout-ci-cert.private.pem")})}}}});`,
+    `import {defineConfig} from '@lovable.dev/vite-tanstack-config';import {readFileSync} from 'node:fs';export default defineConfig({tanstackStart:{server:{entry:'server'}},vite:{resolve:{alias:[{find:'@/integrations/storefront-backend/client',replacement:${JSON.stringify(fixture)}}]},server:{host:'127.0.0.1',port:4173,strictPort:true,allowedHosts:['a.ab.invalid','b.ab.invalid','c.ab.invalid'],https:{key:readFileSync(${JSON.stringify(work + "/checkout-ci-key.private.pem")}),cert:readFileSync(${JSON.stringify(work + "/checkout-ci-cert.private.pem")})}}}});`,
   );
   const fd = fs.openSync(work + "/h03-vite.private.log", "a", 0o600);
   server = spawn(
@@ -138,6 +139,7 @@ try {
         u.pathname.endsWith("/rpc/get_public_storefront_catalog")
       )
         return route.continue();
+      blockedOrigins.add(u.origin);
       return route.abort();
     });
     return context.pages()[0] ?? (await context.newPage());
@@ -288,7 +290,14 @@ try {
   check("no browser JavaScript exceptions", errors.length === 0);
   complete = true;
 } finally {
-  if (context) await context.close();
+  if (context) {
+    if (!complete && context.pages()[0])
+      await context
+        .pages()[0]
+        .screenshot({ path: path.join(shots, "failure.png"), fullPage: true })
+        .catch(() => {});
+    await context.close();
+  }
   if (server) {
     server.kill("SIGTERM");
     await new Promise((r) => {
@@ -305,6 +314,7 @@ try {
     passed: checks.filter((c) => c.passed).length,
     failed: checks.filter((c) => !c.passed).length,
     errors,
+    blockedOrigins: [...blockedOrigins],
   };
   fs.writeFileSync("audits/ab-auth/results/h03-browser.json", JSON.stringify(result, null, 2));
   console.log("H03_BROWSER_RESULT=" + JSON.stringify(result));
