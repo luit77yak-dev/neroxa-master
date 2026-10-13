@@ -73,25 +73,8 @@ const api = async (resource, body) => {
   });
   return { status: r.status, data: await r.json() };
 };
-const fixture = path.join(consumer, "h03.isolated.fixture.ts"),
-  config = path.join(consumer, "vite.h03.config.ts");
-try {
-  fs.writeFileSync(
-    fixture,
-    `export const STOREFRONT_URL=${JSON.stringify(env.API_URL)};import {createClient} from '@supabase/supabase-js';export const supabase=createClient(${JSON.stringify(env.API_URL)},${JSON.stringify(env.ANON_KEY)},{auth:{persistSession:false,autoRefreshToken:false}});export function resolveStorefrontDomain(host:string){if(!['a.ab.invalid','b.ab.invalid','c.ab.invalid'].includes(host))throw Error('Unknown isolated host');return host;}`,
-  );
-  fs.writeFileSync(
-    config,
-    `import {defineConfig} from '@lovable.dev/vite-tanstack-config';import {readFileSync} from 'node:fs';export default defineConfig({tanstackStart:{server:{entry:'server'}},vite:{resolve:{alias:[{find:'@/integrations/storefront-backend/client',replacement:${JSON.stringify(fixture)}}]},server:{host:'127.0.0.1',port:4173,strictPort:true,allowedHosts:['a.ab.invalid','b.ab.invalid','c.ab.invalid'],https:{key:readFileSync(${JSON.stringify(work + "/checkout-ci-key.private.pem")}),cert:readFileSync(${JSON.stringify(work + "/checkout-ci-cert.private.pem")})}}}});`,
-  );
-  const fd = fs.openSync(work + "/first-vite.private.log", "a", 0o600);
-  server = spawn(
-    process.execPath,
-    [consumer + "/node_modules/vite/bin/vite.js", "--config", config],
-    {
-      cwd: consumer,
-      stdio: ["ignore", fd, fd],
-      env: {
+execFileSync('sudo',['tee','-a','/etc/hosts'],{input:'127.0.0.1 unknown.ab.invalid preview.ab.invalid\n',stdio:['pipe','ignore','pipe']});
+const runtimeEnv = {
         ...process.env,
         SUPABASE_URL: env.API_URL,
         NEROXA_DELIVERY_BACKEND_URL: env.API_URL,
@@ -109,9 +92,24 @@ try {
         VITE_NEROXA_DURABLE_CHECKOUT_INTENTS: "true",
         VITE_NEROXA_CHECKOUT_AMENDMENTS: "true",
         NEROXA_CHECKOUT_RATE_LIMIT_SECRET: crypto.randomBytes(48).toString("hex"),
-      },
-    },
-  );
+ VITE_NEROXA_BACKEND_MODE: 'homologation',
+ VITE_NEROXA_TEST_BACKEND_URL: env.API_URL,
+ VITE_NEROXA_TEST_PROJECT_REF: 'local-disposable',
+ VITE_NEROXA_TEST_PUBLISHABLE_KEY: env.ANON_KEY,
+ NEROXA_BACKEND_MODE: 'homologation',
+ NEROXA_TEST_PROJECT_REF: 'local-disposable',
+ NITRO_HOST: '127.0.0.1',
+ NITRO_PORT: '4173',
+ NITRO_SSL_CERT: fs.readFileSync(work + '/checkout-ci-cert.private.pem','utf8'),
+ NITRO_SSL_KEY: fs.readFileSync(work + '/checkout-ci-key.private.pem','utf8'),
+};
+try {
+ const fd = fs.openSync(work + '/first-compiled.private.log', 'a', 0o600);
+ execFileSync(process.execPath,[consumer + '/node_modules/vite/bin/vite.js','build','--mode','homologation'],{cwd:consumer,env:runtimeEnv,stdio:['ignore',fd,fd],timeout:180000});
+ check('normal homologation build exists without replacement module or alias',fs.existsSync(consumer+'/.output/server/index.mjs')&&!fs.existsSync(consumer+'/h03.isolated.fixture.ts')&&!fs.existsSync(consumer+'/vite.h03.config.ts'));
+ const assets=fs.readdirSync(consumer+'/.output/public/assets').filter(n=>/\.js$/.test(n));
+ check('server service credential absent from browser build',assets.every(n=>!fs.readFileSync(consumer+'/.output/public/assets/'+n,'utf8').includes(env.SERVICE_ROLE_KEY)));
+ server=spawn(process.execPath,[consumer+'/.output/server/index.mjs'],{cwd:consumer,stdio:['ignore',fd,fd],env:runtimeEnv});
   await new Promise((r) => setTimeout(r, 5000));
   const launch = async () => {
     context = await chromium.launchPersistentContext(profile, {
@@ -125,7 +123,7 @@ try {
       const r = route.request(),
         u = new URL(r.url());
       if (
-        ["a.ab.invalid", "b.ab.invalid", "c.ab.invalid"].includes(u.hostname) &&
+        ["a.ab.invalid", "b.ab.invalid", "c.ab.invalid", "unknown.ab.invalid", "preview.ab.invalid"].includes(u.hostname) &&
         u.port === "4173"
       ) {
         if (u.pathname === "/api/checkout" && r.method() === "POST") {
@@ -170,6 +168,13 @@ try {
   await page.goto("https://a.ab.invalid:4173/", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Pizza H03 a", exact: true }).waitFor();
   check("real scoped catalog renders", true);
+  for(const host of ['unknown.ab.invalid','preview.ab.invalid']){
+    const deniedPage=await context.newPage();
+    await deniedPage.goto('https://'+host+':4173/',{waitUntil:'networkidle'});
+    await deniedPage.getByRole('heading',{name:'A loja ainda não está pronta',exact:true}).waitFor();
+    check('normal built browser unknown/preview domain has no real-store fallback '+host,await deniedPage.getByRole('heading',{name:'Pizza H03 a',exact:true}).count()===0);
+    await deniedPage.close();
+  }
 
   const users = [actor];
   console.log("::add-mask::" + actor.password);
@@ -472,15 +477,13 @@ try {
       ) ===
         priorHistory + 5,
     );
-    const rpcAsPanel = (name, args) =>
-      panel.evaluate(
-        async ({ name, args }) => {
-          const { supabase } = await import("/src/integrations/supabase/client.ts");
-          const r = await supabase.rpc(name, args);
-          return { data: r.data, code: r.error?.code };
-        },
-        { name, args },
-      );
+    const rpcAsPanel = (name,args) => panel.evaluate(async ({name,args,url,key})=>{
+      const entry=localStorage.getItem(`neroxa-test-auth:local-disposable:${url}`);
+      const session=JSON.parse(entry??'null');
+      if(!session?.access_token)throw Error('Native signed panel session absent');
+      const response=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify(args)});
+      const body=await response.json();return {data:response.ok?body:null,code:response.ok?null:body.code};
+    },{name,args,url:env.API_URL,key:env.ANON_KEY});
     const replay = await rpcAsPanel("update_admin_order_status", {
       p_order_id: lost.order_id,
       p_status: "DELIVERED",
@@ -586,28 +589,25 @@ try {
   }
   const requestCount = checkoutPosts;
   await customerPage.evaluate(() => localStorage.clear());
-  const tryWithoutVault = () =>
-    customerPage.evaluate(async (payload) => {
-      const { withDurableCheckoutIntent } =
-        await import("/src/core/delivery/durable-checkout-intent.ts");
-      try {
-        await withDurableCheckoutIntent(
-          payload.instance_id,
-          payload,
-          async (wire) => {
-            await fetch("/api/checkout", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ p_order: wire }),
-            });
-          },
-          { storage: localStorage, locks: navigator.locks },
-        );
-        return false;
-      } catch {
-        return true;
-      }
-    }, originalPayload);
+  const tryWithoutVault = async () => {
+    const close=customerPage.getByRole('button',{name:'Fechar acompanhamento',exact:true});
+    if(await close.isVisible())await close.click();
+    await customerPage.getByRole('button').filter({has:customerPage.getByRole('heading',{name:'Pizza H03 a',exact:true})}).click();
+    await customerPage.getByText('Grande',{exact:true}).click();
+    await customerPage.getByRole('button',{name:/Próxima etapa/}).click();
+    await customerPage.getByRole('button',{name:/^Recheada/}).click();
+    await customerPage.getByText('Pago H03',{exact:false}).click();
+    await customerPage.getByRole('button',{name:/Próxima etapa/}).click();
+    await customerPage.getByRole('button',{name:/Adicionar ao carrinho/}).click();
+    if(!(await customerPage.getByRole('heading',{name:'Carrinho',exact:true}).isVisible()))await customerPage.getByRole('button',{name:'Abrir carrinho'}).click();
+    await customerPage.getByRole('button',{name:'Continuar para checkout',exact:true}).click();
+    await customerPage.getByLabel(/Nome/).fill('Cliente Entrega fictício');
+    await customerPage.getByLabel(/Telefone/).fill('00000000002');
+    await customerPage.getByRole('button',{name:/Retirada/}).click();
+    await customerPage.getByRole('button',{name:/(?:Enviar pedido|Recuperar tentativa) R\$/}).click();
+    await customerPage.getByRole('alert').filter({hasText:/reconciliação|armazenamento|tentativa/i}).waitFor();
+    return true;
+  };
   check(
     "complete localStorage clearing blocks repeat in current session",
     (await tryWithoutVault()) && checkoutPosts === requestCount,
@@ -642,10 +642,10 @@ try {
       setTimeout(r, 5000);
     });
   }
-  fs.rmSync(fixture, { force: true });
-  fs.rmSync(config, { force: true });
   const result = {
-    classification: complete ? "PASS_DELIVERY_AND_PANEL_NATIVE" : "INCOMPLETE",
+    classification: complete ? "PASS_NORMAL_BUILD_DELIVERY_AND_PANEL_NATIVE" : "INCOMPLETE",
+    buildMode: "homologation",
+    sdkReplacementAlias: false,
     productionApproved: false,
     checks,
     passed: checks.filter((c) => c.passed).length,
