@@ -228,7 +228,7 @@ async function main() {
     SUPABASE_PUBLISHABLE_KEY: local.ANON_KEY,
     VITE_SUPABASE_URL: local.API_URL,
     VITE_SUPABASE_PUBLISHABLE_KEY: local.ANON_KEY,
-    NEROXA_GROUP_ADDONS_V1_ENABLED: "true",
+    NEROXA_GROUP_ADDONS_V1_ENABLED: "false",
     NEROXA_CHECKOUT_GATEWAY_ENABLED: "true",
     VITE_NEROXA_CHECKOUT_GATEWAY: "true",
     NEROXA_CHECKOUT_AMENDMENTS_ENABLED: "true",
@@ -260,29 +260,26 @@ async function main() {
     timeout: 240_000,
   });
   const logFile = path.join(work, "tanstack-https.private.log");
-  logFd = fs.openSync(logFile, "w", 0o600);
-  child = spawn(
-    "npm",
-    [
-      "run",
-      "dev",
-      "--",
-      "--config",
-      "vite.checkout-ci.config.ts",
-      "--host",
-      "127.0.0.1",
-      "--port",
-      "4173",
-    ],
-    {
-      cwd: consumer,
-      env,
-      stdio: ["ignore", logFd, logFd],
-      detached: false,
-    },
-  );
-  fs.closeSync(logFd);
-  logFd = undefined;
+  const startServer = () => {
+    logFd = fs.openSync(logFile, "a", 0o600);
+    child = spawn(
+      process.execPath,
+      [
+        path.join(consumer, "node_modules/vite/bin/vite.js"),
+        "dev",
+        "--config",
+        "vite.checkout-ci.config.ts",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "4173",
+      ],
+      { cwd: consumer, env, stdio: ["ignore", logFd, logFd], detached: false },
+    );
+    fs.closeSync(logFd);
+    logFd = undefined;
+  };
+  startServer();
   let ready = false;
   const seenStatus = new Set();
   const seenReasons = new Set();
@@ -570,6 +567,29 @@ async function main() {
   assert("HTTP creates six net orders in B", after.b === before.b + 6);
   assert("HTTP causes no C orders", after.c === before.c);
 
+  // Preserve the entire legacy matrix, then activate the new input contract on a fresh local process.
+  const oldChild = child;
+  const stopped = new Promise((resolve) => oldChild.once("exit", resolve));
+  oldChild.kill("SIGTERM");
+  await Promise.race([
+    stopped,
+    sleep(5000).then(() => {
+      throw Error("Local HTTP process did not stop");
+    }),
+  ]);
+  env.NEROXA_GROUP_ADDONS_V1_ENABLED = "true";
+  startServer();
+  let groupReady = false;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    if ((await postLocal("b.ab.invalid", {})).status === 400) {
+      groupReady = true;
+      break;
+    }
+    await sleep(1000);
+  }
+  assert("Local HTTP group contract process ready", groupReady);
+  const downgrade = await postLocal("b.ab.invalid", order("b", "00000000445"));
+  assert("Enabled group contract cannot downgrade to legacy HTTP", downgrade.status === 400);
   report.stage = "http-group-addons";
   const rich = await localApi(local, "rpc/get_public_storefront_catalog", "POST", {
     p_domain: "b.ab.invalid",

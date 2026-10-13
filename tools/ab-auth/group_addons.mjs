@@ -245,6 +245,43 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
   sql(
     `UPDATE public.neroxa_storefront_delivery_zones SET delivery_fee=5 WHERE instance_id=${q(A.instance_id)};`,
   );
+  const requiredProduct = crypto.randomUUID();
+  sql(
+    `INSERT INTO public.neroxa_storefront_products(id,instance_id,name,slug,price,metadata) VALUES(${q(requiredProduct)},${q(A.instance_id)},'SKU fictício com tamanho obrigatório',${q("required-" + requiredProduct)},12,'{"options":[{"id":"tamanho","required":true,"choices":[{"id":"padrao","name":"Padrão fictício","price":3}]}]}');`,
+  );
+  check(
+    "required option cannot downgrade into legacy checkout",
+    (await create(order({ product_id: requiredProduct, quantity: 1 }))).status === 400,
+  );
+  check(
+    "required option without groups still enforced",
+    (
+      await create(
+        order({
+          selection_contract: "GROUP_ADDONS_V1",
+          product_id: requiredProduct,
+          group_addon_ids: [],
+          quantity: 1,
+          expected_unit_price: 12,
+        }),
+      )
+    ).status === 400,
+  );
+  check(
+    "unlinked sized SKU valid with explicit choice",
+    (
+      await create(
+        order({
+          selection_contract: "GROUP_ADDONS_V1",
+          product_id: requiredProduct,
+          group_addon_ids: [],
+          quantity: 1,
+          size_id: "padrao",
+          expected_unit_price: 15,
+        }),
+      )
+    ).data[0].total === 15,
+  );
   const snapshot = sql(
     `SELECT selection_snapshot::text FROM public.neroxa_order_items WHERE order_id=${q(id)};`,
   );
@@ -330,6 +367,16 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
         p_customer_phone: p.customer_phone,
         p_items: [{ product_id: A.p, quantity: 1, addons: [] }],
         p_payment_method: "CASH",
+      })
+    ).status === 400,
+  );
+  check(
+    "required option cannot downgrade through private append",
+    (
+      await rpc("neroxa_append_order_items_with_capability", {
+        ...amendment,
+        p_request_key: crypto.randomUUID(),
+        p_items: [{ product_id: requiredProduct, quantity: 1 }],
       })
     ).status === 400,
   );

@@ -13,6 +13,14 @@ ALTER TABLE private.neroxa_group_order_intents ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON private.neroxa_group_order_intents FROM PUBLIC,anon,authenticated,service_role;
 ALTER TABLE public.neroxa_order_items ADD COLUMN IF NOT EXISTS selection_snapshot jsonb NOT NULL DEFAULT '{}'::jsonb;
 DO $snapshot_type$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_catalog.pg_attribute WHERE attrelid='public.neroxa_order_items'::regclass AND attname='selection_snapshot' AND atttypid='jsonb'::regtype AND attnotnull AND NOT attisdropped) THEN RAISE EXCEPTION 'Unexpected snapshot column; stop instead of coercing history'; END IF; END $snapshot_type$;
+CREATE OR REPLACE FUNCTION private.neroxa_requires_group_contract(p_instance uuid,p_product uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY INVOKER SET search_path='' AS $requires$
+ SELECT EXISTS(SELECT 1 FROM public.neroxa_storefront_products p WHERE p.id=p_product AND p.instance_id=p_instance AND (
+ EXISTS(SELECT 1 FROM public.neroxa_storefront_product_addon_groups l WHERE l.product_id=p.id)
+ OR EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(p.metadata->'options','[]')) opt WHERE opt->>'required'='true')
+ ));
+$requires$;
+REVOKE ALL ON FUNCTION private.neroxa_requires_group_contract(uuid,uuid) FROM PUBLIC,anon,authenticated,service_role;
 CREATE OR REPLACE FUNCTION private.neroxa_prepare_group_item(p_instance uuid,p_item jsonb) RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $group$
 DECLARE
@@ -137,7 +145,7 @@ begin
    INSERT INTO public.neroxa_order_items(order_id,product_id,product_name,product_image_url,quantity,notes,unit_price,line_total,addons,selection_snapshot,size_name,crust_name,crust_price)
    VALUES(v_order_id,(v_prepared->>'product_id')::uuid,v_prepared->>'product_name',v_prepared->>'product_image_url',v_qty,nullif(v_item->>'notes',''),v_unit,v_unit*v_qty,v_prepared->'addons',v_prepared->'selection_snapshot',v_prepared->>'size_name',v_prepared->>'crust_name',(v_prepared->>'crust_price')::numeric);
   ELSE
-   IF EXISTS(SELECT 1 FROM public.neroxa_storefront_product_addon_groups l WHERE l.product_id=(v_item->>'product_id')::uuid) THEN RAISE EXCEPTION 'Product requires explicit grouped contract' USING ERRCODE='22023'; END IF;
+   IF private.neroxa_requires_group_contract(v_instance,(v_item->>'product_id')::uuid) THEN RAISE EXCEPTION 'Product requires explicit grouped contract' USING ERRCODE='22023'; END IF;
      IF v_item ? 'group_addon_ids' OR (v_item ? 'selection_contract' AND v_item->>'selection_contract'<>'LEGACY_PRODUCT_V1') THEN RAISE EXCEPTION 'Selection contract mismatch' USING ERRCODE='22023'; END IF;
   v_qty:=greatest(1,coalesce((v_item->>'quantity')::integer,1));
   v_unit:=public.calculate_public_order_line_price(v_instance,nullif(v_item->>'product_id','')::uuid,nullif(v_item->>'second_product_id','')::uuid,nullif(v_item->>'size_id',''),nullif(v_item->>'crust_id',''),coalesce(v_item->'addons','[]'::jsonb),coalesce(v_item->'complements','[]'::jsonb));
@@ -297,7 +305,7 @@ begin
  if not found then raise exception 'Pedido não encontrado';end if;
  if v_order.status not in ('RECEIVED','CONFIRMED','PREPARING','READY') then raise exception 'Este pedido não aceita novos itens';end if;
  for v_item in select * from jsonb_array_elements(coalesce(p_items,'[]'::jsonb)) loop
-  IF v_item ? 'group_addon_ids' OR v_item->>'selection_contract'='GROUP_ADDONS_V1' OR EXISTS(SELECT 1 FROM public.neroxa_storefront_product_addon_groups l WHERE l.product_id=(v_item->>'product_id')::uuid) THEN RAISE EXCEPTION 'Grouped append requires private capability' USING ERRCODE='22023'; END IF;
+  IF v_item ? 'group_addon_ids' OR v_item->>'selection_contract'='GROUP_ADDONS_V1' OR private.neroxa_requires_group_contract(v_order.instance_id,(v_item->>'product_id')::uuid) THEN RAISE EXCEPTION 'Grouped append requires private capability' USING ERRCODE='22023'; END IF;
   v_qty:=greatest(1,coalesce((v_item->>'quantity')::int,1));
   v_unit:=public.calculate_public_order_line_price(v_order.instance_id,nullif(v_item->>'product_id','')::uuid,nullif(v_item->>'second_product_id','')::uuid,nullif(v_item->>'size_id',''),nullif(v_item->>'crust_id',''),coalesce(v_item->'addons','[]'::jsonb),coalesce(v_item->'complements','[]'::jsonb));
   insert into public.neroxa_order_items(order_id,product_id,product_name,product_image_url,second_product_id,is_half,addons,complements,quantity,notes,unit_price,line_total)
