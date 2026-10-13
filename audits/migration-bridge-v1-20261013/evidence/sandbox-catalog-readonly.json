@@ -1,0 +1,2216 @@
+[
+  {
+    "metadata": {
+      "roles": [
+        {
+          "name": "pg_database_owner",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_read_all_data",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_write_all_data",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_monitor",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_read_all_settings",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_read_all_stats",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_stat_scan_tables",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_read_server_files",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_write_server_files",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_execute_server_program",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_signal_backend",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_checkpoint",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_maintain",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_use_reserved_connections",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pg_create_subscription",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "postgres",
+          "login": true,
+          "inherit": true,
+          "bypassrls": true,
+          "superuser": false
+        },
+        {
+          "name": "dashboard_user",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "authenticated",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "anon",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "service_role",
+          "login": false,
+          "inherit": true,
+          "bypassrls": true,
+          "superuser": false
+        },
+        {
+          "name": "supabase_privileged_role",
+          "login": false,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "supabase_admin",
+          "login": true,
+          "inherit": true,
+          "bypassrls": true,
+          "superuser": true
+        },
+        {
+          "name": "authenticator",
+          "login": true,
+          "inherit": false,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "supabase_auth_admin",
+          "login": true,
+          "inherit": false,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "supabase_storage_admin",
+          "login": true,
+          "inherit": false,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "supabase_replication_admin",
+          "login": true,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "supabase_read_only_user",
+          "login": true,
+          "inherit": true,
+          "bypassrls": true,
+          "superuser": false
+        },
+        {
+          "name": "supabase_etl_admin",
+          "login": true,
+          "inherit": true,
+          "bypassrls": true,
+          "superuser": false
+        },
+        {
+          "name": "supabase_realtime_admin",
+          "login": false,
+          "inherit": false,
+          "bypassrls": false,
+          "superuser": false
+        },
+        {
+          "name": "pgbouncer",
+          "login": true,
+          "inherit": true,
+          "bypassrls": false,
+          "superuser": false
+        }
+      ],
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_organizations_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_systems_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_system_instances",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "organization_id",
+          "type": "uuid",
+          "table": "neroxa_system_instances",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "system_id",
+          "type": "uuid",
+          "table": "neroxa_system_instances",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "table": "neroxa_system_instances",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "table": "neroxa_system_instances",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "system_type",
+          "type": "text",
+          "table": "neroxa_system_instances",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "table": "neroxa_system_instances",
+          "default": "'PROVISIONING'::text",
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_system_instances",
+          "default": "now()",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_system_instances",
+          "default": "now()",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_system_instances_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "table": "neroxa_system_instances_slug_key",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_organizations",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "legal_name",
+          "type": "text",
+          "table": "neroxa_organizations",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "trade_name",
+          "type": "text",
+          "table": "neroxa_organizations",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "table": "neroxa_organizations",
+          "default": "true",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_systems",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "table": "neroxa_systems",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "table": "neroxa_systems",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "system_type",
+          "type": "text",
+          "table": "neroxa_systems",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "table": "neroxa_systems",
+          "default": "true",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_system_domains",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "system_instance_id",
+          "type": "uuid",
+          "table": "neroxa_system_domains",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "domain",
+          "type": "text",
+          "table": "neroxa_system_domains",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "table": "neroxa_system_domains",
+          "default": "'PENDING'::text",
+          "nullable": false
+        },
+        {
+          "name": "verified_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_system_domains",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_system_domains_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "domain",
+          "type": "text",
+          "table": "neroxa_system_domains_domain_key",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "organization_id",
+          "type": "uuid",
+          "table": "neroxa_storefront_settings",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "half_pizza_pricing_rule",
+          "type": "text",
+          "table": "neroxa_storefront_settings",
+          "default": "'highest_half'::text",
+          "nullable": false
+        },
+        {
+          "name": "half_pizza_fixed_price",
+          "type": "numeric",
+          "table": "neroxa_storefront_settings",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "organization_id",
+          "type": "uuid",
+          "table": "neroxa_storefront_settings_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "organization_id",
+          "type": "uuid",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "neighborhoods",
+          "type": "text[]",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": "'{}'::text[]",
+          "nullable": false
+        },
+        {
+          "name": "minimum_order",
+          "type": "numeric",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": "0",
+          "nullable": false
+        },
+        {
+          "name": "delivery_fee",
+          "type": "numeric",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": "0",
+          "nullable": false
+        },
+        {
+          "name": "estimated_minutes",
+          "type": "integer",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": "true",
+          "nullable": false
+        },
+        {
+          "name": "sort_order",
+          "type": "integer",
+          "table": "neroxa_storefront_delivery_zones",
+          "default": "0",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_storefront_delivery_zones_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_storefront_products",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_storefront_products",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "table": "neroxa_storefront_products",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "table": "neroxa_storefront_products",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "image_url",
+          "type": "text",
+          "table": "neroxa_storefront_products",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "price",
+          "type": "numeric",
+          "table": "neroxa_storefront_products",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "table": "neroxa_storefront_products",
+          "default": "true",
+          "nullable": false
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "table": "neroxa_storefront_products",
+          "default": "'{}'::jsonb",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_storefront_products_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "organization_id",
+          "type": "uuid",
+          "table": "neroxa_organization_members_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "table": "neroxa_organization_members_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "organization_id",
+          "type": "uuid",
+          "table": "neroxa_organization_members",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "table": "neroxa_organization_members",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "table": "neroxa_organization_members",
+          "default": "true",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "table": "neroxa_platform_members",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "table": "neroxa_platform_members",
+          "default": "true",
+          "nullable": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "table": "neroxa_platform_members_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_orders",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "organization_id",
+          "type": "uuid",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "order_number",
+          "type": "bigint",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "customer_name",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "customer_phone",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "fulfillment",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "payment_method",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": "'RECEIVED'::text",
+          "nullable": false
+        },
+        {
+          "name": "subtotal",
+          "type": "numeric(12,2)",
+          "table": "neroxa_orders",
+          "default": "0",
+          "nullable": false
+        },
+        {
+          "name": "delivery_fee",
+          "type": "numeric(12,2)",
+          "table": "neroxa_orders",
+          "default": "0",
+          "nullable": false
+        },
+        {
+          "name": "total",
+          "type": "numeric(12,2)",
+          "table": "neroxa_orders",
+          "default": "0",
+          "nullable": false
+        },
+        {
+          "name": "address_street",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "address_number",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "address_neighborhood",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "address_complement",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "address_reference",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "idempotency_key",
+          "type": "uuid",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": "now()",
+          "nullable": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": "now()",
+          "nullable": false
+        },
+        {
+          "name": "confirmed_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "preparing_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "ready_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "out_for_delivery_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "delivered_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "cancelled_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_orders_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_id_order_number_key",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "order_number",
+          "type": "bigint",
+          "table": "neroxa_orders_instance_id_order_number_key",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_id_idempotency_key_key",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "idempotency_key",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_id_idempotency_key_key",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_order_items",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "uuid",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "product_name",
+          "type": "text",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "product_image_url",
+          "type": "text",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "second_product_id",
+          "type": "uuid",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "second_product_name",
+          "type": "text",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "is_half",
+          "type": "boolean",
+          "table": "neroxa_order_items",
+          "default": "false",
+          "nullable": false
+        },
+        {
+          "name": "size_id",
+          "type": "uuid",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "size_name",
+          "type": "text",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "crust_id",
+          "type": "uuid",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "crust_name",
+          "type": "text",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "crust_price",
+          "type": "numeric(12,2)",
+          "table": "neroxa_order_items",
+          "default": "0",
+          "nullable": false
+        },
+        {
+          "name": "addons",
+          "type": "jsonb",
+          "table": "neroxa_order_items",
+          "default": "'[]'::jsonb",
+          "nullable": false
+        },
+        {
+          "name": "complements",
+          "type": "jsonb",
+          "table": "neroxa_order_items",
+          "default": "'[]'::jsonb",
+          "nullable": false
+        },
+        {
+          "name": "quantity",
+          "type": "integer",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "unit_price",
+          "type": "numeric(12,2)",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "line_total",
+          "type": "numeric(12,2)",
+          "table": "neroxa_order_items",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_order_items",
+          "default": "now()",
+          "nullable": false
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_order_items_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_order_status_history",
+          "default": "gen_random_uuid()",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "type": "uuid",
+          "table": "neroxa_order_status_history",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "from_status",
+          "type": "text",
+          "table": "neroxa_order_status_history",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "to_status",
+          "type": "text",
+          "table": "neroxa_order_status_history",
+          "default": null,
+          "nullable": false
+        },
+        {
+          "name": "changed_by_user_id",
+          "type": "uuid",
+          "table": "neroxa_order_status_history",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "table": "neroxa_order_status_history",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_order_status_history",
+          "default": "now()",
+          "nullable": false
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_order_number_uidx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "order_number",
+          "type": "bigint",
+          "table": "neroxa_orders_instance_order_number_uidx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "table": "neroxa_order_status_history_pkey",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_idempotency_uidx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "idempotency_key",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_idempotency_uidx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_created_idx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_orders_instance_created_idx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "instance_id",
+          "type": "uuid",
+          "table": "neroxa_orders_instance_status_idx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "table": "neroxa_orders_instance_status_idx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "order_id",
+          "type": "uuid",
+          "table": "neroxa_order_items_order_idx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "order_id",
+          "type": "uuid",
+          "table": "neroxa_order_status_history_order_idx",
+          "default": null,
+          "nullable": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "table": "neroxa_order_status_history_order_idx",
+          "default": null,
+          "nullable": true
+        }
+      ],
+      "indexes": [
+        {
+          "name": "neroxa_system_instances_pkey",
+          "table": "neroxa_system_instances",
+          "definition": "CREATE UNIQUE INDEX neroxa_system_instances_pkey ON public.neroxa_system_instances USING btree (id)"
+        },
+        {
+          "name": "neroxa_system_instances_slug_key",
+          "table": "neroxa_system_instances",
+          "definition": "CREATE UNIQUE INDEX neroxa_system_instances_slug_key ON public.neroxa_system_instances USING btree (slug)"
+        },
+        {
+          "name": "neroxa_organizations_pkey",
+          "table": "neroxa_organizations",
+          "definition": "CREATE UNIQUE INDEX neroxa_organizations_pkey ON public.neroxa_organizations USING btree (id)"
+        },
+        {
+          "name": "neroxa_systems_pkey",
+          "table": "neroxa_systems",
+          "definition": "CREATE UNIQUE INDEX neroxa_systems_pkey ON public.neroxa_systems USING btree (id)"
+        },
+        {
+          "name": "neroxa_system_domains_pkey",
+          "table": "neroxa_system_domains",
+          "definition": "CREATE UNIQUE INDEX neroxa_system_domains_pkey ON public.neroxa_system_domains USING btree (id)"
+        },
+        {
+          "name": "neroxa_system_domains_domain_key",
+          "table": "neroxa_system_domains",
+          "definition": "CREATE UNIQUE INDEX neroxa_system_domains_domain_key ON public.neroxa_system_domains USING btree (domain)"
+        },
+        {
+          "name": "neroxa_storefront_settings_pkey",
+          "table": "neroxa_storefront_settings",
+          "definition": "CREATE UNIQUE INDEX neroxa_storefront_settings_pkey ON public.neroxa_storefront_settings USING btree (organization_id)"
+        },
+        {
+          "name": "neroxa_storefront_delivery_zones_pkey",
+          "table": "neroxa_storefront_delivery_zones",
+          "definition": "CREATE UNIQUE INDEX neroxa_storefront_delivery_zones_pkey ON public.neroxa_storefront_delivery_zones USING btree (id)"
+        },
+        {
+          "name": "neroxa_storefront_products_pkey",
+          "table": "neroxa_storefront_products",
+          "definition": "CREATE UNIQUE INDEX neroxa_storefront_products_pkey ON public.neroxa_storefront_products USING btree (id)"
+        },
+        {
+          "name": "neroxa_organization_members_pkey",
+          "table": "neroxa_organization_members",
+          "definition": "CREATE UNIQUE INDEX neroxa_organization_members_pkey ON public.neroxa_organization_members USING btree (organization_id, user_id)"
+        },
+        {
+          "name": "neroxa_platform_members_pkey",
+          "table": "neroxa_platform_members",
+          "definition": "CREATE UNIQUE INDEX neroxa_platform_members_pkey ON public.neroxa_platform_members USING btree (user_id)"
+        },
+        {
+          "name": "neroxa_orders_pkey",
+          "table": "neroxa_orders",
+          "definition": "CREATE UNIQUE INDEX neroxa_orders_pkey ON public.neroxa_orders USING btree (id)"
+        },
+        {
+          "name": "neroxa_orders_instance_id_order_number_key",
+          "table": "neroxa_orders",
+          "definition": "CREATE UNIQUE INDEX neroxa_orders_instance_id_order_number_key ON public.neroxa_orders USING btree (instance_id, order_number)"
+        },
+        {
+          "name": "neroxa_orders_instance_id_idempotency_key_key",
+          "table": "neroxa_orders",
+          "definition": "CREATE UNIQUE INDEX neroxa_orders_instance_id_idempotency_key_key ON public.neroxa_orders USING btree (instance_id, idempotency_key)"
+        },
+        {
+          "name": "neroxa_orders_instance_created_idx",
+          "table": "neroxa_orders",
+          "definition": "CREATE INDEX neroxa_orders_instance_created_idx ON public.neroxa_orders USING btree (instance_id, created_at DESC)"
+        },
+        {
+          "name": "neroxa_orders_instance_status_idx",
+          "table": "neroxa_orders",
+          "definition": "CREATE INDEX neroxa_orders_instance_status_idx ON public.neroxa_orders USING btree (instance_id, status)"
+        },
+        {
+          "name": "neroxa_orders_instance_order_number_uidx",
+          "table": "neroxa_orders",
+          "definition": "CREATE UNIQUE INDEX neroxa_orders_instance_order_number_uidx ON public.neroxa_orders USING btree (instance_id, order_number)"
+        },
+        {
+          "name": "neroxa_orders_instance_idempotency_uidx",
+          "table": "neroxa_orders",
+          "definition": "CREATE UNIQUE INDEX neroxa_orders_instance_idempotency_uidx ON public.neroxa_orders USING btree (instance_id, idempotency_key) WHERE (idempotency_key IS NOT NULL)"
+        },
+        {
+          "name": "neroxa_order_items_pkey",
+          "table": "neroxa_order_items",
+          "definition": "CREATE UNIQUE INDEX neroxa_order_items_pkey ON public.neroxa_order_items USING btree (id)"
+        },
+        {
+          "name": "neroxa_order_items_order_idx",
+          "table": "neroxa_order_items",
+          "definition": "CREATE INDEX neroxa_order_items_order_idx ON public.neroxa_order_items USING btree (order_id)"
+        },
+        {
+          "name": "neroxa_order_status_history_pkey",
+          "table": "neroxa_order_status_history",
+          "definition": "CREATE UNIQUE INDEX neroxa_order_status_history_pkey ON public.neroxa_order_status_history USING btree (id)"
+        },
+        {
+          "name": "neroxa_order_status_history_order_idx",
+          "table": "neroxa_order_status_history",
+          "definition": "CREATE INDEX neroxa_order_status_history_order_idx ON public.neroxa_order_status_history USING btree (order_id, created_at)"
+        }
+      ],
+      "defaults": [
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "kind": "r",
+          "owner": "postgres",
+          "schema": "public"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "kind": "f",
+          "owner": "postgres",
+          "schema": "public"
+        },
+        {
+          "acl": [
+            "postgres=rwU/postgres",
+            "anon=rwU/postgres",
+            "authenticated=rwU/postgres",
+            "service_role=rwU/postgres"
+          ],
+          "kind": "S",
+          "owner": "postgres",
+          "schema": "public"
+        },
+        {
+          "acl": [
+            "postgres=rwU/supabase_admin",
+            "anon=rwU/supabase_admin",
+            "authenticated=rwU/supabase_admin",
+            "service_role=rwU/supabase_admin"
+          ],
+          "kind": "S",
+          "owner": "supabase_admin",
+          "schema": "public"
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/supabase_admin",
+            "anon=arwdDxtm/supabase_admin",
+            "authenticated=arwdDxtm/supabase_admin",
+            "service_role=arwdDxtm/supabase_admin"
+          ],
+          "kind": "r",
+          "owner": "supabase_admin",
+          "schema": "public"
+        },
+        {
+          "acl": [
+            "postgres=X/supabase_admin",
+            "anon=X/supabase_admin",
+            "authenticated=X/supabase_admin",
+            "service_role=X/supabase_admin"
+          ],
+          "kind": "f",
+          "owner": "supabase_admin",
+          "schema": "public"
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "kind": "r",
+          "owner": "postgres",
+          "schema": "storage"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "kind": "f",
+          "owner": "postgres",
+          "schema": "storage"
+        },
+        {
+          "acl": [
+            "postgres=rwU/postgres",
+            "anon=rwU/postgres",
+            "authenticated=rwU/postgres",
+            "service_role=rwU/postgres"
+          ],
+          "kind": "S",
+          "owner": "postgres",
+          "schema": "storage"
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/supabase_auth_admin",
+            "dashboard_user=arwdDxtm/supabase_auth_admin"
+          ],
+          "kind": "r",
+          "owner": "supabase_auth_admin",
+          "schema": "auth"
+        },
+        {
+          "acl": [
+            "postgres=rwU/supabase_auth_admin",
+            "dashboard_user=rwU/supabase_auth_admin"
+          ],
+          "kind": "S",
+          "owner": "supabase_auth_admin",
+          "schema": "auth"
+        },
+        {
+          "acl": [
+            "postgres=X/supabase_auth_admin",
+            "dashboard_user=X/supabase_auth_admin"
+          ],
+          "kind": "f",
+          "owner": "supabase_auth_admin",
+          "schema": "auth"
+        },
+        {
+          "acl": [
+            "postgres=rwU/supabase_admin",
+            "anon=rwU/supabase_admin",
+            "authenticated=rwU/supabase_admin",
+            "service_role=rwU/supabase_admin"
+          ],
+          "kind": "S",
+          "owner": "supabase_admin",
+          "schema": "graphql_public"
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/supabase_admin",
+            "anon=arwdDxtm/supabase_admin",
+            "authenticated=arwdDxtm/supabase_admin",
+            "service_role=arwdDxtm/supabase_admin"
+          ],
+          "kind": "r",
+          "owner": "supabase_admin",
+          "schema": "graphql_public"
+        },
+        {
+          "acl": [
+            "postgres=X/supabase_admin",
+            "anon=X/supabase_admin",
+            "authenticated=X/supabase_admin",
+            "service_role=X/supabase_admin"
+          ],
+          "kind": "f",
+          "owner": "supabase_admin",
+          "schema": "graphql_public"
+        },
+        {
+          "acl": [
+            "postgres=a*r*w*d*D*x*t*m*/supabase_admin"
+          ],
+          "kind": "r",
+          "owner": "supabase_admin",
+          "schema": "extensions"
+        },
+        {
+          "acl": [
+            "postgres=X*/supabase_admin"
+          ],
+          "kind": "f",
+          "owner": "supabase_admin",
+          "schema": "extensions"
+        },
+        {
+          "acl": [
+            "postgres=r*w*U*/supabase_admin"
+          ],
+          "kind": "S",
+          "owner": "supabase_admin",
+          "schema": "extensions"
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/supabase_admin",
+            "anon=arwdDxtm/supabase_admin",
+            "authenticated=arwdDxtm/supabase_admin",
+            "service_role=arwdDxtm/supabase_admin"
+          ],
+          "kind": "r",
+          "owner": "supabase_admin",
+          "schema": "graphql"
+        },
+        {
+          "acl": [
+            "postgres=X/supabase_admin",
+            "anon=X/supabase_admin",
+            "authenticated=X/supabase_admin",
+            "service_role=X/supabase_admin"
+          ],
+          "kind": "f",
+          "owner": "supabase_admin",
+          "schema": "graphql"
+        },
+        {
+          "acl": [
+            "postgres=rwU/supabase_admin",
+            "anon=rwU/supabase_admin",
+            "authenticated=rwU/supabase_admin",
+            "service_role=rwU/supabase_admin"
+          ],
+          "kind": "S",
+          "owner": "supabase_admin",
+          "schema": "graphql"
+        },
+        {
+          "acl": [
+            "postgres=rwU/supabase_admin",
+            "dashboard_user=rwU/supabase_admin"
+          ],
+          "kind": "S",
+          "owner": "supabase_admin",
+          "schema": "realtime"
+        },
+        {
+          "acl": [
+            "postgres=X/supabase_admin",
+            "dashboard_user=X/supabase_admin"
+          ],
+          "kind": "f",
+          "owner": "supabase_admin",
+          "schema": "realtime"
+        },
+        {
+          "acl": [
+            "postgres=a*r*wdDxtm/supabase_admin",
+            "dashboard_user=arwdDxtm/supabase_admin"
+          ],
+          "kind": "r",
+          "owner": "supabase_admin",
+          "schema": "realtime"
+        }
+      ],
+      "policies": null,
+      "triggers": null,
+      "functions": [
+        {
+          "acl": [
+            "=X/postgres",
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "neroxa_is_platform_member",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "0159867097be728be1b6f01098811871",
+          "signature": "",
+          "definition_md5": "ddfb10f0aabbcf3b047e668954622562"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "create_public_order",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "afc4d910ac31460702a3674bd63d0f9d",
+          "signature": "p_order jsonb",
+          "definition_md5": "33146501d0fe7c33d8a34104361d026f"
+        },
+        {
+          "acl": [
+            "=X/postgres",
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "calculate_public_order_line_price",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "ff3f732a3b15fcb1d2d2fdf9df4ddfe2",
+          "signature": "p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb",
+          "definition_md5": "d840292550213abb5401d57ccd3c33bf"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "append_public_order_items_with_payment",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "46e97e8358ff9b79e23d874875a2f61a",
+          "signature": "p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text",
+          "definition_md5": "bf0f761b852e0c73acaa99d913b6fc02"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "update_admin_order_status",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "df4837d68dcb3679f44c010713cdc70b",
+          "signature": "p_order_id uuid, p_status text, p_note text",
+          "definition_md5": "e6fec3fa15d930ff2529ad4e9bf822aa"
+        },
+        {
+          "acl": [
+            "=X/postgres",
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "get_public_storefront_context",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "e2a885b90e48573a0afcbe8e99425d04",
+          "signature": "p_domain text",
+          "definition_md5": "635726ae640fd2e1a82a4c1a50430727"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "get_admin_orders",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "f1b3bc5b2513ecbb9de0bae423221dbb",
+          "signature": "p_instance_id uuid, p_status text",
+          "definition_md5": "041a9696cffe0b7f41c64cf4e8507b29"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "get_public_order_status",
+          "config": [
+            "search_path=public"
+          ],
+          "schema": "public",
+          "definer": true,
+          "body_md5": "bb004a5cbde6c5a482f06750f138dc60",
+          "signature": "p_order_id uuid, p_customer_phone text",
+          "definition_md5": "d8a86282fd63352fae3059b9a0bcceeb"
+        }
+      ],
+      "relations": [
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_system_instances",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_organizations",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_systems",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_system_domains",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_storefront_settings",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_storefront_delivery_zones",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_storefront_products",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_organization_members",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_platform_members",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": true,
+          "kind": "r",
+          "name": "neroxa_orders",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": true,
+          "kind": "r",
+          "name": "neroxa_order_items",
+          "owner": "postgres",
+          "options": null
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": true,
+          "kind": "r",
+          "name": "neroxa_order_status_history",
+          "owner": "postgres",
+          "options": null
+        }
+      ],
+      "extensions": [
+        {
+          "name": "plpgsql",
+          "version": "1.0"
+        },
+        {
+          "name": "pg_stat_statements",
+          "version": "1.11"
+        },
+        {
+          "name": "uuid-ossp",
+          "version": "1.1"
+        },
+        {
+          "name": "pgcrypto",
+          "version": "1.3"
+        },
+        {
+          "name": "supabase_vault",
+          "version": "0.3.1"
+        }
+      ],
+      "constraints": [
+        {
+          "kind": "f",
+          "name": "neroxa_system_instances_organization_id_fkey",
+          "table": "neroxa_system_instances",
+          "validated": true,
+          "definition": "FOREIGN KEY (organization_id) REFERENCES neroxa_organizations(id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_system_instances_pkey",
+          "table": "neroxa_system_instances",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "u",
+          "name": "neroxa_system_instances_slug_key",
+          "table": "neroxa_system_instances",
+          "validated": true,
+          "definition": "UNIQUE (slug)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_system_instances_system_id_fkey",
+          "table": "neroxa_system_instances",
+          "validated": true,
+          "definition": "FOREIGN KEY (system_id) REFERENCES neroxa_systems(id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_organizations_pkey",
+          "table": "neroxa_organizations",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_systems_pkey",
+          "table": "neroxa_systems",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "u",
+          "name": "neroxa_system_domains_domain_key",
+          "table": "neroxa_system_domains",
+          "validated": true,
+          "definition": "UNIQUE (domain)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_system_domains_pkey",
+          "table": "neroxa_system_domains",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_system_domains_system_instance_id_fkey",
+          "table": "neroxa_system_domains",
+          "validated": true,
+          "definition": "FOREIGN KEY (system_instance_id) REFERENCES neroxa_system_instances(id)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_storefront_settings_organization_id_fkey",
+          "table": "neroxa_storefront_settings",
+          "validated": true,
+          "definition": "FOREIGN KEY (organization_id) REFERENCES neroxa_organizations(id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_storefront_settings_pkey",
+          "table": "neroxa_storefront_settings",
+          "validated": true,
+          "definition": "PRIMARY KEY (organization_id)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_storefront_delivery_zones_organization_id_fkey",
+          "table": "neroxa_storefront_delivery_zones",
+          "validated": true,
+          "definition": "FOREIGN KEY (organization_id) REFERENCES neroxa_organizations(id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_storefront_delivery_zones_pkey",
+          "table": "neroxa_storefront_delivery_zones",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_storefront_products_instance_id_fkey",
+          "table": "neroxa_storefront_products",
+          "validated": true,
+          "definition": "FOREIGN KEY (instance_id) REFERENCES neroxa_system_instances(id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_storefront_products_pkey",
+          "table": "neroxa_storefront_products",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_organization_members_organization_id_fkey",
+          "table": "neroxa_organization_members",
+          "validated": true,
+          "definition": "FOREIGN KEY (organization_id) REFERENCES neroxa_organizations(id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_organization_members_pkey",
+          "table": "neroxa_organization_members",
+          "validated": true,
+          "definition": "PRIMARY KEY (organization_id, user_id)"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_platform_members_pkey",
+          "table": "neroxa_platform_members",
+          "validated": true,
+          "definition": "PRIMARY KEY (user_id)"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_orders_delivery_fee_check",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "CHECK ((delivery_fee >= (0)::numeric))"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_orders_fulfillment_check",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "CHECK ((fulfillment = ANY (ARRAY['DELIVERY'::text, 'PICKUP'::text])))"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_orders_instance_id_fkey",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "FOREIGN KEY (instance_id) REFERENCES neroxa_system_instances(id) ON DELETE CASCADE"
+        },
+        {
+          "kind": "u",
+          "name": "neroxa_orders_instance_id_idempotency_key_key",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "UNIQUE (instance_id, idempotency_key)"
+        },
+        {
+          "kind": "u",
+          "name": "neroxa_orders_instance_id_order_number_key",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "UNIQUE (instance_id, order_number)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_orders_organization_id_fkey",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "FOREIGN KEY (organization_id) REFERENCES neroxa_organizations(id) ON DELETE CASCADE"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_orders_payment_method_check",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "CHECK ((payment_method = ANY (ARRAY['CASH'::text, 'PIX'::text, 'CARD_ON_DELIVERY'::text, 'CARD_ON_SITE'::text])))"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_orders_pkey",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_orders_status_check",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "CHECK ((status = ANY (ARRAY['RECEIVED'::text, 'CONFIRMED'::text, 'PREPARING'::text, 'READY'::text, 'OUT_FOR_DELIVERY'::text, 'DELIVERED'::text, 'CANCELLED'::text])))"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_orders_subtotal_check",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "CHECK ((subtotal >= (0)::numeric))"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_orders_total_check",
+          "table": "neroxa_orders",
+          "validated": true,
+          "definition": "CHECK ((total >= (0)::numeric))"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_order_items_line_total_check",
+          "table": "neroxa_order_items",
+          "validated": true,
+          "definition": "CHECK ((line_total >= (0)::numeric))"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_order_items_order_id_fkey",
+          "table": "neroxa_order_items",
+          "validated": true,
+          "definition": "FOREIGN KEY (order_id) REFERENCES neroxa_orders(id) ON DELETE CASCADE"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_order_items_pkey",
+          "table": "neroxa_order_items",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_order_items_product_id_fkey",
+          "table": "neroxa_order_items",
+          "validated": true,
+          "definition": "FOREIGN KEY (product_id) REFERENCES neroxa_storefront_products(id) ON DELETE SET NULL"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_order_items_quantity_check",
+          "table": "neroxa_order_items",
+          "validated": true,
+          "definition": "CHECK (((quantity >= 1) AND (quantity <= 99)))"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_order_items_second_product_id_fkey",
+          "table": "neroxa_order_items",
+          "validated": true,
+          "definition": "FOREIGN KEY (second_product_id) REFERENCES neroxa_storefront_products(id) ON DELETE SET NULL"
+        },
+        {
+          "kind": "c",
+          "name": "neroxa_order_items_unit_price_check",
+          "table": "neroxa_order_items",
+          "validated": true,
+          "definition": "CHECK ((unit_price >= (0)::numeric))"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_order_status_history_changed_by_user_id_fkey",
+          "table": "neroxa_order_status_history",
+          "validated": true,
+          "definition": "FOREIGN KEY (changed_by_user_id) REFERENCES auth.users(id) ON DELETE SET NULL"
+        },
+        {
+          "kind": "f",
+          "name": "neroxa_order_status_history_order_id_fkey",
+          "table": "neroxa_order_status_history",
+          "validated": true,
+          "definition": "FOREIGN KEY (order_id) REFERENCES neroxa_orders(id) ON DELETE CASCADE"
+        },
+        {
+          "kind": "p",
+          "name": "neroxa_order_status_history_pkey",
+          "table": "neroxa_order_status_history",
+          "validated": true,
+          "definition": "PRIMARY KEY (id)"
+        }
+      ],
+      "memberships": [
+        {
+          "role": "pg_read_all_settings",
+          "admin": false,
+          "member": "pg_monitor"
+        },
+        {
+          "role": "pg_read_all_stats",
+          "admin": false,
+          "member": "pg_monitor"
+        },
+        {
+          "role": "pg_stat_scan_tables",
+          "admin": false,
+          "member": "pg_monitor"
+        },
+        {
+          "role": "pg_read_all_data",
+          "admin": false,
+          "member": "supabase_etl_admin"
+        },
+        {
+          "role": "pg_read_all_data",
+          "admin": false,
+          "member": "supabase_read_only_user"
+        },
+        {
+          "role": "anon",
+          "admin": false,
+          "member": "authenticator"
+        },
+        {
+          "role": "authenticated",
+          "admin": false,
+          "member": "authenticator"
+        },
+        {
+          "role": "service_role",
+          "admin": false,
+          "member": "authenticator"
+        },
+        {
+          "role": "authenticator",
+          "admin": false,
+          "member": "supabase_storage_admin"
+        },
+        {
+          "role": "anon",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "authenticated",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "service_role",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "authenticator",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "pg_monitor",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "pg_read_all_data",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "pg_signal_backend",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "pg_monitor",
+          "admin": false,
+          "member": "supabase_etl_admin"
+        },
+        {
+          "role": "pg_monitor",
+          "admin": false,
+          "member": "supabase_read_only_user"
+        },
+        {
+          "role": "pg_create_subscription",
+          "admin": true,
+          "member": "postgres"
+        },
+        {
+          "role": "supabase_privileged_role",
+          "admin": false,
+          "member": "postgres"
+        },
+        {
+          "role": "supabase_privileged_role",
+          "admin": false,
+          "member": "supabase_etl_admin"
+        },
+        {
+          "role": "anon",
+          "admin": false,
+          "member": "supabase_realtime_admin"
+        },
+        {
+          "role": "authenticated",
+          "admin": false,
+          "member": "supabase_realtime_admin"
+        },
+        {
+          "role": "service_role",
+          "admin": false,
+          "member": "supabase_realtime_admin"
+        }
+      ],
+      "server_version": "17.11"
+    }
+  }
+]

@@ -1,0 +1,360 @@
+[
+  {
+    "metadata": {
+      "counts": {
+        "items": 6,
+        "orders": 3,
+        "history": 12,
+        "products": 4,
+        "instances": 1,
+        "organizations": 1,
+        "platform_members": 1,
+        "organization_members": 0
+      },
+      "project": "uvyinrojuhizjqbuzdcy",
+      "functions": [
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "get_public_order_status",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "jsonb",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "bb004a5cbde6c5a482f06750f138dc60",
+          "language": "sql",
+          "arguments": "p_order_id uuid, p_customer_phone text",
+          "signature": "p_order_id uuid, p_customer_phone text",
+          "definition": "CREATE OR REPLACE FUNCTION public.get_public_order_status(p_order_id uuid, p_customer_phone text)\n RETURNS jsonb\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select jsonb_build_object(\n    'id', o.id, 'order_id', o.id, 'order_number', o.order_number,\n    'status', o.status, 'customer_name', o.customer_name, 'customer_phone', o.customer_phone,\n    'fulfillment', o.fulfillment, 'payment_method', o.payment_method,\n    'subtotal', o.subtotal, 'delivery_fee', o.delivery_fee, 'total', o.total,\n    'address_street', o.address_street, 'address_number', o.address_number,\n    'address_neighborhood', o.address_neighborhood, 'address_complement', o.address_complement,\n    'address_reference', o.address_reference, 'notes', o.notes,\n    'items', coalesce((\n      select jsonb_agg(jsonb_build_object(\n        'lineId', oi.id::text, 'productId', oi.product_id, 'productName', oi.product_name,\n        'imageUrl', oi.product_image_url, 'secondProductId', oi.second_product_id,\n        'secondProductName', oi.second_product_name, 'isHalf', oi.is_half,\n        'sizeId', oi.size_id, 'sizeName', oi.size_name, 'crustId', oi.crust_id,\n        'crustName', oi.crust_name, 'crustPrice', oi.crust_price,\n        'addons', oi.addons, 'complements', oi.complements, 'quantity', oi.quantity,\n        'notes', oi.notes, 'unitPrice', oi.unit_price\n      ) order by oi.created_at)\n      from public.neroxa_order_items oi where oi.order_id = o.id\n    ), '[]'::jsonb),\n    'created_at', o.created_at, 'updated_at', o.updated_at\n  )\n  from public.neroxa_orders o\n  where o.id = p_order_id\n    and regexp_replace(o.customer_phone, '[^0-9]', '', 'g')\n      = regexp_replace(coalesce(p_customer_phone, ''), '[^0-9]', '', 'g')\n  limit 1;\n$function$\n",
+          "volatility": "s",
+          "definition_md5": "d8a86282fd63352fae3059b9a0bcceeb"
+        },
+        {
+          "acl": [
+            "=X/postgres",
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "get_public_storefront_context",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "TABLE(domain text, instance_id uuid, instance_slug text, instance_name text, instance_status text, organization_id uuid, organization_name text, system_id uuid, system_slug text, system_name text, system_type text)",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "e2a885b90e48573a0afcbe8e99425d04",
+          "language": "sql",
+          "arguments": "p_domain text",
+          "signature": "p_domain text",
+          "definition": "CREATE OR REPLACE FUNCTION public.get_public_storefront_context(p_domain text)\n RETURNS TABLE(domain text, instance_id uuid, instance_slug text, instance_name text, instance_status text, organization_id uuid, organization_name text, system_id uuid, system_slug text, system_name text, system_type text)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select d.domain, i.id, i.slug, i.name, i.status,\n         o.id, o.trade_name, s.id, s.slug, s.name, s.system_type\n  from public.neroxa_system_domains d\n  join public.neroxa_system_instances i on i.id = d.system_instance_id\n  join public.neroxa_organizations o on o.id = i.organization_id\n  left join public.neroxa_systems s on s.id = i.system_id\n  where lower(d.domain) = lower(trim(trailing '.' from trim(p_domain)))\n    and d.status = 'VERIFIED'\n    and i.status = 'ACTIVE'\n    and o.active = true\n    and (s.id is null or s.active = true)\n  limit 1;\n$function$\n",
+          "volatility": "s",
+          "definition_md5": "635726ae640fd2e1a82a4c1a50430727"
+        },
+        {
+          "acl": [
+            "=X/postgres",
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "neroxa_is_platform_member",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "boolean",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "0159867097be728be1b6f01098811871",
+          "language": "sql",
+          "arguments": "",
+          "signature": "",
+          "definition": "CREATE OR REPLACE FUNCTION public.neroxa_is_platform_member()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\n  select exists (\n    select 1 from public.neroxa_platform_members m\n    where m.user_id = auth.uid() and m.active\n  );\n$function$\n",
+          "volatility": "s",
+          "definition_md5": "ddfb10f0aabbcf3b047e668954622562"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "append_public_order_items_with_payment",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "TABLE(order_id uuid, order_number bigint, subtotal numeric, total numeric)",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "46e97e8358ff9b79e23d874875a2f61a",
+          "language": "plpgsql",
+          "arguments": "p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text",
+          "signature": "p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text",
+          "definition": "CREATE OR REPLACE FUNCTION public.append_public_order_items_with_payment(p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text)\n RETURNS TABLE(order_id uuid, order_number bigint, subtotal numeric, total numeric)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_order public.neroxa_orders%rowtype;\n  v_item jsonb;\n  v_product record;\n  v_second_id uuid;\n  v_second_name text;\n  v_qty integer;\n  v_unit numeric(12,2);\n  v_added numeric(12,2) := 0;\nbegin\n  if p_payment_method is null or p_payment_method not in ('CASH','PIX','CARD_ON_DELIVERY','CARD_ON_SITE') then\n    raise exception 'Forma de pagamento inválida';\n  end if;\n  if jsonb_typeof(coalesce(p_items,'[]'::jsonb)) <> 'array' or jsonb_array_length(coalesce(p_items,'[]'::jsonb)) = 0 then\n    raise exception 'Adicione pelo menos um item';\n  end if;\n\n  select o.* into v_order\n  from public.neroxa_orders o\n  where o.id = p_order_id\n    and regexp_replace(o.customer_phone, '[^0-9]', '', 'g')\n      = regexp_replace(coalesce(p_customer_phone, ''), '[^0-9]', '', 'g')\n  for update;\n  if not found then raise exception 'Pedido não encontrado'; end if;\n  if v_order.status not in ('RECEIVED','CONFIRMED','PREPARING','READY') then\n    raise exception 'Este pedido não pode mais receber novos itens';\n  end if;\n\n  for v_item in select value from jsonb_array_elements(p_items) as x(value) loop\n    v_second_id := null;\n    v_second_name := null;\n    v_qty := greatest(1, least(99, coalesce((v_item->>'quantity')::integer,1)));\n\n    select p.* into v_product\n    from public.neroxa_storefront_products p\n    where p.id = nullif(v_item->>'product_id','')::uuid\n      and p.instance_id = v_order.instance_id\n      and p.active\n      and coalesce((p.metadata->>'available')::boolean,true);\n    if not found then raise exception 'Produto não disponível'; end if;\n\n    if nullif(v_item->>'second_product_id','') is not null then\n      select p.id,p.name into v_second_id,v_second_name\n      from public.neroxa_storefront_products p\n      where p.id = (v_item->>'second_product_id')::uuid\n        and p.instance_id = v_order.instance_id and p.active\n        and coalesce((p.metadata->>'available')::boolean,true);\n      if not found then raise exception 'Segundo sabor não disponível'; end if;\n    end if;\n\n    v_unit := public.calculate_public_order_line_price(\n      v_order.instance_id, v_product.id, v_second_id,\n      nullif(v_item->>'size_id',''), nullif(v_item->>'crust_id',''),\n      coalesce(v_item->'addons','[]'::jsonb), coalesce(v_item->'complements','[]'::jsonb)\n    );\n\n    insert into public.neroxa_order_items(\n      order_id,product_id,product_name,product_image_url,second_product_id,second_product_name,\n      is_half,size_id,size_name,crust_id,crust_name,crust_price,addons,complements,\n      quantity,notes,unit_price,line_total\n    ) values (\n      v_order.id,v_product.id,v_product.name,v_product.image_url,v_second_id,v_second_name,\n      coalesce((v_item->>'is_half')::boolean,false),\n      case when v_item->>'size_id' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then (v_item->>'size_id')::uuid else null end,\n      nullif(v_item->>'size_name',''),\n      case when v_item->>'crust_id' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then (v_item->>'crust_id')::uuid else null end,\n      nullif(v_item->>'crust_name',''),\n      coalesce((v_item->>'crust_price')::numeric,0),\n      coalesce(v_item->'addons','[]'::jsonb),coalesce(v_item->'complements','[]'::jsonb),\n      v_qty,nullif(v_item->>'notes',''),v_unit,v_unit*v_qty\n    );\n    v_added := v_added + v_unit*v_qty;\n  end loop;\n\n  update public.neroxa_orders as o\n  set payment_method=p_payment_method,\n      subtotal=round(coalesce(v_order.subtotal,0)+v_added,2),\n      total=round(coalesce(v_order.subtotal,0)+v_added+coalesce(v_order.delivery_fee,0),2),\n      updated_at=now()\n  where o.id=v_order.id returning o.* into v_order;\n\n  order_id:=v_order.id; order_number:=v_order.order_number;\n  subtotal:=v_order.subtotal; total:=v_order.total;\n  return next;\nend;\n$function$\n",
+          "volatility": "v",
+          "definition_md5": "bf0f761b852e0c73acaa99d913b6fc02"
+        },
+        {
+          "acl": [
+            "=X/postgres",
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "calculate_public_order_line_price",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "numeric",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "ff3f732a3b15fcb1d2d2fdf9df4ddfe2",
+          "language": "plpgsql",
+          "arguments": "p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb",
+          "signature": "p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb",
+          "definition": "CREATE OR REPLACE FUNCTION public.calculate_public_order_line_price(p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb)\n RETURNS numeric\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_product record;\n  v_second record;\n  v_org uuid;\n  v_rule text := 'highest_half';\n  v_fixed numeric;\n  v_base numeric := 0;\n  v_second_base numeric := 0;\n  v_crust numeric := 0;\n  v_addons numeric := 0;\n  v_complements numeric := 0;\n  v_choice jsonb;\n  v_item jsonb;\n  v_id uuid;\n  v_addon_price numeric;\nbegin\n  select p.*, i.organization_id into v_product\n  from public.neroxa_storefront_products p\n  join public.neroxa_system_instances i on i.id = p.instance_id\n  where p.id = p_product_id and p.instance_id = p_instance_id and p.active;\n  if not found then raise exception 'Produto não disponível'; end if;\n\n  v_org := v_product.organization_id;\n  select s.half_pizza_pricing_rule, s.half_pizza_fixed_price\n    into v_rule, v_fixed\n  from public.neroxa_storefront_settings s where s.organization_id = v_org;\n\n  v_base := coalesce(v_product.price, 0);\n  if p_size_id is not null then\n    select choice into v_choice\n    from jsonb_array_elements(coalesce(v_product.metadata->'options','[]'::jsonb)) opt\n    cross join lateral jsonb_array_elements(coalesce(opt->'choices','[]'::jsonb)) choice\n    where opt->>'id' = 'tamanho' and choice->>'id' = p_size_id limit 1;\n    v_base := v_base + coalesce((v_choice->>'price')::numeric, 0);\n  end if;\n\n  if p_second_product_id is not null then\n    select * into v_second from public.neroxa_storefront_products\n    where id = p_second_product_id and instance_id = p_instance_id and active;\n    if not found then raise exception 'Segundo sabor não disponível'; end if;\n    v_second_base := coalesce(v_second.price, 0);\n    if p_size_id is not null then\n      select choice into v_choice\n      from jsonb_array_elements(coalesce(v_second.metadata->'options','[]'::jsonb)) opt\n      cross join lateral jsonb_array_elements(coalesce(opt->'choices','[]'::jsonb)) choice\n      where opt->>'id' = 'tamanho' and choice->>'id' = p_size_id limit 1;\n      v_second_base := v_second_base + coalesce((v_choice->>'price')::numeric, 0);\n    end if;\n    if coalesce(v_rule, 'highest_half') = 'average_halves' then\n      v_base := (v_base + v_second_base) / 2;\n    elsif coalesce(v_rule, 'highest_half') = 'fixed_price' and v_fixed is not null then\n      v_base := v_fixed;\n    else\n      v_base := greatest(v_base, v_second_base);\n    end if;\n  end if;\n\n  if p_crust_id is not null then\n    select coalesce((choice->>'price')::numeric, 0) into v_crust\n    from jsonb_array_elements(coalesce(v_product.metadata->'options','[]'::jsonb)) opt\n    cross join lateral jsonb_array_elements(coalesce(opt->'choices','[]'::jsonb)) choice\n    where opt->>'id' = 'borda' and choice->>'id' = p_crust_id limit 1;\n  end if;\n\n  for v_item in select * from jsonb_array_elements(coalesce(p_addons,'[]'::jsonb)) loop\n    v_id := nullif(v_item->>'id','')::uuid;\n    if v_id is null then raise exception 'Adicional inválido'; end if;\n    select price into v_addon_price from public.neroxa_storefront_products\n    where id = v_id and instance_id = p_instance_id and active;\n    if not found then raise exception 'Adicional não disponível'; end if;\n    v_addons := v_addons + coalesce(v_addon_price, 0);\n  end loop;\n\n  for v_item in select * from jsonb_array_elements(coalesce(p_complements,'[]'::jsonb)) loop\n    v_id := nullif(v_item->>'productId','')::uuid;\n    if v_id is null then raise exception 'Acompanhamento inválido'; end if;\n    select price into v_addon_price from public.neroxa_storefront_products\n    where id = v_id and instance_id = p_instance_id and active;\n    if not found then raise exception 'Acompanhamento não disponível'; end if;\n    v_complements := v_complements + coalesce(v_addon_price, 0);\n  end loop;\n\n  return v_base + v_crust + v_addons + v_complements;\nend;\n$function$\n",
+          "volatility": "v",
+          "definition_md5": "d840292550213abb5401d57ccd3c33bf"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "create_public_order",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "TABLE(order_id uuid, order_number bigint, total numeric)",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "afc4d910ac31460702a3674bd63d0f9d",
+          "language": "plpgsql",
+          "arguments": "p_order jsonb",
+          "signature": "p_order jsonb",
+          "definition": "CREATE OR REPLACE FUNCTION public.create_public_order(p_order jsonb)\n RETURNS TABLE(order_id uuid, order_number bigint, total numeric)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n v_domain text := lower(trim(trailing '.' from trim(coalesce(p_order->>'storefront_domain',''))));\n v_client_org uuid := nullif(p_order->>'organization_id','')::uuid;\n v_org uuid;\n v_instance uuid;\n v_order_id uuid;\n v_number bigint;\n v_subtotal numeric(12,2) := 0;\n v_delivery_fee numeric(12,2) := 0;\n v_total numeric(12,2);\n v_fulfillment text := coalesce(p_order->>'fulfillment','DELIVERY');\n v_payment text := coalesce(p_order->>'payment_method','PIX');\n v_phone text := trim(coalesce(p_order->>'customer_phone',''));\n v_item jsonb;\n v_unit numeric;\n v_qty integer;\n v_zone record;\n v_neighborhood text;\nbegin\n if v_domain = '' then raise exception 'Domínio da loja obrigatório'; end if;\n\n -- Resolve tenant from a verified, active domain; never trust the browser's tenant ID.\n select ctx.organization_id, ctx.instance_id\n   into v_org, v_instance\n from public.get_public_storefront_context(v_domain) ctx\n limit 1;\n\n if v_org is null or v_instance is null then\n   raise exception 'Loja indisponível para este domínio';\n end if;\n\n if v_client_org is not null and v_client_org <> v_org then\n   raise exception 'O domínio não corresponde à loja selecionada';\n end if;\n\n if v_phone = '' or trim(coalesce(p_order->>'customer_name','')) = '' then\n   raise exception 'Dados do cliente incompletos';\n end if;\n\n if jsonb_typeof(p_order->'items') <> 'array'\n    or jsonb_array_length(coalesce(p_order->'items','[]'::jsonb)) = 0 then\n   raise exception 'O pedido precisa ter pelo menos um item';\n end if;\n\n if v_fulfillment not in ('DELIVERY','PICKUP')\n    or v_payment not in ('CASH','PIX','CARD_ON_DELIVERY','CARD_ON_SITE') then\n   raise exception 'Forma de recebimento ou pagamento inválida';\n end if;\n\n -- Serialize per instance before checking idempotency, so concurrent retries return the same order.\n perform pg_advisory_xact_lock(hashtext(v_instance::text));\n\n if nullif(p_order->>'idempotency_key','') is not null then\n   select o.id, o.order_number, o.total\n     into v_order_id, v_number, v_total\n   from public.neroxa_orders o\n   where o.instance_id = v_instance\n     and o.idempotency_key = (p_order->>'idempotency_key')::uuid;\n\n   if v_order_id is not null then\n     order_id := v_order_id;\n     order_number := v_number;\n     total := v_total;\n     return next;\n     return;\n   end if;\n end if;\n\n if v_fulfillment = 'DELIVERY' then\n   v_neighborhood := trim(coalesce(p_order->>'address_neighborhood',''));\n   if v_neighborhood = '' then raise exception 'Bairro de entrega obrigatório'; end if;\n\n   select z.* into v_zone\n   from public.neroxa_storefront_delivery_zones z\n   where z.organization_id = v_org\n     and z.active\n     and exists (\n       select 1 from unnest(z.neighborhoods) n\n       where lower(trim(n)) = lower(v_neighborhood)\n     )\n   order by z.sort_order\n   limit 1;\n\n   if not found then raise exception 'Bairro não atendido pela loja'; end if;\n   v_delivery_fee := coalesce(v_zone.delivery_fee, 0);\n end if;\n\n -- The per-instance lock above also protects order-number allocation.\n select coalesce(max(o.order_number),0)+1\n   into v_number\n from public.neroxa_orders o\n where o.instance_id = v_instance;\n\n insert into public.neroxa_orders(\n   instance_id, organization_id, order_number, customer_name, customer_phone,\n   fulfillment, payment_method, status, delivery_fee, address_street,\n   address_number, address_neighborhood, address_complement, address_reference,\n   notes, idempotency_key\n ) values (\n   v_instance, v_org, v_number, trim(p_order->>'customer_name'), v_phone,\n   v_fulfillment, v_payment, 'RECEIVED', v_delivery_fee,\n   nullif(trim(p_order->>'address_street'),''),\n   nullif(trim(p_order->>'address_number'),''),\n   nullif(trim(p_order->>'address_neighborhood'),''),\n   nullif(trim(p_order->>'address_complement'),''),\n   nullif(trim(p_order->>'address_reference'),''),\n   nullif(trim(p_order->>'notes'),''),\n   nullif(p_order->>'idempotency_key','')::uuid\n ) returning id into v_order_id;\n\n for v_item in select * from jsonb_array_elements(p_order->'items') loop\n   v_qty := greatest(1, least(99, coalesce((v_item->>'quantity')::integer,1)));\n   v_unit := public.calculate_public_order_line_price(\n     v_instance,\n     nullif(v_item->>'product_id','')::uuid,\n     nullif(v_item->>'second_product_id','')::uuid,\n     nullif(v_item->>'size_id',''),\n     nullif(v_item->>'crust_id',''),\n     coalesce(v_item->'addons','[]'::jsonb),\n     coalesce(v_item->'complements','[]'::jsonb)\n   );\n\n   insert into public.neroxa_order_items(\n     order_id, product_id, product_name, product_image_url, second_product_id,\n     second_product_name, is_half, size_id, size_name, crust_id, crust_name,\n     crust_price, addons, complements, quantity, notes, unit_price, line_total\n   )\n   select\n     v_order_id, p.id, p.name, p.image_url,\n     nullif(v_item->>'second_product_id','')::uuid, p2.name,\n     coalesce((v_item->>'is_half')::boolean,false),\n     case when v_item->>'size_id' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then (v_item->>'size_id')::uuid else null end,\n     coalesce(\n       nullif(v_item->>'size_name',''),\n       (select choice->>'name'\n        from jsonb_array_elements(coalesce(p.metadata->'options','[]'::jsonb)) opt\n        cross join lateral jsonb_array_elements(coalesce(opt->'choices','[]'::jsonb)) choice\n        where opt->>'id'='tamanho' and choice->>'id'=v_item->>'size_id'\n        limit 1)\n     ),\n     case when v_item->>'crust_id' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then (v_item->>'crust_id')::uuid else null end,\n     coalesce(\n       nullif(v_item->>'crust_name',''),\n       (select choice->>'name'\n        from jsonb_array_elements(coalesce(p.metadata->'options','[]'::jsonb)) opt\n        cross join lateral jsonb_array_elements(coalesce(opt->'choices','[]'::jsonb)) choice\n        where opt->>'id'='borda' and choice->>'id'=v_item->>'crust_id'\n        limit 1)\n     ),\n     coalesce((v_item->>'crust_price')::numeric,0),\n     coalesce(v_item->'addons','[]'::jsonb),\n     coalesce(v_item->'complements','[]'::jsonb),\n     v_qty, nullif(v_item->>'notes',''), v_unit, v_unit*v_qty\n   from public.neroxa_storefront_products p\n   left join public.neroxa_storefront_products p2\n     on p2.id = nullif(v_item->>'second_product_id','')::uuid\n    and p2.instance_id = v_instance\n   where p.id = nullif(v_item->>'product_id','')::uuid\n     and p.instance_id = v_instance\n     and p.active\n     and coalesce((p.metadata->>'available')::boolean,true);\n\n   if not found then raise exception 'Produto não disponível'; end if;\n   v_subtotal := v_subtotal + v_unit*v_qty;\n end loop;\n\n v_total := v_subtotal + v_delivery_fee;\n update public.neroxa_orders\n set subtotal = v_subtotal, total = v_total, updated_at = now()\n where id = v_order_id;\n\n insert into public.neroxa_order_status_history(order_id,to_status,note)\n values(v_order_id,'RECEIVED','Pedido criado pelo site');\n\n order_id := v_order_id;\n order_number := v_number;\n total := v_total;\n return next;\nend;\n$function$\n",
+          "volatility": "v",
+          "definition_md5": "33146501d0fe7c33d8a34104361d026f"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "get_admin_orders",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "SETOF neroxa_orders",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "f1b3bc5b2513ecbb9de0bae423221dbb",
+          "language": "plpgsql",
+          "arguments": "p_instance_id uuid, p_status text DEFAULT NULL::text",
+          "signature": "p_instance_id uuid, p_status text",
+          "definition": "CREATE OR REPLACE FUNCTION public.get_admin_orders(p_instance_id uuid, p_status text DEFAULT NULL::text)\n RETURNS SETOF neroxa_orders\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_org uuid;\nbegin\n  select i.organization_id into v_org\n  from public.neroxa_system_instances i where i.id = p_instance_id;\n  if v_org is null then raise exception 'Loja não encontrada'; end if;\n  if not public.neroxa_is_platform_member()\n     and not exists (\n       select 1 from public.neroxa_organization_members m\n       where m.organization_id = v_org and m.user_id = auth.uid() and m.active\n     ) then\n    raise exception 'Acesso não autorizado aos pedidos desta loja';\n  end if;\n\n  return query\n  select o.* from public.neroxa_orders o\n  where o.instance_id = p_instance_id and (p_status is null or o.status = p_status)\n  order by o.created_at desc;\nend;\n$function$\n",
+          "volatility": "s",
+          "definition_md5": "041a9696cffe0b7f41c64cf4e8507b29"
+        },
+        {
+          "acl": [
+            "postgres=X/postgres",
+            "anon=X/postgres",
+            "authenticated=X/postgres",
+            "service_role=X/postgres"
+          ],
+          "name": "update_admin_order_status",
+          "owner": "postgres",
+          "config": [
+            "search_path=public"
+          ],
+          "result": "neroxa_orders",
+          "schema": "public",
+          "definer": true,
+          "body_md5": "df4837d68dcb3679f44c010713cdc70b",
+          "language": "plpgsql",
+          "arguments": "p_order_id uuid, p_status text, p_note text DEFAULT NULL::text",
+          "signature": "p_order_id uuid, p_status text, p_note text",
+          "definition": "CREATE OR REPLACE FUNCTION public.update_admin_order_status(p_order_id uuid, p_status text, p_note text DEFAULT NULL::text)\n RETURNS neroxa_orders\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_order public.neroxa_orders%rowtype;\n  v_previous_status text;\nbegin\n  select o.* into v_order from public.neroxa_orders o where o.id=p_order_id for update;\n  if not found then raise exception 'Pedido não encontrado'; end if;\n  if not public.neroxa_is_platform_member()\n     and not exists (\n       select 1 from public.neroxa_organization_members m\n       where m.organization_id=v_order.organization_id and m.user_id=auth.uid() and m.active\n     ) then\n    raise exception 'Acesso não autorizado a este pedido';\n  end if;\n  if p_status not in ('RECEIVED','CONFIRMED','PREPARING','READY','OUT_FOR_DELIVERY','DELIVERED','CANCELLED') then\n    raise exception 'Status inválido';\n  end if;\n  if p_status = v_order.status then return v_order; end if;\n  v_previous_status := v_order.status;\n\n  if not (\n    (v_order.status = 'RECEIVED' and p_status in ('CONFIRMED','CANCELLED')) or\n    (v_order.status = 'CONFIRMED' and p_status in ('PREPARING','CANCELLED')) or\n    (v_order.status = 'PREPARING' and p_status in ('READY','CANCELLED')) or\n    (v_order.status = 'READY' and p_status = 'CANCELLED') or\n    (v_order.status = 'READY' and v_order.fulfillment = 'PICKUP' and p_status = 'DELIVERED') or\n    (v_order.status = 'READY' and v_order.fulfillment = 'DELIVERY' and p_status = 'OUT_FOR_DELIVERY') or\n    (v_order.status = 'OUT_FOR_DELIVERY' and p_status in ('DELIVERED','CANCELLED'))\n  ) then\n    raise exception 'Transição de status inválida: % -> %', v_order.status, p_status;\n  end if;\n\n  update public.neroxa_orders\n  set status=p_status, updated_at=now(),\n      confirmed_at=case when p_status='CONFIRMED' and confirmed_at is null then now() else confirmed_at end,\n      preparing_at=case when p_status='PREPARING' and preparing_at is null then now() else preparing_at end,\n      ready_at=case when p_status='READY' and ready_at is null then now() else ready_at end,\n      out_for_delivery_at=case when p_status='OUT_FOR_DELIVERY' and out_for_delivery_at is null then now() else out_for_delivery_at end,\n      delivered_at=case when p_status='DELIVERED' and delivered_at is null then now() else delivered_at end,\n      cancelled_at=case when p_status='CANCELLED' and cancelled_at is null then now() else cancelled_at end\n  where id=p_order_id returning * into v_order;\n\n  insert into public.neroxa_order_status_history(\n    order_id,from_status,to_status,changed_by_user_id,note\n  ) values(v_order.id,v_previous_status,p_status,auth.uid(),nullif(trim(p_note),''));\n  return v_order;\nend;\n$function$\n",
+          "volatility": "v",
+          "definition_md5": "e6fec3fa15d930ff2529ad4e9bf822aa"
+        }
+      ],
+      "relations": [
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_system_instances",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_organizations",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_systems",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_system_domains",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_storefront_settings",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_storefront_delivery_zones",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_storefront_products",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_organization_members",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "anon=arwdDxtm/postgres",
+            "authenticated=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": false,
+          "kind": "r",
+          "name": "neroxa_platform_members",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": true,
+          "kind": "r",
+          "name": "neroxa_orders",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": true,
+          "kind": "r",
+          "name": "neroxa_order_items",
+          "owner": "postgres",
+          "force_rls": false
+        },
+        {
+          "acl": [
+            "postgres=arwdDxtm/postgres",
+            "service_role=arwdDxtm/postgres"
+          ],
+          "rls": true,
+          "kind": "r",
+          "name": "neroxa_order_status_history",
+          "owner": "postgres",
+          "force_rls": false
+        }
+      ],
+      "captured_at": "2026-10-13T23:28:22.392697+00:00",
+      "server_version": "17.11"
+    }
+  }
+]

@@ -156,8 +156,15 @@ try {
   }
   report.stage = "baseline";
   const baseline = path.join(work, "baseline.sql");
-  execFileSync("python3", ["tools/ab-auth/build_schema.py", baseline], { stdio: "inherit" });
-  sql(fs.readFileSync(baseline, "utf8"));
+  const bridgeUpgrade = process.env.BRIDGE_SCENARIO === "upgrade";
+  if (!bridgeUpgrade) {
+    execFileSync("python3", ["tools/ab-auth/build_schema.py", baseline], { stdio: "inherit" });
+    sql(fs.readFileSync(baseline, "utf8"));
+  } else {
+    if (sql("SELECT count(*) FROM neroxa_bridge.journal WHERE stage IN ('B','C','D');") !== "3")
+      throw new Error("Bridge preparation journal required; never rebuild a populated database");
+    report.source = "Verified observed sandbox synthetic structure + explicit bounded bridge";
+  }
   report.baseline = {
     relations: Number(
       sql(
@@ -173,10 +180,14 @@ try {
       sql("SELECT count(*) FROM pg_policies WHERE schemaname IN ('public','private');"),
     ),
   };
+  const expectedBaseline = bridgeUpgrade
+    ? JSON.parse(fs.readFileSync("audits/migration-bridge-v1-20261013/MANIFEST-PONTE.json"))
+        .baselineProjection
+    : { relations: 34, functions: 50, policies: 99 };
   if (
-    report.baseline.relations !== 34 ||
-    report.baseline.functions !== 50 ||
-    report.baseline.policies !== 99
+    report.baseline.relations !== expectedBaseline.relations ||
+    report.baseline.functions !== expectedBaseline.functions ||
+    report.baseline.policies !== expectedBaseline.policies
   )
     throw new Error("Complete snapshot object count mismatch");
   report.stage = "candidates";

@@ -1,0 +1,635 @@
+{
+  "classification": "REVIEWED_INVENTORY_NOT_EXECUTABLE_SANDBOX_INSTALLER",
+  "automatic_installation": false,
+  "remote_execution_authorized": false,
+  "master_head": "0e2b95b1bc2d170dbbab20de98abe1875850da49",
+  "delivery_head": "3f3c27cf74e672231b50d1d1c4ba710b89a8200a",
+  "runtime": {
+    "master": "26b3c54f89f5e1a90f28c5f463b1543db99c3e0e",
+    "delivery": "c695929cbc36389f3fdbadf25acdc3a7ed22dae3"
+  },
+  "baseline": {
+    "path": "audits/ab-auth/master-catalog-20261009.json",
+    "sha256": "e7ed111d73ec8d63b514db8c39059d6b87ae97be74d54e0d682d38bc0e4cf858",
+    "builder": "tools/ab-auth/build_schema.py",
+    "source": "full captured historical catalog, not original CREATE history or universal baseline"
+  },
+  "sequence": [
+    {
+      "position": 1,
+      "path": "audits/sql/instance-membership-foundation.candidate.sql",
+      "sha256": "7889d4d9bdc37cf01457a8d0608e997e143f8bbfd377130b16f72539487c72d0",
+      "requires_prior_position": null,
+      "source_stage": "run.mjs",
+      "create_tables": [
+        "public.neroxa_instance_members"
+      ],
+      "create_functions": [
+        "neroxa_private.has_instance_role"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path = ''"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": false,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 2,
+      "path": "audits/sql/storefront-instance-phase1.candidate.sql",
+      "sha256": "e4e75abc28a5c07b163a6e98f7a9c7be9fad3f8a2543c4635cfbf5d35193e462",
+      "requires_prior_position": 1,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [
+        [
+          "public.neroxa_storefront_settings",
+          "instance_id"
+        ],
+        [
+          "public.neroxa_storefront_delivery_zones",
+          "instance_id"
+        ]
+      ],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 3,
+      "path": "audits/sql/store-product-category-guard.candidate.sql",
+      "sha256": "385d4446003c5604f9e18a0ebbf1b5f1c92d83fd11655db6cdd9815e7547011e",
+      "requires_prior_position": 2,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.neroxa_validate_product_category_instance"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [
+        "neroxa_product_category_instance_guard"
+      ],
+      "search_paths": [
+        "SET search_path = public AS $$"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": false,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 4,
+      "path": "audits/sql/storefront-tenant-integrity.candidate.sql",
+      "sha256": "c388d0dabb8c58988ef30c30b1f084c2acabf33ff23e798d278ac8d99ff99cf1",
+      "requires_prior_position": 3,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.neroxa_guard_storefront_tenant"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [
+        "neroxa_orders_tenant_guard",
+        "neroxa_settings_tenant_guard",
+        "neroxa_zones_tenant_guard"
+      ],
+      "search_paths": [
+        "SET search_path='' AS $$"
+      ],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 5,
+      "path": "audits/sql/storefront-parent-instance-guard.candidate.sql",
+      "sha256": "ec8afaa42ec5f590c1cbb1c98ff191d652779c3b0d97adc2ff4599f7389084c5",
+      "requires_prior_position": 4,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.neroxa_prevent_instance_org_reassignment"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [
+        "neroxa_instance_org_immutable"
+      ],
+      "search_paths": [
+        "SET search_path='' AS $$"
+      ],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 6,
+      "path": "audits/sql/store-isolation-policies.candidate.sql",
+      "sha256": "848d370e950ca8998ae8e3322c41f1484bb25e667c30d2cb1e8e2e1da087735c",
+      "requires_prior_position": 5,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [],
+      "policies": [
+        "\"instance managers categories delete\"",
+        "\"instance managers categories insert\"",
+        "\"instance managers categories update\"",
+        "\"instance managers products delete\"",
+        "\"instance managers products insert\"",
+        "\"instance managers products update\"",
+        "\"instance members categories read\"",
+        "\"instance members orders read\"",
+        "\"instance members products read\"",
+        "\"instance operators orders update\""
+      ],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 7,
+      "path": "audits/sql/storefront-instance-phase2-cutover.candidate.sql",
+      "sha256": "f06c49a835128063c95d1dae7272502a1831ff1009c3a9dc430edae7b633855a",
+      "requires_prior_position": 6,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 8,
+      "path": "audits/sql/storefront-settings-zones-rls.candidate.sql",
+      "sha256": "959170218f352c6d7b41e7dcc011ab8e092ded44e8a5a8e8855a1c8947f52c64",
+      "requires_prior_position": 7,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [],
+      "policies": [
+        "\"instance settings delete\"",
+        "\"instance settings insert\"",
+        "\"instance settings read\"",
+        "\"instance settings update\"",
+        "\"instance zones delete\"",
+        "\"instance zones insert\"",
+        "\"instance zones read\"",
+        "\"instance zones update\""
+      ],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 9,
+      "path": "audits/sql/storefront-admin-rpc.candidate.sql",
+      "sha256": "0e1c6e4a806a12f5631c556040e2ee06b29c3c37c789f53e1631c5f71a9bc753",
+      "requires_prior_position": 8,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.get_admin_orders"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path = '' AS $$"
+      ],
+      "acl_statements_present": false,
+      "has_transaction": false,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 10,
+      "path": "audits/sql/storefront-rpcs-phase2.candidate.sql",
+      "sha256": "4d37407a16a8b962161c0aa807b444a95b033299fc1131cf1938421e4068b439",
+      "requires_prior_position": 9,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.calculate_public_order_line_price",
+        "public.create_public_order",
+        "public.get_public_storefront_catalog",
+        "public.update_admin_order_status"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path TO 'public'"
+      ],
+      "acl_statements_present": false,
+      "has_transaction": false,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 11,
+      "path": "audits/sql/store-isolation-prerequisites.assert.sql",
+      "sha256": "9b2e0873c49d4358ef7e138f5c6ac9a6f4d673f9fa7107cb5fbb22403daa9c55",
+      "requires_prior_position": 10,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": false,
+      "has_transaction": false,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 12,
+      "path": "audits/sql/store-isolation-runtime-hardening.candidate.sql",
+      "sha256": "342bafbec2f94f1f03aab24731fa31700b7c20151334a2ec415564c412384c37",
+      "requires_prior_position": 11,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "private.neroxa_has_platform_role",
+        "public.append_public_order_items_with_payment",
+        "public.neroxa_keep_store_instance"
+      ],
+      "alter_columns": [],
+      "policies": [
+        "\"instance members instances read\"",
+        "\"instance members order history read\"",
+        "\"instance members order items read\"",
+        "\"platform AAL2 orders read\""
+      ],
+      "triggers": [
+        "neroxa_category_instance_immutable",
+        "neroxa_product_instance_immutable"
+      ],
+      "search_paths": [
+        "SET search_path TO 'public'",
+        "SET search_path='' AS $$"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 13,
+      "path": "audits/sql/admin-order-rpc-acl.release-gate.candidate.sql",
+      "sha256": "dd50db6bf42a0b2c41065110d6a88f2ee7e26bf225538718a3ac2f96020666a4",
+      "requires_prior_position": 12,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 14,
+      "path": "audits/sql/group-addons-pricing.candidate.sql",
+      "sha256": "3850db07fda4a794b00d13177c08138b3e0486e7e7abc5bc8eb05c608ac84a1d",
+      "requires_prior_position": 13,
+      "source_stage": "run.mjs",
+      "create_tables": [
+        "private.neroxa_group_order_intents"
+      ],
+      "create_functions": [
+        "private.neroxa_prepare_group_item",
+        "private.neroxa_requires_group_contract",
+        "public.append_public_order_items_with_payment",
+        "public.create_public_order",
+        "public.get_public_order_status",
+        "public.get_public_storefront_catalog"
+      ],
+      "alter_columns": [
+        [
+          "public.neroxa_order_items",
+          "selection_snapshot"
+        ]
+      ],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path TO 'public'",
+        "SET search_path='' AS $group$",
+        "SET search_path='' AS $requires$"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 15,
+      "path": "audits/sql/store-availability.candidate.sql",
+      "sha256": "45da99d6ef1d4f0afadd65473b5c2ed7360f1e5766ec3af7aa6e61fdfbcb9daf",
+      "requires_prior_position": 14,
+      "source_stage": "run.mjs",
+      "create_tables": [
+        "public.neroxa_storefront_availability",
+        "public.neroxa_storefront_special_days",
+        "public.neroxa_storefront_special_hours",
+        "public.neroxa_storefront_weekly_hours"
+      ],
+      "create_functions": [
+        "private.neroxa_assert_store_open",
+        "private.neroxa_guard_availability",
+        "private.neroxa_public_availability",
+        "private.neroxa_store_is_open",
+        "public.append_public_order_items_with_payment",
+        "public.create_public_order",
+        "public.get_public_storefront_catalog"
+      ],
+      "alter_columns": [],
+      "policies": [
+        "availability_delete",
+        "availability_insert",
+        "availability_read",
+        "availability_update"
+      ],
+      "triggers": [
+        "availability_identity"
+      ],
+      "search_paths": [
+        "SET search_path TO 'public'",
+        "SET search_path='' AS $$"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [
+        "49af4aa15b530cd9fc614ec1c594c962",
+        "85d9df673084d014f635704e867e1e2a",
+        "4b2f907823bb97da3355ab4a399f3168"
+      ],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 16,
+      "path": "audits/sql/checkout-recovery.candidate.sql",
+      "sha256": "acc820704864db99ade9c27352c6462163fdfb0fef5076b816c9963c06ca9022",
+      "requires_prior_position": 15,
+      "source_stage": "run.mjs",
+      "create_tables": [
+        "private.neroxa_recovery_quota_counters"
+      ],
+      "create_functions": [
+        "private.neroxa_lease_group_intent",
+        "public.create_public_order",
+        "public.neroxa_recover_group_order",
+        "public.neroxa_recovery_reserve_quota"
+      ],
+      "alter_columns": [
+        [
+          "private.neroxa_group_order_intents",
+          "recovery_expires_at"
+        ]
+      ],
+      "policies": [],
+      "triggers": [
+        "group_intent_lease"
+      ],
+      "search_paths": [
+        "SET search_path TO ''",
+        "SET search_path TO 'public'",
+        "SET search_path='' AS $$"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [
+        "46a6a03f43b04d5deb1dc7ace1080869"
+      ],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 17,
+      "path": "audits/sql/checkout-reconciliation.candidate.sql",
+      "sha256": "bf5da2fca7e7ca19ca084c070f422ee3112ca7f0d7408044660299f9e5b43c5a",
+      "requires_prior_position": 16,
+      "source_stage": "run.mjs",
+      "create_tables": [
+        "private.neroxa_checkout_reconciliation"
+      ],
+      "create_functions": [
+        "public.create_public_order",
+        "public.neroxa_reconcile_checkout"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path='' AS $$",
+        "SET search_path=public AS $function$"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [
+        "558513e7394392b1088f6b0fd243d954"
+      ],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 18,
+      "path": "audits/sql/operational-order-detail.candidate.sql",
+      "sha256": "beff5f1acf436176435806f697c89a21e646dd6f3b4eb4c031ef345763867790",
+      "requires_prior_position": 17,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.get_admin_order_detail"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path='' AS $$"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 19,
+      "path": "audits/sql/operational-order-transitions.candidate.sql",
+      "sha256": "4d4baf9edbcbd7d269c52b38ff3fde5cbeb1f7be40ea945eef6c5ebd7eae1180",
+      "requires_prior_position": 18,
+      "source_stage": "run.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.update_admin_order_status"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path TO 'public'"
+      ],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [
+        "bece1eb06c354c83bcf917d7698e4a69"
+      ],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 20,
+      "path": "audits/sql/checkout-public-rpc-revoke.release-gate.candidate.sql",
+      "sha256": "17bea495aca5d6712a89d0108ee9c84bceb9e742595648e140377397192f9da2",
+      "requires_prior_position": 19,
+      "source_stage": "checkout_gateway_integration.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 21,
+      "path": "audits/sql/checkout-durable-rate-limit.candidate.sql",
+      "sha256": "b75d348d626d6c4ea27163bf5d539ad3ae8d4d9103b54cff3a4d4deb6d5d0cbb",
+      "requires_prior_position": 20,
+      "source_stage": "checkout_gateway_integration.mjs",
+      "create_tables": [
+        "private.neroxa_checkout_quota_counters"
+      ],
+      "create_functions": [
+        "public.neroxa_checkout_reserve_quota"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path TO ''"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 22,
+      "path": "audits/sql/legacy-order-append-no-bypass.release-gate.candidate.sql",
+      "sha256": "c22eaa44d7e7929ac97ab9417bc2164b907a9254dc194c453fa3fcdd550639ef",
+      "requires_prior_position": 21,
+      "source_stage": "checkout_gateway_integration.mjs",
+      "create_tables": [],
+      "create_functions": [],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 23,
+      "path": "audits/sql/order-amendment-capability.candidate.sql",
+      "sha256": "60f791be31aa94407edc71a570f994a6ea61fc1ab2610efc6ff3dfd54680ae69",
+      "requires_prior_position": 22,
+      "source_stage": "order_amendment_capability.mjs",
+      "create_tables": [
+        "private.neroxa_order_amendment_capabilities",
+        "private.neroxa_order_amendment_operations"
+      ],
+      "create_functions": [
+        "public.neroxa_append_order_items_with_capability",
+        "public.neroxa_register_order_amendment_capability"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path TO ''"
+      ],
+      "acl_statements_present": true,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 24,
+      "path": "audits/sql/group-addons-capability.candidate.sql",
+      "sha256": "675fe171218eaf5c5aa6570aefed31dace35f63f0293cb0f146dc8f0d3491a5e",
+      "requires_prior_position": 23,
+      "source_stage": "order_amendment_capability.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.neroxa_append_order_items_with_capability"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path TO ''"
+      ],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [],
+      "idempotent_installation_claim": false
+    },
+    {
+      "position": 25,
+      "path": "audits/sql/store-availability-capability.candidate.sql",
+      "sha256": "cc0bb4ae8932550652a31dc2ca1e1751be5fa8bc449d487984ce9ad537edc499",
+      "requires_prior_position": 24,
+      "source_stage": "order_amendment_capability.mjs",
+      "create_tables": [],
+      "create_functions": [
+        "public.neroxa_append_order_items_with_capability"
+      ],
+      "alter_columns": [],
+      "policies": [],
+      "triggers": [],
+      "search_paths": [
+        "SET search_path TO ''"
+      ],
+      "acl_statements_present": false,
+      "has_transaction": true,
+      "body_preconditions_md5": [
+        "a155f86d00edea3cf807723f7cac5838"
+      ],
+      "idempotent_installation_claim": false
+    }
+  ],
+  "warning": "Exact tested replay order. Rows20/22 revoke old APIs before replacement23 in a non-serving test harness. Future serving cutover requires staged replacement and new full replay; do not execute this manifest remotely."
+}
