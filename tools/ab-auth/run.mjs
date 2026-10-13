@@ -219,6 +219,7 @@ try {
     sha256: crypto.createHash("sha256").update(fs.readFileSync(adminAcl)).digest("hex"),
     applied: true,
   });
+  sql(fs.readFileSync("audits/sql/group-addons-pricing.candidate.sql", "utf8"));
   report.stage = "fixtures";
   const sharedSystem = id();
   const org = id(),
