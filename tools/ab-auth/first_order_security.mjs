@@ -236,16 +236,55 @@ try {
   const containers = JSON.parse(
     execFileSync("docker", ["inspect", "supabase_auth_" + project], { encoding: "utf8" }),
   );
-  const secret = containers[0].Config.Env.find((e) => e.startsWith("GOTRUE_JWT_SECRET="))?.slice(
-    "GOTRUE_JWT_SECRET=".length,
+  const authConfig = Object.fromEntries(
+    containers[0].Config.Env.map((e) => {
+      const separator = e.indexOf("=");
+      return [e.slice(0, separator), e.slice(separator + 1)];
+    }),
   );
-  const parts = actors.token.split(".");
-  if (!secret || JSON.parse(Buffer.from(parts[0], "base64url")).alg !== "HS256")
-    throw Error("Expiry verifier needs known local signing contract");
+  const parts = actors.token.split("."),
+    header = JSON.parse(Buffer.from(parts[0], "base64url"));
   const claims = JSON.parse(Buffer.from(parts[1], "base64url"));
   claims.exp = Math.floor(Date.now() / 1000) - 30;
-  const body = parts[0] + "." + Buffer.from(JSON.stringify(claims)).toString("base64url");
-  const expired = body + "." + crypto.createHmac("sha256", secret).update(body).digest("base64url");
+  const originalBody = parts[0] + "." + parts[1],
+    body = parts[0] + "." + Buffer.from(JSON.stringify(claims)).toString("base64url");
+  let signature,
+    verified = false;
+  if (header.alg === "HS256" && authConfig.GOTRUE_JWT_SECRET) {
+    const expected = crypto
+      .createHmac("sha256", authConfig.GOTRUE_JWT_SECRET)
+      .update(originalBody)
+      .digest();
+    verified = expected.equals(Buffer.from(parts[2], "base64url"));
+    signature = crypto.createHmac("sha256", authConfig.GOTRUE_JWT_SECRET).update(body).digest();
+  } else if (["ES256", "RS256", "EdDSA"].includes(header.alg)) {
+    const raw = JSON.parse(authConfig.GOTRUE_JWT_KEYS ?? "null");
+    const entries = Array.isArray(raw) ? raw : (raw?.keys ?? []);
+    const jwk = entries.map((e) => e.key ?? e).find((k) => k.kid === header.kid && k.d);
+    if (!jwk)
+      throw Error(
+        "Disposable private signer unavailable for " +
+          header.alg +
+          "; JWT configuration names: " +
+          Object.keys(authConfig)
+            .filter((k) => k.includes("JWT"))
+            .join(","),
+      );
+    const key = crypto.createPrivateKey({ key: jwk, format: "jwk" }),
+      pub = crypto.createPublicKey(key);
+    const algorithm = header.alg === "EdDSA" ? null : "sha256";
+    const signOptions = header.alg === "ES256" ? { key, dsaEncoding: "ieee-p1363" } : key;
+    const verifyOptions = header.alg === "ES256" ? { key: pub, dsaEncoding: "ieee-p1363" } : pub;
+    verified = crypto.verify(
+      algorithm,
+      Buffer.from(originalBody),
+      verifyOptions,
+      Buffer.from(parts[2], "base64url"),
+    );
+    signature = crypto.sign(algorithm, Buffer.from(body), signOptions);
+  } else throw Error("Unsupported disposable JWT signing contract: " + header.alg);
+  check("original GoTrue signature verified with native " + header.alg, verified);
+  const expired = body + "." + signature.toString("base64url");
   fs.writeFileSync(work + "/expired.identity.private.json", JSON.stringify({ token: expired }), {
     mode: 0o600,
   });
