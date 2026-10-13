@@ -1,0 +1,9 @@
+{
+  "runtimeMaster": "26b3c54f89f5e1a90f28c5f463b1543db99c3e0e",
+  "automaticInstallation": false,
+  "sha256": {
+    "operational-order-detail.candidate.sql": "beff5f1acf436176435806f697c89a21e646dd6f3b4eb4c031ef345763867790",
+    "operational-order-transitions.candidate.sql": "4d4baf9edbcbd7d269c52b38ff3fde5cbeb1f7be40ea945eef6c5ebd7eae1180",
+    "checkout-reconciliation.candidate.sql": "bf5da2fca7e7ca19ca084c070f422ee3112ca7f0d7408044660299f9e5b43c5a"
+  }
+}
