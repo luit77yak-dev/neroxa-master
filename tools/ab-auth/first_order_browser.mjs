@@ -248,11 +248,23 @@ try {
   await screenshot(page, "cart");
   await page.getByRole("button", { name: "Continuar para checkout", exact: true }).click();
   await page.getByLabel(/Nome/).fill("Cliente Entrega fictício");
+  await page.getByLabel(/Nome/).focus();
+  await page.keyboard.press("Tab");
+  check(
+    "keyboard reaches customer telephone",
+    await page.getByLabel(/Telefone/).evaluate((el) => el === document.activeElement),
+  );
   await page.getByLabel(/Telefone/).fill("00000000002");
   await page.getByRole("button", { name: /Entrega.*Receba/ }).click();
   await page.getByLabel(/Rua/).fill("Rua Entrega fictícia");
   await page.getByLabel(/Número/).fill("100");
   await page.getByLabel(/Bairro/).selectOption("Bairro Entrega 0");
+  const submittedBefore = checkoutPosts;
+  await page.getByLabel(/Rua/).fill("");
+  await page.getByRole("button", { name: /Enviar pedido R\$/ }).click();
+  await page.getByRole("alert").filter({ hasText: "Informe rua" }).waitFor();
+  check("delivery area alone cannot bypass required street", checkoutPosts === submittedBefore);
+  await page.getByLabel(/Rua/).fill("Rua Entrega fictícia");
   await screenshot(page, "checkout");
   const initialOrders = Number(
     sql(`SELECT count(*) FROM public.neroxa_orders WHERE instance_id='${A.instance_id}'`),
@@ -366,6 +378,14 @@ try {
     await panel.goto("https://a.ab.invalid:4173/admin/pedidos", { waitUntil: "networkidle" });
     const login = async (user) => {
       await panel.getByLabel("E-mail", { exact: true }).fill(user.email);
+      await panel.getByLabel("E-mail", { exact: true }).focus();
+      await panel.keyboard.press("Tab");
+      check(
+        "keyboard reaches operational password",
+        await panel
+          .getByLabel("Senha", { exact: true })
+          .evaluate((el) => el === document.activeElement),
+      );
       await panel.getByLabel("Senha", { exact: true }).fill(user.password);
       await panel.getByRole("button", { name: "Entrar", exact: true }).click();
       await panel.getByLabel("Instância", { exact: true }).waitFor();
