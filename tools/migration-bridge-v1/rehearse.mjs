@@ -75,6 +75,13 @@ for (const [p, hash] of Object.entries(manifest.inputs))
     "input hash " + path.basename(p),
     crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex") === hash,
   );
+check(
+  "faithful empty source fixture hash",
+  crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(manifest.emptySourceFixture.path))
+    .digest("hex") === manifest.emptySourceFixture.sha256,
+);
 for (const x of manifest.sequence)
   check(
     "phase hash " + x.phase,

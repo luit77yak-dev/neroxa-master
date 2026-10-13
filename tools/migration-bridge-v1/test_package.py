@@ -16,6 +16,10 @@ class Tests(unittest.TestCase):
  def test_hash_tamper(self):self.m['sequence'][0]['sha256']='0'*64;self.assertRaises(ValueError,verify,self.m)
  def test_path(self):self.m['sequence'][0]['path']='../../private';self.assertRaises(ValueError,verify,self.m)
  def test_remote(self):self.m['remoteExecutionAuthorized']=True;self.assertRaises(ValueError,verify,self.m)
+ def test_acl_normalized_without_erasing_grants(self):
+  s=(R/self.m['sequence'][0]['path']).read_text();self.assertIn('array_agg(v ORDER BY v)',s);self.assertIn('md5(prosrc)',s);self.assertIn('prosecdef',s);self.assertIn('BRIDGE_FUNCTION_DRIFT',s)
+ def test_fixture_hash(self):
+  x=self.m['emptySourceFixture'];self.assertEqual(hashlib.sha256((R/x['path']).read_bytes()).hexdigest(),x['sha256'])
  def test_regprocedure_uses_types_only(self):
   s=(R/self.m['sequence'][0]['path']).read_text();self.assertNotIn('to_regprocedure(\'public.create_public_order(p_order',s)
  def test_preflight_readonly(self):

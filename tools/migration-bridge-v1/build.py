@@ -43,6 +43,9 @@ for t in S['relations']:
  for c in cols(S,tn):
   A.append(f"DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum WHERE a.attrelid={lit('public.'+tn)}::regclass AND a.attname={lit(c['name'])} AND format_type(a.atttypid,a.atttypmod)={lit(c['type'])} AND a.attnotnull={'false' if c['nullable'] else 'true'} AND pg_get_expr(d.adbin,d.adrelid) IS NOT DISTINCT FROM "+(lit(c['default']) if c['default'] else 'NULL')+") THEN RAISE EXCEPTION 'BRIDGE_COLUMN_DRIFT'; END IF; END $$;")
  A.append(f"DO $$ BEGIN IF (SELECT count(*) FROM pg_attribute WHERE attrelid={lit('public.'+tn)}::regclass AND attnum>0 AND NOT attisdropped)<>{len(cols(S,tn))} THEN RAISE EXCEPTION 'BRIDGE_COLUMN_COUNT_DRIFT'; END IF; END $$;")
+for t in S['relations']:
+ tn=t['name'];expected=sum(c['table']==tn for c in S['constraints']);indexes=sum(c['table']==tn for c in S['indexes'])
+ A.append(f"DO $$ BEGIN IF (SELECT count(*) FROM pg_constraint WHERE conrelid={lit('public.'+tn)}::regclass)<>{expected} OR (SELECT count(*) FROM pg_indexes WHERE schemaname='public' AND tablename={lit(tn)})<>{indexes} THEN RAISE EXCEPTION 'BRIDGE_CONSTRAINT_INDEX_COUNT_DRIFT'; END IF; END $$;")
 for collection,select,expr in [('constraints','pg_constraint k JOIN pg_class c ON c.oid=k.conrelid','pg_get_constraintdef(k.oid)'),('indexes','pg_indexes i','i.indexdef')]:
  for x in S[collection] or []:
   if collection=='constraints':cond=f"k.conrelid={lit('public.'+x['table'])}::regclass AND k.conname={lit(x['name'])} AND k.convalidated={'true' if x['validated'] else 'false'}"
@@ -52,7 +55,7 @@ A.append("DO $$ BEGIN IF EXISTS(SELECT 1 FROM pg_policies WHERE schemaname='publ
 A.append("DO $$ BEGIN IF (SELECT count(*) FROM pg_proc WHERE pronamespace='public'::regnamespace AND prokind='f')<>8 THEN RAISE EXCEPTION 'BRIDGE_FUNCTION_OVERLOAD'; END IF; END $$;")
 for f in LIVE['functions']:
  sig=f['schema']+'.'+f['name']+'('+re.sub(r'\bp_\w+\s+','',f['signature'])+')'
- A.append(f"DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_proc WHERE oid=to_regprocedure({lit(sig)}) AND md5(prosrc)={lit(f['body_md5'])} AND md5(pg_get_functiondef(oid))={lit(f['definition_md5'])} AND pg_get_userbyid(proowner)='postgres' AND prosecdef={'true' if f['definer'] else 'false'} AND proacl::text[] IS NOT DISTINCT FROM ARRAY["+','.join(lit(a) for a in f['acl'])+"]::text[]) THEN RAISE EXCEPTION 'BRIDGE_FUNCTION_DRIFT'; END IF; END $$;")
+ A.append(f"DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM pg_proc WHERE oid=to_regprocedure({lit(sig)}) AND md5(prosrc)={lit(f['body_md5'])} AND md5(pg_get_functiondef(oid))={lit(f['definition_md5'])} AND pg_get_userbyid(proowner)='postgres' AND prosecdef={'true' if f['definer'] else 'false'} AND (SELECT array_agg(v ORDER BY v) FROM unnest(proacl::text[]) v) IS NOT DISTINCT FROM ARRAY["+','.join(lit(a) for a in sorted(f['acl']))+"]::text[]) THEN RAISE EXCEPTION 'BRIDGE_FUNCTION_DRIFT'; END IF; END $$;")
 A.append("""DO $$ BEGIN
  IF EXISTS(SELECT 1 FROM public.neroxa_orders o LEFT JOIN public.neroxa_system_instances i ON i.id=o.instance_id WHERE i.id IS NULL OR i.organization_id IS DISTINCT FROM o.organization_id)
  OR EXISTS(SELECT 1 FROM public.neroxa_order_items x LEFT JOIN public.neroxa_orders o ON o.id=x.order_id WHERE o.id IS NULL)
@@ -152,4 +155,5 @@ for t in S['relations']:
  if t['rls']:f.append('ALTER TABLE '+name(t['name'])+' ENABLE ROW LEVEL SECURITY;')
  f+=acl('TABLE',name(t['name']),t['acl'],source=True)
 f+=['SET check_function_bodies=on;','COMMIT;'];(OUT/'observed-sandbox.empty-fixture.sql').write_text('-- ONLY empty local-disposable database; synthetic metadata, NO REMOTE.\n'+'\n'.join(f)+'\n')
+manifest['emptySourceFixture']={'path':str((OUT/'observed-sandbox.empty-fixture.sql').relative_to(R)),'sha256':hashlib.sha256((OUT/'observed-sandbox.empty-fixture.sql').read_bytes()).hexdigest()};(OUT/'MANIFEST-PONTE.json').write_text(json.dumps(manifest,indent=2)+'\n')
 print(json.dumps({'tables':len(TABLES),'phases':4,'required_resolution':required}))
