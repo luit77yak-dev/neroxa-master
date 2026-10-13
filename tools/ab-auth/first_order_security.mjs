@@ -314,7 +314,22 @@ try {
   fs.writeFileSync(work + "/expired.identity.private.json", JSON.stringify({ token: expired }), {
     mode: 0o600,
   });
-  const expiredResult = await rpc("get_admin_orders", { p_instance_id: a.f.instance_id }, expired);
+  // Native JWT verification includes provider leeway/cache behavior. Observe it, never disable verification or alter its config.
+  const expiryWaitStarted = Date.now(),
+    deadline = Date.now() + 75000;
+  let expiredResult;
+  do {
+    expiredResult = await rpc("get_admin_orders", { p_instance_id: a.f.instance_id }, expired);
+    if (expiredResult.status === 401) break;
+    await new Promise((r) => setTimeout(r, 1500));
+  } while (Date.now() < deadline);
+  console.log(
+    "NATIVE_EXPIRY_OBSERVATION=" +
+      JSON.stringify({
+        http: expiredResult.status,
+        observedAdditionalSeconds: Math.ceil((Date.now() - expiryWaitStarted) / 1000),
+      }),
+  );
   check("real PostgREST rejects signed local expired identity", expiredResult.status === 401);
   complete = true;
 } finally {
