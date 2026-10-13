@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-13",
+  "branch": "audit/h03-h04-20261013",
+  "masterTestCommit": "e338e4ee4ee8ce7e4532799025d3f723f3a4ebf5",
+  "deliveryTestCommit": "6f5b37e997948106772be5dd00242dfd77290a28",
+  "restoreTestCommit": "b1fe64936ff9b3965ddd6bbef11376d345c4c156",
+  "integratedRun": 38432605009,
+  "restoreRun": 38431446701,
+  "productionApproved": false,
+  "sql": [
+    {
+      "repository": "neroxa-master",
+      "path": "audits/sql/store-availability.candidate.sql",
+      "sha256": "45da99d6ef1d4f0afadd65473b5c2ed7360f1e5766ec3af7aa6e61fdfbcb9daf"
+    },
+    {
+      "repository": "neroxa-master",
+      "path": "audits/sql/checkout-recovery.candidate.sql",
+      "sha256": "acc820704864db99ade9c27352c6462163fdfb0fef5076b816c9963c06ca9022"
+    },
+    {
+      "repository": "neroxa-master",
+      "path": "audits/sql/store-availability-capability.candidate.sql",
+      "sha256": "cc0bb4ae8932550652a31dc2ca1e1751be5fa8bc449d487984ce9ad537edc499"
+    }
+  ],
+  "canonicalDeliveryEvidenceCommit": "55a701fccbadc1687924456df563ef976806ddc7"
+}
