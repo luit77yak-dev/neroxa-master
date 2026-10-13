@@ -116,4 +116,86 @@ begin
  insert into public.neroxa_order_status_history(order_id,to_status,note) values(v_order_id,'RECEIVED','Pedido criado pelo site');
  order_id:=v_order_id;order_number:=v_number;total:=v_total;return next;
 end $function$;
+-- Separate read budget: never consumes or relaxes the existing checkout quota.
+CREATE TABLE private.neroxa_recovery_quota_counters (
+  instance_id uuid NOT NULL REFERENCES public.neroxa_system_instances(id),
+  scope text NOT NULL CHECK (scope IN ('store', 'contact')),
+  window_start timestamptz NOT NULL,
+  identity_hash text NOT NULL,
+  attempts integer NOT NULL DEFAULT 0 CHECK (attempts > 0),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (instance_id, scope, window_start, identity_hash)
+);
+
+ALTER TABLE private.neroxa_recovery_quota_counters ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE private.neroxa_recovery_quota_counters
+FROM PUBLIC, anon, authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.neroxa_recovery_reserve_quota(
+  p_instance_id uuid,
+  p_contact_fingerprint text
+) RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO ''
+AS $quota$
+DECLARE
+  v_current timestamptz := clock_timestamp();
+  v_minute timestamptz;
+  v_ten_minutes timestamptz;
+  v_attempts integer;
+BEGIN
+  IF p_instance_id IS NULL OR
+     p_contact_fingerprint !~ '^[0-9a-f]{64}$' OR
+     p_contact_fingerprint IS NULL
+  THEN
+    RAISE EXCEPTION 'Invalid checkout quota identity' USING ERRCODE='22023';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.neroxa_system_instances i
+    WHERE i.id = p_instance_id AND i.status = 'ACTIVE'
+  ) THEN
+    RAISE EXCEPTION 'Inactive or unknown store' USING ERRCODE='22023';
+  END IF;
+
+  v_minute := to_timestamp(floor(extract(epoch FROM v_current) / 60)::bigint * 60);
+  v_ten_minutes := to_timestamp(floor(extract(epoch FROM v_current) / 60)::bigint * 60);
+
+  -- Consistent global-before-contact lock order. INSERT/ON CONFLICT guards
+  -- against concurrent overbooking across independent serverless workers.
+  INSERT INTO private.neroxa_recovery_quota_counters
+    (instance_id, scope, window_start, identity_hash, attempts)
+  VALUES (p_instance_id, 'store', v_minute, 'store-total', 1)
+  ON CONFLICT (instance_id, scope, window_start, identity_hash)
+  DO UPDATE SET attempts = private.neroxa_recovery_quota_counters.attempts + 1
+  WHERE private.neroxa_recovery_quota_counters.attempts < 120
+  RETURNING attempts INTO v_attempts;
+
+  IF v_attempts IS NULL THEN
+    RAISE EXCEPTION 'Recovery store quota exceeded' USING ERRCODE='PT429';
+  END IF;
+  v_attempts := NULL;
+
+  INSERT INTO private.neroxa_recovery_quota_counters
+    (instance_id, scope, window_start, identity_hash, attempts)
+  VALUES (p_instance_id, 'contact', v_ten_minutes, p_contact_fingerprint, 1)
+  ON CONFLICT (instance_id, scope, window_start, identity_hash)
+  DO UPDATE SET attempts = private.neroxa_recovery_quota_counters.attempts + 1
+  WHERE private.neroxa_recovery_quota_counters.attempts < 30
+  RETURNING attempts INTO v_attempts;
+
+  IF v_attempts IS NULL THEN
+    -- RAISE rolls back both increments in this function transaction.
+    RAISE EXCEPTION 'Recovery contact quota exceeded' USING ERRCODE='PT429';
+  END IF;
+  RETURN true;
+END
+$quota$;
+
+REVOKE ALL ON FUNCTION public.neroxa_recovery_reserve_quota(uuid,text)
+FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.neroxa_recovery_reserve_quota(uuid,text) TO service_role;
+
+
 COMMIT;

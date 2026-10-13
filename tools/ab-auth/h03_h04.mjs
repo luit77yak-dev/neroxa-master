@@ -340,6 +340,48 @@ try {
     "absent availability never opens",
     sql(`SELECT private.neroxa_store_is_open('${crypto.randomUUID()}',${at})`) === "f",
   );
+  const readFingerprint = crypto.randomBytes(32).toString("hex");
+  // Keep the HTTP burst away from a fixed-window boundary; never freeze the server clock.
+  const seconds = Number(sql("SELECT extract(second FROM clock_timestamp())"));
+  if (seconds > 50) await new Promise((r) => setTimeout(r, (61 - seconds) * 1000));
+  const beforeWrites = sql(
+    `SELECT coalesce(sum(attempts),0) FROM private.neroxa_checkout_quota_counters WHERE instance_id=${q(A.instance_id)}`,
+  );
+  let allowed = 0;
+  for (let n = 0; n < 30; n++) {
+    const response = await rpc("neroxa_recovery_reserve_quota", {
+      p_instance_id: A.instance_id,
+      p_contact_fingerprint: readFingerprint,
+    });
+    if (response.status === 200 && response.data === true) allowed++;
+  }
+  check("real recovery read budget accepts 30 bounded reads", allowed === 30);
+  check(
+    "real recovery read budget denies 31st read",
+    (
+      await rpc("neroxa_recovery_reserve_quota", {
+        p_instance_id: A.instance_id,
+        p_contact_fingerprint: readFingerprint,
+      })
+    ).status === 429,
+  );
+  check(
+    "recovery reads never consume checkout quota",
+    sql(
+      `SELECT coalesce(sum(attempts),0) FROM private.neroxa_checkout_quota_counters WHERE instance_id=${q(A.instance_id)}`,
+    ) === beforeWrites,
+  );
+  check(
+    "anon cannot reserve privileged read quota",
+    (
+      await rpc(
+        "neroxa_recovery_reserve_quota",
+        { p_instance_id: A.instance_id, p_contact_fingerprint: readFingerprint },
+        env.ANON_KEY,
+        env.ANON_KEY,
+      )
+    ).status === 401,
+  );
   complete = true;
 } finally {
   const result = {
