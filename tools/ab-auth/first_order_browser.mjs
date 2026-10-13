@@ -48,7 +48,7 @@ const sql = (s) =>
     ],
     { input: s, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] },
   ).trim();
-const profile = path.join(work, "browser-profile.private");
+const profile = path.join(work, "first-browser-profile.private");
 fs.mkdirSync(profile, { mode: 0o700 });
 const shots = path.resolve("audits/ab-auth/results/first-browser");
 fs.mkdirSync(shots, { recursive: true });
