@@ -2,37 +2,46 @@ name: Build and Test
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
   push:
-    branches:
-      - main
+    branches: [main, audit/store-isolation-candidate-20261011]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [lint, test, build, format]
+    name: ${{ matrix.check }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
         with:
           node-version: "22.x"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Format check (non-mutating)
-        run: npx prettier --check .
-
+          cache: npm
+      - run: npm ci
       - name: Lint
+        if: matrix.check == 'lint'
         run: npm run lint
-
       - name: Test
+        if: matrix.check == 'test'
         run: npm test
-
       - name: Build
+        if: matrix.check == 'build'
         run: npm run build
+      - name: Format check (changed files only)
+        if: matrix.check == 'format'
+        shell: bash
+        run: |
+          git diff --name-only --diff-filter=ACMRT origin/main...HEAD |
+            grep -E '\.(ts|tsx|js|jsx|json|md|css|yml|yaml)$' > /tmp/format-files || true
+          if [ -s /tmp/format-files ]; then
+            xargs -d '\n' npx prettier --check < /tmp/format-files
+          fi

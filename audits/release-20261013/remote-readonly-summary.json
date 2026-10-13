@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-13",
+  "project": "iefaoaqzltvpfabyeelj",
+  "remote_writes": false,
+  "settings_distribution": {
+    "one_instance": 4,
+    "zero_instance": 1
+  },
+  "orphan": {
+    "active": true,
+    "organization_status": "CANCELLED",
+    "subscription_status": "TRIAL",
+    "active_members": 0,
+    "instances": 0,
+    "domains": 0,
+    "linked_contracts": 1,
+    "contract_status": "ACTIVE",
+    "signature_status": "SIGNED",
+    "billing_records": 1,
+    "plan_missing": false,
+    "plan_inactive": false,
+    "expired_periods_detected": 0
+  },
+  "production_delivery_deployment": {
+    "sha": "47e7d8aef66b0c458ed6f423cebeba99abfcc7a8",
+    "url": "https://pizza-perfect-plate-nn9wvv4h6-neroxa2.vercel.app",
+    "state": "READY",
+    "new_gateway_routes_present_in_source": false,
+    "checkout_payload_instance_present_in_source": false
+  },
+  "production_rpc_state": {
+    "cutover_instance_column": false,
+    "capability_and_quota_rpc_present": false,
+    "legacy_and_admin_rpc_anon_execute": true,
+    "job_extensions_pg_cron_pg_net": false
+  },
+  "limitations": [
+    "No production POST or SQL writes. Deployment env/runtime domain binding not certified. External jobs outside accessible APIs remain unknown."
+  ]
+}

@@ -1,0 +1,1163 @@
+{
+  "relations": [
+    {
+      "schema": "public",
+      "name": "neroxa_audit_logs",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 8,
+      "foreign_keys": [
+        {
+          "name": "neroxa_audit_logs_actor_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_billing_records",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 16,
+      "foreign_keys": [
+        {
+          "name": "neroxa_billing_records_subscription_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_subscriptions"
+        }
+      ],
+      "triggers": ["trg_neroxa_billing_record_integrity", "trg_neroxa_billing_records_updated_at"]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_checkout_sessions",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 19,
+      "foreign_keys": [
+        {
+          "name": "neroxa_checkout_sessions_organization_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        },
+        {
+          "name": "neroxa_checkout_sessions_plan_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_plans"
+        },
+        {
+          "name": "neroxa_checkout_sessions_subscription_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_subscriptions"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_client_contacts",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 12,
+      "foreign_keys": [
+        {
+          "name": "neroxa_client_contacts_client_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_clients",
+      "kind": "v",
+      "owner": "postgres",
+      "rls": false,
+      "columns": 14,
+      "foreign_keys": [],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_contract_signatures",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 11,
+      "foreign_keys": [
+        {
+          "name": "neroxa_contract_signatures_contract_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_contracts"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_contracts",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 36,
+      "foreign_keys": [
+        {
+          "name": "neroxa_contracts_client_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        },
+        {
+          "name": "neroxa_contracts_plan_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_plans"
+        },
+        {
+          "name": "neroxa_contracts_proposal_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_proposals"
+        },
+        {
+          "name": "neroxa_contracts_system_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_systems"
+        }
+      ],
+      "triggers": [
+        "trg_neroxa_contract_commercial_immutability",
+        "trg_neroxa_contract_proposal_integrity",
+        "trg_neroxa_contract_status_transition",
+        "trg_sync_neroxa_contract_terminal_lifecycle"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_order_items",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 20,
+      "foreign_keys": [
+        {
+          "name": "neroxa_order_items_order_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_orders"
+        },
+        {
+          "name": "neroxa_order_items_product_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_storefront_products"
+        },
+        {
+          "name": "neroxa_order_items_second_product_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_storefront_products"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_order_status_history",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 7,
+      "foreign_keys": [
+        {
+          "name": "neroxa_order_status_history_changed_by_user_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        },
+        {
+          "name": "neroxa_order_status_history_order_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_orders"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_orders",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 27,
+      "foreign_keys": [
+        {
+          "name": "neroxa_orders_instance_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_system_instances"
+        },
+        {
+          "name": "neroxa_orders_organization_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_organization_members",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 7,
+      "foreign_keys": [
+        {
+          "name": "neroxa_organization_members_organization_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        },
+        {
+          "name": "neroxa_organization_members_user_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_organizations",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 17,
+      "foreign_keys": [],
+      "triggers": ["neroxa_organizations_set_updated_at"]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_payment_events",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 11,
+      "foreign_keys": [],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_plan_features",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 6,
+      "foreign_keys": [
+        {
+          "name": "neroxa_plan_features_plan_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_plans"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_plan_products",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 6,
+      "foreign_keys": [
+        {
+          "name": "neroxa_plan_products_plan_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_plans"
+        },
+        {
+          "name": "neroxa_plan_products_product_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_products"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_plans",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 17,
+      "foreign_keys": [
+        {
+          "name": "neroxa_plans_system_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_systems"
+        }
+      ],
+      "triggers": ["trg_neroxa_plans_updated_at"]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_platform_members",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 6,
+      "foreign_keys": [
+        {
+          "name": "neroxa_platform_members_user_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        }
+      ],
+      "triggers": ["trg_neroxa_platform_members_updated_at"]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_platform_settings",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 4,
+      "foreign_keys": [
+        {
+          "name": "neroxa_platform_settings_updated_by_user_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_products",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 11,
+      "foreign_keys": [
+        {
+          "name": "neroxa_products_system_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_systems"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_proposals",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 21,
+      "foreign_keys": [
+        {
+          "name": "neroxa_proposals_client_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        },
+        {
+          "name": "neroxa_proposals_plan_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_plans"
+        },
+        {
+          "name": "neroxa_proposals_system_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_systems"
+        }
+      ],
+      "triggers": ["trg_neroxa_proposal_status_transition"]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_provisioning_jobs",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 10,
+      "foreign_keys": [
+        {
+          "name": "neroxa_provisioning_jobs_system_instance_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_system_instances"
+        }
+      ],
+      "triggers": [
+        "trg_guard_neroxa_provisioning_job_insert",
+        "trg_neroxa_sync_instance_from_provisioning_job"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_storefront_addon_groups",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 10,
+      "foreign_keys": [
+        {
+          "name": "neroxa_storefront_addon_groups_instance_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_system_instances"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_storefront_addons",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 8,
+      "foreign_keys": [
+        {
+          "name": "neroxa_storefront_addons_group_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_storefront_addon_groups"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_storefront_categories",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 10,
+      "foreign_keys": [
+        {
+          "name": "neroxa_storefront_categories_instance_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_system_instances"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_storefront_delivery_zones",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 11,
+      "foreign_keys": [
+        {
+          "name": "neroxa_storefront_delivery_zones_organization_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_storefront_product_addon_groups",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 3,
+      "foreign_keys": [
+        {
+          "name": "neroxa_storefront_product_addon_groups_group_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_storefront_addon_groups"
+        },
+        {
+          "name": "neroxa_storefront_product_addon_groups_product_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_storefront_products"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_storefront_products",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 13,
+      "foreign_keys": [
+        {
+          "name": "neroxa_storefront_products_category_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_storefront_categories"
+        },
+        {
+          "name": "neroxa_storefront_products_instance_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_system_instances"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_storefront_settings",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 32,
+      "foreign_keys": [
+        {
+          "name": "neroxa_storefront_settings_organization_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_subscriptions",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 17,
+      "foreign_keys": [
+        {
+          "name": "neroxa_subscriptions_contract_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_contracts"
+        },
+        {
+          "name": "neroxa_subscriptions_plan_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_plans"
+        }
+      ],
+      "triggers": [
+        "trg_neroxa_subscription_integrity",
+        "trg_neroxa_subscriptions_updated_at",
+        "trg_sync_billing_with_subscription_terminal",
+        "trg_sync_instance_status_with_subscription"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_support_messages",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 6,
+      "foreign_keys": [
+        {
+          "name": "neroxa_support_messages_author_user_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        },
+        {
+          "name": "neroxa_support_messages_ticket_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_support_tickets"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_support_tickets",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 14,
+      "foreign_keys": [
+        {
+          "name": "neroxa_support_tickets_assignee_user_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        },
+        {
+          "name": "neroxa_support_tickets_created_by_user_id_fkey",
+          "target_schema": "auth",
+          "target_table": "users"
+        },
+        {
+          "name": "neroxa_support_tickets_organization_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_organizations"
+        }
+      ],
+      "triggers": []
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_system_domains",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 8,
+      "foreign_keys": [
+        {
+          "name": "neroxa_system_domains_system_instance_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_system_instances"
+        }
+      ],
+      "triggers": [
+        "trg_neroxa_system_domains_reset_verification",
+        "trg_neroxa_system_domains_updated_at"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_system_instances",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 11,
+      "foreign_keys": [
+        {
+          "name": "neroxa_system_instances_plan_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_plans"
+        },
+        {
+          "name": "neroxa_system_instances_subscription_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_subscriptions"
+        },
+        {
+          "name": "neroxa_system_instances_system_id_fkey",
+          "target_schema": "public",
+          "target_table": "neroxa_systems"
+        }
+      ],
+      "triggers": [
+        "trg_guard_neroxa_system_instance_insert",
+        "trg_neroxa_system_instances_updated_at",
+        "trg_sync_domains_with_instance_status"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_systems",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "columns": 9,
+      "foreign_keys": [],
+      "triggers": ["trg_set_neroxa_systems_updated_at"]
+    }
+  ],
+  "catalog_dependencies": [
+    {
+      "dependent": "default privileges on new relations belonging to role postgres in schema public",
+      "referenced": "schema public",
+      "dependency_type": "a"
+    },
+    {
+      "dependent": "default privileges on new functions belonging to role postgres in schema public",
+      "referenced": "schema public",
+      "dependency_type": "a"
+    },
+    {
+      "dependent": "default privileges on new sequences belonging to role postgres in schema public",
+      "referenced": "schema public",
+      "dependency_type": "a"
+    },
+    {
+      "dependent": "default privileges on new sequences belonging to role supabase_admin in schema public",
+      "referenced": "schema public",
+      "dependency_type": "a"
+    },
+    {
+      "dependent": "default privileges on new relations belonging to role supabase_admin in schema public",
+      "referenced": "schema public",
+      "dependency_type": "a"
+    },
+    {
+      "dependent": "default privileges on new functions belonging to role supabase_admin in schema public",
+      "referenced": "schema public",
+      "dependency_type": "a"
+    },
+    {
+      "dependent": "type neroxa_platform_role",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_billing_period",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_subscription_status",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_instance_status",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_domain_status",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_billing_status",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_provisioning_status",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_support_ticket_status",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_support_ticket_priority",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "type neroxa_organization_role",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function neroxa_is_platform_member()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function neroxa_has_platform_role(neroxa_platform_role[])",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function neroxa_set_updated_at()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function create_neroxa_client(text,text,text,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function update_neroxa_client(uuid,text,text,text,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function transition_neroxa_client_status(uuid,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function create_neroxa_client_contact(uuid,text,text,text,text,text,boolean,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function private.neroxa_has_platform_role(neroxa_platform_role[])",
+      "referenced": "schema private",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function sync_instance_status_with_subscription()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function sync_domains_with_instance_status()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function private.neroxa_is_platform_staff(uuid)",
+      "referenced": "schema private",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function set_neroxa_systems_updated_at()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_neroxa_platform_access()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function record_neroxa_audit(text,text,uuid,uuid,jsonb)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function validate_neroxa_proposal_status_transition()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function validate_neroxa_contract_status_transition()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function prevent_neroxa_contract_commercial_change()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function activate_neroxa_contract_and_subscription(uuid)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function prepare_neroxa_implementation_from_subscription(uuid,text,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function transition_neroxa_domain_status(uuid,neroxa_domain_status)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function update_neroxa_provisioning_job_status(uuid,neroxa_provisioning_status,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function sync_neroxa_instance_from_provisioning_job()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function delete_neroxa_system_instance_safely(uuid)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function transition_neroxa_instance_status(uuid,neroxa_instance_status)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function reset_neroxa_domain_verification_on_change()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function delete_neroxa_system_domain_safely(uuid)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function apply_neroxa_domain_validation_result(uuid,boolean)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_neroxa_public_proposal(uuid)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function respond_neroxa_public_proposal(uuid,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_neroxa_public_contract(uuid)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function sign_neroxa_contract_as_customer(uuid,text,text,boolean)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function sign_neroxa_contract(uuid,text,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function send_neroxa_contract_for_signature(uuid)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function sync_neroxa_contract_terminal_lifecycle()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function validate_neroxa_contract_proposal_integrity()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function validate_neroxa_billing_record_integrity()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function validate_neroxa_subscription_integrity()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function sync_billing_with_subscription_terminal()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function guard_neroxa_implementation_write_path()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function retry_neroxa_provisioning_job(uuid)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_public_storefront_context(text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_public_storefront_catalog(text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function create_public_order(jsonb)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_public_order_status(uuid,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function append_public_order_items_with_payment(uuid,text,jsonb,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_admin_orders(uuid,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function update_admin_order_status(uuid,text,text)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function calculate_public_order_line_price(uuid,uuid,uuid,text,text,jsonb,jsonb)",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function neroxa_has_org_role(uuid,neroxa_organization_role[])",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "function get_supplier_panel_context()",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_platform_members",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_plans",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_plan_features",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_subscriptions",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_billing_records",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_system_instances",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_system_domains",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_provisioning_jobs",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_audit_logs",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_organizations",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_client_contacts",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_proposals",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_contracts",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "view neroxa_clients",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_payment_events",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_checkout_sessions",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_systems",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_products",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_plan_products",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_support_tickets",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_support_messages",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_platform_settings",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_contract_signatures",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_storefront_categories",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_storefront_products",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_storefront_settings",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_storefront_delivery_zones",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_orders",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_order_items",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_order_status_history",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_organization_members",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_storefront_addon_groups",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_storefront_addons",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    },
+    {
+      "dependent": "table neroxa_storefront_product_addon_groups",
+      "referenced": "schema public",
+      "dependency_type": "n"
+    }
+  ],
+  "platform_required": [
+    "PG17",
+    "native Supabase Auth schema/users/uid/jwt",
+    "anon/authenticated/authenticator/service_role roles from platform",
+    "real JWT validation in PostgREST",
+    "TOTP enrollment/challenge verification in GoTrue"
+  ],
+  "unresolved": [
+    "Current production drift versus 2026-10-09 catalog",
+    "Managed owner defaults/memberships exact equivalence",
+    "Legacy multi-instance organization-scoped data mapping"
+  ]
+}

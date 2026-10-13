@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-12",
+  "branch": "audit/store-isolation-candidate-20261011",
+  "base": "9f976ca3a80ab7ddfacc05f94f5f774ceaf9d4a5",
+  "node": "22.23.3",
+  "npm": "10.9.9",
+  "checks": {
+    "npm ci": {
+      "exit_code": 0,
+      "packages_installed": 472
+    },
+    "npm run lint": {
+      "exit_code": 0,
+      "errors": 0,
+      "warnings": 12
+    },
+    "npm test": {
+      "exit_code": 0,
+      "test_files": 4,
+      "tests_passed": 30
+    },
+    "npm run build": {
+      "exit_code": 0
+    },
+    "format": {
+      "scope": "Complete PR changed-file scope; not only the five originally reported files",
+      "exit_code": 0
+    },
+    "git diff --check": {
+      "exit_code": 0
+    }
+  },
+  "additional_typecheck": {
+    "passed": false,
+    "baseline_errors": 43,
+    "corrected_errors": 43,
+    "new_diagnostics": 0,
+    "note": "Comparison used same regenerated router/dependencies; generated file not included in correction commit."
+  },
+  "production_db_accessed": false,
+  "sql_modified": false,
+  "eslint_rules_changed": false,
+  "runtime_handlers_and_auth_calls_unchanged": true,
+  "logs": {
+    "npm-ci.log": {
+      "sha256": "2c948d737ead3a7c5d6cd0cb3338ebdb0d03823c61cc6ab3e5a3254a03f70c28"
+    },
+    "lint-final.log": {
+      "sha256": "72c8125b997b92629d88eb1390b54f60cc430c87ceb5ee9dba257daf8de12b2e"
+    },
+    "test-final.log": {
+      "sha256": "e650a0add8b88f4189660afa9ba98b25091ad42ea4590c630b62cbffd8d533c3"
+    },
+    "build-final.log": {
+      "sha256": "f8095af2a3b441d0c8ca57e6972f63e3c40cb30d804fe2d5b9bad8cad23e795a"
+    }
+  }
+}
