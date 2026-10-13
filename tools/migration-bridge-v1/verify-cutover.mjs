@@ -126,7 +126,7 @@ try {
   });
   const tokens = {};
   for (const alias of ["historicOperator", "foreignOperator", "outsider"]) {
-    const email = alias.toLowerCase() + "-" + project + "@ab.invalid",
+    const email = "bridge-" + alias.toLowerCase() + "-" + project + "@ab.invalid",
       password = crypto.randomBytes(24).toString("base64url");
     const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
     if (created.error) throw Error("Synthetic Auth creation");
@@ -154,6 +154,117 @@ try {
         r.data.length === (actor === "historicOperator" ? 3 : 0),
     );
   }
+  // New native GROUP order on the ORIGINAL retained store, not only newly seeded stores.
+  // These are explicit synthetic operational grants/configuration, never real owner recovery.
+  sql(
+    `BEGIN;UPDATE public.neroxa_organization_members SET role='OWNER' WHERE organization_id=${q(privateState.org)} AND user_id=${q(tokens.historicOperator.user)};UPDATE public.neroxa_instance_members SET role='OWNER' WHERE instance_id=${q(privateState.store)} AND user_id=${q(tokens.historicOperator.user)};INSERT INTO public.neroxa_system_domains(system_instance_id,domain,status) VALUES(${q(privateState.store)},'bridge-historical.ab.invalid','VERIFIED');COMMIT;`,
+  );
+  const send = async (resource, body, token = tokens.historicOperator.token) => {
+    const r = await fetch(env.API_URL + "/rest/v1/" + resource, {
+      method: "POST",
+      headers: {
+        apikey: env.ANON_KEY,
+        Authorization: "Bearer " + token,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+      },
+      body: JSON.stringify(body),
+    });
+    return { status: r.status, data: await r.json() };
+  };
+  const opened = await send("neroxa_storefront_availability", {
+    instance_id: privateState.store,
+    enabled: true,
+    timezone: "America/Sao_Paulo",
+  });
+  check("authorized real Auth configures retained store availability", opened.status === 201);
+  const hours = await send(
+    "neroxa_storefront_weekly_hours",
+    Array.from({ length: 7 }, (_, weekday) => ({
+      instance_id: privateState.store,
+      weekday,
+      opens_at: "00:00",
+      closes_at: "24:00",
+    })),
+  );
+  check("authorized scoped owner configures retained store hours", hours.status === 201);
+  const group = crypto.randomUUID(),
+    addon = crypto.randomUUID();
+  sql(
+    `BEGIN;INSERT INTO public.neroxa_storefront_addon_groups(id,instance_id,name,required,min_selections,max_selections) VALUES(${q(group)},${q(privateState.store)},'Grupo novo sintético do legado',true,1,1);INSERT INTO public.neroxa_storefront_addons(id,group_id,name,price_delta) VALUES(${q(addon)},${q(group)},'Adicional novo sintético',2);INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) VALUES(${q(privateState.products[0])},${q(group)});COMMIT;`,
+  );
+  const newKey = crypto.randomUUID();
+  const payload = {
+    organization_id: privateState.org,
+    instance_id: privateState.store,
+    store_domain: "bridge-historical.ab.invalid",
+    customer_name: "Novo perfil completamente fictício",
+    customer_phone: "00000000123",
+    fulfillment: "DELIVERY",
+    payment_method: "CASH",
+    address_street: "Rua fictícia do ensaio",
+    address_number: "123",
+    address_neighborhood: "Bairro sintético",
+    idempotency_key: newKey,
+    selection_contract: "GROUP_ADDONS_V1",
+    expected_total: 39,
+    expected_delivery_fee: 7,
+    items: [
+      {
+        product_id: privateState.products[0],
+        quantity: 1,
+        selection_contract: "GROUP_ADDONS_V1",
+        expected_unit_price: 32,
+        group_addon_ids: [addon],
+      },
+    ],
+  };
+  const created = await rpc("create_public_order", { p_order: payload }, env.SERVICE_ROLE_KEY);
+  check(
+    "new native order on preserved original instance",
+    created.status === 200 && Array.isArray(created.data) && Number(created.data[0].total) === 39,
+  );
+  const newOrder = created.data[0].order_id;
+  check(
+    "original store new order persisted with GROUP v2 and exact fee",
+    sql(
+      `SELECT count(*) FROM public.neroxa_orders o JOIN public.neroxa_order_items i ON i.order_id=o.id WHERE o.id=${q(newOrder)} AND o.instance_id=${q(privateState.store)} AND o.subtotal=32 AND o.delivery_fee=7 AND o.total=39 AND i.selection_snapshot->>'contract'='GROUP_ADDONS_V1' AND i.selection_snapshot->>'version'='2';`,
+    ) === "1",
+  );
+  const retried = await rpc("create_public_order", { p_order: payload }, env.SERVICE_ROLE_KEY);
+  check(
+    "retained store idempotent retry preserves unique new order",
+    retried.status === 200 &&
+      retried.data[0].order_id === newOrder &&
+      sql(
+        `SELECT count(*) FROM public.neroxa_orders WHERE instance_id=${q(privateState.store)} AND idempotency_key=${q(newKey)};`,
+      ) === "1",
+  );
+  const recovered = await rpc(
+    "neroxa_recover_group_order",
+    { p_instance_id: privateState.store, p_checkout_key: newKey, p_order: payload },
+    env.SERVICE_ROLE_KEY,
+  );
+  check(
+    "retained store new proof recovery works",
+    recovered.status === 200 && JSON.stringify(recovered.data).includes(newOrder),
+  );
+  const altered = await rpc(
+    "create_public_order",
+    { p_order: { ...payload, customer_name: "Outro perfil fictício" } },
+    env.SERVICE_ROLE_KEY,
+  );
+  check(
+    "same historical store intent rejects altered payload",
+    altered.status >= 400 &&
+      sql(
+        `SELECT count(*) FROM public.neroxa_orders WHERE instance_id=${q(privateState.store)} AND idempotency_key=${q(newKey)};`,
+      ) === "1",
+  );
+  // Advance the T1 checkpoint after the additional real native write; no restore to T0.
+  const afterNativeWrite = sql(
+    "SELECT md5(jsonb_agg(to_jsonb(o) ORDER BY id)::text) FROM public.neroxa_orders o;",
+  );
   // Cutover gate only after substitutes were exercised with real browser and ingress remains offline.
   const bridgeManifest = JSON.parse(
     fs.readFileSync("audits/migration-bridge-v1-20261013/MANIFEST-PONTE.json"),
@@ -196,9 +307,9 @@ try {
     ) === "0",
   );
   check(
-    "new Auth grants do not mutate original orders",
+    "post-cutover native order and existing T1 writes preserved",
     sql("SELECT md5(jsonb_agg(to_jsonb(o) ORDER BY id)::text) FROM public.neroxa_orders o;") ===
-      before,
+      afterNativeWrite,
   );
   done = true;
 } finally {

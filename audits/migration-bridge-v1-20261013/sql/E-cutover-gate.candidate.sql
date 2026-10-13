@@ -3,9 +3,12 @@ DO $$ BEGIN
  IF current_user<>'postgres' OR current_setting('app.bridge_environment',true) IS DISTINCT FROM 'local-disposable'
  OR current_setting('app.bridge_consumers_frozen',true) IS DISTINCT FROM 'yes'
  THEN RAISE EXCEPTION 'BRIDGE_FROZEN_DISPOSABLE_REQUIRED'; END IF;
- IF (SELECT count(*) FROM neroxa_bridge.journal WHERE stage IN ('B','C','D'))<>3
- OR to_regprocedure('public.neroxa_recover_group_order(uuid,uuid,jsonb)') IS NULL
- THEN RAISE EXCEPTION 'BRIDGE_NATIVE_SUBSTITUTES_REQUIRED'; END IF;
+ IF to_regclass('neroxa_bridge.journal') IS NULL THEN
+  IF current_setting('app.bridge_clean_verified',true) IS DISTINCT FROM 'yes' THEN RAISE EXCEPTION 'BRIDGE_PREPARATION_REQUIRED'; END IF;
+ ELSE
+  IF (SELECT count(*) FROM neroxa_bridge.journal WHERE stage IN ('B','C','D'))<>3 THEN RAISE EXCEPTION 'BRIDGE_PREPARATION_REQUIRED'; END IF;
+ END IF;
+ IF to_regprocedure('public.neroxa_recover_group_order(uuid,uuid,jsonb)') IS NULL THEN RAISE EXCEPTION 'BRIDGE_NATIVE_SUBSTITUTES_REQUIRED'; END IF;
 END $$;
 -- RLS does not protect TRUNCATE; never copy broad historical ACL onto the target.
 DO $$ DECLARE r record; BEGIN
