@@ -146,6 +146,37 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
     "maximum selections enforced",
     (await create(order({ ...line(), group_addon_ids: [A.a, extra] }))).status === 400,
   );
+  sql(`UPDATE public.neroxa_storefront_products SET price=-1 WHERE id=${q(A.p)};`);
+  check("negative base price rejected", (await create(order())).status === 400);
+  sql(
+    `UPDATE public.neroxa_storefront_products SET price=30 WHERE id=${q(A.p)};UPDATE public.neroxa_storefront_addons SET price_delta=2.255 WHERE id=${q(A.a)};`,
+  );
+  check(
+    "fractional cents require explicit pricing decision",
+    (await create(order())).status === 400,
+  );
+  sql(`UPDATE public.neroxa_storefront_addons SET price_delta=2.25 WHERE id=${q(A.a)};`);
+  const optional = crypto.randomUUID(),
+    free = crypto.randomUUID();
+  sql(
+    `INSERT INTO public.neroxa_storefront_addon_groups(id,instance_id,name,required,min_selections,max_selections) VALUES(${q(optional)},${q(A.instance_id)},'Grupo opcional gratuito',false,0,2);INSERT INTO public.neroxa_storefront_addons(id,group_id,name,price_delta) VALUES(${q(free)},${q(optional)},'Opção gratuita',0);INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) VALUES(${q(A.other)},${q(optional)});`,
+  );
+  const optionalLine = {
+    selection_contract: "GROUP_ADDONS_V1",
+    product_id: A.other,
+    group_addon_ids: [],
+    quantity: 1,
+    expected_unit_price: 12,
+  };
+  check("optional group empty valid", (await create(order(optionalLine))).data[0].total === 12);
+  check(
+    "free addon has zero delta",
+    (await create(order({ ...optionalLine, group_addon_ids: [free] }))).data[0].total === 12,
+  );
+  check(
+    "forged final total rejected",
+    (await create({ ...order(), expected_total: 0.01 })).status === 409,
+  );
   const snapshot = sql(
     `SELECT selection_snapshot::text FROM public.neroxa_order_items WHERE order_id=${q(id)};`,
   );
@@ -273,28 +304,44 @@ INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) V
       )
     ).data.some((o) => o.id === id),
   );
-  check(
-    "authenticated A denied sibling B",
-    (
-      await rpc(
-        "get_admin_orders",
-        { p_instance_id: B.instance_id, p_status: null },
-        env.ANON_KEY,
-        signed.data.session.access_token,
-      )
-    ).status === 400,
-  );
-  check(
-    "authenticated A denied organization C",
-    (
-      await rpc(
-        "get_admin_orders",
-        { p_instance_id: C.instance_id, p_status: null },
-        env.ANON_KEY,
-        signed.data.session.access_token,
-      )
-    ).status === 400,
-  );
+  for (const [alias, scope] of [
+    ["sibling B", B],
+    ["organization C", C],
+  ]) {
+    const denied = await rpc(
+      "get_admin_orders",
+      { p_instance_id: scope.instance_id, p_status: null },
+      env.ANON_KEY,
+      signed.data.session.access_token,
+    );
+    console.log(
+      "GROUP_ACCESS_DIAGNOSTIC=" +
+        JSON.stringify({
+          scope: alias,
+          status: denied.status,
+          rows: Array.isArray(denied.data) ? denied.data.length : null,
+        }),
+    );
+    check(
+      "authenticated A reads no orders from " + alias,
+      denied.status === 200 && Array.isArray(denied.data) && denied.data.length === 0,
+    );
+    const foreignOrder = sql(
+      `SELECT id FROM public.neroxa_orders WHERE instance_id=${q(scope.instance_id)} ORDER BY created_at DESC LIMIT 1;`,
+    );
+    const before = sql(`SELECT status FROM public.neroxa_orders WHERE id=${q(foreignOrder)};`);
+    const write = await rpc(
+      "update_admin_order_status",
+      { p_order_id: foreignOrder, p_status: "CONFIRMED", p_note: null },
+      env.ANON_KEY,
+      signed.data.session.access_token,
+    );
+    check(
+      "authenticated A cannot change " + alias,
+      [400, 403].includes(write.status) &&
+        sql(`SELECT status FROM public.neroxa_orders WHERE id=${q(foreignOrder)};`) === before,
+    );
+  }
   check(
     "new helper PUBLIC EXECUTE revoked",
     sql(
