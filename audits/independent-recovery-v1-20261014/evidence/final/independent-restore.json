@@ -1,0 +1,815 @@
+{
+  "status": "PASS",
+  "stage": "ready-for-target-browser",
+  "checks": [
+    {
+      "name": "Loopback database /supabase_db_neroxa-ab-38512737541",
+      "passed": true
+    },
+    {
+      "name": "Loopback database /supabase_db_neroxa-ab-385127375411",
+      "passed": true
+    },
+    {
+      "name": "Different PostgreSQL system identifiers",
+      "passed": true
+    },
+    {
+      "name": "Different PostgreSQL data volumes",
+      "passed": true
+    },
+    {
+      "name": "Different native networks",
+      "passed": true
+    },
+    {
+      "name": "Different signing/API credentials",
+      "passed": true
+    },
+    {
+      "name": "PostgreSQL 17 tools",
+      "passed": true
+    },
+    {
+      "name": "Native global roles and memberships semantically identical",
+      "passed": true
+    },
+    {
+      "name": "Extension versions equal",
+      "passed": true
+    },
+    {
+      "name": "Historical cohort 3 orders 6 items 12 events",
+      "passed": true
+    },
+    {
+      "name": "Archive readable and nonempty",
+      "passed": true
+    },
+    {
+      "name": "Archive SHA after crossing source/runner boundary",
+      "passed": true
+    },
+    {
+      "name": "Archive SHA after crossing runner/target boundary",
+      "passed": true
+    },
+    {
+      "name": "At most one archive public declaration",
+      "passed": true
+    },
+    {
+      "name": "Catalog categories",
+      "passed": true
+    },
+    {
+      "name": "Catalog schemas",
+      "passed": true
+    },
+    {
+      "name": "Catalog relations",
+      "passed": true
+    },
+    {
+      "name": "Catalog columns",
+      "passed": true
+    },
+    {
+      "name": "Catalog policies",
+      "passed": true
+    },
+    {
+      "name": "Catalog triggers",
+      "passed": true
+    },
+    {
+      "name": "Catalog constraints",
+      "passed": true
+    },
+    {
+      "name": "Catalog indexes",
+      "passed": true
+    },
+    {
+      "name": "Catalog functions",
+      "passed": true
+    },
+    {
+      "name": "Catalog extensions",
+      "passed": true
+    },
+    {
+      "name": "Catalog table-grants",
+      "passed": true
+    },
+    {
+      "name": "Properties categories",
+      "passed": true
+    },
+    {
+      "name": "Properties functions",
+      "passed": true
+    },
+    {
+      "name": "Properties defaults",
+      "passed": true
+    },
+    {
+      "name": "Properties column-properties",
+      "passed": true
+    },
+    {
+      "name": "Properties views-options",
+      "passed": true
+    },
+    {
+      "name": "Properties enums",
+      "passed": true
+    },
+    {
+      "name": "Properties roles",
+      "passed": true
+    },
+    {
+      "name": "Properties memberships",
+      "passed": true
+    },
+    {
+      "name": "Properties event-triggers",
+      "passed": true
+    },
+    {
+      "name": "Properties index-properties",
+      "passed": true
+    },
+    {
+      "name": "Properties type-ownership",
+      "passed": true
+    },
+    {
+      "name": "Properties sequence-properties",
+      "passed": true
+    },
+    {
+      "name": "Data categories",
+      "passed": true
+    },
+    {
+      "name": "Data sequence",
+      "passed": true
+    },
+    {
+      "name": "Data sequence",
+      "passed": true
+    },
+    {
+      "name": "Data sequence",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "All target FKs zero orphans",
+      "passed": true
+    },
+    {
+      "name": "Historical anchors restored",
+      "passed": true
+    },
+    {
+      "name": "No historical append capability",
+      "passed": true
+    },
+    {
+      "name": "Restored auth loopback",
+      "passed": true
+    },
+    {
+      "name": "Restored rest loopback",
+      "passed": true
+    },
+    {
+      "name": "Target Auth health",
+      "passed": true
+    },
+    {
+      "name": "Different effective GoTrue signing secrets",
+      "passed": true
+    },
+    {
+      "name": "Different effective EC signing keys",
+      "passed": true
+    },
+    {
+      "name": "Source JWT valid with SOURCE effective signing secret",
+      "passed": true
+    },
+    {
+      "name": "Source JWT cryptographic signature invalid for TARGET",
+      "passed": true
+    },
+    {
+      "name": "Restored user authenticates against TARGET",
+      "passed": true
+    },
+    {
+      "name": "TARGET JWT signed only by TARGET key",
+      "passed": true
+    },
+    {
+      "name": "TARGET new JWT same UID and different signature",
+      "passed": true
+    },
+    {
+      "name": "Recovered scoped administrator 0",
+      "passed": true
+    },
+    {
+      "name": "Recovered scoped administrator 1",
+      "passed": true
+    },
+    {
+      "name": "Recovered scoped administrator 2",
+      "passed": true
+    },
+    {
+      "name": "SOURCE JWT rejected by TARGET signature",
+      "passed": true
+    },
+    {
+      "name": "SOURCE unchanged after target restore",
+      "passed": true
+    },
+    {
+      "name": "Restored GROUP checkout same key returns same order",
+      "passed": true
+    },
+    {
+      "name": "Restored append same request key returns NOT_SETTLED",
+      "passed": true
+    },
+    {
+      "name": "Retry creates no order item or history",
+      "passed": true
+    },
+    {
+      "name": "Restored checkout divergent payload rejected",
+      "passed": true
+    },
+    {
+      "name": "Restored recovery cross-instance specifically denied",
+      "passed": true
+    },
+    {
+      "name": "Restored original buyer proof recovers same order",
+      "passed": true
+    },
+    {
+      "name": "TARGET recovered identity 0",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 0/0",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 0/1",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 0/2",
+      "passed": true
+    },
+    {
+      "name": "TARGET historical access 0",
+      "passed": true
+    },
+    {
+      "name": "Foreign source signing rejected identity 0",
+      "passed": true
+    },
+    {
+      "name": "TARGET recovered identity 1",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 1/0",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 1/1",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 1/2",
+      "passed": true
+    },
+    {
+      "name": "TARGET historical access 1",
+      "passed": true
+    },
+    {
+      "name": "Foreign source signing rejected identity 1",
+      "passed": true
+    },
+    {
+      "name": "TARGET recovered identity 2",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 2/0",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 2/1",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 2/2",
+      "passed": true
+    },
+    {
+      "name": "TARGET historical access 2",
+      "passed": true
+    },
+    {
+      "name": "Foreign source signing rejected identity 2",
+      "passed": true
+    },
+    {
+      "name": "TARGET recovered identity 3",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 3/0",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 3/1",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 3/2",
+      "passed": true
+    },
+    {
+      "name": "TARGET historical access 3",
+      "passed": true
+    },
+    {
+      "name": "Foreign source signing rejected identity 3",
+      "passed": true
+    },
+    {
+      "name": "TARGET recovered identity 4",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 4/0",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 4/1",
+      "passed": true
+    },
+    {
+      "name": "TARGET instance grant 4/2",
+      "passed": true
+    },
+    {
+      "name": "TARGET historical access 4",
+      "passed": true
+    },
+    {
+      "name": "Foreign source signing rejected identity 4",
+      "passed": true
+    },
+    {
+      "name": "Target no new historical capability",
+      "passed": true
+    },
+    {
+      "name": "TARGET expiry Auth is loopback",
+      "passed": true
+    },
+    {
+      "name": "TARGET expiry Auth ready",
+      "passed": true
+    },
+    {
+      "name": "TARGET natively issues short signed owner credential",
+      "passed": true
+    },
+    {
+      "name": "TARGET short token authorized before expiry",
+      "passed": true
+    },
+    {
+      "name": "TARGET PostgREST rejects its own expired signed identity",
+      "passed": true
+    },
+    {
+      "name": "Private TARGET TLS prepared independently",
+      "passed": true
+    }
+  ],
+  "remoteSql": false,
+  "metrics": {
+    "backupMs": 121,
+    "transferMs": 40,
+    "restoreMs": 263,
+    "authToFirstAuthorizedReadMs": 1544
+  },
+  "limitations": [
+    "Operational 16-table bridge projection, not full commercial Master.",
+    "Managed native bootstrap roles are compared, not imported or elevated.",
+    "T0 recovery does not prove RPO zero or hosted recovery.",
+    "Auth sessions and refresh tokens require separate portability/security review.",
+    "MFA variants outside previous scoped matrix not independently certified."
+  ],
+  "clusters": {
+    "systemIdentifiers": [
+      "7696379351125323813",
+      "7696380490054172709"
+    ],
+    "dataVolumes": [
+      [
+        "/var/lib/docker/volumes/supabase_db_neroxa-ab-38512737541/_data"
+      ],
+      [
+        "/var/lib/docker/volumes/supabase_db_neroxa-ab-385127375411/_data"
+      ]
+    ],
+    "images": [
+      "supabase/postgres:17.11.0.004",
+      "supabase/postgres:17.11.0.004"
+    ],
+    "networks": [
+      [
+        "neroxa-ab-38512737541"
+      ],
+      [
+        "neroxa-ab-385127375411"
+      ]
+    ]
+  },
+  "versions": {
+    "postgres": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "dump": "pg_dump (PostgreSQL) 17.11",
+    "restore": "pg_restore (PostgreSQL) 17.11",
+    "node": "v22.23.3"
+  },
+  "roleMapping": "Identity mapping verified by role attributes/memberships; bootstrap passwords and signing secrets intentionally not transferred.",
+  "archive": {
+    "sha256": "3615bc36502f5c33b6ed60707cc18825066cff7b3d108b7b65b26d812205ed0b",
+    "bytes": 701751,
+    "format": "custom",
+    "private": true,
+    "tocSha256": "fd24273841f9b8f9e443301be41c5c0c9280daffffed3f71bafecdb2c1bd5b73",
+    "tocEntries": 1088
+  },
+  "fingerprints": {
+    "sourceDataSha256": "5291164174489a61b82d486c3953fe5397cd583e042e1379a0e21a67d9f94254",
+    "targetDataSha256": "5291164174489a61b82d486c3953fe5397cd583e042e1379a0e21a67d9f94254",
+    "sourceCatalogSha256": "681a7a33634d414e1b1af3873cd8ab2f527e3d146eb7e9a22f8fc7630613ac51",
+    "targetCatalogSha256": "681a7a33634d414e1b1af3873cd8ab2f527e3d146eb7e9a22f8fc7630613ac51",
+    "sourcePropertiesSha256": "0ee2b5856847e375f25d7a3ec7188569de63de36fc8fde9d5d12307960960a24",
+    "targetPropertiesSha256": "0ee2b5856847e375f25d7a3ec7188569de63de36fc8fde9d5d12307960960a24"
+  },
+  "foreignKeys": 74,
+  "foreignTokenResponse": {
+    "status": 401,
+    "code": "PGRST301"
+  },
+  "expiry": {
+    "observedSeconds": 34,
+    "status": 401,
+    "code": "PGRST303"
+  },
+  "serviceImages": {
+    "auth": "supabase/gotrue:v2.197.0",
+    "rest": "postgrest/postgrest:v16.4"
+  }
+}

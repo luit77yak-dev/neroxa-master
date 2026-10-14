@@ -1,0 +1,170 @@
+{
+  "classification": "INCOMPLETE",
+  "buildMode": "homologation",
+  "sdkReplacementAlias": false,
+  "productionApproved": false,
+  "checks": [
+    {
+      "name": "normal homologation build exists without replacement module or alias",
+      "passed": true
+    },
+    {
+      "name": "server service credential absent from browser build",
+      "passed": true
+    },
+    {
+      "name": "real scoped catalog renders",
+      "passed": true
+    },
+    {
+      "name": "normal built browser unknown/preview domain has no real-store fallback unknown.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "normal built browser unknown/preview domain has no real-store fallback preview.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "authorized fake owner sets initial price",
+      "passed": true
+    },
+    {
+      "name": "catalog no document overflow 360",
+      "passed": true
+    },
+    {
+      "name": "catalog no document overflow 390",
+      "passed": true
+    },
+    {
+      "name": "catalog no document overflow 412",
+      "passed": true
+    },
+    {
+      "name": "catalog no document overflow 768",
+      "passed": true
+    },
+    {
+      "name": "catalog no document overflow 1440",
+      "passed": true
+    },
+    {
+      "name": "configurator no document overflow 360",
+      "passed": true
+    },
+    {
+      "name": "configurator no document overflow 390",
+      "passed": true
+    },
+    {
+      "name": "configurator no document overflow 412",
+      "passed": true
+    },
+    {
+      "name": "configurator no document overflow 768",
+      "passed": true
+    },
+    {
+      "name": "configurator no document overflow 1440",
+      "passed": true
+    },
+    {
+      "name": "cart no document overflow 360",
+      "passed": true
+    },
+    {
+      "name": "cart no document overflow 390",
+      "passed": true
+    },
+    {
+      "name": "cart no document overflow 412",
+      "passed": true
+    },
+    {
+      "name": "cart no document overflow 768",
+      "passed": true
+    },
+    {
+      "name": "cart no document overflow 1440",
+      "passed": true
+    },
+    {
+      "name": "keyboard reaches customer telephone",
+      "passed": true
+    },
+    {
+      "name": "delivery area alone cannot bypass required street",
+      "passed": true
+    },
+    {
+      "name": "checkout no document overflow 360",
+      "passed": true
+    },
+    {
+      "name": "checkout no document overflow 390",
+      "passed": true
+    },
+    {
+      "name": "checkout no document overflow 412",
+      "passed": true
+    },
+    {
+      "name": "checkout no document overflow 768",
+      "passed": true
+    },
+    {
+      "name": "checkout no document overflow 1440",
+      "passed": true
+    },
+    {
+      "name": "authenticated owner changes fee",
+      "passed": true
+    },
+    {
+      "name": "changed fee rejected without order",
+      "passed": true
+    },
+    {
+      "name": "delivery total91 shown before consent",
+      "passed": true
+    },
+    {
+      "name": "normal delivery opens tracking without technical intervention",
+      "passed": true
+    },
+    {
+      "name": "database authoritative delivery fields and GROUP snapshot",
+      "passed": true
+    },
+    {
+      "name": "tracking no document overflow 360",
+      "passed": true
+    },
+    {
+      "name": "tracking no document overflow 390",
+      "passed": true
+    },
+    {
+      "name": "tracking no document overflow 412",
+      "passed": true
+    },
+    {
+      "name": "tracking no document overflow 768",
+      "passed": true
+    },
+    {
+      "name": "tracking no document overflow 1440",
+      "passed": true
+    },
+    {
+      "name": "keyboard reaches operational password",
+      "passed": true
+    }
+  ],
+  "passed": 39,
+  "failed": 0,
+  "errors": [],
+  "blockedOrigins": [
+    "https://fonts.googleapis.com"
+  ]
+}

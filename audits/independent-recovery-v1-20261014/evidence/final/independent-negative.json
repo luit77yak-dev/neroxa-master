@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "tests": [
+    {
+      "name": "Checksum detects changed archive byte before restore",
+      "passed": true
+    },
+    {
+      "name": "Real pg_restore rejects invalid archive",
+      "passed": true
+    },
+    {
+      "name": "Real pg_restore rejects incomplete archive",
+      "passed": true
+    },
+    {
+      "name": "Native missing role preflight cannot map an unknown owner",
+      "passed": true
+    },
+    {
+      "name": "Native absent required extension stops preflight",
+      "passed": true
+    },
+    {
+      "name": "Transactional ACL drift detected",
+      "passed": true
+    },
+    {
+      "name": "ACL restored after rollback",
+      "passed": true
+    },
+    {
+      "name": "Native orphan history rejected by FK",
+      "passed": true
+    },
+    {
+      "name": "Interrupted transactional recovery aborts specifically",
+      "passed": true
+    },
+    {
+      "name": "Interrupted recovery leaves no partial object",
+      "passed": true
+    },
+    {
+      "name": "Historical buyer proof specifically blocked by restored anchor trigger",
+      "passed": true
+    }
+  ]
+}

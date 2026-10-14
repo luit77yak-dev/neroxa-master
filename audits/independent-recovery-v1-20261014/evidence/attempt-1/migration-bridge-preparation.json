@@ -1,0 +1,469 @@
+{
+  "classification": "PASS_BOUNDED_OBSERVED_PROFILE_PREPARATION",
+  "profile": "observed-uninstalled-eight-sql-sandbox",
+  "scope": "16-table operational Delivery projection; not full Master replacement",
+  "tests": [
+    {
+      "name": "input hash sandbox-catalog-readonly.json",
+      "passed": true
+    },
+    {
+      "name": "input hash sandbox-functions-readonly.json",
+      "passed": true
+    },
+    {
+      "name": "input hash master-catalog-20261009.json",
+      "passed": true
+    },
+    {
+      "name": "input hash legacy-state-profiles-readonly.json",
+      "passed": true
+    },
+    {
+      "name": "input hash legacy-shape-readonly.json",
+      "passed": true
+    },
+    {
+      "name": "input hash legacy-fulfillment-shape-readonly.json",
+      "passed": true
+    },
+    {
+      "name": "faithful empty source fixture hash",
+      "passed": true
+    },
+    {
+      "name": "phase hash A",
+      "passed": true
+    },
+    {
+      "name": "phase hash B",
+      "passed": true
+    },
+    {
+      "name": "phase hash C",
+      "passed": true
+    },
+    {
+      "name": "phase hash D",
+      "passed": true
+    },
+    {
+      "name": "phase hash E",
+      "passed": true
+    },
+    {
+      "name": "empty application schema before fixture",
+      "passed": true
+    },
+    {
+      "name": "faithful source preflight",
+      "passed": true
+    },
+    {
+      "name": "source 3 orders 6 items 12 history",
+      "passed": true
+    },
+    {
+      "name": "representative keys/status/half/addons/domain shape",
+      "passed": true
+    },
+    {
+      "name": "preflight fails with no disposable marker error cause",
+      "passed": true,
+      "expected": "BRIDGE_DISPOSABLE_CONTEXT_REQUIRED"
+    },
+    {
+      "name": "preflight fails with no disposable marker",
+      "passed": true
+    },
+    {
+      "name": "unexpected column rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_COLUMN_COUNT_DRIFT"
+    },
+    {
+      "name": "unexpected column rejected",
+      "passed": true
+    },
+    {
+      "name": "function tamper rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_FUNCTION_DRIFT"
+    },
+    {
+      "name": "function tamper rejected",
+      "passed": true
+    },
+    {
+      "name": "ACL drift rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_RELATION_DRIFT"
+    },
+    {
+      "name": "ACL drift rejected",
+      "passed": true
+    },
+    {
+      "name": "unknown policy rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_POLICY_TRIGGER_DRIFT"
+    },
+    {
+      "name": "unknown policy rejected",
+      "passed": true
+    },
+    {
+      "name": "ambiguous settings-to-instance rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_AMBIGUOUS_INSTANCE"
+    },
+    {
+      "name": "ambiguous settings-to-instance rejected",
+      "passed": true
+    },
+    {
+      "name": "Auth identity orphan rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_AUTH_ORPHAN"
+    },
+    {
+      "name": "Auth identity orphan rejected",
+      "passed": true
+    },
+    {
+      "name": "wrong totals rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_HISTORICAL_INTEGRITY"
+    },
+    {
+      "name": "wrong totals rejected",
+      "passed": true
+    },
+    {
+      "name": "phase C before expansion rejected",
+      "passed": true
+    },
+    {
+      "name": "expansion failure rolls back everything error cause",
+      "passed": true,
+      "expected": "INJECTED_FAILURE"
+    },
+    {
+      "name": "expansion failure rolls back everything",
+      "passed": true
+    },
+    {
+      "name": "no journal after failed expansion",
+      "passed": true
+    },
+    {
+      "name": "historical identity/value/snapshot digest after A",
+      "passed": true
+    },
+    {
+      "name": "historical identity/value/snapshot digest after B",
+      "passed": true
+    },
+    {
+      "name": "journal hash B",
+      "passed": true
+    },
+    {
+      "name": "journal schema fingerprint B",
+      "passed": true
+    },
+    {
+      "name": "journal resume preserves data B",
+      "passed": true
+    },
+    {
+      "name": "missing commercial resolution rejected error cause",
+      "passed": true,
+      "expected": "BRIDGE_EXPLICIT_RESOLUTION_REQUIRED"
+    },
+    {
+      "name": "missing commercial resolution rejected",
+      "passed": true
+    },
+    {
+      "name": "data conversion failure rollback error cause",
+      "passed": true,
+      "expected": "INJECTED_FAILURE"
+    },
+    {
+      "name": "data conversion failure rollback",
+      "passed": true
+    },
+    {
+      "name": "history intact after conversion rollback",
+      "passed": true
+    },
+    {
+      "name": "failed C not journaled",
+      "passed": true
+    },
+    {
+      "name": "historical identity/value/snapshot digest after C",
+      "passed": true
+    },
+    {
+      "name": "journal hash C",
+      "passed": true
+    },
+    {
+      "name": "journal schema fingerprint C",
+      "passed": true
+    },
+    {
+      "name": "journal resume preserves data C",
+      "passed": true
+    },
+    {
+      "name": "native preparation refuses unfrozen consumers error cause",
+      "passed": true,
+      "expected": "BRIDGE_FROZEN_CONSUMERS_REQUIRED"
+    },
+    {
+      "name": "native preparation refuses unfrozen consumers",
+      "passed": true
+    },
+    {
+      "name": "historical identity/value/snapshot digest after D",
+      "passed": true
+    },
+    {
+      "name": "journal hash D",
+      "passed": true
+    },
+    {
+      "name": "journal schema fingerprint D",
+      "passed": true
+    },
+    {
+      "name": "journal resume preserves data D",
+      "passed": true
+    }
+  ],
+  "productionApproved": false,
+  "remoteWrites": false,
+  "functionComparisons": [
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "neroxa_is_platform_member",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "boolean",
+      "body_md5": "0159867097be728be1b6f01098811871",
+      "arguments": "",
+      "definition_md5": "ddfb10f0aabbcf3b047e668954622562"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "append_public_order_items_with_payment",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "TABLE(order_id uuid, order_number bigint, subtotal numeric, total numeric)",
+      "body_md5": "46e97e8358ff9b79e23d874875a2f61a",
+      "arguments": "p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text",
+      "definition_md5": "bf0f761b852e0c73acaa99d913b6fc02"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "get_public_storefront_context",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "TABLE(domain text, instance_id uuid, instance_slug text, instance_name text, instance_status text, organization_id uuid, organization_name text, system_id uuid, system_slug text, system_name text, system_type text)",
+      "body_md5": "e2a885b90e48573a0afcbe8e99425d04",
+      "arguments": "p_domain text",
+      "definition_md5": "635726ae640fd2e1a82a4c1a50430727"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "get_public_order_status",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "jsonb",
+      "body_md5": "bb004a5cbde6c5a482f06750f138dc60",
+      "arguments": "p_order_id uuid, p_customer_phone text",
+      "definition_md5": "d8a86282fd63352fae3059b9a0bcceeb"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "calculate_public_order_line_price",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "numeric",
+      "body_md5": "ff3f732a3b15fcb1d2d2fdf9df4ddfe2",
+      "arguments": "p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb",
+      "definition_md5": "d840292550213abb5401d57ccd3c33bf"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "create_public_order",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "TABLE(order_id uuid, order_number bigint, total numeric)",
+      "body_md5": "afc4d910ac31460702a3674bd63d0f9d",
+      "arguments": "p_order jsonb",
+      "definition_md5": "33146501d0fe7c33d8a34104361d026f"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "get_admin_orders",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "SETOF neroxa_orders",
+      "body_md5": "f1b3bc5b2513ecbb9de0bae423221dbb",
+      "arguments": "p_instance_id uuid, p_status text DEFAULT NULL::text",
+      "definition_md5": "041a9696cffe0b7f41c64cf4e8507b29"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "update_admin_order_status",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "neroxa_orders",
+      "body_md5": "df4837d68dcb3679f44c010713cdc70b",
+      "arguments": "p_order_id uuid, p_status text, p_note text DEFAULT NULL::text",
+      "definition_md5": "e6fec3fa15d930ff2529ad4e9bf822aa"
+    }
+  ],
+  "before": {
+    "counts": {
+      "orders": 3,
+      "items": 6,
+      "history": 12
+    },
+    "digests": {
+      "neroxa_system_instances": "d5dd60698e8a18dcf3b2bdbd9085859a",
+      "neroxa_organizations": "b8346ea022a2c0ba48aef0f54e5449ac",
+      "neroxa_systems": "4467d8de61236eaeab25b1024918b499",
+      "neroxa_system_domains": "9d83804e2d5e84698d3117158f6500df",
+      "neroxa_storefront_settings": "197edd36ac867f5569c6f76b05899476",
+      "neroxa_storefront_delivery_zones": "6be714cc78dadcdf49e1c86f4ef70e2b",
+      "neroxa_storefront_products": "a3a45650a34a67b4fcf3420ca23db22c",
+      "neroxa_organization_members": "d751713988987e9331980363e24189ce",
+      "neroxa_platform_members": "f407801247a3f4f80c961945cc9937ea",
+      "neroxa_orders": "946bf0d3eac53e5f7f5ee42cf267a8cf",
+      "neroxa_order_items": "d8afd9b8b0027c4273d03f0c03e5abae",
+      "neroxa_order_status_history": "41a5057645d2822a6310c69d1cf8d21a"
+    }
+  },
+  "expanded": {
+    "digests": {
+      "neroxa_system_instances": "d5dd60698e8a18dcf3b2bdbd9085859a",
+      "neroxa_organizations": "b8346ea022a2c0ba48aef0f54e5449ac",
+      "neroxa_systems": "4467d8de61236eaeab25b1024918b499",
+      "neroxa_system_domains": "9d83804e2d5e84698d3117158f6500df",
+      "neroxa_storefront_settings": "197edd36ac867f5569c6f76b05899476",
+      "neroxa_storefront_delivery_zones": "6be714cc78dadcdf49e1c86f4ef70e2b",
+      "neroxa_storefront_products": "a3a45650a34a67b4fcf3420ca23db22c",
+      "neroxa_organization_members": "d751713988987e9331980363e24189ce",
+      "neroxa_platform_members": "f407801247a3f4f80c961945cc9937ea",
+      "neroxa_orders": "946bf0d3eac53e5f7f5ee42cf267a8cf",
+      "neroxa_order_items": "d8afd9b8b0027c4273d03f0c03e5abae",
+      "neroxa_order_status_history": "41a5057645d2822a6310c69d1cf8d21a"
+    }
+  },
+  "afterPreparation": {
+    "digests": {
+      "neroxa_system_instances": "d5dd60698e8a18dcf3b2bdbd9085859a",
+      "neroxa_organizations": "b8346ea022a2c0ba48aef0f54e5449ac",
+      "neroxa_systems": "4467d8de61236eaeab25b1024918b499",
+      "neroxa_system_domains": "9d83804e2d5e84698d3117158f6500df",
+      "neroxa_storefront_settings": "197edd36ac867f5569c6f76b05899476",
+      "neroxa_storefront_delivery_zones": "6be714cc78dadcdf49e1c86f4ef70e2b",
+      "neroxa_storefront_products": "a3a45650a34a67b4fcf3420ca23db22c",
+      "neroxa_organization_members": "d751713988987e9331980363e24189ce",
+      "neroxa_platform_members": "f407801247a3f4f80c961945cc9937ea",
+      "neroxa_orders": "946bf0d3eac53e5f7f5ee42cf267a8cf",
+      "neroxa_order_items": "d8afd9b8b0027c4273d03f0c03e5abae",
+      "neroxa_order_status_history": "41a5057645d2822a6310c69d1cf8d21a"
+    },
+    "journal": [
+      {
+        "stage": "B",
+        "sha256": "33516a834ff221cc602d8b851a634beec7592faf72e39105383f7d8fcc4ef306"
+      },
+      {
+        "stage": "C",
+        "sha256": "956b193d0f107789c64c5d58cde8ce8a835b2381ec16bd25a2e949c42880d4bf"
+      },
+      {
+        "stage": "D",
+        "sha256": "0dbb7719e52cf4e3dabeca860f4210fb60dfa80cdda9f5f9fcc11dc107c34ae1"
+      }
+    ]
+  },
+  "originalOrderIds": [
+    "aafeb7e1-9210-430d-9812-19b17a07e2b8",
+    "0f75cfac-2479-456d-821e-392a2f90488f",
+    "5cae1601-0de9-4ffe-be9f-97b8ff91af86"
+  ],
+  "syntheticStoreId": "d8342eef-8a78-4067-8c03-b57eae887d2a",
+  "originalDigests": {
+    "neroxa_system_instances": "d5dd60698e8a18dcf3b2bdbd9085859a",
+    "neroxa_organizations": "b8346ea022a2c0ba48aef0f54e5449ac",
+    "neroxa_systems": "4467d8de61236eaeab25b1024918b499",
+    "neroxa_system_domains": "9d83804e2d5e84698d3117158f6500df",
+    "neroxa_storefront_settings": "197edd36ac867f5569c6f76b05899476",
+    "neroxa_storefront_delivery_zones": "6be714cc78dadcdf49e1c86f4ef70e2b",
+    "neroxa_storefront_products": "a3a45650a34a67b4fcf3420ca23db22c",
+    "neroxa_organization_members": "d751713988987e9331980363e24189ce",
+    "neroxa_platform_members": "f407801247a3f4f80c961945cc9937ea",
+    "neroxa_orders": "946bf0d3eac53e5f7f5ee42cf267a8cf",
+    "neroxa_order_items": "d8afd9b8b0027c4273d03f0c03e5abae",
+    "neroxa_order_status_history": "41a5057645d2822a6310c69d1cf8d21a"
+  }
+}

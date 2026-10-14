@@ -1,0 +1,22 @@
+# Runbook — exclusivamente descartável
+
+Não executar contra Master, sandbox remoto ou produção. Não reutilizar este workflow como instalador remoto.
+
+1. Conferir ancestralidade da Ponte V1, MANIFEST-PONTE.json, cinco candidatos A–E, 25 candidatos nativos e 95 hashes das evidências. Fixar SHAs exatos Master/Delivery no workflow. Manter originais/main intactos e deploymentEnabled=false para a candidata antes do push.
+2. Executar preflight.py antes de baixar imagens: 26 GiB livres (6 imagens +8 volumes +2 archives +5 builds +5 margem), memória disponível >=6 GiB, >=2 CPUs e portas 54321/54322/55321/55322/56321 livres. Se falhar, interromper; não contratar recursos.
+3. Supabase CLI 2.120.0: init em diretório novo 0700 sem link, migrations ou seed; PG17 e MFA TOTP habilitado. Configurar credenciais JWT sintéticas privadas, EC P-256 por stack e signing_keys_path privado; nunca deixar a chave EC padrão compartilhada da CLI. Relay Docker e bridge restringem binds a 127.0.0.1.
+4. SOURCE: observed-sandbox.empty-fixture.sql somente em banco vazio, dados fictícios 3/6/12 e resoluções explícitas da fixture; ponte A–D e candidatos nativos na ordem comprovada. Reexecutar matrizes de segurança e navegador, depois E-cutover-gate.
+5. prepare-source.mjs: criar pedido GROUP entrega + tamanho/borda/adicional, capability nova, append NOT_SETTLED e identidades fictícias com grants explícitos. Não atribuir proofs a pedidos históricos. Congelar escritas operacionais e parar Auth/REST SOURCE.
+6. Bootstrap TARGET independente em outra rede/volume/portas, sem SQL da aplicação. Verificar system identifiers, mounts, versions, roles/memberships e extensões. Falhar em divergência, sem alterar permissões para contornar.
+7. restore.mjs: pg_dump --format=custom; suplemento de ACL; chmod0600; gerar SHA256/TOC. Transferir archive por fronteira entre clusters e conferir SHA em cada destino. Criar base vazia template0 no cluster TARGET; não restaurar sobre base populada. pg_restore --single-transaction --exit-on-error; aplicar suplemento ACL com ON_ERROR_STOP.
+8. Comparar fingerprints de catálogo, propriedades, todas as tabelas/sequências e todas as FKs. Comparar cohort histórico 3/6/12, anchors, snapshots GROUP, intents e capacidades. Qualquer diferença interrompe liberação.
+9. Iniciar Auth/REST com configuração TARGET apontada para o banco recuperado. Reautenticar usuários fictícios preservados; conferir sub/UID. Verificar HMAC SOURCE válida apenas na SOURCE, inválida na TARGET; exigir rejeição HTTP 401 com código documentado PGRST301/PGRST303. Nunca reutilizar JWT SOURCE para aprovação.
+10. Liberar exclusivamente TARGET; repetir idempotência, append, NOT_SETTLED e matriz de identidades A1/A2/B1/outsider/histórico. Exigir respostas específicas e observar efeitos no banco.
+11. negative.mjs: archives inválido/incompleto, hash, roles/extensões ausentes no preflight, ACL temporária revertida, FK real, interrupção transacional e proteção de histórico. Não desativar constraints/RLS.
+12. Preparar todos os arquivos privados do navegador na TARGET: status, fixtures, actor reautenticado, TLS próprio e identidade expirada emitida pelo GoTrue TARGET (nunca copiar JWT SOURCE). Observar expiração real no PostgREST sem diminuir sua verificação. Executar first_order_browser.mjs com AB_DATABASE=neroxa_recovery_RUN_ID, status privado TARGET e build homologation normal. Não permitir origens SOURCE ou externas no navegador. SOURCE continua congelada.
+13. T1: criar pedidos pelo navegador, congelar, produzir checkpoint archive privado fora do cluster TARGET. Simular falha transacional, conferir digest e bloquear rollback T0 quando houver divergência. Roll-forward só com dados presentes e verificados. Sem arquivo/WAL/delta sobrevivente, reconhecer perda possível de T1.
+14. Publicar apenas JSON sanitizados, TOC de metadados e capturas fictícias. Remover contêineres, volumes, redes, processos e diretórios de ambos os projetos pelos identificadores exclusivos. Conferir ausência de recursos próprios.
+
+Comando autorizado neste perfil: workflow_dispatch da candidata independent-recovery-v1.yml. Não autoriza SQL remoto, deploy ou merge. O workflow também dispara apenas por push nessa candidata para registrar/testar seus pins.
+
+Em falha parcial: não reaplicar restore sobre destino já populado. Interromper serviços, registrar o estágio e a causa sanitizada. Para tentar novamente, usar outro ambiente descartável vazio e replay completo. Não apagar SOURCE nem dados T1 para tornar uma assertion verdadeira.

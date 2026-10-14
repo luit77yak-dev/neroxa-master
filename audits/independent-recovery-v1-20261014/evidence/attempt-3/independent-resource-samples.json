@@ -1,0 +1,427 @@
+{
+  "sampleIntervalSeconds": 5,
+  "sampledPeakDiskUsedBytes": 69001154560,
+  "sampledMinMemoryAvailableBytes": 13581393920,
+  "samples": [
+    {
+      "utcEpoch": 1791943340,
+      "diskUsedBytes": 64300888064,
+      "diskFreeBytes": 90576523264,
+      "memoryAvailableBytes": 15486799872
+    },
+    {
+      "utcEpoch": 1791943345,
+      "diskUsedBytes": 64685518848,
+      "diskFreeBytes": 90191892480,
+      "memoryAvailableBytes": 15413858304
+    },
+    {
+      "utcEpoch": 1791943350,
+      "diskUsedBytes": 64887373824,
+      "diskFreeBytes": 89990037504,
+      "memoryAvailableBytes": 15389401088
+    },
+    {
+      "utcEpoch": 1791943355,
+      "diskUsedBytes": 65481728000,
+      "diskFreeBytes": 89395683328,
+      "memoryAvailableBytes": 15431946240
+    },
+    {
+      "utcEpoch": 1791943360,
+      "diskUsedBytes": 66182438912,
+      "diskFreeBytes": 88694972416,
+      "memoryAvailableBytes": 15432364032
+    },
+    {
+      "utcEpoch": 1791943365,
+      "diskUsedBytes": 65863708672,
+      "diskFreeBytes": 89013702656,
+      "memoryAvailableBytes": 15175954432
+    },
+    {
+      "utcEpoch": 1791943370,
+      "diskUsedBytes": 65916723200,
+      "diskFreeBytes": 88960688128,
+      "memoryAvailableBytes": 15200808960
+    },
+    {
+      "utcEpoch": 1791943375,
+      "diskUsedBytes": 65916723200,
+      "diskFreeBytes": 88960688128,
+      "memoryAvailableBytes": 15308640256
+    },
+    {
+      "utcEpoch": 1791943380,
+      "diskUsedBytes": 66285322240,
+      "diskFreeBytes": 88592089088,
+      "memoryAvailableBytes": 15392342016
+    },
+    {
+      "utcEpoch": 1791943385,
+      "diskUsedBytes": 66353467392,
+      "diskFreeBytes": 88523943936,
+      "memoryAvailableBytes": 15285051392
+    },
+    {
+      "utcEpoch": 1791943390,
+      "diskUsedBytes": 66709684224,
+      "diskFreeBytes": 88167727104,
+      "memoryAvailableBytes": 15308959744
+    },
+    {
+      "utcEpoch": 1791943395,
+      "diskUsedBytes": 66928300032,
+      "diskFreeBytes": 87949111296,
+      "memoryAvailableBytes": 15278649344
+    },
+    {
+      "utcEpoch": 1791943400,
+      "diskUsedBytes": 67147534336,
+      "diskFreeBytes": 87729876992,
+      "memoryAvailableBytes": 15330258944
+    },
+    {
+      "utcEpoch": 1791943405,
+      "diskUsedBytes": 67307118592,
+      "diskFreeBytes": 87570292736,
+      "memoryAvailableBytes": 15337340928
+    },
+    {
+      "utcEpoch": 1791943410,
+      "diskUsedBytes": 67491115008,
+      "diskFreeBytes": 87386296320,
+      "memoryAvailableBytes": 15327252480
+    },
+    {
+      "utcEpoch": 1791943415,
+      "diskUsedBytes": 67515047936,
+      "diskFreeBytes": 87362363392,
+      "memoryAvailableBytes": 15232081920
+    },
+    {
+      "utcEpoch": 1791943420,
+      "diskUsedBytes": 67531837440,
+      "diskFreeBytes": 87345573888,
+      "memoryAvailableBytes": 15054299136
+    },
+    {
+      "utcEpoch": 1791943425,
+      "diskUsedBytes": 67531837440,
+      "diskFreeBytes": 87345573888,
+      "memoryAvailableBytes": 15177940992
+    },
+    {
+      "utcEpoch": 1791943430,
+      "diskUsedBytes": 67533324288,
+      "diskFreeBytes": 87344087040,
+      "memoryAvailableBytes": 15223562240
+    },
+    {
+      "utcEpoch": 1791943435,
+      "diskUsedBytes": 67533688832,
+      "diskFreeBytes": 87343722496,
+      "memoryAvailableBytes": 15201820672
+    },
+    {
+      "utcEpoch": 1791943440,
+      "diskUsedBytes": 67551809536,
+      "diskFreeBytes": 87325601792,
+      "memoryAvailableBytes": 15210033152
+    },
+    {
+      "utcEpoch": 1791943445,
+      "diskUsedBytes": 67552956416,
+      "diskFreeBytes": 87324454912,
+      "memoryAvailableBytes": 15018299392
+    },
+    {
+      "utcEpoch": 1791943450,
+      "diskUsedBytes": 67586269184,
+      "diskFreeBytes": 87291142144,
+      "memoryAvailableBytes": 15085805568
+    },
+    {
+      "utcEpoch": 1791943455,
+      "diskUsedBytes": 67586879488,
+      "diskFreeBytes": 87290531840,
+      "memoryAvailableBytes": 15070343168
+    },
+    {
+      "utcEpoch": 1791943460,
+      "diskUsedBytes": 67631800320,
+      "diskFreeBytes": 87245611008,
+      "memoryAvailableBytes": 14968066048
+    },
+    {
+      "utcEpoch": 1791943465,
+      "diskUsedBytes": 67741990912,
+      "diskFreeBytes": 87135420416,
+      "memoryAvailableBytes": 14842638336
+    },
+    {
+      "utcEpoch": 1791943470,
+      "diskUsedBytes": 67831771136,
+      "diskFreeBytes": 87045640192,
+      "memoryAvailableBytes": 14903173120
+    },
+    {
+      "utcEpoch": 1791943475,
+      "diskUsedBytes": 67984592896,
+      "diskFreeBytes": 86892818432,
+      "memoryAvailableBytes": 14910984192
+    },
+    {
+      "utcEpoch": 1791943480,
+      "diskUsedBytes": 68079951872,
+      "diskFreeBytes": 86797459456,
+      "memoryAvailableBytes": 14757830656
+    },
+    {
+      "utcEpoch": 1791943485,
+      "diskUsedBytes": 68137664512,
+      "diskFreeBytes": 86739746816,
+      "memoryAvailableBytes": 14804447232
+    },
+    {
+      "utcEpoch": 1791943490,
+      "diskUsedBytes": 68299272192,
+      "diskFreeBytes": 86578139136,
+      "memoryAvailableBytes": 14549852160
+    },
+    {
+      "utcEpoch": 1791943495,
+      "diskUsedBytes": 68450840576,
+      "diskFreeBytes": 86426570752,
+      "memoryAvailableBytes": 14703984640
+    },
+    {
+      "utcEpoch": 1791943500,
+      "diskUsedBytes": 68769546240,
+      "diskFreeBytes": 86107865088,
+      "memoryAvailableBytes": 14484987904
+    },
+    {
+      "utcEpoch": 1791943505,
+      "diskUsedBytes": 68855414784,
+      "diskFreeBytes": 86021996544,
+      "memoryAvailableBytes": 15012790272
+    },
+    {
+      "utcEpoch": 1791943510,
+      "diskUsedBytes": 68855463936,
+      "diskFreeBytes": 86021947392,
+      "memoryAvailableBytes": 15003725824
+    },
+    {
+      "utcEpoch": 1791943515,
+      "diskUsedBytes": 68882882560,
+      "diskFreeBytes": 85994528768,
+      "memoryAvailableBytes": 14784663552
+    },
+    {
+      "utcEpoch": 1791943520,
+      "diskUsedBytes": 68894269440,
+      "diskFreeBytes": 85983141888,
+      "memoryAvailableBytes": 14393286656
+    },
+    {
+      "utcEpoch": 1791943525,
+      "diskUsedBytes": 68896428032,
+      "diskFreeBytes": 85980983296,
+      "memoryAvailableBytes": 13895225344
+    },
+    {
+      "utcEpoch": 1791943530,
+      "diskUsedBytes": 68896854016,
+      "diskFreeBytes": 85980557312,
+      "memoryAvailableBytes": 13696634880
+    },
+    {
+      "utcEpoch": 1791943535,
+      "diskUsedBytes": 68899168256,
+      "diskFreeBytes": 85978243072,
+      "memoryAvailableBytes": 13581393920
+    },
+    {
+      "utcEpoch": 1791943540,
+      "diskUsedBytes": 68899053568,
+      "diskFreeBytes": 85978357760,
+      "memoryAvailableBytes": 15020793856
+    },
+    {
+      "utcEpoch": 1791943545,
+      "diskUsedBytes": 68899336192,
+      "diskFreeBytes": 85978075136,
+      "memoryAvailableBytes": 15106441216
+    },
+    {
+      "utcEpoch": 1791943550,
+      "diskUsedBytes": 68899360768,
+      "diskFreeBytes": 85978050560,
+      "memoryAvailableBytes": 15170850816
+    },
+    {
+      "utcEpoch": 1791943555,
+      "diskUsedBytes": 68899364864,
+      "diskFreeBytes": 85978046464,
+      "memoryAvailableBytes": 15176163328
+    },
+    {
+      "utcEpoch": 1791943560,
+      "diskUsedBytes": 68899364864,
+      "diskFreeBytes": 85978046464,
+      "memoryAvailableBytes": 15183192064
+    },
+    {
+      "utcEpoch": 1791943565,
+      "diskUsedBytes": 68899364864,
+      "diskFreeBytes": 85978046464,
+      "memoryAvailableBytes": 15182307328
+    },
+    {
+      "utcEpoch": 1791943570,
+      "diskUsedBytes": 68899364864,
+      "diskFreeBytes": 85978046464,
+      "memoryAvailableBytes": 15212847104
+    },
+    {
+      "utcEpoch": 1791943575,
+      "diskUsedBytes": 68899364864,
+      "diskFreeBytes": 85978046464,
+      "memoryAvailableBytes": 15213056000
+    },
+    {
+      "utcEpoch": 1791943580,
+      "diskUsedBytes": 68900880384,
+      "diskFreeBytes": 85976530944,
+      "memoryAvailableBytes": 14388129792
+    },
+    {
+      "utcEpoch": 1791943585,
+      "diskUsedBytes": 68906369024,
+      "diskFreeBytes": 85971042304,
+      "memoryAvailableBytes": 14941868032
+    },
+    {
+      "utcEpoch": 1791943590,
+      "diskUsedBytes": 68909322240,
+      "diskFreeBytes": 85968089088,
+      "memoryAvailableBytes": 14726320128
+    },
+    {
+      "utcEpoch": 1791943595,
+      "diskUsedBytes": 68909371392,
+      "diskFreeBytes": 85968039936,
+      "memoryAvailableBytes": 14826151936
+    },
+    {
+      "utcEpoch": 1791943600,
+      "diskUsedBytes": 68909342720,
+      "diskFreeBytes": 85968068608,
+      "memoryAvailableBytes": 14862688256
+    },
+    {
+      "utcEpoch": 1791943605,
+      "diskUsedBytes": 68911484928,
+      "diskFreeBytes": 85965926400,
+      "memoryAvailableBytes": 14766411776
+    },
+    {
+      "utcEpoch": 1791943610,
+      "diskUsedBytes": 68916469760,
+      "diskFreeBytes": 85960941568,
+      "memoryAvailableBytes": 14646276096
+    },
+    {
+      "utcEpoch": 1791943615,
+      "diskUsedBytes": 68920737792,
+      "diskFreeBytes": 85956673536,
+      "memoryAvailableBytes": 14424506368
+    },
+    {
+      "utcEpoch": 1791943620,
+      "diskUsedBytes": 68920668160,
+      "diskFreeBytes": 85956743168,
+      "memoryAvailableBytes": 14547750912
+    },
+    {
+      "utcEpoch": 1791943625,
+      "diskUsedBytes": 68920700928,
+      "diskFreeBytes": 85956710400,
+      "memoryAvailableBytes": 14559580160
+    },
+    {
+      "utcEpoch": 1791943630,
+      "diskUsedBytes": 68920709120,
+      "diskFreeBytes": 85956702208,
+      "memoryAvailableBytes": 14549426176
+    },
+    {
+      "utcEpoch": 1791943635,
+      "diskUsedBytes": 68920717312,
+      "diskFreeBytes": 85956694016,
+      "memoryAvailableBytes": 14560960512
+    },
+    {
+      "utcEpoch": 1791943640,
+      "diskUsedBytes": 68920762368,
+      "diskFreeBytes": 85956648960,
+      "memoryAvailableBytes": 14615375872
+    },
+    {
+      "utcEpoch": 1791943645,
+      "diskUsedBytes": 68918161408,
+      "diskFreeBytes": 85959249920,
+      "memoryAvailableBytes": 15110864896
+    },
+    {
+      "utcEpoch": 1791943650,
+      "diskUsedBytes": 68918243328,
+      "diskFreeBytes": 85959168000,
+      "memoryAvailableBytes": 15159787520
+    },
+    {
+      "utcEpoch": 1791943655,
+      "diskUsedBytes": 68959911936,
+      "diskFreeBytes": 85917499392,
+      "memoryAvailableBytes": 14961856512
+    },
+    {
+      "utcEpoch": 1791943660,
+      "diskUsedBytes": 68967501824,
+      "diskFreeBytes": 85909909504,
+      "memoryAvailableBytes": 14964944896
+    },
+    {
+      "utcEpoch": 1791943665,
+      "diskUsedBytes": 68967890944,
+      "diskFreeBytes": 85909520384,
+      "memoryAvailableBytes": 14980767744
+    },
+    {
+      "utcEpoch": 1791943670,
+      "diskUsedBytes": 68971610112,
+      "diskFreeBytes": 85905801216,
+      "memoryAvailableBytes": 14856171520
+    },
+    {
+      "utcEpoch": 1791943675,
+      "diskUsedBytes": 68971610112,
+      "diskFreeBytes": 85905801216,
+      "memoryAvailableBytes": 14869807104
+    },
+    {
+      "utcEpoch": 1791943680,
+      "diskUsedBytes": 68971794432,
+      "diskFreeBytes": 85905616896,
+      "memoryAvailableBytes": 14891425792
+    },
+    {
+      "utcEpoch": 1791943685,
+      "diskUsedBytes": 69001154560,
+      "diskFreeBytes": 85876256768,
+      "memoryAvailableBytes": 14876221440
+    }
+  ]
+}

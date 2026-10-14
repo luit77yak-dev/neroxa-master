@@ -1,0 +1,20 @@
+{
+  "freeBytes": 90582474752,
+  "requiredBytes": 27917287424,
+  "availableMemoryBytes": 15582830592,
+  "requiredMemoryBytes": 6442450944,
+  "cpus": 4,
+  "ports": [
+    54321,
+    54322,
+    55321,
+    55322,
+    56321
+  ],
+  "imagesGiB": 6,
+  "volumesGiB": 8,
+  "archivesGiB": 2,
+  "buildGiB": 5,
+  "marginGiB": 5,
+  "passed": true
+}

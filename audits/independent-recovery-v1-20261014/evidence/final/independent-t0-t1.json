@@ -1,0 +1,61 @@
+{
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "Actual target browser PASS normal build",
+      "passed": true
+    },
+    {
+      "name": "T1 has actual new committed orders beyond T0",
+      "passed": true
+    },
+    {
+      "name": "T1 differs from restored T0",
+      "passed": true
+    },
+    {
+      "name": "T1 archive hash matches container",
+      "passed": true
+    },
+    {
+      "name": "Post-cutover transaction failure specific",
+      "passed": true
+    },
+    {
+      "name": "Failed transaction journal absent",
+      "passed": true
+    },
+    {
+      "name": "T1 full data and Auth unchanged after failure",
+      "passed": true
+    },
+    {
+      "name": "Destructive rollback to T0 blocked by populated-target guard",
+      "passed": true
+    },
+    {
+      "name": "Frozen T1 mutations rejected specifically",
+      "passed": true
+    },
+    {
+      "name": "Frozen write no data loss",
+      "passed": true
+    },
+    {
+      "name": "Roll-forward resumes with T1 orders intact",
+      "passed": true
+    }
+  ],
+  "rpoZero": false,
+  "t1CompleteClusterLoss": "NOT_PROVEN: T1 recovery requires the private checkpoint archive to survive outside the failed cluster; no WAL/PITR/CDC is configured.",
+  "orders": {
+    "t0": 46,
+    "t1": 47
+  },
+  "checkpoint": {
+    "sha256": "1c76ba88b8e57f52f9a8e6d0ba41efcb035baa755466d34be93990c7b12d8298",
+    "bytes": 704919,
+    "location": "private disposable runner outside target cluster; removed at cleanup"
+  },
+  "dataSha256": "6a5b969ede88c0e57c4c9a9d4fbe2ae96fbf781222eb77714564bca869d55663"
+}

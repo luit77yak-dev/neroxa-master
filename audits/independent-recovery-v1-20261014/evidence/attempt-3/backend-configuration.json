@@ -1,0 +1,85 @@
+{
+  "classification": "PASS_NATIVE_BACKEND_CONFIGURATION",
+  "checks": [
+    {
+      "name": "native PostgREST validates signed public key at sole allowed backend",
+      "passed": true
+    },
+    {
+      "name": "real native PostgREST rejects foreign signature before catalog or order",
+      "passed": true
+    },
+    {
+      "name": "private origin divergence denies SSR and privilege context",
+      "passed": true
+    },
+    {
+      "name": "private project divergence denies SSR and privilege context",
+      "passed": true
+    },
+    {
+      "name": "private mode divergence denies SSR and privilege context",
+      "passed": true
+    },
+    {
+      "name": "private public-key divergence denies SSR and privilege context",
+      "passed": true
+    },
+    {
+      "name": "normal build fails closed: missing test configuration",
+      "passed": true
+    },
+    {
+      "name": "normal build fails closed: server-only opt-in default build",
+      "passed": true
+    },
+    {
+      "name": "normal build fails closed: missing test key",
+      "passed": true
+    },
+    {
+      "name": "normal build fails closed: production URL",
+      "passed": true
+    },
+    {
+      "name": "normal build fails closed: foreign administrative project",
+      "passed": true
+    },
+    {
+      "name": "no fallback unknown.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "unknown domain remains denied by real catalog unknown.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "no fallback preview.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "unknown domain remains denied by real catalog preview.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "no fallback localhost",
+      "passed": true
+    },
+    {
+      "name": "unknown domain remains denied by real catalog localhost",
+      "passed": true
+    },
+    {
+      "name": "no fallback preview.lovable.app",
+      "passed": true
+    },
+    {
+      "name": "unknown domain remains denied by real catalog preview.lovable.app",
+      "passed": true
+    }
+  ],
+  "passed": 19,
+  "failed": 0,
+  "productionApproved": false,
+  "sqlModified": false
+}

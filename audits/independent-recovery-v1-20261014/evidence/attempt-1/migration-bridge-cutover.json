@@ -1,0 +1,159 @@
+{
+  "classification": "PASS_BOUNDED_UPGRADE_AND_T1_ROLL_FORWARD",
+  "checks": [
+    {
+      "name": "original IDs and every historical field neroxa_orders",
+      "passed": true
+    },
+    {
+      "name": "original IDs and every historical field neroxa_order_items",
+      "passed": true
+    },
+    {
+      "name": "original IDs and every historical field neroxa_order_status_history",
+      "passed": true
+    },
+    {
+      "name": "legacy snapshot marker remains empty, never reinterpreted",
+      "passed": true
+    },
+    {
+      "name": "no historical capability fabricated",
+      "passed": true
+    },
+    {
+      "name": "new post-cutover native orders exist",
+      "passed": true
+    },
+    {
+      "name": "new GROUP version2 snapshots exist",
+      "passed": true
+    },
+    {
+      "name": "post-cutover injected failure caught",
+      "passed": true
+    },
+    {
+      "name": "failed checkpoint absent",
+      "passed": true
+    },
+    {
+      "name": "all T1 orders preserved",
+      "passed": true
+    },
+    {
+      "name": "historical authenticated read historicOperator",
+      "passed": true
+    },
+    {
+      "name": "historical authenticated read foreignOperator",
+      "passed": true
+    },
+    {
+      "name": "historical authenticated read outsider",
+      "passed": true
+    },
+    {
+      "name": "authorized real Auth configures retained store availability",
+      "passed": true
+    },
+    {
+      "name": "authorized scoped owner configures retained store hours",
+      "passed": true
+    },
+    {
+      "name": "new native order on preserved original instance",
+      "passed": true
+    },
+    {
+      "name": "original store new order persisted with GROUP v2 and exact fee",
+      "passed": true
+    },
+    {
+      "name": "retained store idempotent retry preserves unique new order",
+      "passed": true
+    },
+    {
+      "name": "retained store new proof recovery works",
+      "passed": true
+    },
+    {
+      "name": "same historical store intent rejects altered payload",
+      "passed": true
+    },
+    {
+      "name": "cutover gate hash",
+      "passed": true
+    },
+    {
+      "name": "client roles have no RLS-bypassing TRUNCATE",
+      "passed": true
+    },
+    {
+      "name": "legacy public phone tracking disabled in frozen test cutover",
+      "passed": true
+    },
+    {
+      "name": "all 16 projected tables keep RLS",
+      "passed": true
+    },
+    {
+      "name": "historical FKs prevent cascade deletion",
+      "passed": true
+    },
+    {
+      "name": "same-organization A2 positive scoped Auth control",
+      "passed": true
+    },
+    {
+      "name": "same organization member still cannot read original A1 orders",
+      "passed": true
+    },
+    {
+      "name": "original A1 owner does not silently inherit new A2",
+      "passed": true
+    },
+    {
+      "name": "A2 operator cannot mutate historical A1 order",
+      "passed": true
+    },
+    {
+      "name": "old keyed order cannot become GROUP or duplicate",
+      "passed": true
+    },
+    {
+      "name": "old key alone is not buyer recovery proof",
+      "passed": true
+    },
+    {
+      "name": "received historical order cannot gain artificial capability",
+      "passed": true
+    },
+    {
+      "name": "privileged attempt to retrofit historical intent fails closed",
+      "passed": true
+    },
+    {
+      "name": "new legitimate native order still accepts private capability",
+      "passed": true
+    },
+    {
+      "name": "all historical buyer capabilities remain absent",
+      "passed": true
+    },
+    {
+      "name": "historical half item remains readable only by scoped Auth",
+      "passed": true
+    },
+    {
+      "name": "post-cutover native order and existing T1 writes preserved",
+      "passed": true
+    }
+  ],
+  "passed": 37,
+  "failed": 0,
+  "scope": "16-table operational projection; no shared Master financial lifecycle certification",
+  "independentRestore": false,
+  "realSandboxRolesResolved": false,
+  "productionApproved": false
+}

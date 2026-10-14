@@ -1,0 +1,606 @@
+{
+  "status": "FAIL",
+  "stage": "compare",
+  "checks": [
+    {
+      "name": "Loopback database /supabase_db_neroxa-ab-38497008138",
+      "passed": true
+    },
+    {
+      "name": "Loopback database /supabase_db_neroxa-ab-384970081381",
+      "passed": true
+    },
+    {
+      "name": "Different PostgreSQL system identifiers",
+      "passed": true
+    },
+    {
+      "name": "Different PostgreSQL data volumes",
+      "passed": true
+    },
+    {
+      "name": "Different native networks",
+      "passed": true
+    },
+    {
+      "name": "Different signing/API credentials",
+      "passed": true
+    },
+    {
+      "name": "PostgreSQL 17 tools",
+      "passed": true
+    },
+    {
+      "name": "Native global roles and memberships semantically identical",
+      "passed": true
+    },
+    {
+      "name": "Extension versions equal",
+      "passed": true
+    },
+    {
+      "name": "Historical cohort 3 orders 6 items 12 events",
+      "passed": true
+    },
+    {
+      "name": "Archive readable and nonempty",
+      "passed": true
+    },
+    {
+      "name": "Archive SHA after crossing source/runner boundary",
+      "passed": true
+    },
+    {
+      "name": "Archive SHA after crossing runner/target boundary",
+      "passed": true
+    },
+    {
+      "name": "At most one archive public declaration",
+      "passed": true
+    },
+    {
+      "name": "Catalog categories",
+      "passed": true
+    },
+    {
+      "name": "Catalog schemas",
+      "passed": true
+    },
+    {
+      "name": "Catalog relations",
+      "passed": true
+    },
+    {
+      "name": "Catalog columns",
+      "passed": true
+    },
+    {
+      "name": "Catalog policies",
+      "passed": true
+    },
+    {
+      "name": "Catalog triggers",
+      "passed": true
+    },
+    {
+      "name": "Catalog constraints",
+      "passed": true
+    },
+    {
+      "name": "Catalog indexes",
+      "passed": true
+    },
+    {
+      "name": "Catalog functions",
+      "passed": true
+    },
+    {
+      "name": "Catalog extensions",
+      "passed": true
+    },
+    {
+      "name": "Catalog table-grants",
+      "passed": true
+    },
+    {
+      "name": "Properties categories",
+      "passed": true
+    },
+    {
+      "name": "Properties functions",
+      "passed": true
+    },
+    {
+      "name": "Properties defaults",
+      "passed": true
+    },
+    {
+      "name": "Properties column-properties",
+      "passed": true
+    },
+    {
+      "name": "Properties views-options",
+      "passed": true
+    },
+    {
+      "name": "Properties enums",
+      "passed": true
+    },
+    {
+      "name": "Properties roles",
+      "passed": true
+    },
+    {
+      "name": "Properties memberships",
+      "passed": true
+    },
+    {
+      "name": "Properties event-triggers",
+      "passed": true
+    },
+    {
+      "name": "Properties index-properties",
+      "passed": true
+    },
+    {
+      "name": "Properties type-ownership",
+      "passed": true
+    },
+    {
+      "name": "Properties sequence-properties",
+      "passed": true
+    },
+    {
+      "name": "Data categories",
+      "passed": true
+    },
+    {
+      "name": "Data sequence",
+      "passed": true
+    },
+    {
+      "name": "Data sequence",
+      "passed": true
+    },
+    {
+      "name": "Data sequence",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "Data table",
+      "passed": true
+    },
+    {
+      "name": "All target FKs zero orphans",
+      "passed": true
+    },
+    {
+      "name": "Historical anchors restored",
+      "passed": true
+    },
+    {
+      "name": "No historical append capability",
+      "passed": true
+    },
+    {
+      "name": "Restored auth loopback",
+      "passed": true
+    },
+    {
+      "name": "Restored rest loopback",
+      "passed": true
+    },
+    {
+      "name": "Target Auth health",
+      "passed": true
+    },
+    {
+      "name": "Restored user authenticates against TARGET",
+      "passed": true
+    },
+    {
+      "name": "TARGET new JWT same UID and different signature",
+      "passed": true
+    },
+    {
+      "name": "Recovered scoped administrator 0",
+      "passed": true
+    },
+    {
+      "name": "Recovered scoped administrator 1",
+      "passed": true
+    },
+    {
+      "name": "Recovered scoped administrator 2",
+      "passed": true
+    },
+    {
+      "name": "SOURCE JWT rejected by TARGET signature",
+      "passed": false
+    }
+  ],
+  "remoteSql": false,
+  "metrics": {
+    "backupMs": 188,
+    "transferMs": 58,
+    "restoreMs": 455
+  },
+  "limitations": [
+    "Operational 16-table bridge projection, not full commercial Master.",
+    "Managed native bootstrap roles are compared, not imported or elevated.",
+    "T0 recovery does not prove RPO zero or hosted recovery.",
+    "Auth sessions and refresh tokens require separate portability/security review.",
+    "MFA variants outside previous scoped matrix not independently certified."
+  ],
+  "clusters": {
+    "systemIdentifiers": [
+      "7696332650173423653",
+      "7696334019652243493"
+    ],
+    "dataVolumes": [
+      [
+        "/var/lib/docker/volumes/supabase_db_neroxa-ab-38497008138/_data"
+      ],
+      [
+        "/var/lib/docker/volumes/supabase_db_neroxa-ab-384970081381/_data"
+      ]
+    ],
+    "images": [
+      "supabase/postgres:17.11.0.004",
+      "supabase/postgres:17.11.0.004"
+    ],
+    "networks": [
+      [
+        "neroxa-ab-38497008138"
+      ],
+      [
+        "neroxa-ab-384970081381"
+      ]
+    ]
+  },
+  "versions": {
+    "postgres": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "dump": "pg_dump (PostgreSQL) 17.11",
+    "restore": "pg_restore (PostgreSQL) 17.11",
+    "node": "v22.23.3"
+  },
+  "roleMapping": "Identity mapping verified by role attributes/memberships; bootstrap passwords and signing secrets intentionally not transferred.",
+  "archive": {
+    "sha256": "d9b4554a2103f7741e8336750e5c6d93990cda870d8c1c0fbae5dc8d0f118230",
+    "bytes": 701892,
+    "format": "custom",
+    "private": true,
+    "tocSha256": "5456c8bb81789e552158e392d867262c26c7159056776f01fcbdee98d891aa28",
+    "tocEntries": 1088
+  },
+  "fingerprints": {
+    "sourceDataSha256": "248a95b75ff5046c72f75a71c9faffdd55d3507550c17f741cdf39ec85bb969a",
+    "targetDataSha256": "248a95b75ff5046c72f75a71c9faffdd55d3507550c17f741cdf39ec85bb969a",
+    "sourceCatalogSha256": "681a7a33634d414e1b1af3873cd8ab2f527e3d146eb7e9a22f8fc7630613ac51",
+    "targetCatalogSha256": "681a7a33634d414e1b1af3873cd8ab2f527e3d146eb7e9a22f8fc7630613ac51",
+    "sourcePropertiesSha256": "0ee2b5856847e375f25d7a3ec7188569de63de36fc8fde9d5d12307960960a24",
+    "targetPropertiesSha256": "0ee2b5856847e375f25d7a3ec7188569de63de36fc8fde9d5d12307960960a24"
+  },
+  "foreignKeys": 74,
+  "error": "SOURCE JWT rejected by TARGET signature"
+}
