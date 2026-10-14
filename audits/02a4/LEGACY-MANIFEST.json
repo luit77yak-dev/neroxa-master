@@ -1,0 +1,134 @@
+{
+  "sourceDelivery": "7388038288c09eafa3a13172bbb7c8e5061f8b2c",
+  "mode": "literal source migrations; bodies validated; tables empty during historical image UPDATE",
+  "files": [
+    {
+      "source": "20260924025927_c9b76a2b-b43e-4b2e-b236-42cbe19fd6f2.sql",
+      "sha256": "5c48d5dd9afa9d4472d61db7d676cf3208dc8931ec87b9a64cf844c4d2ba574d"
+    },
+    {
+      "source": "20260924025959_2f2d3aed-70a3-4e06-82fc-477207b4d359.sql",
+      "sha256": "ce2fd76f5418ed8604d955f6fd026b927cb22994102093451c24d9d7215c51cd"
+    },
+    {
+      "source": "20260924030033_8fa3fa08-b582-48e3-953e-f328b191efad.sql",
+      "sha256": "ee065239bfb0a0331f1e448fd111b6ce400f67fe64c950fd10883d097d331be2"
+    },
+    {
+      "source": "20260924030057_d8465ae2-84d7-4c63-aff0-8fc3ecb1e6ae.sql",
+      "sha256": "a470e3458f4a94de3e016b583a60b2db2672c271fc20e9c554708e3e7c47ed5d"
+    },
+    {
+      "source": "20260925003510_3c2ad10a-ccee-4f31-8271-0312ae9b1f61.sql",
+      "sha256": "970bb3a82747be5dc7c9972612050a8d5fadfa92e0e304f730c59ad26ef4bf01"
+    },
+    {
+      "source": "20260925010400_add_public_order_status_tracking.sql",
+      "sha256": "e2bb37a299d30ee30e0a6a54628fbae74e7d634dae3fcfacf6ab34ea32ee02aa"
+    },
+    {
+      "source": "20260925011434_3943bfb2-e97b-4a94-b263-d7735f7a0dbc.sql",
+      "sha256": "c32eb1f896cb9a89baaa2d23792b71abf246aea4a1c4323a332c76e3d5125749"
+    },
+    {
+      "source": "20260925011456_b013e0c8-6824-47e2-987a-8f7c93ee08fe.sql",
+      "sha256": "73a59cdad34ed663cd4842d23f35581ea9e206f24b33b1d13ffee3b804dc22e5"
+    },
+    {
+      "source": "20260925011547_93dd5764-f219-4218-ac1c-ac043223aeb2.sql",
+      "sha256": "378886916234dd64c0d9ce39404b628000a828d921f508cbfdbfd4831b44909c"
+    },
+    {
+      "source": "20260925020936_d8efc867-c321-4c97-b84f-8cc2c55de5c6.sql",
+      "sha256": "2b106dc35a20326e51b55d0d79d0c48a70722f058820eb750fede6f7da49fb75"
+    },
+    {
+      "source": "20260925033434_317a1edd-6341-4fcf-82d4-0cde17683a4c.sql",
+      "sha256": "548b668c1960624482a13f4b342a209ab4eb6c5fcd9ad4670b9e346275de8c9e"
+    },
+    {
+      "source": "20260926032516_070872c0-e4d9-4274-ac37-eb601429be5e.sql",
+      "sha256": "5157106fdb8c0cc9fb44d010f7a834c1f88080807d64b6121b75243f959cb156"
+    },
+    {
+      "source": "20260926130000_apply_minimum_order_only_to_delivery.sql",
+      "sha256": "402cce7737bc238df902abc534b4b53180101e1003a99e979cf0beb70afcba6f"
+    },
+    {
+      "source": "20260926230000_harden_public_order_pricing.sql",
+      "sha256": "444b1ee85d2de7624b717451ade0be07c242fa21e1d27518dce1541aa96f79e1"
+    },
+    {
+      "source": "20260926241000_align_public_order_pricing.sql",
+      "sha256": "9458fec43f19e8909b5ca420a910abf0b6a4715f7f28f3b9edf405c45fcae780"
+    },
+    {
+      "source": "20260927001108_f889d6a8-88ae-4603-8e72-e9d0d36c0535.sql",
+      "sha256": "a40f4aba8f3f84aebb8d7e426dd47649bf722da1a13303ec43e4579e6346eb03"
+    },
+    {
+      "source": "20260927120000_remove_public_order_minimum.sql",
+      "sha256": "f4dc6960f88ab6c91efd53c4df183c09196b5e0719e2df545d3ca89daba165c1"
+    },
+    {
+      "source": "20260927130000_delivery_minimum_fee_plus_one.sql",
+      "sha256": "d169e1774342616362e1e40b53ca551ed425474848f37c76a3b28069cebbd366"
+    },
+    {
+      "source": "20260927140000_allow_public_order_item_additions.sql",
+      "sha256": "bbb8fb975fca932797c576949ac468a3e3440a0dbfc5c663746c5f07d25baa1c"
+    },
+    {
+      "source": "20260928120000_append_order_items_with_payment.sql",
+      "sha256": "6d3379b42b0f3e8c8ac2dadefaa14fff71f4327468863afdcbaf95489cae4f8d"
+    },
+    {
+      "source": "20260928133000_fix_append_order_items_with_payment.sql",
+      "sha256": "366d5fbbd833152ab2d0436d1194dbfb2cc5120e89c5fa10695bfce480addbe6"
+    },
+    {
+      "source": "20260928143000_fix_public_order_status_items.sql",
+      "sha256": "20a797537d4005a2436ece313c90778677ee8b9c07a5abdf9ea8870066aa8c3e"
+    },
+    {
+      "source": "20260928143100_reload_postgrest_schema.sql",
+      "sha256": "5cc20c052fcd47bc8736b8fe2fdee438cca70f6093af0b31493b9275159bc6e9"
+    },
+    {
+      "source": "20260930170000_neroxa_master_security_foundation.sql",
+      "sha256": "910032e6db7ec422ca7088da5bbcf8692b7238ad167d2ee99f6fc93b95c7fd4c"
+    },
+    {
+      "source": "20260930171000_neroxa_master_audit_foundation.sql",
+      "sha256": "4ccb436f1eb1b9820cda98a8aa172e14cb1e8f8cc2258938c12b316af578b3dd"
+    },
+    {
+      "source": "20260930173000_neroxa_master_security_hardening.sql",
+      "sha256": "2e63730b16ac13b669103cea13b4025a90ded8133f9a0b8c4bd7e6142779a8ea"
+    },
+    {
+      "source": "20260930180000_neroxa_master_clients_foundation.sql",
+      "sha256": "b723591e43e4179363601571bfcb5e8f71f72b0c3b87953a3271a92e0081a385"
+    },
+    {
+      "source": "20260930183000_neroxa_master_client_service.sql",
+      "sha256": "dadbf795711bcf07d165d617746db8db93c4c983fb978c1c56fb5953ede73212"
+    },
+    {
+      "source": "20260930190000_neroxa_master_commercial_foundation.sql",
+      "sha256": "c6677c120e90f3e7cbf07ed97b9e097d59e29bb69f6b801db6350f2871f6b23f"
+    },
+    {
+      "source": "20260930200000_neroxa_master_subscriptions_foundation.sql",
+      "sha256": "1dae572b17748d1baf2d42a3fa838df721705123dc6f2a663d54b5ee27faf810"
+    },
+    {
+      "source": "20260930210000_neroxa_master_finance_foundation.sql",
+      "sha256": "4dc74fce400366750e6222925b742370541cdd5441e387b59b1f3e4fabfb4c4f"
+    }
+  ],
+  "candidate": {
+    "path": "audits/02a2/sql/legacy-store-surfaces-quarantine.candidate.sql",
+    "sha256": "fdc0bd4402de968f3e2ac6751705276ac054f52f6beddc975f9fdd04c0f9fb8a"
+  }
+}
