@@ -181,6 +181,7 @@ try {
   };
   const toc = run(src, ["pg_restore", "--list", archive]);
   e.archive.tocSha256 = sha(toc);
+  fs.writeFileSync("audits/ab-auth/results/independent-toc.txt", toc);
   e.archive.tocEntries = toc.split("\n").filter((x) => /^\d+;/.test(x)).length;
   check("Archive readable and nonempty", e.archive.bytes > 1000 && e.archive.tocEntries > 50);
   // Transfer armored text through Docker relay; exact binary decoded only privately.
@@ -427,10 +428,7 @@ try {
   const altered = await service("create_public_order", {
     p_order: { ...proof.payload, customer_name: "Alteração fictícia proibida" },
   });
-  check(
-    "Restored checkout divergent payload rejected",
-    altered.status >= 400 && !!altered.body.code,
-  );
+  check("Restored checkout divergent payload rejected", altered.body.code === "22023");
   const wrong = await service("neroxa_recover_group_order", {
     p_instance_id: fixtures[1].instance_id,
     p_checkout_key: proof.payload.idempotency_key,
