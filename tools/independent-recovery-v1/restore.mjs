@@ -323,10 +323,37 @@ try {
     await new Promise((r) => setTimeout(r, 1000));
   }
   check("Target Auth health", ready);
+  const secretFor = (project) =>
+    JSON.parse(docker(["inspect", "supabase_auth_" + project]))[0]
+      .Config.Env.find((x) => x.startsWith("GOTRUE_JWT_SECRET="))
+      ?.slice("GOTRUE_JWT_SECRET=".length);
+  const sourceSigningSecret = secretFor(source),
+    targetSigningSecret = secretFor(target);
+  check(
+    "Different effective GoTrue signing secrets",
+    !!sourceSigningSecret && !!targetSigningSecret && sourceSigningSecret !== targetSigningSecret,
+  );
+  const verifyHmac = (jwt, secret) => {
+    const [h, p, sig] = jwt.split(".");
+    return (
+      crypto
+        .createHmac("sha256", secret)
+        .update(h + "." + p)
+        .digest("base64url") === sig
+    );
+  };
   const sourceActor = JSON.parse(
     fs.readFileSync(process.env.DR_SOURCE_WORKDIR + "/h03-actor.private.json", "utf8"),
   );
   const claims = JSON.parse(Buffer.from(sourceActor.token.split(".")[1], "base64url"));
+  check(
+    "Source JWT valid with SOURCE effective signing secret",
+    verifyHmac(sourceActor.token, sourceSigningSecret),
+  );
+  check(
+    "Source JWT cryptographic signature invalid for TARGET",
+    !verifyHmac(sourceActor.token, targetSigningSecret),
+  );
   const client = createClient(targetEnv.API_URL, targetEnv.ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
@@ -375,9 +402,10 @@ try {
   const foreign = await req("rpc/get_admin_orders", sourceActor.token, {
     p_instance_id: fixtures[0].instance_id,
   });
+  e.foreignTokenResponse = { status: foreign.status, code: foreign.body.code };
   check(
     "SOURCE JWT rejected by TARGET signature",
-    foreign.status === 401 && foreign.body.code === "PGRST301",
+    foreign.status === 401 && ["PGRST301", "PGRST303"].includes(foreign.body.code),
   );
   fs.writeFileSync(work + "/h03-actor.private.json", JSON.stringify({ ...sourceActor, token }), {
     mode: 0o600,
@@ -477,7 +505,7 @@ try {
     });
     check(
       "Foreign source signing rejected identity " + i,
-      bad.status === 401 && bad.body.code === "PGRST301",
+      bad.status === 401 && ["PGRST301", "PGRST303"].includes(bad.body.code),
     );
   }
   check(
