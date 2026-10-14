@@ -1,0 +1,10 @@
+{
+  "browserBinary": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)",
+  "playwrightCore": "1.58.2",
+  "appNode": "v22.23.0",
+  "controllerNode": "v24.19.0",
+  "bun_lock_sha256": "7595f081edcd1868649c798603c7e130d0d20deeca3838a3d975521b678b983a",
+  "browser_SHA": "ad41822e4622e3b14bcb650d7be84126f78b80f6",
+  "realAuthInBrowser": false,
+  "realAuthInDatabaseProfiles": true
+}

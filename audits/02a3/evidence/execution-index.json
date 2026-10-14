@@ -1,0 +1,277 @@
+{
+  "run2-legacy": {
+    "checks": 0,
+    "counts": {},
+    "error": {
+      "stage": "schema",
+      "message": "SQL: ERROR:  \"v_crust\" is not a known variable"
+    },
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 111232258048,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15738814464,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run3-master": {
+    "checks": 399,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:PASS": 1,
+      "baseline:FAIL": 1,
+      "candidate:PASS": 384,
+      "candidate:FAIL": 7
+    },
+    "error": {
+      "stage": "realtime",
+      "message": "Realtime TIMED_OUT"
+    },
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91588247552,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15287853056,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run7-master": {
+    "checks": 419,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 400,
+      "candidate:FAIL": 9
+    },
+    "error": {
+      "stage": "targeted forbidden mutation",
+      "message": "P0 candidate mutation; stop writes: staff without grant changes B availability"
+    },
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91588243456,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15469584384,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run4-legacy": {
+    "checks": 9,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 2,
+      "baseline:PASS": 1
+    },
+    "error": {
+      "stage": "candidate",
+      "message": "SQL: ERROR:  must be owner of table objects"
+    },
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 90863972352,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15544336384,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run6-legacy": {
+    "checks": 9,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 2,
+      "baseline:PASS": 1
+    },
+    "error": {
+      "stage": "candidate",
+      "message": "SQL: ERROR:  must be owner of table objects"
+    },
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91588136960,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15346417664,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run6-master": {
+    "checks": 423,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 404,
+      "candidate:FAIL": 9
+    },
+    "error": null,
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91588231168,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15579979776,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run1-master": {
+    "checks": 0,
+    "counts": {},
+    "error": null,
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 111232352256,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15770312704,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run8-master": {
+    "checks": 14,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 2,
+      "candidate:FAIL": 2
+    },
+    "error": null,
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91588190208,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15322357760,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run2-master": {
+    "checks": 380,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:PASS": 1,
+      "baseline:FAIL": 1,
+      "candidate:PASS": 369,
+      "candidate:FAIL": 3
+    },
+    "error": {
+      "stage": "candidate",
+      "message": "P0 candidate access/integrity violation: neroxa_storefront_availability child/availability foreign"
+    },
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 111016419328,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15728984064,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  },
+  "run5-master": {
+    "checks": 416,
+    "counts": {
+      "platform:PASS": 6,
+      "baseline:PASS": 1,
+      "baseline:FAIL": 1,
+      "candidate:PASS": 400,
+      "candidate:FAIL": 8
+    },
+    "error": {
+      "stage": "realtime",
+      "message": "Realtime TIMED_OUT"
+    },
+    "resource": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91588214784,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15567872000,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "cleanup_recorded": true
+  }
+}

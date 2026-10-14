@@ -1,0 +1,30 @@
+{
+  "classification": "P0 confirmed, approval interrupted",
+  "sourceRun": 38621636857,
+  "job": 116050361678,
+  "harnessSha": "ca9310e5a28d32e1271d91af74700f6c91741657",
+  "candidate": {
+    "path": "audits/02a2/scoped-order-access.candidate.sql",
+    "sha256": "648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c"
+  },
+  "actor": "staff_none",
+  "identity": "Auth-issued authenticated AAL2; platform probe PASS; no instance membership seeded",
+  "method": "PATCH",
+  "path": "/rest/v1/neroxa_storefront_availability?instance_id=eq.91000000-0000-4000-8000-000000000200",
+  "body": {
+    "enabled": false
+  },
+  "http": 200,
+  "returnedRows": 1,
+  "changedTables": [
+    "public.neroxa_storefront_availability"
+  ],
+  "before": {
+    "public.neroxa_storefront_availability": "3:b6a177ef79d386cef52f2092783714d6"
+  },
+  "after": {
+    "public.neroxa_storefront_availability": "3:98290f77e05ec1c1a5ee905aeb7e9c92"
+  },
+  "unrelatedTablesUnchanged": true,
+  "newWritesStopped": true
+}
