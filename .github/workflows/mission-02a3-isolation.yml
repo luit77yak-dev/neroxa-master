@@ -14,16 +14,7 @@ jobs:
       matrix:
         include:
           - profile: master
-            focus: matrix
-            actors: admin_A,admin_B,admin_C
-          - profile: master
-            focus: matrix
-            actors: staff_A,staff_none,common,anon
-          - profile: master
             focus: addons-realtime
-            actors: all
-          - profile: legacy
-            focus: matrix
             actors: all
     env:
       MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql

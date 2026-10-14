@@ -13,3 +13,5 @@ Storage M: schema público histórico não contém políticas Storage operaciona
 Draft: ensaios reais pendentes até logs. Não promover SQLs, não restaurar grants como rollback, não reativar painel. Sem integração comercial, sem merge/deploy.
 
 Revisão: Deliverya99a7d7 tipa snapshot opcional de tamanho e revoga drivers/loyalty_accounts após P0 real7388038. Novo teste exige uma ordem/item, subtotal/total/linha30 e taxa0, além de Auth RPC real. Matriz M dividida por atores sem trocar asserts;324 horários já foram executados separadamente. Complementos/Realtime têm job focalizado. RT em L é NOT RUN intencionalmente após quarentena, não PASS. Não somar casos duplicados dos lotes.
+
+Diagnóstico final RT4f95a33: join rejeitado com InitializingProjectConnection, antes de entrega de evento. Retry limitado a quatro tentativas/5s exclusivamente desse estado transitório; JWT/authorization/other errors continuam FAIL sem retry. Novo job focalizado, sem alterar SQL/asserts nem reinterpretar run anterior.
