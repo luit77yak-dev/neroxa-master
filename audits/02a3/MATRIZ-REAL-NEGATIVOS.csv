@@ -1,0 +1,377 @@
+phase,resource_case,actor,target,operation,raw_status,HTTP,SQLSTATE,returned_rows,state_unchanged,assessment
+baseline,baseline foreign private read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+baseline,baseline foreign private read,staff_none,B,SELECT,FAIL,200,,1,True,AS EXECUTED
+candidate,neroxa_orders read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,admin_A,B,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,admin_A,B,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,admin_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,admin_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,admin_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,admin_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,admin_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,admin_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,admin_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,admin_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,admin_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,admin_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,admin_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,admin_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,admin_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,admin_A,C,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,admin_A,C,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,admin_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,admin_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,admin_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,admin_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,admin_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,admin_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,admin_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,admin_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,admin_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,admin_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,admin_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,admin_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,admin_B,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,admin_B,A,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,admin_B,A,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_B,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,admin_B,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,admin_B,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_B,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,admin_B,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,admin_B,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_B,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,admin_B,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,admin_B,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_B,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,admin_B,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,admin_B,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_B,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,admin_B,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,admin_B,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_B,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,admin_B,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,admin_B,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,admin_B,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,admin_B,C,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,admin_B,C,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_B,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,admin_B,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,admin_B,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_B,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,admin_B,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,admin_B,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_B,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,admin_B,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,admin_B,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_B,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,admin_B,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,admin_B,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_B,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,admin_B,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,admin_B,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_B,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,admin_B,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,admin_B,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,admin_C,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,admin_C,A,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,admin_C,A,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_C,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,admin_C,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,admin_C,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_C,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,admin_C,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,admin_C,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_C,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,admin_C,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,admin_C,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_C,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,admin_C,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,admin_C,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_C,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,admin_C,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,admin_C,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_C,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,admin_C,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,admin_C,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,admin_C,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,admin_C,B,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,admin_C,B,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_C,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,admin_C,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,admin_C,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_C,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,admin_C,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,admin_C,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_C,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,admin_C,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,admin_C,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_C,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,admin_C,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,admin_C,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_C,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,admin_C,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,admin_C,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_C,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,admin_C,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,admin_C,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,staff_A,B,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,staff_A,B,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,staff_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,staff_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,staff_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,staff_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,staff_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,staff_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,staff_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,staff_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,staff_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,staff_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,staff_A,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,staff_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,staff_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,staff_A,C,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,staff_A,C,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,staff_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,staff_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,staff_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,staff_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,staff_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,staff_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,staff_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,staff_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,staff_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,staff_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,staff_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,staff_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,staff_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,staff_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,staff_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,staff_A,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,staff_A,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,staff_A,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,staff_none,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,staff_none,A,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,staff_none,A,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,staff_none,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,staff_none,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,staff_none,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,staff_none,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,staff_none,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,staff_none,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,staff_none,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,staff_none,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,staff_none,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,staff_none,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,staff_none,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,staff_none,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,staff_none,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,staff_none,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,staff_none,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,staff_none,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,staff_none,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,staff_none,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,staff_none,B,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,staff_none,B,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,staff_none,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,staff_none,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,staff_none,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,staff_none,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,staff_none,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,staff_none,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,staff_none,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,staff_none,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,staff_none,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,staff_none,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,staff_none,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,staff_none,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,staff_none,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,staff_none,C,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,staff_none,C,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,staff_none,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,staff_none,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,staff_none,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,staff_none,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,staff_none,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,staff_none,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,staff_none,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,staff_none,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,staff_none,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,staff_none,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,staff_none,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,staff_none,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,staff_none,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,staff_none,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,staff_none,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,staff_none,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,staff_none,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,staff_none,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,common,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,common,A,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,common,A,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,common,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,common,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,common,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,common,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,common,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,common,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,common,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,common,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,common,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,common,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,common,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,common,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,common,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,common,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,common,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,common,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,common,A,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,common,A,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,common,B,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,common,B,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,common,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,common,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,common,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,common,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,common,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,common,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,common,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,common,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,common,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,common,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,common,B,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,common,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,common,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders foreign update,common,C,UPDATE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_orders foreign delete,common,C,DELETE,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,common,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign update,common,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_categories foreign delete,common,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,common,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign update,common,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products foreign delete,common,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,common,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign update,common,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups foreign delete,common,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,common,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign update,common,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons foreign delete,common,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,common,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign update,common,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings foreign delete,common,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,common,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign update,common,C,UPDATE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones foreign delete,common,C,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,anon,A,SELECT,PASS,401,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,anon,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,anon,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,anon,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,anon,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,anon,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,anon,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,anon,B,SELECT,PASS,401,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,anon,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,anon,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,anon,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,anon,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,anon,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,anon,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,anon,C,SELECT,PASS,401,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,anon,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_products read,anon,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,anon,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,anon,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,anon,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,anon,C,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,admin_A,B,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,admin_A,C,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,staff_A,B,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,staff_A,C,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,staff_none,A,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,staff_none,B,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,staff_none,C,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,common,A,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,common,B,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,common,C,RPC,PASS,200,,0,True,AS EXECUTED
+candidate,get_admin_orders,anon,A,RPC,PASS,401,42501,,True,AS EXECUTED
+candidate,get_admin_orders,anon,B,RPC,PASS,401,42501,,True,AS EXECUTED
+candidate,get_admin_orders,anon,C,RPC,PASS,401,42501,,True,AS EXECUTED
+candidate,category crossing,admin_A,B,INSERT,PASS,400,23514,,True,AS EXECUTED
+candidate,instance adulteration,admin_A,B,UPDATE,PASS,400,23514,,True,AS EXECUTED
+candidate,foreign status RPC,admin_A,B,RPC,PASS,403,42501,,True,AS EXECUTED
+candidate,foreign status RPC,staff_none,B,RPC,PASS,403,42501,,True,AS EXECUTED
+candidate,neroxa_order_items child/availability foreign,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_order_status_history child/availability foreign,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_availability child/availability foreign,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_weekly_hours child/availability foreign,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_order_items child/availability foreign,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_order_status_history child/availability foreign,staff_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_availability child/availability foreign,staff_A,B,SELECT,FAIL,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_weekly_hours child/availability foreign,staff_A,B,SELECT,FAIL,200,,1,True,AS EXECUTED
+candidate,neroxa_order_items child/availability foreign,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_order_status_history child/availability foreign,staff_none,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_availability child/availability foreign,staff_none,B,SELECT,FAIL,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_weekly_hours child/availability foreign,staff_none,B,SELECT,FAIL,200,,1,True,AS EXECUTED
+candidate,neroxa_order_items child/availability foreign,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_order_status_history child/availability foreign,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_availability child/availability foreign,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_weekly_hours child/availability foreign,common,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,neroxa_order_items child/availability foreign,anon,B,SELECT,PASS,401,42501,,True,AS EXECUTED
+candidate,neroxa_order_status_history child/availability foreign,anon,B,SELECT,PASS,401,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_availability child/availability foreign,anon,B,SELECT,PASS,401,42501,,True,AS EXECUTED
+candidate,neroxa_storefront_weekly_hours child/availability foreign,anon,B,SELECT,PASS,401,42501,,True,AS EXECUTED
+candidate,foreign product insert,admin_A,B,INSERT,FAIL,400,23514,,True,DENIAL VERIFIED; raw test failed over-strict HTTP403 expectation; not P0
+candidate,Inherited SELECT grant still scoped,admin_A,B,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,REST revoked explicit membership same JWT,admin_A,A,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,Master CRM view common user,common,CRM,SELECT,PASS,200,,0,True,AS EXECUTED
+candidate,Storage cross-prefix upload,admin_A,B,INSERT,PASS,403,StorageApiError,,True,AS EXECUTED
+candidate,Storage cross-prefix upload,staff_A,B,INSERT,PASS,403,StorageApiError,,True,AS EXECUTED
+candidate,Storage cross-prefix upload,staff_none,B,INSERT,PASS,403,StorageApiError,,True,AS EXECUTED
+candidate,Storage cross-prefix upload,common,B,INSERT,PASS,403,StorageApiError,,True,AS EXECUTED
+candidate,Storage cross-prefix upload,anon,B,INSERT,PASS,403,StorageApiError,,True,AS EXECUTED
+candidate,Storage foreign download,admin_A,B,SELECT,PASS,404,StorageApiError,,True,AS EXECUTED
+candidate,Storage foreign overwrite,admin_A,B,UPDATE,PASS,403,,,True,AS EXECUTED
+candidate,Storage foreign removal,admin_A,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,Storage foreign download,staff_none,B,SELECT,PASS,404,StorageApiError,,True,AS EXECUTED
+candidate,Storage foreign overwrite,staff_none,B,UPDATE,PASS,403,,,True,AS EXECUTED
+candidate,Storage foreign removal,staff_none,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,Storage foreign download,common,B,SELECT,PASS,404,StorageApiError,,True,AS EXECUTED
+candidate,Storage foreign overwrite,common,B,UPDATE,PASS,403,,,True,AS EXECUTED
+candidate,Storage foreign removal,common,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,Storage foreign download,anon,B,SELECT,PASS,404,StorageApiError,,True,AS EXECUTED
+candidate,Storage foreign overwrite,anon,B,UPDATE,PASS,403,,,True,AS EXECUTED
+candidate,Storage foreign removal,anon,B,DELETE,PASS,200,,0,True,AS EXECUTED
+candidate,staff without grant changes B availability,staff_none,B,UPDATE,FAIL,200,,1,False,AS EXECUTED

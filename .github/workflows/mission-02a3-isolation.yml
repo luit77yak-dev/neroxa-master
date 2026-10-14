@@ -1,0 +1,98 @@
+name: Mission 02A3 real isolated profiles
+on:
+  push:
+    branches: [security/mission-02a3-real-isolation-20261014]
+    paths: [.github/workflows/mission-02a3-isolation.yml, tools/mission-02a3/**]
+permissions:
+  contents: read
+jobs:
+  real-profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [master] # Legacy exact candidate already failed managed Storage ownership; see prior pinned runs.
+    env:
+      MISSION_PROFILE: ${{ matrix.profile }}
+      MISSION_MUTATION_PROBE: "false"
+      MISSION_FOCUS: "legacy-rpc" # Focused follow-up; full matrix and forbidden UPDATE retained in prior pinned run.
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
+      AB_PROJECT: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
+      AB_NETWORK: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 7fe0e05ca899de3182872921591cbaccd840e58c
+          path: delivery-legacy
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.0'
+      - name: Verify public standard runner eligibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo 'PUBLIC_STANDARD_RUNNER_ELIGIBLE=true; no cache/artifact upload configured'
+      - name: Reclaim only disposable hosted SDKs and measure actual capacity
+        run: |
+          test "$GITHUB_ACTIONS" = true
+          case "$PWD" in /home/runner/*) ;; *) exit 1;; esac
+          df -h "$RUNNER_TEMP"
+          if [ "$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1)" -lt 30064771072 ]; then
+            sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+          fi
+          python3 tools/mission-02a3/preflight.py
+      - name: Pinned dependencies; no app environment or customer data
+        run: |
+          test "$(git -C delivery-legacy rev-parse HEAD)" = 7fe0e05ca899de3182872921591cbaccd840e58c
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
+          echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
+          find . -name .env -not -path './node_modules/*' -not -path './.git/*' -exec rm -- {} +
+      - name: Unlinked platform with real Auth REST Storage Realtime
+        run: |
+          export AB_WORKDIR="$RUNNER_TEMP/02a3-$MISSION_PROFILE-$GITHUB_RUN_ID"
+          echo "AB_WORKDIR=$AB_WORKDIR" >> "$GITHUB_ENV"
+          mkdir -m 700 "$AB_WORKDIR"
+          supabase init --workdir "$AB_WORKDIR"
+          python3 tools/ab-auth/configure.py
+          test ! -d "$AB_WORKDIR/supabase/migrations"
+          test ! -f "$AB_WORKDIR/supabase/.temp/project-ref"
+          docker network create --driver bridge --opt com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$AB_NETWORK"
+          python3 tools/ab-auth/docker_loopback.py > "$AB_WORKDIR/relay.private.log" 2>&1 &
+          echo $! > "$AB_WORKDIR/relay.pid"
+          for attempt in $(seq 1 30); do test -S "$AB_WORKDIR/docker-loopback.sock" && break; sleep 1; done
+          export DOCKER_HOST="unix://$AB_WORKDIR/docker-loopback.sock"
+          echo "DOCKER_HOST=$DOCKER_HOST" >> "$GITHUB_ENV"
+          if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit > "$AB_WORKDIR/start.private.log" 2>&1; then
+            python3 tools/ab-auth/start_failure.py
+            exit 1
+          fi
+          supabase status --workdir "$AB_WORKDIR" -o env > "$AB_WORKDIR/status.private.env"
+          chmod 600 "$AB_WORKDIR/status.private.env"
+          docker ps --format '{{.Names}} {{.Image}} {{.Status}}'
+          df -h "$RUNNER_TEMP"
+      - name: Real identities and candidate rehearsal; deny all external test egress
+        run: |
+          bash tools/mission-02a3/network.sh lock
+          trap 'bash tools/mission-02a3/network.sh unlock' EXIT
+          node tools/mission-02a3/run.mjs
+      - name: Cleanup only this disposable project
+        if: always()
+        run: |
+          bash tools/mission-02a3/network.sh unlock
+          if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
+            supabase stop --workdir "$AB_WORKDIR" --no-backup
+            if [ -f "$AB_WORKDIR/relay.pid" ]; then kill "$(cat "$AB_WORKDIR/relay.pid")" || true; fi
+          fi
+          docker --host=unix:///var/run/docker.sock network rm "$AB_NETWORK" || true
+          remaining=$(docker --host=unix:///var/run/docker.sock ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT)
+          test -z "$remaining"
+          echo 'CLEANUP=PASS no project containers; runner disposable; no dumps or tokens uploaded'

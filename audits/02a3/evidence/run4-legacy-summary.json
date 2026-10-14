@@ -1,0 +1,66 @@
+{
+  "mission": "02A.3",
+  "profile": "legacy",
+  "status": "FAIL",
+  "stage": "candidate",
+  "productionApproved": false,
+  "limitations": [
+    "Historical structural catalog is not installed production schema.",
+    "Master CRM scope differs from store customer PII.",
+    "Legacy schema has no shop-instance field; A/B ownership is fixture lineage, not added fake isolation."
+  ],
+  "versions": {
+    "postgres": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "node": "v22.23.0"
+  },
+  "images": [
+    {
+      "name": "supabase_storage_neroxa-02a3-38620164304-legacy",
+      "tag": "supabase/storage-api:v1.79.36",
+      "imageId": "sha256:12afd2170c5ca80880a4af472bcb89d28e090e3155a8bcee4246c1fb3991dcdd"
+    },
+    {
+      "name": "supabase_rest_neroxa-02a3-38620164304-legacy",
+      "tag": "postgrest/postgrest:v16.4",
+      "imageId": "sha256:1ad5f2ea5501150ec9c7953ae9bf04111ced39a53ca01fc0f08af6d0b7ba67be"
+    },
+    {
+      "name": "supabase_realtime_neroxa-02a3-38620164304-legacy",
+      "tag": "supabase/realtime:v2.140.10",
+      "imageId": "sha256:7412151d218fc99aa324e95883f1e29d2008542c9f85e241873f50c3f6476c43"
+    },
+    {
+      "name": "supabase_auth_neroxa-02a3-38620164304-legacy",
+      "tag": "supabase/gotrue:v2.197.0",
+      "imageId": "sha256:1181bff5ba4ce440013a63cef9f4cf13024c432d705c9b1fbc9e5b949e852f48"
+    },
+    {
+      "name": "supabase_kong_neroxa-02a3-38620164304-legacy",
+      "tag": "kong:2.8.1",
+      "imageId": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a"
+    },
+    {
+      "name": "supabase_db_neroxa-02a3-38620164304-legacy",
+      "tag": "supabase/postgres:17.11.0.004",
+      "imageId": "sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a"
+    }
+  ],
+  "legacyReplay": {
+    "mode": "catalog reconstruction with deferred function validation",
+    "literalReplay": "FAIL in prior real execution: undeclared v_crust",
+    "sourceBodiesChanged": false,
+    "normalMigrationReplayApproved": false
+  },
+  "appliedCandidate": {
+    "path": "delivery-legacy/audits/02a2/sql/legacy-store-surfaces-quarantine.candidate.sql",
+    "sha256": "23fdefa37984d73339fb314833e878b48d84f3069948ebe922210877e34c513c"
+  },
+  "error": {
+    "stage": "candidate",
+    "message": "SQL: ERROR:  must be owner of table objects"
+  },
+  "counts": {
+    "pass": 7,
+    "fail": 2
+  }
+}

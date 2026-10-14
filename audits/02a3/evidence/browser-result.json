@@ -1,0 +1,1910 @@
+{
+  "mission": "02A.3",
+  "sha": "ad41822e4622e3b14bcb650d7be84126f78b80f6",
+  "status": "PASS",
+  "RLSProof": false,
+  "checks": [
+    {
+      "name": "Client React commit mounts SuspendedLegacyPanel",
+      "status": "PASS",
+      "commits": [
+        {
+          "names": [
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "StartClient",
+            "Transitioner"
+          ],
+          "at": 5619.899999999441
+        },
+        {
+          "names": [
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "StartClient",
+            "Transitioner"
+          ],
+          "at": 5628.899999999441
+        },
+        {
+          "names": [
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "Lazy",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "StartClient",
+            "SuspendedLegacyPanel",
+            "Transitioner"
+          ],
+          "at": 5635.299999999814
+        }
+      ]
+    },
+    {
+      "name": "StaffPanel absent from mounted fiber tree",
+      "status": "PASS"
+    },
+    {
+      "name": "Hydrated navigation to existing admin orders login",
+      "status": "PASS",
+      "url": "http://127.0.0.1:58601/admin/pedidos",
+      "commits": [
+        {
+          "names": [
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "StartClient",
+            "Transitioner"
+          ],
+          "at": 2495.899999999441
+        },
+        {
+          "names": [
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "StartClient",
+            "Transitioner"
+          ],
+          "at": 2499.2999999998137
+        },
+        {
+          "names": [
+            "AdminOrdersPage",
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "Lazy",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "StartClient",
+            "Transitioner"
+          ],
+          "at": 2502.2999999998137
+        },
+        {
+          "names": [
+            "",
+            "AdminOrdersPage",
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "Lazy",
+            "LogIn",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "ShoppingBag",
+            "StartClient",
+            "Transitioner"
+          ],
+          "at": 2513.899999999441
+        },
+        {
+          "names": [
+            "",
+            "AdminOrdersPage",
+            "Asset",
+            "Await",
+            "AwaitInner",
+            "CatchBoundary",
+            "CatchNotFound",
+            "HeadContent",
+            "Lazy",
+            "LogIn",
+            "MatchImpl",
+            "MatchInnerImpl",
+            "MatchView",
+            "Matches",
+            "MatchesInner",
+            "OutletImpl",
+            "QueryClientProvider",
+            "RootComponent",
+            "RootShell",
+            "RouterContextProvider",
+            "RouterProvider",
+            "Script",
+            "Scripts",
+            "ShoppingBag",
+            "StartClient",
+            "Transitioner"
+          ],
+          "at": 2531.2999999998137
+        }
+      ]
+    }
+  ],
+  "ssr200": true,
+  "backendRequests": [],
+  "blockedExternalOrigins": [
+    "https://fonts.googleapis.com",
+    "https://fonts.googleapis.com"
+  ],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
+    "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+  ],
+  "pageErrors": [],
+  "requests": [
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/painel"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/styles.css"
+    },
+    {
+      "method": "GET",
+      "origin": "https://fonts.googleapis.com",
+      "path": "/css2"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@tanstack-start/styles.css"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@id/virtual:tanstack-start-dev-client-entry"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@react-refresh"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@vite/client"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/plugin/default-entry/client.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react-dom_client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/esm/client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react_jsx-dev-runtime.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/rolldown-runtime-DC62tzP2.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/hydrateStart.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/StartClient.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react-dom.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/index.dev.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react_jsx-runtime.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client/hydrateStart.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/utils.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/awaited.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/ClientOnly.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useRouter.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useMatch.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useLoaderData.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useLoaderDeps.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useParams.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useSearch.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useNavigate.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useRouteContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/link.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/route.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/fileRoute.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/lazyRouteComponent.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/not-found.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/ScriptOnce.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Match.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Matches.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/router.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/RouterProvider.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/ScrollRestoration.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useBlocker.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useRouterState.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useLocation.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useCanGoBack.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Asset.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/headContentUtils.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Scripts.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/HeadContent.dev.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client/ServerFunctionSerializationAdapter.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/start.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/empty-plugin-adapters.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/router.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/isServer/development.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/nonRouteComponentContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/routerContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/matchContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@tanstack_react-router_n_@tanstack_react-store.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/renderRouteNotFound.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/scroll-restoration.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Transitioner.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/routerStores.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/HeadContent.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/history/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/constants.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/createClientRpc.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/load-client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/makeSerovalPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/headers.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/json.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/seroval-plugins.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/RawStreamRPCPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/supabase/auth-attacher.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@tanstack_react-query.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routeTree.gen.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/load-server.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/utils.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/invariant.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/path.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/not-found.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/scroll-restoration.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/qss.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/searchParams.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/root.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/redirect.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/rewrite.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/stores.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/router.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/defer.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/link.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/manifest.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/Matches.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/bodyScripts.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/route.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/config.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/searchMiddleware.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/transformer.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/RawStream.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/scroll-restoration-script/client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getStartOptions.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/serverFnFetcher.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/ssr-match-id.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval/dist/dev/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/cookie-es/dist/index.mjs"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/ShallowErrorPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/RawStreamJSONPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval-plugins/dist/dev/web.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/esm/useServerFn.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/Hydrate.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/supabase/client.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/__root.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/index.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-assinaturas.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-clientes.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-comercial.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-financeiro.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/painel.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/admin/pedidos.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/loja/$slug.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/await-signal.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/sieve-cache.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/new-process-route-tree.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getDefaultSerovalPlugins.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/frame-decoder.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval-plugins/dist/dev/web-CDQeyEaf.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/rawStreamCodec.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/safeObjectMerge.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createMiddleware.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createCsrfMiddleware.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createStart.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getRouterInstance.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getGlobalStartContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-fn-stubs/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/styles.css"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/lib/lovable-error-reporting.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/core/delivery/backend-configuration.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/test-backend.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@supabase_supabase-js.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/supabase/previewAuthStorage.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/lucide-react.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/components/ui/button.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/lib/domain/money.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/features/admin/components/TopPanelNav.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval-plugins/dist/dev/rolldown-runtime-D7D4PA-g.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getStartContextServerOnly.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-fn-stubs/dist/esm/createIsomorphicFn.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-fn-stubs/dist/esm/envOnly.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@radix-ui_react-slot.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/class-variance-authority.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/lib/utils.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/clsx.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/tailwind-merge.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/painel.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/admin/pedidos"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/styles.css"
+    },
+    {
+      "method": "GET",
+      "origin": "https://fonts.googleapis.com",
+      "path": "/css2"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@tanstack-start/styles.css"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@id/virtual:tanstack-start-dev-client-entry"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@react-refresh"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@vite/client"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/vite/dist/client/env.mjs"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/plugin/default-entry/client.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react-dom_client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/esm/client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react_jsx-dev-runtime.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/rolldown-runtime-DC62tzP2.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/hydrateStart.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/StartClient.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/index.dev.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react_jsx-runtime.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client/hydrateStart.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/utils.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/awaited.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/CatchBoundary.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/ClientOnly.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useRouter.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useMatch.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useLoaderData.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useLoaderDeps.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useParams.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useSearch.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useNavigate.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useRouteContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/link.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/route.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/fileRoute.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/lazyRouteComponent.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/not-found.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/ScriptOnce.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Match.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Matches.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/router.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/RouterProvider.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/ScrollRestoration.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useBlocker.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useRouterState.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useLocation.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/useCanGoBack.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Asset.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/headContentUtils.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Scripts.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/HeadContent.dev.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/react-dom.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client/ServerFunctionSerializationAdapter.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/start.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/empty-plugin-adapters.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/router.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/isServer/development.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/nonRouteComponentContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/routerContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/matchContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@tanstack_react-router_n_@tanstack_react-store.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/routerStores.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/Transitioner.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/renderRouteNotFound.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/scroll-restoration.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-router/dist/esm/HeadContent.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/history/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/constants.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/createClientRpc.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/load-client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/makeSerovalPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/headers.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/json.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/seroval-plugins.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/RawStreamRPCPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/supabase/auth-attacher.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@tanstack_react-query.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routeTree.gen.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/load-server.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/utils.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/invariant.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/path.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/not-found.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/scroll-restoration.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/qss.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/searchParams.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/root.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/redirect.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/rewrite.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/stores.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/router.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/defer.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/link.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/manifest.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/Matches.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/bodyScripts.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/route.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/config.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/searchMiddleware.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/transformer.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/RawStream.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/scroll-restoration-script/client.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getStartOptions.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/serverFnFetcher.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/ssr-match-id.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval/dist/dev/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/cookie-es/dist/index.mjs"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/ShallowErrorPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/RawStreamJSONPlugin.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval-plugins/dist/dev/web.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start/dist/esm/useServerFn.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/react-start-client/dist/esm/Hydrate.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/supabase/client.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/__root.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/index.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-assinaturas.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-clientes.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-comercial.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/master-financeiro.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/painel.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/admin/pedidos.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/loja/$slug.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/await-signal.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/sieve-cache.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/new-process-route-tree.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getDefaultSerovalPlugins.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/client-rpc/frame-decoder.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/router-core/dist/esm/ssr/serializer/rawStreamCodec.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval-plugins/dist/dev/web-CDQeyEaf.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/safeObjectMerge.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createServerFn.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createMiddleware.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createCsrfMiddleware.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/createStart.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getRouterInstance.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getGlobalStartContext.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-fn-stubs/dist/esm/index.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/core/delivery/backend-configuration.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/test-backend.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@supabase_supabase-js.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/supabase/previewAuthStorage.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/styles.css"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/lib/lovable-error-reporting.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/lucide-react.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/components/ui/button.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/lib/domain/money.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/features/admin/components/TopPanelNav.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/seroval-plugins/dist/dev/rolldown-runtime-D7D4PA-g.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-client-core/dist/esm/getStartContextServerOnly.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-fn-stubs/dist/esm/createIsomorphicFn.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/@fs/workspace/delivery-02a2-verify/node_modules/@tanstack/start-fn-stubs/dist/esm/envOnly.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/@radix-ui_react-slot.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/class-variance-authority.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/lib/utils.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/clsx.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/node_modules/.vite/deps/tailwind-merge.js"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/routes/admin/pedidos.tsx"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/core/delivery/backend-binding.ts"
+    },
+    {
+      "method": "GET",
+      "origin": "http://127.0.0.1:58601",
+      "path": "/src/integrations/storefront-backend/client.ts"
+    }
+  ]
+}

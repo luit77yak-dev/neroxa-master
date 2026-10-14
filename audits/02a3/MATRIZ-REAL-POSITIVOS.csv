@@ -1,0 +1,44 @@
+phase,resource_case,actor,target,operation,raw_status,HTTP,SQLSTATE,returned_rows,state_unchanged,assessment
+platform,Real Auth effective PostgreSQL identity,admin_A,session,RPC,PASS,200,,,True,AS EXECUTED
+platform,Real Auth effective PostgreSQL identity,admin_B,session,RPC,PASS,200,,,True,AS EXECUTED
+platform,Real Auth effective PostgreSQL identity,admin_C,session,RPC,PASS,200,,,True,AS EXECUTED
+platform,Real Auth effective PostgreSQL identity,staff_A,session,RPC,PASS,200,,,True,AS EXECUTED
+platform,Real Auth effective PostgreSQL identity,staff_none,session,RPC,PASS,200,,,True,AS EXECUTED
+platform,Real Auth effective PostgreSQL identity,common,session,RPC,PASS,200,,,True,AS EXECUTED
+baseline,baseline own staff neroxa_storefront_addon_groups,staff_A,A,SELECT,FAIL,200,,0,True,AS EXECUTED
+baseline,baseline own staff neroxa_storefront_addons,staff_A,A,SELECT,FAIL,200,,0,True,AS EXECUTED
+candidate,neroxa_orders read,admin_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_orders read,admin_B,B,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_B,B,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_B,B,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_B,B,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_B,B,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_B,B,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_B,B,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_orders read,admin_C,C,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,admin_C,C,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_products read,admin_C,C,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,admin_C,C,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,admin_C,C,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,admin_C,C,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,admin_C,C,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_orders read,staff_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_categories read,staff_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_products read,staff_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_addon_groups read,staff_A,A,SELECT,FAIL,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_addons read,staff_A,A,SELECT,FAIL,200,,0,True,AS EXECUTED
+candidate,neroxa_storefront_settings read,staff_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,neroxa_storefront_delivery_zones read,staff_A,A,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,get_admin_orders,admin_A,A,RPC,PASS,200,,1,True,AS EXECUTED
+candidate,get_admin_orders,staff_A,A,RPC,PASS,200,,1,True,AS EXECUTED
+candidate,own product price update,admin_A,A,UPDATE,PASS,200,,1,False,AS EXECUTED
+candidate,own status RPC,admin_A,A,RPC,PASS,200,,,False,AS EXECUTED
+candidate,global CRM legitimate staff,staff_none,CRM,SELECT,PASS,200,,1,True,AS EXECUTED
+candidate,Master CRM view permitted global staff,staff_none,CRM,SELECT,PASS,200,,2,True,AS EXECUTED
+candidate,Storage own upload,admin_A,A,INSERT,FAIL,403,,,True,AS EXECUTED

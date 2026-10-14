@@ -1,0 +1,62 @@
+[
+  {
+    "baseRefName": "audit/independent-recovery-v1-20261014",
+    "headRefName": "security/delivery-02a-panel-gate-20261014",
+    "headRefOid": "b324c1499ff3feda7cb6b56fec3c2ac63bc56052",
+    "isDraft": true,
+    "number": 38,
+    "state": "OPEN",
+    "url": "https://github.com/luit77yak-dev/pizza-perfect-plate/pull/38",
+    "repository": "pizza-perfect-plate"
+  },
+  {
+    "baseRefName": "security/delivery-02a-panel-gate-20261014",
+    "headRefName": "security/mission-02a2-validation-20261014",
+    "headRefOid": "ad41822e4622e3b14bcb650d7be84126f78b80f6",
+    "isDraft": true,
+    "number": 39,
+    "state": "OPEN",
+    "url": "https://github.com/luit77yak-dev/pizza-perfect-plate/pull/39",
+    "repository": "pizza-perfect-plate"
+  },
+  {
+    "baseRefName": "security/delivery-02a-panel-gate-20261014",
+    "headRefName": "security/mission-02a2-legacy-quarantine-20261014",
+    "headRefOid": "7fe0e05ca899de3182872921591cbaccd840e58c",
+    "isDraft": true,
+    "number": 40,
+    "state": "OPEN",
+    "url": "https://github.com/luit77yak-dev/pizza-perfect-plate/pull/40",
+    "repository": "pizza-perfect-plate"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "audit/store-isolation-candidate-20261011",
+    "headRefOid": "229059e5702bdad3ffa96d3373d878061ab90261",
+    "isDraft": true,
+    "number": 37,
+    "state": "OPEN",
+    "url": "https://github.com/luit77yak-dev/neroxa-master/pull/37",
+    "repository": "neroxa-master"
+  },
+  {
+    "baseRefName": "audit/independent-recovery-v1-20261014",
+    "headRefName": "security/mission-02a2-scoped-admin-20261014",
+    "headRefOid": "330520ade7abf297423d5ffeb24d406bc43f88ff",
+    "isDraft": true,
+    "number": 38,
+    "state": "OPEN",
+    "url": "https://github.com/luit77yak-dev/neroxa-master/pull/38",
+    "repository": "neroxa-master"
+  },
+  {
+    "baseRefName": "security/mission-02a2-scoped-admin-20261014",
+    "headRefName": "security/mission-02a3-real-isolation-20261014",
+    "headRefOid": "d04dcf9ab23c15e41039658d74df2ddd7528ea34",
+    "isDraft": true,
+    "number": 40,
+    "state": "OPEN",
+    "url": "https://github.com/luit77yak-dev/neroxa-master/pull/40",
+    "repository": "neroxa-master"
+  }
+]
