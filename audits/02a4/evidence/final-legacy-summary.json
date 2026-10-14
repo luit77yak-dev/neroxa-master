@@ -1,0 +1,174 @@
+{
+  "actorBatch": "all",
+  "mission": "02A.3",
+  "profile": "legacy",
+  "scope": "matrix",
+  "status": "PASS PARTIAL PROFILE",
+  "stage": "storage",
+  "productionApproved": false,
+  "limitations": [
+    "Historical structural catalog is not installed production schema.",
+    "Master CRM scope differs from store customer PII.",
+    "Legacy schema has no shop-instance field; A/B ownership is fixture lineage, not added fake isolation."
+  ],
+  "versions": {
+    "postgres": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "node": "v22.23.0"
+  },
+  "images": [
+    {
+      "name": "supabase_storage_neroxa-02a3-38647381181-legacy",
+      "tag": "supabase/storage-api:v1.79.36",
+      "imageId": "sha256:12afd2170c5ca80880a4af472bcb89d28e090e3155a8bcee4246c1fb3991dcdd"
+    },
+    {
+      "name": "supabase_rest_neroxa-02a3-38647381181-legacy",
+      "tag": "postgrest/postgrest:v16.4",
+      "imageId": "sha256:1ad5f2ea5501150ec9c7953ae9bf04111ced39a53ca01fc0f08af6d0b7ba67be"
+    },
+    {
+      "name": "supabase_realtime_neroxa-02a3-38647381181-legacy",
+      "tag": "supabase/realtime:v2.140.10",
+      "imageId": "sha256:7412151d218fc99aa324e95883f1e29d2008542c9f85e241873f50c3f6476c43"
+    },
+    {
+      "name": "supabase_auth_neroxa-02a3-38647381181-legacy",
+      "tag": "supabase/gotrue:v2.197.0",
+      "imageId": "sha256:1181bff5ba4ce440013a63cef9f4cf13024c432d705c9b1fbc9e5b949e852f48"
+    },
+    {
+      "name": "supabase_kong_neroxa-02a3-38647381181-legacy",
+      "tag": "kong:2.8.1",
+      "imageId": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a"
+    },
+    {
+      "name": "supabase_db_neroxa-02a3-38647381181-legacy",
+      "tag": "supabase/postgres:17.11.0.004",
+      "imageId": "sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a"
+    }
+  ],
+  "storageOwnership": {
+    "executor": "postgres",
+    "superuser": "off",
+    "owner": "supabase_storage_admin",
+    "rls": true
+  },
+  "legacyReplay": {
+    "mode": "literal ordered migration files",
+    "bodyValidation": true,
+    "sourceDelivery": "a99a7d743f9dbed8ece5d8b0880c4b9c543960c3",
+    "status": "PASS"
+  },
+  "appliedCandidate": {
+    "path": "delivery-legacy/audits/02a2/sql/legacy-store-surfaces-quarantine.candidate.sql",
+    "sha256": "6cae854a1cffaa0c42a3ae227d29d24a2355662c39598fea6f6ce31c1ee619bf"
+  },
+  "rollback": {
+    "status": "PASS",
+    "dataPreserved": true,
+    "aclPreserved": true,
+    "unsafePrivilegesRestoredInServingEnvironment": false
+  },
+  "applicationDataIntegrity": {
+    "status": "PASS",
+    "before": {
+      "public.orders": "4:b91a88ccbf0faad9fdcf610e4eeb4c6e",
+      "public.coupons": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.drivers": "1:744f1f568a203f76c5dd900b8aee6774",
+      "public.products": "3:bc1e470c0ee229f711e906f2163307e2",
+      "public.profiles": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "storage.buckets": "1:334fa6618b2d2040017207b5382984f2",
+      "storage.objects": "3:0b4f7c7e174102e4fa7bdb1f8ff275cf",
+      "public.audit_logs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.categories": "3:981aa2b57df0d31b6ea1b631bf5a3e2c",
+      "public.order_items": "4:e82e2a845809afbfe7b9acb63a993e48",
+      "public.store_hours": "2:0522d8e9bd469bce34b0abe5edc264bd",
+      "public.neroxa_plans": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_roles": "4:959346b1a1fc898dcb61abb0849eadd8",
+      "public.organizations": "2:12fe201f1ee366b76fa19a34c2154ecf",
+      "public.product_sizes": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.special_hours": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.delivery_zones": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_clients": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.product_addons": "3:381c9e2aafe427ce6c644c3c9c436e23",
+      "public.product_crusts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.product_prices": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_invoices": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_payments": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.loyalty_accounts": "1:ddc27c5f22d61a1b04491a99d12339b3",
+      "public.neroxa_contracts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_proposals": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_audit_logs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.order_item_addons": "1:ac59606f3fb8e2472c6ad40b1929217a",
+      "public.neroxa_permissions": "22:6222a2aa7d6f17c709a2c1c940ecbccc",
+      "public.neroxa_staff_roles": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.product_addon_links": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.loyalty_transactions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_invoice_items": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_plan_features": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_staff_members": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_subscriptions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.order_status_history": "3:28daf4e6691a2b5ed026b80cce06d70b",
+      "public.organization_members": "3:12f4e8de5352dfc2b8490c343a863044",
+      "public.neroxa_proposal_items": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.organization_settings": "2:cfff350207c2c6f39ab153dad3c86d14",
+      "public.neroxa_client_contacts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_role_permissions": "47:01c9c5bffd61c04f1b661f36abd87a26",
+      "public.neroxa_contract_versions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_subscription_items": "0:d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "after": {
+      "public.orders": "4:b91a88ccbf0faad9fdcf610e4eeb4c6e",
+      "public.coupons": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.drivers": "1:744f1f568a203f76c5dd900b8aee6774",
+      "public.products": "3:bc1e470c0ee229f711e906f2163307e2",
+      "public.profiles": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "storage.buckets": "1:334fa6618b2d2040017207b5382984f2",
+      "storage.objects": "3:0b4f7c7e174102e4fa7bdb1f8ff275cf",
+      "public.audit_logs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.categories": "3:981aa2b57df0d31b6ea1b631bf5a3e2c",
+      "public.order_items": "4:e82e2a845809afbfe7b9acb63a993e48",
+      "public.store_hours": "2:0522d8e9bd469bce34b0abe5edc264bd",
+      "public.neroxa_plans": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_roles": "4:959346b1a1fc898dcb61abb0849eadd8",
+      "public.organizations": "2:12fe201f1ee366b76fa19a34c2154ecf",
+      "public.product_sizes": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.special_hours": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.delivery_zones": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_clients": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.product_addons": "3:381c9e2aafe427ce6c644c3c9c436e23",
+      "public.product_crusts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.product_prices": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_invoices": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_payments": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.loyalty_accounts": "1:ddc27c5f22d61a1b04491a99d12339b3",
+      "public.neroxa_contracts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_proposals": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_audit_logs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.order_item_addons": "1:ac59606f3fb8e2472c6ad40b1929217a",
+      "public.neroxa_permissions": "22:6222a2aa7d6f17c709a2c1c940ecbccc",
+      "public.neroxa_staff_roles": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.product_addon_links": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.loyalty_transactions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_invoice_items": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_plan_features": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_staff_members": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_subscriptions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.order_status_history": "3:28daf4e6691a2b5ed026b80cce06d70b",
+      "public.organization_members": "3:12f4e8de5352dfc2b8490c343a863044",
+      "public.neroxa_proposal_items": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.organization_settings": "2:cfff350207c2c6f39ab153dad3c86d14",
+      "public.neroxa_client_contacts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_role_permissions": "47:01c9c5bffd61c04f1b661f36abd87a26",
+      "public.neroxa_contract_versions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_subscription_items": "0:d41d8cd98f00b204e9800998ecf8427e"
+    }
+  },
+  "realtimeCoverage": "NOT RUN in this matrix batch; separate focused job for M, legacy quarantine intentionally suspends order access",
+  "counts": {
+    "pass": 263,
+    "fail": 1,
+    "blocked": 0
+  },
+  "realtimeChecks": []
+}

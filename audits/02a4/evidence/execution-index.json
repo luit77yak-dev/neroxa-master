@@ -1,0 +1,293 @@
+[
+  {
+    "name": "baseline-matrix",
+    "checks": 419,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 401,
+      "candidate:FAIL": 8
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "baseline-rpc",
+    "checks": 14,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 2,
+      "candidate:FAIL": 2
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "compat-legacy-attempt2",
+    "checks": 264,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 2,
+      "baseline:PASS": 1,
+      "candidate:PASS": 252,
+      "candidate:FAIL": 3
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "compat-master-attempt2",
+    "checks": 533,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 523
+    },
+    "summary": false,
+    "cleanup": true
+  },
+  {
+    "name": "f01-attempt2",
+    "checks": 747,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 732,
+      "candidate:FAIL": 4,
+      "candidate:BLOCKED": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "f01-regression",
+    "checks": 482,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 472
+    },
+    "summary": false,
+    "cleanup": true
+  },
+  {
+    "name": "final-addons-realtime",
+    "checks": 28,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 17,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "final-legacy",
+    "checks": 264,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 1,
+      "baseline:PASS": 3,
+      "candidate:PASS": 254
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "final-master-admins",
+    "checks": 223,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 212,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "final-master-staff",
+    "checks": 272,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 261,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "realtime-auth-proof",
+    "checks": 34,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 23,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "realtime-diagnostic",
+    "checks": 34,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 23,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "realtime-marker-proof",
+    "checks": 34,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 23,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "realtime-ready",
+    "checks": 31,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 19,
+      "candidate:FAIL": 1,
+      "candidate:BLOCKED": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "session-availability",
+    "checks": 334,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 324
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "session-core-admins",
+    "checks": 223,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 212,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "session-core-staff",
+    "checks": 272,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 261,
+      "candidate:FAIL": 1
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "session-realtime",
+    "checks": 37,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 27
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "session-storage",
+    "checks": 55,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 45
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "storage-candidate",
+    "checks": 327,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 317
+    },
+    "summary": false,
+    "cleanup": true
+  },
+  {
+    "name": "storage-focused",
+    "checks": 55,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 45
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "tracking-candidate",
+    "checks": 28,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 18
+    },
+    "summary": true,
+    "cleanup": true
+  },
+  {
+    "name": "tracking-private-digest",
+    "checks": 28,
+    "byPhase": {
+      "platform:PASS": 6,
+      "baseline:FAIL": 3,
+      "baseline:PASS": 1,
+      "candidate:PASS": 18
+    },
+    "summary": true,
+    "cleanup": true
+  }
+]

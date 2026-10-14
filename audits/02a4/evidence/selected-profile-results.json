@@ -1,0 +1,233 @@
+[
+  {
+    "profile": "baseline-matrix",
+    "counts": {
+      "pass": 408,
+      "fail": 11,
+      "blocked": 0
+    },
+    "status": "FAIL",
+    "candidateFiles": null,
+    "cleanup": true
+  },
+  {
+    "profile": "baseline-rpc",
+    "counts": {
+      "pass": 9,
+      "fail": 5,
+      "blocked": 0
+    },
+    "status": "FAIL",
+    "candidateFiles": null,
+    "cleanup": true
+  },
+  {
+    "profile": "f01-attempt2",
+    "counts": {
+      "pass": 739,
+      "fail": 7,
+      "blocked": 1
+    },
+    "status": "FAIL",
+    "candidateFiles": [
+      {
+        "path": "audits/02a4/availability-instance-scope.candidate.sql",
+        "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      }
+    ],
+    "cleanup": true
+  },
+  {
+    "profile": "tracking-private-digest",
+    "counts": {
+      "pass": 25,
+      "fail": 3,
+      "blocked": 0
+    },
+    "status": "PASS PARTIAL PROFILE",
+    "candidateFiles": [
+      {
+        "path": "audits/02a4/private-tracking.candidate.sql",
+        "sha256": "7c1e7c5daf8588cc7eaeb8ad63825f15747c9660ab5391a8899697698e7112dd",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/phone-rpc-quarantine.release-gate.sql",
+        "sha256": "b57a7082d603f1f2e15d9bc53487e47b8adb3188d8b8497332cbc76c06c47689",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      }
+    ],
+    "cleanup": true
+  },
+  {
+    "profile": "final-legacy",
+    "counts": {
+      "pass": 263,
+      "fail": 1,
+      "blocked": 0
+    },
+    "status": "PASS PARTIAL PROFILE",
+    "candidateFiles": null,
+    "cleanup": true
+  },
+  {
+    "profile": "session-core-admins",
+    "counts": {
+      "pass": 219,
+      "fail": 4,
+      "blocked": 0
+    },
+    "status": "FAIL",
+    "candidateFiles": [
+      {
+        "path": "audits/02a4/availability-instance-scope.candidate.sql",
+        "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+        "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/delivery-live-session.candidate.sql",
+        "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      }
+    ],
+    "cleanup": true
+  },
+  {
+    "profile": "session-core-staff",
+    "counts": {
+      "pass": 268,
+      "fail": 4,
+      "blocked": 0
+    },
+    "status": "FAIL",
+    "candidateFiles": [
+      {
+        "path": "audits/02a4/availability-instance-scope.candidate.sql",
+        "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+        "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/delivery-live-session.candidate.sql",
+        "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      }
+    ],
+    "cleanup": true
+  },
+  {
+    "profile": "session-availability",
+    "counts": {
+      "pass": 331,
+      "fail": 3,
+      "blocked": 0
+    },
+    "status": "PASS PARTIAL PROFILE",
+    "candidateFiles": [
+      {
+        "path": "audits/02a4/availability-instance-scope.candidate.sql",
+        "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+        "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/delivery-live-session.candidate.sql",
+        "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      }
+    ],
+    "cleanup": true
+  },
+  {
+    "profile": "session-storage",
+    "counts": {
+      "pass": 52,
+      "fail": 3,
+      "blocked": 0
+    },
+    "status": "PASS PARTIAL PROFILE",
+    "candidateFiles": [
+      {
+        "path": "audits/02a4/availability-instance-scope.candidate.sql",
+        "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+        "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/delivery-live-session.candidate.sql",
+        "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/storage-instance-images.candidate.sql",
+        "sha256": "5739b1226bb2d9ee7b760ddfaa8b0ffcd65048ec92dd938a41a194713795962e",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      }
+    ],
+    "cleanup": true
+  },
+  {
+    "profile": "session-realtime",
+    "counts": {
+      "pass": 34,
+      "fail": 3,
+      "blocked": 0
+    },
+    "status": "PASS PARTIAL PROFILE",
+    "candidateFiles": [
+      {
+        "path": "audits/02a4/availability-instance-scope.candidate.sql",
+        "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+        "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      },
+      {
+        "path": "audits/02a4/delivery-live-session.candidate.sql",
+        "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+        "atomicRollback": "PASS",
+        "dataPreserved": true
+      }
+    ],
+    "cleanup": true
+  }
+]
