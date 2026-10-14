@@ -2,6 +2,21 @@
   "profile": "M:19 predecessors -> scoped02A2 -> availability02A4 -> addon02A4; separate L job",
   "files": {
     "audits/02a4/availability-instance-scope.candidate.sql": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
-    "audits/02a4/addon-explicit-membership.candidate.sql": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49"
+    "audits/02a4/addon-explicit-membership.candidate.sql": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+    "audits/02a4/delivery-live-session.candidate.sql": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+    "audits/02a4/storage-instance-images.candidate.sql": "5739b1226bb2d9ee7b760ddfaa8b0ffcd65048ec92dd938a41a194713795962e"
+  },
+  "profiles": {
+    "core": [
+      "availability-instance-scope.candidate.sql",
+      "addon-explicit-membership.candidate.sql",
+      "delivery-live-session.candidate.sql"
+    ],
+    "storage": [
+      "availability-instance-scope.candidate.sql",
+      "addon-explicit-membership.candidate.sql",
+      "delivery-live-session.candidate.sql",
+      "storage-instance-images.candidate.sql"
+    ]
   }
 }
