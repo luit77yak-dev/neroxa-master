@@ -31,7 +31,8 @@
       "security/mission-02a2-scoped-admin-20261014": false,
       "security/mission-02a3-real-isolation-20261014": false,
       "security/mission-02a4-availability-20261014": false,
-      "security/mission-02a4-compat-harness-20261014": false
+      "security/mission-02a4-compat-harness-20261014": false,
+      "security/mission-02a4-live-session-20261014": false
     }
   }
 }
