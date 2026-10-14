@@ -1,0 +1,16 @@
+# F02 — substituição preparatória; ainda aberta
+
+Base Master #40 SHA57e8930d9be66b51f28828fab2057b809dcc65a9. SQL novo somente servidor, não é endpoint comprador pronto. Capability opaca de 32 bytes gerada pelo servidor, SHA256 apenas no banco privado, vinculada ao pedido/instância, validade24h e revogação. Registro exige checkout_key existente, não reemite nem gira token em retry. Tracking minimiza PII: status, itens/valores, sem telefone/nome/endereço. Não se habilita RPC ao anônimo por apresentar telefone. Origin não é identidade: validar domínio/Origin no gateway e quota antes da consulta; token continua obrigatório. Pedido sem token exige recuperação autenticada/verificada, sem fallback telefone.
+
+| Consumidor | Caminho atual/autorização | Substituto | Flags/gate para desativar |
+|---|---|---|---|
+| Delivery Storefront.tsx ~180 e ~1218 | get_public_order_status, UUID+telefone, fallback quando gateway não está ativo | gateway tracking -> neroxa_track_order_with_capability; token volátil por pedido | novo NEROXA_PRIVATE_TRACKING_ENABLED=false por padrão; remover fallback inseguro antes de ativar |
+| CheckoutPanel.tsx ~247 | append_public_order_items_with_payment, UUID+telefone | order-amendment.server.ts -> neroxa_append_order_items_with_capability | NEROXA_CHECKOUT_GATEWAY_ENABLED + NEROXA_CHECKOUT_AMENDMENTS_ENABLED; legado desabilitado conscientemente |
+| checkout-gateway.server.ts ~181 | registra token de amendment service-only após checkout idempotente | compartilhar emissão controlada ou token tracking separado com hash e replay seguro | não dar token a retry sem prova; emissão tracking ainda não integrada |
+| order-amendment.server.ts | Origin/contexto + quota HMAC + capability; RPC service-only candidata | aproveitar, validar preço/idempotência/estado/loja aberta | depende dos SQLs amendment/group/availability de perfil próprio, ainda fora dos19 predecessores de M |
+| SQL/REST direto, todos os overloads públicos | get_public_order_status/append_public_order_items* | gate offline revoga PUBLIC/anon/authenticated, mantendo backend seguro separado | GUC explícita de consumidores migrados/desabilitados; não publicar como auto-migration |
+| histórico local e cliente que perde token | telefone/UUID não é recuperação privada suficiente | preservar resumo não sensível; recuperação verificada sob quota, sem reemissão cega | gate recuperação/T1 independente; NOT IMPLEMENTED nesta PR |
+
+Inventário não certifica consumidores externos desconhecidos; revisar scripts/apps externos antes de revogação real. Tipos gerados não são consumidores executáveis. Views/globais/overloads inspecionados no clone precisam de prova complementar antes do encerramento universal.
+
+Ordem: base M exata -> private-tracking -> revisão/migração ou desativação explícita dos consumidores -> phone-rpc-quarantine somente clone. Gate é fail-closed e avalia grants herdados. Em produção nenhuma revogação autorizada. Reversão: conservar suspensão e dados, roll-forward; nunca restaurar grants por telefone. Não pronta para merge: endpoint comprador, Origin/domínio/quota/issuance, recovery e append loja aberta ainda não completamente integrados/testados. F02 continua aberta mesmo com SQL positivo.
