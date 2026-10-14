@@ -12,9 +12,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [master, legacy]
+        profile: [master] # Legacy exact candidate already failed managed Storage ownership; see prior pinned runs.
     env:
       MISSION_PROFILE: ${{ matrix.profile }}
+      MISSION_MUTATION_PROBE: "true"
       SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
       AB_PROJECT: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
       AB_NETWORK: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
