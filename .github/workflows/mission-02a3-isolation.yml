@@ -1,8 +1,8 @@
 name: Mission 02A3 real isolated profiles
 on:
   push:
-    branches: [security/mission-02a4-availability-20261014]
-    paths: [.github/workflows/mission-02a3-isolation.yml, tools/mission-02a3/**]
+    branches: [security/mission-02a4-compat-harness-20261014]
+    paths: [.github/workflows/mission-02a3-isolation.yml, tools/mission-02a3/**, tools/mission-02a4/**, audits/02a4/**]
 permissions:
   contents: read
 jobs:
@@ -12,11 +12,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [master]
-        focus: [matrix]
+        include:
+          - profile: master
+            focus: addons-realtime
+            actors: all
     env:
-      MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql
-      MISSION02A4_AVAILABILITY: "true"
+      MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql
+      MISSION02A4_AVAILABILITY: "false"
+      MISSION_ACTORS: ${{ matrix.actors }}
       MISSION_PROFILE: ${{ matrix.profile }}
       MISSION_MUTATION_PROBE: "true"
       MISSION_FOCUS: ${{ matrix.focus }}
@@ -30,7 +33,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: luit77yak-dev/pizza-perfect-plate
-          ref: 7fe0e05ca899de3182872921591cbaccd840e58c
+          ref: a99a7d743f9dbed8ece5d8b0880c4b9c543960c3
           path: delivery-legacy
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -54,7 +57,7 @@ jobs:
           python3 tools/mission-02a3/preflight.py
       - name: Pinned dependencies; no app environment or customer data
         run: |
-          test "$(git -C delivery-legacy rev-parse HEAD)" = 7fe0e05ca899de3182872921591cbaccd840e58c
+          test "$(git -C delivery-legacy rev-parse HEAD)" = a99a7d743f9dbed8ece5d8b0880c4b9c543960c3
           npm ci --ignore-scripts --no-audit --no-fund
           npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
