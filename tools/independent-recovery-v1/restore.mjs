@@ -543,6 +543,95 @@ try {
       `SELECT count(*) FROM private.neroxa_order_amendment_capabilities WHERE order_id IN (${ids})`,
     ) === "0",
   );
+  // Inventory every browser private fixture. Expired identity must be issued by
+  // TARGET Auth, not copied from SOURCE or forged by the harness.
+  const authTemplate = JSON.parse(docker(["inspect", "neroxa_dr_auth_" + target]))[0];
+  const expiryName = "neroxa_dr_expiry_auth_" + target;
+  const expiryEnv = authTemplate.Config.Env.filter(
+    (x) => x.startsWith("GOTRUE_") || x.startsWith("API_EXTERNAL_URL="),
+  ).filter((x) => !x.startsWith("GOTRUE_JWT_EXP="));
+  expiryEnv.push("GOTRUE_JWT_EXP=2");
+  try {
+    docker([
+      "run",
+      "-d",
+      "--name",
+      expiryName,
+      "--network",
+      Object.keys(authTemplate.NetworkSettings.Networks)[0],
+      "--label",
+      "com.supabase.cli.project=" + target,
+      "-p",
+      "127.0.0.1::9999",
+      ...expiryEnv.flatMap((x) => ["-e", x]),
+      authTemplate.Config.Image,
+    ]);
+    const binding = JSON.parse(docker(["inspect", expiryName]))[0].NetworkSettings.Ports[
+      "9999/tcp"
+    ][0];
+    check("TARGET expiry Auth is loopback", binding.HostIp === "127.0.0.1");
+    const expiryUrl = "http://127.0.0.1:" + binding.HostPort;
+    let health = false;
+    for (let i = 0; i < 30; i++) {
+      try {
+        health = (await fetch(expiryUrl + "/health")).ok;
+      } catch {}
+      if (health) break;
+      await new Promise((r) => setTimeout(r, 500));
+    }
+    check("TARGET expiry Auth ready", health);
+    const signed = await fetch(expiryUrl + "/token?grant_type=password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: sourceActor.email, password: sourceActor.password }),
+    });
+    const session = await signed.json();
+    const c = session.access_token
+      ? JSON.parse(Buffer.from(session.access_token.split(".")[1], "base64url"))
+      : {};
+    check(
+      "TARGET natively issues short signed owner credential",
+      signed.ok &&
+        session.expires_in <= 10 &&
+        c.sub === claims.sub &&
+        verifySignature(session.access_token, targetSigning) &&
+        !verifySignature(session.access_token, sourceSigning),
+    );
+    console.log("::add-mask::" + session.access_token);
+    const healthy = await req("rpc/get_admin_orders", session.access_token, {
+      p_instance_id: fixtures[0].instance_id,
+    });
+    check("TARGET short token authorized before expiry", healthy.status === 200);
+    let expired;
+    const start = Date.now();
+    do {
+      expired = await req("rpc/get_admin_orders", session.access_token, {
+        p_instance_id: fixtures[0].instance_id,
+      });
+      if (expired.status === 401) break;
+      await new Promise((r) => setTimeout(r, 1500));
+    } while (Date.now() - start < 75000);
+    check(
+      "TARGET PostgREST rejects its own expired signed identity",
+      expired.status === 401 && ["PGRST301", "PGRST303"].includes(expired.body.code),
+    );
+    e.expiry = {
+      observedSeconds: Math.ceil((Date.now() - start) / 1000),
+      status: expired.status,
+      code: expired.body.code,
+    };
+    fs.writeFileSync(
+      work + "/expired.identity.private.json",
+      JSON.stringify({ token: session.access_token }),
+      { mode: 0o600 },
+    );
+    e.serviceImages = {
+      auth: authTemplate.Config.Image,
+      rest: JSON.parse(docker(["inspect", "neroxa_dr_rest_" + target]))[0].Config.Image,
+    };
+  } finally {
+    docker(["rm", "-f", expiryName]);
+  }
   // TARGET gets its own temporary TLS key; never depend on SOURCE workdir files.
   const targetKey = path.join(work, "checkout-ci-key.private.pem"),
     targetCert = path.join(work, "checkout-ci-cert.private.pem");
