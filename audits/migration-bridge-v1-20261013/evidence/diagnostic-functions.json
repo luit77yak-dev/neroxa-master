@@ -1,0 +1,179 @@
+{
+  "classification": "REPROVADO",
+  "profile": "observed-uninstalled-eight-sql-sandbox",
+  "scope": "16-table operational Delivery projection; not full Master replacement",
+  "tests": [
+    {
+      "name": "input hash sandbox-catalog-readonly.json",
+      "passed": true
+    },
+    {
+      "name": "input hash sandbox-functions-readonly.json",
+      "passed": true
+    },
+    {
+      "name": "input hash master-catalog-20261009.json",
+      "passed": true
+    },
+    {
+      "name": "phase hash A",
+      "passed": true
+    },
+    {
+      "name": "phase hash B",
+      "passed": true
+    },
+    {
+      "name": "phase hash C",
+      "passed": true
+    },
+    {
+      "name": "phase hash D",
+      "passed": true
+    },
+    {
+      "name": "phase hash E",
+      "passed": true
+    },
+    {
+      "name": "empty application schema before fixture",
+      "passed": true
+    }
+  ],
+  "productionApproved": false,
+  "remoteWrites": false,
+  "functionComparisons": [
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "neroxa_is_platform_member",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "boolean",
+      "body_md5": "0159867097be728be1b6f01098811871",
+      "arguments": "",
+      "definition_md5": "ddfb10f0aabbcf3b047e668954622562"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "append_public_order_items_with_payment",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "TABLE(order_id uuid, order_number bigint, subtotal numeric, total numeric)",
+      "body_md5": "46e97e8358ff9b79e23d874875a2f61a",
+      "arguments": "p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text",
+      "definition_md5": "bf0f761b852e0c73acaa99d913b6fc02"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "get_public_storefront_context",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "TABLE(domain text, instance_id uuid, instance_slug text, instance_name text, instance_status text, organization_id uuid, organization_name text, system_id uuid, system_slug text, system_name text, system_type text)",
+      "body_md5": "e2a885b90e48573a0afcbe8e99425d04",
+      "arguments": "p_domain text",
+      "definition_md5": "635726ae640fd2e1a82a4c1a50430727"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "get_public_order_status",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "jsonb",
+      "body_md5": "bb004a5cbde6c5a482f06750f138dc60",
+      "arguments": "p_order_id uuid, p_customer_phone text",
+      "definition_md5": "d8a86282fd63352fae3059b9a0bcceeb"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "calculate_public_order_line_price",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "numeric",
+      "body_md5": "ff3f732a3b15fcb1d2d2fdf9df4ddfe2",
+      "arguments": "p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb",
+      "definition_md5": "d840292550213abb5401d57ccd3c33bf"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "create_public_order",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "TABLE(order_id uuid, order_number bigint, total numeric)",
+      "body_md5": "afc4d910ac31460702a3674bd63d0f9d",
+      "arguments": "p_order jsonb",
+      "definition_md5": "33146501d0fe7c33d8a34104361d026f"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "get_admin_orders",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "SETOF neroxa_orders",
+      "body_md5": "f1b3bc5b2513ecbb9de0bae423221dbb",
+      "arguments": "p_instance_id uuid, p_status text DEFAULT NULL::text",
+      "definition_md5": "041a9696cffe0b7f41c64cf4e8507b29"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "name": "update_admin_order_status",
+      "config": [
+        "search_path=public"
+      ],
+      "result": "neroxa_orders",
+      "body_md5": "df4837d68dcb3679f44c010713cdc70b",
+      "arguments": "p_order_id uuid, p_status text, p_note text DEFAULT NULL::text",
+      "definition_md5": "e6fec3fa15d930ff2529ad4e9bf822aa"
+    }
+  ],
+  "error": "BRIDGE_SQL_FAILED: BRIDGE_FUNCTION_DRIFT"
+}

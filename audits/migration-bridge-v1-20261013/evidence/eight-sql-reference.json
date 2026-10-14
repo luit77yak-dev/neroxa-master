@@ -1,0 +1,40 @@
+{
+  "target_project": "uvyinrojuhizjqbuzdcy",
+  "remote_execution_authorized": false,
+  "automatic_migrations_directory": false,
+  "migrations": [
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222613_sandbox_preflight.sql",
+      "sha256": "3f5fb8d16a52336a30f9d89517da5d530bf26bdb405de22df9a1a823265c4ae8"
+    },
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222617_sandbox_contract_schema.sql",
+      "sha256": "9a3ea0ce9634b353f802149de9f11b7f327d5ccd0b137546df8143935e26ba1a"
+    },
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222621_sandbox_scope_authorization.sql",
+      "sha256": "4548a1c6098384a8cbc4e1626caa171563096067d89d319229790f71c89e180e"
+    },
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222625_sandbox_order_catalog_integrity.sql",
+      "sha256": "7a4a07136231a4b4273da5cf6695c26f535dfda8d77407e1b63b06d1dc2f3862"
+    },
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222629_sandbox_public_order_contracts.sql",
+      "sha256": "d10075df51cc4ca32bf2bee250a28b3c20a47f3b800f19731dad9a3b5270b73a"
+    },
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222632_sandbox_catalog_tenant_caps.sql",
+      "sha256": "f9273cd6c7620c1b0aa9f9c6524fcb18762819be93812fb53dc8792bc8771441"
+    },
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222636_sandbox_order_capability.sql",
+      "sha256": "78b44c86457c00d2b33ca39e7aa40a5506149fc35b0b74ff535dd15968d48bcc"
+    },
+    {
+      "path": "supabase/reconciliation/neroxa-delivery-test/migrations/20261010222640_sandbox_final_acl_checks.sql",
+      "sha256": "22944d5bd0598046e731c4dfe42acb609ed198239876da5721cc0713384d7c2b"
+    }
+  ],
+  "rollback": "restore sandbox snapshot; do not delete orders or pretend old migration versions were applied"
+}

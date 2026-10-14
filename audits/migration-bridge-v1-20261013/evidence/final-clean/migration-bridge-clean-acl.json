@@ -1,0 +1,52 @@
+{
+  "classification": "PASS_CLEAN_POST_CUTOVER_ACL",
+  "checks": [
+    {
+      "name": "clean browser substitutes actually passed before cutover",
+      "passed": true
+    },
+    {
+      "name": "clean gate hash",
+      "passed": true
+    },
+    {
+      "name": "no implicit PUBLIC function execution",
+      "passed": true
+    },
+    {
+      "name": "no client TRUNCATE bypass",
+      "passed": true
+    },
+    {
+      "name": "authenticated operational read still works after PUBLIC revoke",
+      "passed": true
+    },
+    {
+      "name": "scoped Auth cannot cross b.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "scoped Auth cannot cross c.ab.invalid",
+      "passed": true
+    },
+    {
+      "name": "public catalog explicit grant survives cutover",
+      "passed": true
+    },
+    {
+      "name": "phone tracking not public after cutover",
+      "passed": true
+    },
+    {
+      "name": "service-only proof recovery retains execution",
+      "passed": true
+    },
+    {
+      "name": "clean gate preserves every order/item/history field",
+      "passed": true
+    }
+  ],
+  "passed": 11,
+  "failed": 0,
+  "productionApproved": false
+}

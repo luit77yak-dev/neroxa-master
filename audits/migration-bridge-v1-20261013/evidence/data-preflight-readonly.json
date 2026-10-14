@@ -1,0 +1,20 @@
+[
+  {
+    "summary": {
+      "total_mismatch": 0,
+      "org_auth_orphans": 0,
+      "invalid_domain_enum": 0,
+      "items_missing_order": 0,
+      "items_wrong_instance": 0,
+      "zones_precision_loss": 0,
+      "history_missing_order": 0,
+      "invalid_instance_enum": 0,
+      "platform_auth_orphans": 0,
+      "item_subtotal_mismatch": 0,
+      "products_precision_loss": 0,
+      "ambiguous_zones_instance": 0,
+      "orders_wrong_organization": 0,
+      "ambiguous_settings_instance": 0
+    }
+  }
+]
