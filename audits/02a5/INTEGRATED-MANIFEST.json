@@ -34,7 +34,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "captured application owners only during catalog reconstruction; inspect and reject native Auth/Storage owner changes"
     },
     {
       "path": "audits/sql/instance-membership-foundation.candidate.sql",
@@ -71,7 +72,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/storefront-instance-phase1.candidate.sql",
@@ -106,7 +108,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/store-product-category-guard.candidate.sql",
@@ -141,7 +144,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/storefront-tenant-integrity.candidate.sql",
@@ -178,7 +182,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/storefront-parent-instance-guard.candidate.sql",
@@ -212,7 +217,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/store-isolation-policies.candidate.sql",
@@ -250,7 +256,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/storefront-instance-phase2-cutover.candidate.sql",
@@ -285,7 +292,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/storefront-settings-zones-rls.candidate.sql",
@@ -324,7 +332,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/storefront-admin-rpc.candidate.sql",
@@ -361,7 +370,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/storefront-rpcs-phase2.candidate.sql",
@@ -412,7 +422,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/store-isolation-prerequisites.assert.sql",
@@ -443,7 +454,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/store-isolation-runtime-hardening.candidate.sql",
@@ -489,7 +501,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/admin-order-rpc-acl.release-gate.candidate.sql",
@@ -523,7 +536,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/group-addons-pricing.candidate.sql",
@@ -575,7 +589,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/store-availability.candidate.sql",
@@ -638,7 +653,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/checkout-recovery.candidate.sql",
@@ -688,7 +704,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/checkout-reconciliation.candidate.sql",
@@ -739,7 +756,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/operational-order-detail.candidate.sql",
@@ -776,7 +794,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "path": "audits/sql/operational-order-transitions.candidate.sql",
@@ -814,7 +833,8 @@
         "different historical catalog",
         "unverified native service versions"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "id": "scoped-order-access.candidate.sql",
@@ -867,7 +887,8 @@
         "different helper body",
         "unverified function replacement"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "id": "availability-instance-scope.candidate.sql",
@@ -902,7 +923,8 @@
         "different helper body",
         "unverified function replacement"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "id": "addon-explicit-membership.candidate.sql",
@@ -939,7 +961,8 @@
         "different helper body",
         "unverified function replacement"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "id": "delivery-live-session.candidate.sql",
@@ -981,7 +1004,8 @@
         "different helper body",
         "unverified function replacement"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "id": "storage-instance-images.candidate.sql",
@@ -1019,7 +1043,8 @@
         "different helper body",
         "unverified function replacement"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "id": "private-tracking.candidate.sql",
@@ -1058,7 +1083,8 @@
         "different helper body",
         "unverified function replacement"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     },
     {
       "id": "phone-rpc-quarantine.release-gate.sql",
@@ -1094,7 +1120,8 @@
         "different helper body",
         "unverified function replacement"
       ],
-      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants"
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
     }
   ],
   "order": [
