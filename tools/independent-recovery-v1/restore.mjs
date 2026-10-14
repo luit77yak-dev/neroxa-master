@@ -323,23 +323,46 @@ try {
     await new Promise((r) => setTimeout(r, 1000));
   }
   check("Target Auth health", ready);
-  const secretFor = (project) =>
-    JSON.parse(docker(["inspect", "supabase_auth_" + project]))[0]
-      .Config.Env.find((x) => x.startsWith("GOTRUE_JWT_SECRET="))
-      ?.slice("GOTRUE_JWT_SECRET=".length);
-  const sourceSigningSecret = secretFor(source),
-    targetSigningSecret = secretFor(target);
+  const authConfigFor = (project) =>
+    Object.fromEntries(
+      JSON.parse(docker(["inspect", "supabase_auth_" + project]))[0].Config.Env.map((x) => {
+        const i = x.indexOf("=");
+        return [x.slice(0, i), x.slice(i + 1)];
+      }),
+    );
+  const sourceSigning = authConfigFor(source),
+    targetSigning = authConfigFor(target);
   check(
     "Different effective GoTrue signing secrets",
-    !!sourceSigningSecret && !!targetSigningSecret && sourceSigningSecret !== targetSigningSecret,
+    sourceSigning.GOTRUE_JWT_SECRET !== targetSigning.GOTRUE_JWT_SECRET,
   );
-  const verifyHmac = (jwt, secret) => {
-    const [h, p, sig] = jwt.split(".");
-    return (
-      crypto
-        .createHmac("sha256", secret)
-        .update(h + "." + p)
-        .digest("base64url") === sig
+  const keysFor = (cfg) => {
+    const v = JSON.parse(cfg.GOTRUE_JWT_KEYS ?? "[]");
+    return Array.isArray(v) ? v : v.keys;
+  };
+  check(
+    "Different effective EC signing keys",
+    JSON.stringify(keysFor(sourceSigning)) !== JSON.stringify(keysFor(targetSigning)),
+  );
+  const verifySignature = (jwt, cfg) => {
+    const [h, p, sig] = jwt.split("."),
+      head = JSON.parse(Buffer.from(h, "base64url"));
+    if (head.alg === "HS256")
+      return (
+        crypto
+          .createHmac("sha256", cfg.GOTRUE_JWT_SECRET)
+          .update(h + "." + p)
+          .digest("base64url") === sig
+      );
+    if (head.alg !== "ES256") throw Error("Unsupported test JWT algorithm");
+    const key = keysFor(cfg).find((x) => x.kid === head.kid && x.kty === "EC");
+    if (!key) return false;
+    const { d, ...publicKey } = key;
+    return crypto.verify(
+      "sha256",
+      Buffer.from(h + "." + p),
+      { key: crypto.createPublicKey({ key: publicKey, format: "jwk" }), dsaEncoding: "ieee-p1363" },
+      Buffer.from(sig, "base64url"),
     );
   };
   const sourceActor = JSON.parse(
@@ -348,11 +371,11 @@ try {
   const claims = JSON.parse(Buffer.from(sourceActor.token.split(".")[1], "base64url"));
   check(
     "Source JWT valid with SOURCE effective signing secret",
-    verifyHmac(sourceActor.token, sourceSigningSecret),
+    verifySignature(sourceActor.token, sourceSigning),
   );
   check(
     "Source JWT cryptographic signature invalid for TARGET",
-    !verifyHmac(sourceActor.token, targetSigningSecret),
+    !verifySignature(sourceActor.token, targetSigning),
   );
   const client = createClient(targetEnv.API_URL, targetEnv.ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -366,6 +389,10 @@ try {
     !login.error && login.data.user?.id === claims.sub,
   );
   const token = login.data.session.access_token;
+  check(
+    "TARGET JWT signed only by TARGET key",
+    verifySignature(token, targetSigning) && !verifySignature(token, sourceSigning),
+  );
   console.log("::add-mask::" + token);
   const targetClaims = JSON.parse(Buffer.from(token.split(".")[1], "base64url"));
   check(
