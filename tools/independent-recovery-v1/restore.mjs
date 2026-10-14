@@ -261,6 +261,7 @@ try {
     ) === "0",
   );
   // Auth and REST configurations come from independently bootstrapped TARGET.
+  const authStart = performance.now();
   const services = {};
   for (const [kind, port, prefix, varName] of [
     ["auth", 9999, "GOTRUE_", "GOTRUE_DB_DATABASE_URL"],
@@ -370,6 +371,7 @@ try {
           : [401, 403].includes(r.status),
     );
   }
+  e.metrics.authToFirstAuthorizedReadMs = Math.round(performance.now() - authStart);
   const foreign = await req("rpc/get_admin_orders", sourceActor.token, {
     p_instance_id: fixtures[0].instance_id,
   });
