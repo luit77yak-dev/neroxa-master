@@ -309,6 +309,51 @@ try {
       "SELECT count(*) FROM pg_constraint WHERE conrelid='public.neroxa_orders'::regclass AND contype='f' AND confdeltype='c';",
     ) === "0",
   );
+  const sibling = crypto.randomUUID();
+  sql(
+    `BEGIN;SET LOCAL neroxa.implementation_write_path='official';INSERT INTO public.neroxa_system_instances(id,organization_id,system_id,name,slug,system_type,status) SELECT ${q(sibling)},organization_id,system_id,'Segunda loja histórica fictícia',${q("bridge-a2-" + project)},'DELIVERY','ACTIVE' FROM public.neroxa_system_instances WHERE id=${q(privateState.store)};INSERT INTO public.neroxa_organization_members(organization_id,user_id,role) VALUES(${q(privateState.org)},${q(tokens.foreignOperator.user)},'OPERATOR');INSERT INTO public.neroxa_instance_members(instance_id,user_id,role) VALUES(${q(sibling)},${q(tokens.foreignOperator.user)},'OPERATOR');COMMIT;`,
+  );
+  const readInstance = async (instance, token) => {
+    const r = await fetch(env.API_URL + "/rest/v1/neroxa_system_instances?id=eq." + instance, {
+      headers: { apikey: env.ANON_KEY, Authorization: "Bearer " + token },
+    });
+    return { status: r.status, data: await r.json() };
+  };
+  const siblingOwn = await readInstance(sibling, tokens.foreignOperator.token);
+  check(
+    "same-organization A2 positive scoped Auth control",
+    siblingOwn.status === 200 && siblingOwn.data.length === 1,
+  );
+  const sourceDenied = await rpc(
+    "get_admin_orders",
+    { p_instance_id: privateState.store },
+    tokens.foreignOperator.token,
+  );
+  check(
+    "same organization member still cannot read original A1 orders",
+    sourceDenied.status === 200 && sourceDenied.data.length === 0,
+  );
+  const siblingDenied = await readInstance(sibling, tokens.historicOperator.token);
+  check(
+    "original A1 owner does not silently inherit new A2",
+    siblingDenied.status === 200 && siblingDenied.data.length === 0,
+  );
+  const crossWrite = await rpc(
+    "update_admin_order_status",
+    {
+      p_order_id: privateState.orders[2],
+      p_status: "CONFIRMED",
+      p_note: "Tentativa cruzada fictícia",
+    },
+    tokens.foreignOperator.token,
+  );
+  check(
+    "A2 operator cannot mutate historical A1 order",
+    crossWrite.status === 403 &&
+      crossWrite.data?.code === "42501" &&
+      sql(`SELECT status FROM public.neroxa_orders WHERE id=${q(privateState.orders[2])};`) ===
+        "RECEIVED",
+  );
   const historicalKey = privateState.keys[2],
     historicalId = privateState.orders[2];
   const rejectedOld = await rpc(
