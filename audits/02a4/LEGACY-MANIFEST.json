@@ -1,5 +1,5 @@
 {
-  "sourceDelivery": "7388038288c09eafa3a13172bbb7c8e5061f8b2c",
+  "sourceDelivery": "a99a7d743f9dbed8ece5d8b0880c4b9c543960c3",
   "mode": "literal source migrations; bodies validated; tables empty during historical image UPDATE",
   "files": [
     {
@@ -72,7 +72,7 @@
     },
     {
       "source": "20260927130000_delivery_minimum_fee_plus_one.sql",
-      "sha256": "d169e1774342616362e1e40b53ca551ed425474848f37c76a3b28069cebbd366"
+      "sha256": "98da15ba789460fde20cadb4101c6af58572825b1fc14b98cf62609112b50059"
     },
     {
       "source": "20260927140000_allow_public_order_item_additions.sql",
@@ -129,6 +129,6 @@
   ],
   "candidate": {
     "path": "audits/02a2/sql/legacy-store-surfaces-quarantine.candidate.sql",
-    "sha256": "fdc0bd4402de968f3e2ac6751705276ac054f52f6beddc975f9fdd04c0f9fb8a"
+    "sha256": "6cae854a1cffaa0c42a3ae227d29d24a2355662c39598fea6f6ce31c1ee619bf"
   }
 }
