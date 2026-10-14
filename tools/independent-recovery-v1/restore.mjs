@@ -493,7 +493,9 @@ try {
 } catch (err) {
   e.error =
     String(err.stderr ?? "").match(/ERROR:\s*([^\n]+)/)?.[1] ??
-    String(err.message).split("\n")[0].slice(0, 180);
+    (err.stderr !== undefined
+      ? "Disposable command failed; details withheld"
+      : String(err.message).split("\n")[0].slice(0, 180));
   process.exitCode = 1;
 } finally {
   fs.mkdirSync(path.dirname(out), { recursive: true });
