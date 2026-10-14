@@ -17,7 +17,7 @@ Identidades vêm do Auth local, com TOTP real para staff. Nunca substituir JWT p
 
 ## Navegador
 
-Checkout Delivery ad41822e4622e3b14bcb650d7be84126f78b80f6. Instalação frozen Bun do lock do projeto, app Node22.23.0. Controller Playwright-core1.58.2, Chromium154.0.8037.57. Dependências e hashes em browser-environment.json. `browser.mjs` e `deny-egress.cjs` registram harness e guarda. Adaptar somente caminhos locais, preservando rede loopback, variáveis fictícias e retirada de .env; restaurar .env após o ensaio sem expor seu conteúdo. Comando efetivo do servidor está em browser-command.log. Trace e screenshots em evidence. Não usar backend comercial para obter login; teste comprova somente contenção e navegação/hidratação.
+Checkout Delivery ad41822e4622e3b14bcb650d7be84126f78b80f6. Instalação frozen Bun do lock do projeto, app Node22.23.0. Controller Playwright-core1.58.2, Chromium154.0.8037.57. Dependências e hashes em browser-environment.json. `browser.mjs` e `deny-egress.cjs` registram harness e guarda. Adaptar somente caminhos locais, preservando rede loopback, variáveis fictícias e retirada de .env; restaurar .env após o ensaio sem expor seu conteúdo. Comando efetivo do servidor está em browser.mjs; browser-command.log registra as etapas e o resultado. Trace e screenshots em evidence. Não usar backend comercial para obter login; teste comprova somente contenção e navegação/hidratação.
 
 ## Verificação dos arquivos
 
