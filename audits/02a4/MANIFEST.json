@@ -1,0 +1,7 @@
+{
+  "baseHarness": "57e8930d9be66b51f28828fab2057b809dcc65a9",
+  "baseMasterCandidate": "648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c",
+  "files": {
+    "audits/02a4/availability-instance-scope.candidate.sql": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264"
+  }
+}

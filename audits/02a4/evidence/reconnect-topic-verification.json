@@ -1,0 +1,13 @@
+{
+  "source": "/workspace/mission-02a4/evidence/session-realtime-summary.json",
+  "status": "PASS",
+  "staleAFrames": 0,
+  "liveBFrames": 1,
+  "liveBPositive": true,
+  "verifiedLogout": {
+    "authApiSuccess": true,
+    "authErrorCode": null,
+    "serverSessionAbsent": true
+  },
+  "scope": "Actual captured frames by topic and live-B control; does not certify all identities/resources."
+}

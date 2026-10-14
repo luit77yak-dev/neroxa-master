@@ -29,7 +29,8 @@
       "audit/migration-bridge-v1-20261013": false,
       "audit/independent-recovery-v1-20261014": false,
       "security/mission-02a2-scoped-admin-20261014": false,
-      "security/mission-02a3-real-isolation-20261014": false
+      "security/mission-02a3-real-isolation-20261014": false,
+      "security/mission-02a4-availability-20261014": false
     }
   }
 }

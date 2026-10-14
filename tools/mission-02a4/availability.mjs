@@ -1,0 +1,18 @@
+export async function availability({sql,ids,check,api,empty,q,people}){
+ const tables=['neroxa_storefront_availability','neroxa_storefront_weekly_hours','neroxa_storefront_special_days','neroxa_storefront_special_hours'];
+ // Distinct future exceptions preserve original fixture and checkout availability.
+ for(const x of ['A','B','C'])sql(`INSERT INTO neroxa_storefront_special_days(instance_id,date,closed) VALUES(${q(ids[x+'store'])},'2099-01-01',false);INSERT INTO neroxa_storefront_special_hours(instance_id,date,opens_at,closes_at) VALUES(${q(ids[x+'store'])},'2099-01-01','10:00','20:00');`);
+ for(const actor of ['admin_A','admin_B','admin_C','staff_A','staff_none','common','anon'])for(const x of ['A','B','C'])for(const table of tables){
+ const allowed=actor==='admin_'+x||(actor==='staff_A'&&x==='A');const filter='?instance_id=eq.'+ids[x+'store'];
+ await check('02A4 '+table+' SELECT',actor,x,'SELECT',allowed?'ALLOW':'DENY',()=>api(actor,table+filter),allowed?r=>r.http===200&&Array.isArray(r.body)&&r.body.length===1:empty,{deny:!allowed,p0:!allowed});
+ const patch=table.endsWith('_availability')?{enabled:true}:table.endsWith('_weekly_hours')?{closes_at:'23:59:00'}:table.endsWith('_special_days')?{closed:false}:{closes_at:'21:00:00'};
+ await check('02A4 '+table+' UPDATE',actor,x,'UPDATE',allowed?'ALLOW':'DENY',()=>api(actor,table+filter,'PATCH',patch),allowed?r=>r.http===200&&r.body?.length===1:empty,{deny:!allowed,p0:!allowed});
+ if(!allowed){await check('02A4 '+table+' DELETE',actor,x,'DELETE','DENY',()=>api(actor,table+filter,'DELETE'),empty,{deny:true,p0:true});const row=table.endsWith('_availability')?{instance_id:ids[x+'store'],enabled:false,timezone:'UTC'}:table.endsWith('_weekly_hours')?{instance_id:ids[x+'store'],weekday:1,opens_at:'01:00',closes_at:'02:00'}:table.endsWith('_special_days')?{instance_id:ids[x+'store'],date:'2099-01-02',closed:true}:{instance_id:ids[x+'store'],date:'2099-01-01',opens_at:'01:00',closes_at:'02:00'};await check('02A4 '+table+' INSERT',actor,x,'INSERT','DENY',()=>api(actor,table,'POST',row),r=>[401,403].includes(r.http),{deny:true,p0:true});}
+ }
+ for(const table of tables)await check('02A4 immutable availability instance','admin_A','B','UPDATE','DENY',()=>api('admin_A',table+'?instance_id=eq.'+ids.Astore,'PATCH',{instance_id:ids.Bstore}),r=>[400,403,409].includes(r.http),{deny:true,p0:true});
+ // Own INSERT/DELETE on child rows (not deleting the parent/legitimate fixture).
+ for(const actor of ['admin_A','staff_A'])for(const table of tables.slice(1)){const row=table.endsWith('_weekly_hours')?{instance_id:ids.Astore,weekday:2,opens_at:'03:00',closes_at:'04:00'}:table.endsWith('_special_days')?{instance_id:ids.Astore,date:'2099-01-03',closed:false}:{instance_id:ids.Astore,date:'2099-01-01',opens_at:'03:00',closes_at:'04:00'};await check('02A4 own child INSERT '+table,actor,'A','INSERT','ALLOW',()=>api(actor,table,'POST',row),r=>r.http===201&&r.body?.length===1);const filter='?instance_id=eq.'+ids.Astore+(table.endsWith('_weekly_hours')?'&weekday=eq.2':table.endsWith('_special_days')?'&date=eq.2099-01-03':'&opens_at=eq.03:00:00');await check('02A4 own child DELETE '+table,actor,'A','DELETE','ALLOW',()=>api(actor,table+filter,'DELETE'),r=>r.http===200&&r.body?.length===1);}
+ sql(`UPDATE neroxa_instance_members SET active=false WHERE instance_id=${q(ids.Astore)} AND user_id=${q(people.staff_A.id)};`);
+ for(const table of tables)await check('02A4 revoked staff same Auth JWT '+table,'staff_A','A','SELECT','DENY',()=>api('staff_A',table+'?instance_id=eq.'+ids.Astore),empty,{deny:true,p0:true});
+ sql(`UPDATE neroxa_instance_members SET active=true WHERE instance_id=${q(ids.Astore)} AND user_id=${q(people.staff_A.id)};`);
+}

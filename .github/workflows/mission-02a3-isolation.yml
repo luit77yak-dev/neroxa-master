@@ -1,7 +1,7 @@
 name: Mission 02A3 real isolated profiles
 on:
   push:
-    branches: [security/mission-02a3-real-isolation-20261014]
+    branches: [security/mission-02a4-availability-20261014]
     paths: [.github/workflows/mission-02a3-isolation.yml, tools/mission-02a3/**]
 permissions:
   contents: read
@@ -12,11 +12,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [master] # Legacy exact candidate already failed managed Storage ownership; see prior pinned runs.
+        profile: [master]
+        focus: [matrix]
     env:
+      MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql
+      MISSION02A4_AVAILABILITY: "true"
       MISSION_PROFILE: ${{ matrix.profile }}
-      MISSION_MUTATION_PROBE: "false"
-      MISSION_FOCUS: "legacy-rpc" # Focused follow-up; full matrix and forbidden UPDATE retained in prior pinned run.
+      MISSION_MUTATION_PROBE: "true"
+      MISSION_FOCUS: ${{ matrix.focus }}
       SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
       AB_PROJECT: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
       AB_NETWORK: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
