@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   historical-rehearsal:
-    if: github.ref == 'refs/heads/audit/first-complete-order-20261013'
+    if: github.ref == 'refs/heads/audit/migration-bridge-v1-20261013'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
