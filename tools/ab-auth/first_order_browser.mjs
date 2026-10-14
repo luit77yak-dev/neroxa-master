@@ -42,7 +42,7 @@ const sql = (s) =>
       "-U",
       "postgres",
       "-d",
-      "postgres",
+      process.env.AB_DATABASE ?? "postgres",
       "-v",
       "ON_ERROR_STOP=1",
     ],
