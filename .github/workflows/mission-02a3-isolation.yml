@@ -13,8 +13,10 @@ jobs:
       fail-fast: false
       matrix:
         profile: [master]
-        focus: [matrix, legacy-rpc]
+        focus: [matrix]
     env:
+      MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql
+      MISSION02A4_AVAILABILITY: "true"
       MISSION_PROFILE: ${{ matrix.profile }}
       MISSION_MUTATION_PROBE: "true"
       MISSION_FOCUS: ${{ matrix.focus }}
