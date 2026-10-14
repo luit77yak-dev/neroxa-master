@@ -43,7 +43,9 @@ jobs:
           test "$GITHUB_ACTIONS" = true
           case "$PWD" in /home/runner/*) ;; *) exit 1;; esac
           df -h "$RUNNER_TEMP"
-          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+          if [ "$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1)" -lt 30064771072 ]; then
+            sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
+          fi
           python3 tools/mission-02a3/preflight.py
       - name: Pinned dependencies; no app environment or customer data
         run: |
