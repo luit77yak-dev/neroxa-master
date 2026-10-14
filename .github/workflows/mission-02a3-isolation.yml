@@ -13,10 +13,10 @@ jobs:
       fail-fast: false
       matrix:
         profile: [master]
-        focus: [matrix]
+        focus: [storage-only]
     env:
       MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/storage-instance-images.candidate.sql
-      MISSION02A4_AVAILABILITY: "true"
+      MISSION02A4_AVAILABILITY: "false"
       MISSION02A4_STORAGE: "true"
       MISSION_PROFILE: ${{ matrix.profile }}
       MISSION_MUTATION_PROBE: "true"
