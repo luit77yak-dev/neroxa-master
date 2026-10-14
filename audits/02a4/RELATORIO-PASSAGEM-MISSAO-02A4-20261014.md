@@ -224,3 +224,22 @@ Comandos reais: npm ci --ignore-scripts --no-audit --no-fund; CLI2.120 init/star
 Logs e snapshots completos no pacote. Summaries/CSVs/antes-depois em evidence; `extract-evidence.py` regenera resultados dos logs. O formato MISSION02A3_SUMMARY/mission02A.3 é herdado do harness reutilizado: os commits, manifests e runs listados identificam as execuções02A.4. Não são relatórios antigos reciclados como aprovação atual. Hashes de todos os arquivos e fonte dos SQLs ficam no manifesto do pacote.
 
 As conexões WebSocket com JWT antigo podem ser aceitas criptograficamente; a prova45 é de negação dos dados privados, não de fechamento físico do socket ou invalidação global da assinatura JWT. Quotas de conexão e demais modalidades continuam pendentes.
+
+### URLs e SHAs das execuções
+
+|Run|SHA|Tentativa|Estado CI|
+|---|---|---|---|
+|[38627968576](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38627968576)|284f05a0d6b39e737888365f184c9e0b504ea6a1|1|completed/failure|
+|[38628192443](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38628192443)|172abae4bc5dc41348202915e61e4f1fd8918ab2|2|completed/cancelled|
+|[38628979793](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38628979793)|a642cd20a5fa6d371164a50bf2d3d3e587dedd7c|1|completed/success|
+|[38629775680](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38629775680)|846e04090ccc29070525887f2ee29017fd019391|1|completed/success|
+|[38629490815](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38629490815)|59f5787eebad27800349a46d7783bfc21ccd46b1|2|completed/failure|
+|[38647381181](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38647381181)|4f95a332cda60c4d24e0329b8df93ffec811c9fd|1|completed/failure|
+|[38630418859](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38630418859)|bbfbfc35d3dfd566fcaa9bb50cce29e6f7ed941a|1|completed/success|
+|[38647994280](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38647994280)|8e9ea1bf328a40868e470ea6a87d090cdcaba5a7|1|completed/failure|
+|[38648588792](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38648588792)|c3e3d1137203b9f6b65467745220559be1a15ffc|1|completed/failure|
+|[38649335058](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38649335058)|77c318f4f467d2c3b7621ceeba411a6fa66d3108|1|completed/failure|
+|[38649645182](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38649645182)|55dfd757410cf179e1e51744c6f15f224f26f810|1|completed/failure|
+|[38650424558](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38650424558)|a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0|1|completed/failure|
+
+CI success/failure/cancelled não substitui o veredito por fase/caso. Os testes de baseline inseguros e falhas funcionais discriminadas permanecem nos resultados brutos.

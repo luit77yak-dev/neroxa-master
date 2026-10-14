@@ -14,3 +14,5 @@ Somente VM descartável, backend loopback/bridge e dados fictícios. Não execut
 Não tomar cancelamento do job como conclusão de todas as etapas: conferir casos efetivamente registrados e resumo. Realtime sem evento positivo deixa negativo/revogação/logout BLOCKED. Atomicidade de transação não é restore T1 nem rollback pós-commit; não recuperar serviço restaurando grants inseguros.
 
 Últimos ensaios: run38647381181/SHA4f95a332cda60c4d24e0329b8df93ffec811c9fd para lotes M e L; fonte L a99a7d743f9dbed8ece5d8b0880c4b9c543960c3. HEAD posterior de Master43 é somente diagnóstico Realtime; usar os commits fixados para repetir os lotes, não presumir que o workflow de HEAD executa tudo.
+
+Sucessor sessão ativa: Master45 SHAa189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0/run38650424558. Reproduction/session contém overlay, manifestos, cinco lotes e SQL com sessão real. Slots/frames são capturados, sem JWTs. `verify-realtime-proof.py evidence/session-realtime-summary.json` verifica por tópico o controleB e o JWT antigoA. Não combinar F02/L sem manifesto e ensaio próprios.
