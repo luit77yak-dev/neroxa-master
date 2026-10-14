@@ -61,7 +61,7 @@ jobs:
           python3 tools/ab-auth/configure.py
           test ! -d "$AB_WORKDIR/supabase/migrations"
           test ! -f "$AB_WORKDIR/supabase/.temp/project-ref"
-          docker network create --internal --driver bridge --opt com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$AB_NETWORK"
+          docker network create --driver bridge --opt com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$AB_NETWORK"
           python3 tools/ab-auth/docker_loopback.py > "$AB_WORKDIR/relay.private.log" 2>&1 &
           echo $! > "$AB_WORKDIR/relay.pid"
           for attempt in $(seq 1 30); do test -S "$AB_WORKDIR/docker-loopback.sock" && break; sleep 1; done
@@ -88,6 +88,7 @@ jobs:
             supabase stop --workdir "$AB_WORKDIR" --no-backup
             if [ -f "$AB_WORKDIR/relay.pid" ]; then kill "$(cat "$AB_WORKDIR/relay.pid")" || true; fi
           fi
-          docker network rm "$AB_NETWORK" || true
-          test -z "$(docker ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT)"
+          docker --host=unix:///var/run/docker.sock network rm "$AB_NETWORK" || true
+          remaining=$(docker --host=unix:///var/run/docker.sock ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT)
+          test -z "$remaining"
           echo 'CLEANUP=PASS no project containers; runner disposable; no dumps or tokens uploaded'
