@@ -13,6 +13,9 @@ class Contracts(unittest.TestCase):
    script="""const fs=require('node:fs'),c=require('node:crypto');const paths=process.argv.slice(1);const keys=paths.map(p=>{const {d,...k}=JSON.parse(fs.readFileSync(p+'/dr-signing.private.json'))[0];return c.createPublicKey({key:k,format:'jwk'});});const jwt=fs.readFileSync(paths[0]+'/config.toml','utf8').match(/anon_key = \"([^\"]+)\"/)[1];const [h,p,s]=jwt.split('.');const v=k=>c.verify('sha256',Buffer.from(h+'.'+p),{key:k,dsaEncoding:'ieee-p1363'},Buffer.from(s,'base64url'));process.stdout.write(JSON.stringify([v(keys[0]),v(keys[1])]));"""
    result=subprocess.check_output(['node','-e',script,*map(str,paths)],text=True);self.assertEqual(json.loads(result),[True,False])
 
+ def test_browser_order_locator_uses_exact_authoritative_number(self):
+  s=(R.parent/'ab-auth/first_order_browser.mjs').read_text();line=next(x for x in s.splitlines() if 'const orderCard =' in x)
+  self.assertIn('persisted.order.order_number',line);self.assertIn('exact:true',line);self.assertNotIn('RegExp',line)
  def test_two_distinct_clusters(self):
   s=(R/'restore.mjs').read_text();self.assertIn('system_identifier FROM pg_control_system()',s);self.assertIn('source === target',s);self.assertIn('Different PostgreSQL data volumes',s)
  def test_errors_fail_atomically(self):

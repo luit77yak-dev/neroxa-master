@@ -400,7 +400,7 @@ try {
       await panel.getByLabel("Instância", { exact: true }).waitFor();
     };
     await login(users[0]);
-    const orderCard = panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).filter({hasText:new RegExp("Pedido #"+persisted.order.order_number+"\\b")});
+    const orderCard = panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).filter({has:panel.getByText("Pedido #"+persisted.order.order_number,{exact:true})});
     await orderCard.waitFor();
     check("operational card identifies the authoritative order number uniquely",await orderCard.count()===1);
     await orderCard.click();
