@@ -1,0 +1,81 @@
+[
+  {
+    "profiles": [
+      {
+        "slot": 1,
+        "states": [
+          {
+            "to": "RECEIVED",
+            "from": null
+          },
+          {
+            "to": "DELIVERED",
+            "from": "OUT_FOR_DELIVERY"
+          },
+          {
+            "to": "PREPARING",
+            "from": "CONFIRMED"
+          },
+          {
+            "to": "CONFIRMED",
+            "from": "RECEIVED"
+          },
+          {
+            "to": "READY",
+            "from": "PREPARING"
+          },
+          {
+            "to": "OUT_FOR_DELIVERY",
+            "from": "READY"
+          }
+        ],
+        "status": "DELIVERED",
+        "has_key": true,
+        "half_items": 0,
+        "addon_items": 1
+      },
+      {
+        "slot": 2,
+        "states": [
+          {
+            "to": "RECEIVED",
+            "from": null
+          },
+          {
+            "to": "DELIVERED",
+            "from": "READY"
+          },
+          {
+            "to": "PREPARING",
+            "from": "CONFIRMED"
+          },
+          {
+            "to": "READY",
+            "from": "PREPARING"
+          },
+          {
+            "to": "CONFIRMED",
+            "from": "RECEIVED"
+          }
+        ],
+        "status": "DELIVERED",
+        "has_key": true,
+        "half_items": 0,
+        "addon_items": 0
+      },
+      {
+        "slot": 3,
+        "states": [
+          {
+            "to": "RECEIVED",
+            "from": null
+          }
+        ],
+        "status": "RECEIVED",
+        "has_key": true,
+        "half_items": 1,
+        "addon_items": 0
+      }
+    ]
+  }
+]

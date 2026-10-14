@@ -27,3 +27,18 @@ DO $$ DECLARE f record; BEGIN
  WHERE n.nspname IN ('public','private','neroxa_private') AND p.prokind='f'
  LOOP EXECUTE format('REVOKE EXECUTE ON FUNCTION %s FROM PUBLIC',f.sig); END LOOP;
 END $$;
+-- Upgrade anchors have no buyer proof. New hashes and capabilities MUST NOT be retrofitted.
+DO $$ BEGIN
+ IF to_regclass('neroxa_bridge.legacy_order_anchors') IS NOT NULL THEN
+  EXECUTE $ddl$CREATE FUNCTION neroxa_bridge.reject_legacy_buyer_proof() RETURNS trigger
+  LANGUAGE plpgsql SECURITY INVOKER SET search_path='' AS $fn$
+  BEGIN
+   IF EXISTS(SELECT 1 FROM neroxa_bridge.legacy_order_anchors a WHERE a.order_id=NEW.order_id)
+   THEN RAISE EXCEPTION 'Historical order has no new buyer proof' USING ERRCODE='42501'; END IF;
+   RETURN NEW;
+  END; $fn$;$ddl$;
+  REVOKE ALL ON FUNCTION neroxa_bridge.reject_legacy_buyer_proof() FROM PUBLIC,anon,authenticated,service_role;
+  CREATE TRIGGER bridge_no_historical_intent BEFORE INSERT OR UPDATE ON private.neroxa_group_order_intents FOR EACH ROW EXECUTE FUNCTION neroxa_bridge.reject_legacy_buyer_proof();
+  CREATE TRIGGER bridge_no_historical_capability BEFORE INSERT OR UPDATE ON private.neroxa_order_amendment_capabilities FOR EACH ROW EXECUTE FUNCTION neroxa_bridge.reject_legacy_buyer_proof();
+ END IF;
+END $$;

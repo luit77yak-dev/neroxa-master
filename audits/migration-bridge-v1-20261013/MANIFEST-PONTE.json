@@ -99,14 +99,14 @@
     {
       "phase": "B",
       "path": "audits/migration-bridge-v1-20261013/sql/B-expand.candidate.sql",
-      "sha256": "3ffb82c2d98f7fa6e1f8f5efa2c696bb0b4b3e1a9bf4e92a179c809b7e2973f6",
+      "sha256": "33516a834ff221cc602d8b851a634beec7592faf72e39105383f7d8fcc4ef306",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "A"
     },
     {
       "phase": "C",
       "path": "audits/migration-bridge-v1-20261013/sql/C-resolve-data.candidate.sql",
-      "sha256": "568a1fc8c70514ddcf2ad37bf4a4840ed915b01faee223a1d365d21a7f07d5ab",
+      "sha256": "956b193d0f107789c64c5d58cde8ce8a835b2381ec16bd25a2e949c42880d4bf",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "B"
     },
@@ -120,7 +120,7 @@
     {
       "phase": "E",
       "path": "audits/migration-bridge-v1-20261013/sql/E-cutover-gate.candidate.sql",
-      "sha256": "50abc0b18e6ccef599fe34713c5eeac1238834dc101e4cf08619f5e887cf7167",
+      "sha256": "16719f2fb073e3c645e41a836aabfe6f239b6148287c842eacf796a427fe62d8",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "D plus all native candidates and browser substitutes verified"
     }
@@ -753,7 +753,9 @@
   "inputs": {
     "audits/migration-bridge-v1-20261013/evidence/sandbox-catalog-readonly.json": "4a6b216631eda672b1f4a5b5b4df636c0c21553c8a0bb8c7245ba9bc5a22a80a",
     "audits/migration-bridge-v1-20261013/evidence/sandbox-functions-readonly.json": "18cb53c287f77db5a8403676718df2ac85d8fca8f03b4194997d961afd7a1594",
-    "audits/ab-auth/master-catalog-20261009.json": "e7ed111d73ec8d63b514db8c39059d6b87ae97be74d54e0d682d38bc0e4cf858"
+    "audits/ab-auth/master-catalog-20261009.json": "e7ed111d73ec8d63b514db8c39059d6b87ae97be74d54e0d682d38bc0e4cf858",
+    "audits/migration-bridge-v1-20261013/evidence/legacy-state-profiles-readonly.json": "a8234557cf27299c06b069e9e38a0142413813675f774daaa3c2e8b0481a597a",
+    "audits/migration-bridge-v1-20261013/evidence/legacy-shape-readonly.json": "c4f4d9583eeecbe5548a2bb18a8a4a2dbec23443c4082af8cdc6247f14ca4fa6"
   },
   "emptySourceFixture": {
     "path": "audits/migration-bridge-v1-20261013/observed-sandbox.empty-fixture.sql",

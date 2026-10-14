@@ -11,6 +11,7 @@ DO $$ BEGIN
 END $$;
 DO $$ BEGIN IF current_setting('app.bridge_consumers_frozen',true) IS DISTINCT FROM 'yes' THEN RAISE EXCEPTION 'BRIDGE_FROZEN_CONSUMERS_REQUIRED'; END IF; END $$;
 DO $$ BEGIN IF current_setting('app.bridge_resolution',true) IS NULL OR current_setting('app.bridge_resolution',true)='' THEN RAISE EXCEPTION 'BRIDGE_EXPLICIT_RESOLUTION_REQUIRED'; END IF; END $$;
+INSERT INTO neroxa_bridge.legacy_order_anchors(order_id,instance_id,idempotency_key) SELECT id,instance_id,idempotency_key FROM public.neroxa_orders;
 ALTER TABLE public."neroxa_order_items" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();
 ALTER TABLE public."neroxa_order_items" ALTER COLUMN "is_half" SET DEFAULT false;
 ALTER TABLE public."neroxa_order_items" ALTER COLUMN "crust_price" SET DEFAULT 0;

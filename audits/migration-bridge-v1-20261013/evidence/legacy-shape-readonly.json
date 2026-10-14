@@ -1,0 +1,16 @@
+[
+  {
+    "summary": {
+      "zones": 1,
+      "domains": 1,
+      "settings": 1,
+      "half_items": 1,
+      "orders_by_status": {
+        "RECEIVED": 1,
+        "DELIVERED": 2
+      },
+      "items_with_legacy_addons": 1,
+      "orders_with_idempotency_key": 3
+    }
+  }
+]

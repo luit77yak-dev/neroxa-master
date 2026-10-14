@@ -309,6 +309,91 @@ try {
       "SELECT count(*) FROM pg_constraint WHERE conrelid='public.neroxa_orders'::regclass AND contype='f' AND confdeltype='c';",
     ) === "0",
   );
+  const historicalKey = privateState.keys[2],
+    historicalId = privateState.orders[2];
+  const rejectedOld = await rpc(
+    "create_public_order",
+    { p_order: { ...payload, idempotency_key: historicalKey } },
+    env.SERVICE_ROLE_KEY,
+  );
+  check(
+    "old keyed order cannot become GROUP or duplicate",
+    rejectedOld.status === 400 &&
+      rejectedOld.data?.code === "22023" &&
+      sql(
+        `SELECT count(*) FROM public.neroxa_orders WHERE instance_id=${q(privateState.store)} AND idempotency_key=${q(historicalKey)};`,
+      ) === "1",
+  );
+  const historicalRecovery = await rpc(
+    "neroxa_recover_group_order",
+    {
+      p_instance_id: privateState.store,
+      p_checkout_key: historicalKey,
+      p_order: { ...payload, idempotency_key: historicalKey },
+    },
+    env.SERVICE_ROLE_KEY,
+  );
+  check(
+    "old key alone is not buyer recovery proof",
+    historicalRecovery.status === 403 && historicalRecovery.data?.code === "42501",
+  );
+  const deniedCapability = await rpc(
+    "neroxa_register_order_amendment_capability",
+    {
+      p_instance_id: privateState.store,
+      p_order_id: historicalId,
+      p_checkout_key: historicalKey,
+      p_token_sha256: crypto.randomBytes(32).toString("hex"),
+    },
+    env.SERVICE_ROLE_KEY,
+  );
+  check(
+    "received historical order cannot gain artificial capability",
+    deniedCapability.status === 403 &&
+      deniedCapability.data?.code === "42501" &&
+      deniedCapability.data?.message?.includes("Historical order has no new buyer proof"),
+  );
+  let blockedProof = false;
+  try {
+    sql(
+      `BEGIN;INSERT INTO private.neroxa_group_order_intents(order_id,payload_sha256,recovery_expires_at) VALUES(${q(historicalId)},repeat('0',64),clock_timestamp()+interval '1 hour');ROLLBACK;`,
+    );
+  } catch (e) {
+    blockedProof = String(e.stderr ?? "").includes("Historical order has no new buyer proof");
+  }
+  check("privileged attempt to retrofit historical intent fails closed", blockedProof);
+  const newCap = await rpc(
+    "neroxa_register_order_amendment_capability",
+    {
+      p_instance_id: privateState.store,
+      p_order_id: newOrder,
+      p_checkout_key: newKey,
+      p_token_sha256: crypto.randomBytes(32).toString("hex"),
+    },
+    env.SERVICE_ROLE_KEY,
+  );
+  check(
+    "new legitimate native order still accepts private capability",
+    newCap.status === 200 && newCap.data === true,
+  );
+  check(
+    "all historical buyer capabilities remain absent",
+    sql(
+      `SELECT count(*) FROM private.neroxa_order_amendment_capabilities WHERE order_id IN (${privateState.orders.map(q).join(",")});`,
+    ) === "0",
+  );
+  const detail = await rpc(
+    "get_admin_order_detail",
+    { p_instance_id: privateState.store, p_order_id: historicalId },
+    tokens.historicOperator.token,
+  );
+  check(
+    "historical half item remains readable only by scoped Auth",
+    detail.status === 200 &&
+      detail.data?.items?.length === 2 &&
+      detail.data.items.some((x) => x.is_half) &&
+      detail.data?.history?.length === 1,
+  );
   check(
     "post-cutover native order and existing T1 writes preserved",
     sql("SELECT md5(jsonb_agg(to_jsonb(o) ORDER BY id)::text) FROM public.neroxa_orders o;") ===

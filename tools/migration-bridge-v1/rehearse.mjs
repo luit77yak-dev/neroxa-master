@@ -213,25 +213,32 @@ try {
     productIds = [id(), id(), id(), id()],
     zone = id(),
     orders = [id(), id(), id()];
+  const keys = [id(), id(), id()];
+  const profiles = JSON.parse(
+    fs.readFileSync(root + "/evidence/legacy-state-profiles-readonly.json"),
+  )[0].profiles;
   let seed = `BEGIN;INSERT INTO public.neroxa_organizations(id,legal_name,trade_name) VALUES(${quote(org)},'Organização histórica inteiramente fictícia','Histórico sintético');
  INSERT INTO public.neroxa_systems(id,slug,name,system_type) VALUES(${quote(system)},'bridge-historical-system','Delivery sintético','DELIVERY');
  INSERT INTO public.neroxa_system_instances(id,organization_id,system_id,name,slug,system_type,status) VALUES(${quote(store)},${quote(org)},${quote(system)},'Loja histórica fictícia','bridge-old','DELIVERY','ACTIVE');
  INSERT INTO public.neroxa_platform_members(user_id,active) VALUES(${quote(user)},true);
  INSERT INTO public.neroxa_storefront_settings(organization_id,half_pizza_pricing_rule) VALUES(${quote(org)},'highest_half');
+ INSERT INTO public.neroxa_system_domains(system_instance_id,domain,status) VALUES(${quote(store)},'bridge-source.ab.invalid','VERIFIED');
  INSERT INTO public.neroxa_storefront_delivery_zones(id,organization_id,name,neighborhoods,delivery_fee) VALUES(${quote(zone)},${quote(org)},'Bairro histórico',ARRAY['Bairro sintético'],7);`;
   productIds.forEach(
     (p, i) =>
       (seed += `INSERT INTO public.neroxa_storefront_products(id,instance_id,name,slug,price,metadata) VALUES(${quote(p)},${quote(store)},'Produto histórico ${i}', 'bridge-product-${i}',${30 + i * 10},'{}');`),
   );
   orders.forEach((o, i) => {
-    seed += `INSERT INTO public.neroxa_orders(id,organization_id,instance_id,order_number,customer_name,customer_phone,fulfillment,payment_method,status,subtotal,delivery_fee,total,created_at) VALUES(${quote(o)},${quote(org)},${quote(store)},${i + 1},'Perfil sintético ${i}','0000000000${i}','DELIVERY','CASH','READY',70,7,77,'2025-01-01');`;
-    [0, 1].forEach(
-      (v) =>
-        (seed += `INSERT INTO public.neroxa_order_items(id,order_id,product_id,product_name,quantity,unit_price,line_total,addons,complements) VALUES(${quote(id())},${quote(o)},${quote(productIds[v])},'Snapshot histórico ${v}',1,${30 + v * 10},${30 + v * 10},'[{"legacy_type":"product_addon","name":"fictício","price":0}]','[]');`),
-    );
-    ["RECEIVED", "CONFIRMED", "PREPARING", "READY"].forEach(
-      (s, k) =>
-        (seed += `INSERT INTO public.neroxa_order_status_history(id,order_id,from_status,to_status,note,created_at) VALUES(${quote(id())},${quote(o)},${k ? quote(["RECEIVED", "CONFIRMED", "PREPARING"][k - 1]) : "NULL"},${quote(s)},'Evento histórico fictício','2025-01-01 00:0${k}:00+00');`),
+    seed += `INSERT INTO public.neroxa_orders(id,organization_id,instance_id,order_number,customer_name,customer_phone,fulfillment,payment_method,status,subtotal,delivery_fee,total,idempotency_key,created_at) VALUES(${quote(o)},${quote(org)},${quote(store)},${i + 1},'Perfil sintético ${i}','0000000000${i}','DELIVERY','CASH',${quote(profiles[i].status)},70,7,77,${quote(keys[i])},'2025-01-01');`;
+    [0, 1].forEach((v) => {
+      const half = profiles[i].half_items > 0 && v === 0;
+      const adds =
+        profiles[i].addon_items > 0 && v === 0 ? JSON.stringify([{ id: productIds[2] }]) : "[]";
+      seed += `INSERT INTO public.neroxa_order_items(id,order_id,product_id,product_name,quantity,unit_price,line_total,addons,complements,is_half,second_product_id,second_product_name) VALUES(${quote(id())},${quote(o)},${quote(productIds[v])},'Snapshot histórico ${v}',1,${30 + v * 10},${30 + v * 10},${quote(adds)},'[]',${half ? "true" : "false"},${half ? quote(productIds[1]) : "NULL"},${half ? quote("Sabor histórico fictício") : "NULL"});`;
+    });
+    profiles[i].states.forEach(
+      (event, k) =>
+        (seed += `INSERT INTO public.neroxa_order_status_history(id,order_id,from_status,to_status,note,created_at) VALUES(${quote(id())},${quote(o)},${event.from ? quote(event.from) : "NULL"},${quote(event.to)},'Evento histórico fictício','2025-01-01 00:${String(k).padStart(2, "0")}:00+00');`),
     );
   });
   sql(seed + "COMMIT;");
@@ -249,6 +256,12 @@ try {
     sql(
       "SELECT (SELECT count(*) FROM public.neroxa_orders)||':'||(SELECT count(*) FROM public.neroxa_order_items)||':'||(SELECT count(*) FROM public.neroxa_order_status_history);",
     ) === "3:6:12",
+  );
+  check(
+    "representative keys/status/half/addons/domain shape",
+    sql(
+      "SELECT (SELECT count(*) FROM public.neroxa_orders WHERE idempotency_key IS NOT NULL)||':'||(SELECT count(*) FROM public.neroxa_orders WHERE status='DELIVERED')||':'||(SELECT count(*) FROM public.neroxa_orders WHERE status='RECEIVED')||':'||(SELECT count(*) FROM public.neroxa_order_items WHERE is_half)||':'||(SELECT count(*) FROM public.neroxa_order_items WHERE addons<>'[]'::jsonb)||':'||(SELECT count(*) FROM public.neroxa_system_domains);",
+    ) === "3:2:1:1:1:1",
   );
   original = digests();
   report.before = { counts: { orders: 3, items: 6, history: 12 }, digests: original };
@@ -375,7 +388,7 @@ try {
   // Private runtime data for further checks; generated exclusively in this disposable runner.
   fs.writeFileSync(
     path.join(work, "bridge.private.json"),
-    JSON.stringify({ orders, store, org, products: productIds, original, resolution }),
+    JSON.stringify({ orders, keys, store, org, products: productIds, original, resolution }),
     { mode: 0o600 },
   );
   console.log(
