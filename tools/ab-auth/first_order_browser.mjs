@@ -400,7 +400,10 @@ try {
       await panel.getByLabel("Instância", { exact: true }).waitFor();
     };
     await login(users[0]);
-    await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).click();
+    const orderCard = panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).filter({hasText:new RegExp("Pedido #"+persisted.order.order_number+"\\b")});
+    await orderCard.waitFor();
+    check("operational card identifies the authoritative order number uniquely",await orderCard.count()===1);
+    await orderCard.click();
     await panel
       .getByRole("region", { name: "Itens do pedido" })
       .getByText("2 × Pizza H03 a", { exact: true })
@@ -426,7 +429,7 @@ try {
         0 && (await panel.getByRole("region", { name: "Itens do pedido" }).count()) === 0,
     );
     await panel.getByLabel("Instância", { exact: true }).fill(A.instance_id);
-    await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).waitFor();
+    await orderCard.waitFor();
     failList = true;
     await panel.getByRole("button", { name: "Atualizar", exact: true }).click();
     await panel.getByRole("alert").waitFor();
@@ -437,7 +440,7 @@ try {
     );
     failList = false;
     await panel.getByRole("button", { name: "Atualizar", exact: true }).click();
-    await panel.getByRole("button").filter({ hasText: "Cliente Entrega fictício" }).click();
+    await orderCard.click();
     await panel
       .getByRole("region", { name: "Itens do pedido" })
       .getByText("2 × Pizza H03 a", { exact: true })

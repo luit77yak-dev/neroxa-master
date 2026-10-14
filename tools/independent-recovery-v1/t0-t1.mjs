@@ -32,12 +32,26 @@ const check = (name, passed) => {
 };
 const digest = () => sql(fs.readFileSync("tools/ab-auth/restore_data.sql", "utf8"));
 try {
+  const browserReport = JSON.parse(
+    fs.readFileSync("audits/ab-auth/results/first-order-browser.json", "utf8"),
+  );
   check(
     "Actual target browser PASS normal build",
-    JSON.parse(
-      fs.readFileSync("audits/ab-auth/results/first-order-browser.json", "utf8"),
-    ).checks.every((x) => x.passed),
+    browserReport.classification === "PASS_NORMAL_BUILD_DELIVERY_AND_PANEL_NATIVE" &&
+      browserReport.checks.length >= 77 &&
+      browserReport.failed === 0 &&
+      browserReport.checks.every((x) => x.passed),
   );
+  const t0Orders = Number(
+    state.baselineData
+      .split("\n")
+      .find((x) => x.startsWith("table|public.neroxa_orders|"))
+      .split("|")[2]
+      .split(":")[0],
+  );
+  const t1Orders = Number(sql("SELECT count(*) FROM public.neroxa_orders"));
+  check("T1 has actual new committed orders beyond T0", t1Orders > t0Orders);
+  e.orders = { t0: t0Orders, t1: t1Orders };
   const before = digest();
   const orderDigest = sql(
     "SELECT md5(jsonb_agg(to_jsonb(o) ORDER BY id)::text) FROM public.neroxa_orders o",
