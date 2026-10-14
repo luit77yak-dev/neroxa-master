@@ -77,7 +77,7 @@ for t in sorted(TABLES):
   nc=newcols[t].get(c['name'])
   if nc and c['type']=='numeric' and nc['type'].startswith('numeric('):
    A.append(f"DO $$ BEGIN IF EXISTS(SELECT 1 FROM {name(t)} WHERE {q(c['name'])} IS DISTINCT FROM {q(c['name'])}::{nc['type']}::numeric) THEN RAISE EXCEPTION 'BRIDGE_MONETARY_PRECISION'; END IF; END $$;")
-B=[GUARD,"CREATE SCHEMA neroxa_bridge; REVOKE ALL ON SCHEMA neroxa_bridge FROM PUBLIC,anon,authenticated,service_role;","CREATE TABLE neroxa_bridge.journal(stage text PRIMARY KEY,sha256 text NOT NULL CHECK(length(sha256)=64),completed_at timestamptz NOT NULL DEFAULT now());","REVOKE ALL ON neroxa_bridge.journal FROM PUBLIC,anon,authenticated,service_role;"]
+B=[GUARD,"CREATE SCHEMA neroxa_bridge; REVOKE ALL ON SCHEMA neroxa_bridge FROM PUBLIC,anon,authenticated,service_role;","CREATE TABLE neroxa_bridge.journal(stage text PRIMARY KEY,sha256 text NOT NULL CHECK(length(sha256)=64),catalog_digest text NOT NULL CHECK(length(catalog_digest)=32),completed_at timestamptz NOT NULL DEFAULT now());","ALTER TABLE neroxa_bridge.journal ENABLE ROW LEVEL SECURITY; REVOKE ALL ON neroxa_bridge.journal FROM PUBLIC,anon,authenticated,service_role;"]
 for t in N['types']:
  if t['name'] in TYPES:B.append('CREATE TYPE '+name(t['name'])+' AS ENUM ('+','.join(lit(x) for x in t['enum_labels'])+');')
 for t in sorted(TABLES):
@@ -87,7 +87,7 @@ for t in sorted(TABLES):
  else:
   for c in cols(N,t):
    if c['name'] not in oldcols[t]:B.append(f"ALTER TABLE {name(t)} ADD COLUMN {q(c['name'])} {c['type']};")
-C=[GUARD,"DO $$ BEGIN IF current_setting('app.bridge_resolution',true) IS NULL OR current_setting('app.bridge_resolution',true)='' THEN RAISE EXCEPTION 'BRIDGE_EXPLICIT_RESOLUTION_REQUIRED'; END IF; END $$;"]
+C=[GUARD,"DO $$ BEGIN IF current_setting('app.bridge_consumers_frozen',true) IS DISTINCT FROM 'yes' THEN RAISE EXCEPTION 'BRIDGE_FROZEN_CONSUMERS_REQUIRED'; END IF; END $$;","DO $$ BEGIN IF current_setting('app.bridge_resolution',true) IS NULL OR current_setting('app.bridge_resolution',true)='' THEN RAISE EXCEPTION 'BRIDGE_EXPLICIT_RESOLUTION_REQUIRED'; END IF; END $$;"]
 required={}
 for t in sorted(TABLES):
  if not oldcols[t]:continue

@@ -1,3 +1,4 @@
+import { catalogDigestQuery } from "./catalog-fingerprint.mjs";
 import fs from "node:fs";
 import crypto from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -106,7 +107,7 @@ try {
   let failed = false;
   try {
     sql(
-      "BEGIN;INSERT INTO neroxa_bridge.journal(stage,sha256) VALUES('FAILURE_TEST',repeat('0',64));DO $$ BEGIN RAISE EXCEPTION 'INJECTED_POST_CUTOVER';END $$;COMMIT;",
+      "BEGIN;INSERT INTO neroxa_bridge.journal(stage,sha256,catalog_digest) VALUES('FAILURE_TEST',repeat('0',64),repeat('0',32));DO $$ BEGIN RAISE EXCEPTION 'INJECTED_POST_CUTOVER';END $$;COMMIT;",
     );
   } catch {
     failed = true;
@@ -275,9 +276,11 @@ try {
   sql(
     "BEGIN;SET LOCAL app.bridge_environment='local-disposable';SET LOCAL app.bridge_consumers_frozen='yes';" +
       gate +
-      "INSERT INTO neroxa_bridge.journal(stage,sha256) VALUES('E'," +
+      "INSERT INTO neroxa_bridge.journal(stage,sha256,catalog_digest) VALUES('E'," +
       q(e.sha256) +
-      ");COMMIT;",
+      ",(" +
+      catalogDigestQuery +
+      "));COMMIT;",
   );
   check(
     "client roles have no RLS-bypassing TRUNCATE",

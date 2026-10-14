@@ -99,14 +99,14 @@
     {
       "phase": "B",
       "path": "audits/migration-bridge-v1-20261013/sql/B-expand.candidate.sql",
-      "sha256": "e6362231c8b23ced8d280158fc4535dcbdd8e56f1db05f008164870bcd893f51",
+      "sha256": "3ffb82c2d98f7fa6e1f8f5efa2c696bb0b4b3e1a9bf4e92a179c809b7e2973f6",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "A"
     },
     {
       "phase": "C",
       "path": "audits/migration-bridge-v1-20261013/sql/C-resolve-data.candidate.sql",
-      "sha256": "19c6d164718eb08524eb91c019348581720dde2dd5efb053ad316dff4a3d22c1",
+      "sha256": "568a1fc8c70514ddcf2ad37bf4a4840ed915b01faee223a1d365d21a7f07d5ab",
       "repeat": "journal-skip-only; never blind replay",
       "requires": "B"
     },

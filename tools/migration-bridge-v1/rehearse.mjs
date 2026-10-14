@@ -1,3 +1,4 @@
+import { catalogDigestQuery } from "./catalog-fingerprint.mjs";
 // Strictly disposable Docker/PostgreSQL harness. No remote connection support.
 import fs from "node:fs";
 import path from "node:path";
@@ -59,12 +60,31 @@ const check = (name, passed) => {
   if (!passed) throw Error("BRIDGE_CHECK_FAILED: " + name);
   console.log("PASS " + name);
 };
+const expectedErrors = {
+  "preflight fails with no disposable marker": "BRIDGE_DISPOSABLE_CONTEXT_REQUIRED",
+  "unexpected column rejected": "BRIDGE_COLUMN_COUNT_DRIFT",
+  "function tamper rejected": "BRIDGE_FUNCTION_DRIFT",
+  "ACL drift rejected": "BRIDGE_RELATION_DRIFT",
+  "unknown policy rejected": "BRIDGE_POLICY_TRIGGER_DRIFT",
+  "ambiguous settings-to-instance rejected": "BRIDGE_AMBIGUOUS_INSTANCE",
+  "Auth identity orphan rejected": "BRIDGE_AUTH_ORPHAN",
+  "wrong totals rejected": "BRIDGE_HISTORICAL_INTEGRITY",
+  "expansion failure rolls back everything": "INJECTED_FAILURE",
+  "missing commercial resolution rejected": "BRIDGE_EXPLICIT_RESOLUTION_REQUIRED",
+  "data conversion failure rollback": "INJECTED_FAILURE",
+  "native preparation refuses unfrozen consumers": "BRIDGE_FROZEN_CONSUMERS_REQUIRED",
+};
 const denied = (name, s) => {
   let blocked = false;
   try {
     sql("BEGIN;" + s + ";ROLLBACK;");
-  } catch {
-    blocked = true;
+  } catch (e) {
+    blocked = expectedErrors[name] ? e.message.includes(expectedErrors[name]) : false;
+    report.tests.push({
+      name: name + " error cause",
+      passed: blocked,
+      expected: expectedErrors[name] ?? null,
+    });
   }
   check(name, blocked);
 };
@@ -110,6 +130,7 @@ const digests = () =>
       ];
     }),
   );
+
 let original, resolution;
 function apply(phase) {
   const p = phases[phase];
@@ -121,6 +142,11 @@ function apply(phase) {
       );
       if (stored) {
         check("journal hash " + phase, stored === p.sha256);
+        check(
+          "journal schema fingerprint " + phase,
+          sql("SELECT catalog_digest FROM neroxa_bridge.journal WHERE stage=" + quote(phase)) ===
+            sql(catalogDigestQuery),
+        );
         check(
           "journal resume preserves data " + phase,
           JSON.stringify(digests()) === JSON.stringify(original),
@@ -150,7 +176,7 @@ function apply(phase) {
       p.sql +
       (phase === "A"
         ? ""
-        : `INSERT INTO neroxa_bridge.journal(stage,sha256) VALUES(${quote(phase)},${quote(p.sha256)});`) +
+        : `INSERT INTO neroxa_bridge.journal(stage,sha256,catalog_digest) VALUES(${quote(phase)},${quote(p.sha256)},(${catalogDigestQuery}));`) +
       "COMMIT;",
   );
   check(
@@ -259,7 +285,13 @@ try {
     "wrong totals rejected",
     context + "UPDATE public.neroxa_orders SET total=999;" + phases.A.sql,
   );
-  denied("phase C before expansion rejected", context + phases.C.sql);
+  let wrongOrder = false;
+  try {
+    apply("C");
+  } catch (e) {
+    wrongOrder = e.message === "BRIDGE_STAGE_ORDER";
+  }
+  check("phase C before expansion rejected", wrongOrder);
   denied(
     "expansion failure rolls back everything",
     context + phases.B.sql + "DO $$ BEGIN RAISE EXCEPTION 'INJECTED_FAILURE';END $$;",
@@ -272,7 +304,10 @@ try {
   apply("B");
   apply("B");
   report.expanded = { digests: digests() };
-  denied("missing commercial resolution rejected", context + phases.C.sql);
+  denied(
+    "missing commercial resolution rejected",
+    context + "SET LOCAL app.bridge_consumers_frozen='yes';" + phases.C.sql,
+  );
   resolution = {};
   // Synthetic explicit resolutions. Never a proposal to infer these values for real records.
   for (const [table, fields] of Object.entries(manifest.requiredResolution)) {
@@ -305,6 +340,7 @@ try {
   denied(
     "data conversion failure rollback",
     context +
+      "SET LOCAL app.bridge_consumers_frozen='yes';" +
       "SET LOCAL app.bridge_resolution=" +
       quote(JSON.stringify(resolution)) +
       ";" +

@@ -10,8 +10,8 @@ DO $$ BEGIN
  IF has_schema_privilege('anon','public','CREATE') OR has_schema_privilege('authenticated','public','CREATE') THEN RAISE EXCEPTION 'BRIDGE_UNTRUSTED_SCHEMA_CREATE'; END IF;
 END $$;
 CREATE SCHEMA neroxa_bridge; REVOKE ALL ON SCHEMA neroxa_bridge FROM PUBLIC,anon,authenticated,service_role;
-CREATE TABLE neroxa_bridge.journal(stage text PRIMARY KEY,sha256 text NOT NULL CHECK(length(sha256)=64),completed_at timestamptz NOT NULL DEFAULT now());
-REVOKE ALL ON neroxa_bridge.journal FROM PUBLIC,anon,authenticated,service_role;
+CREATE TABLE neroxa_bridge.journal(stage text PRIMARY KEY,sha256 text NOT NULL CHECK(length(sha256)=64),catalog_digest text NOT NULL CHECK(length(catalog_digest)=32),completed_at timestamptz NOT NULL DEFAULT now());
+ALTER TABLE neroxa_bridge.journal ENABLE ROW LEVEL SECURITY; REVOKE ALL ON neroxa_bridge.journal FROM PUBLIC,anon,authenticated,service_role;
 CREATE TYPE public."neroxa_domain_status" AS ENUM ('PENDING','VERIFYING','VERIFIED','FAILED','DISABLED');
 CREATE TYPE public."neroxa_instance_status" AS ENUM ('PROVISIONING','ACTIVE','SUSPENDED','ARCHIVED');
 CREATE TYPE public."neroxa_organization_role" AS ENUM ('OWNER','ADMIN','MANAGER','OPERATOR');
