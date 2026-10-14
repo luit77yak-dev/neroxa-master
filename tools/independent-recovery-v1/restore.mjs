@@ -543,6 +543,34 @@ try {
       `SELECT count(*) FROM private.neroxa_order_amendment_capabilities WHERE order_id IN (${ids})`,
     ) === "0",
   );
+  // TARGET gets its own temporary TLS key; never depend on SOURCE workdir files.
+  const targetKey = path.join(work, "checkout-ci-key.private.pem"),
+    targetCert = path.join(work, "checkout-ci-cert.private.pem");
+  execFileSync(
+    "openssl",
+    [
+      "req",
+      "-new",
+      "-x509",
+      "-nodes",
+      "-newkey",
+      "rsa:2048",
+      "-keyout",
+      targetKey,
+      "-out",
+      targetCert,
+      "-days",
+      "1",
+      "-subj",
+      "/CN=a.ab.invalid",
+      "-addext",
+      "subjectAltName=DNS:a.ab.invalid,DNS:b.ab.invalid,DNS:c.ab.invalid,DNS:unknown.ab.invalid,DNS:preview.ab.invalid",
+    ],
+    { stdio: ["ignore", "ignore", "pipe"], timeout: 30000 },
+  );
+  fs.chmodSync(targetKey, 0o600);
+  fs.chmodSync(targetCert, 0o600);
+  check("Private TARGET TLS prepared independently", fs.statSync(targetKey).mode % 512 === 0o600);
   e.stage = "ready-for-target-browser";
   e.status = "PASS";
 } catch (err) {

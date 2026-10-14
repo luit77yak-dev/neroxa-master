@@ -197,9 +197,13 @@ try {
       );
     users.push({ email, password });
   }
-  const optGroup = crypto.randomUUID(),
-    optAddon = crypto.randomUUID();
-  sql(
+  // Restored TARGET already contains the SOURCE browser fixture. Reuse that
+  // exact scoped addon instead of duplicating its label or changing snapshots.
+  const restoredOptional = process.env.AB_DATABASE ? JSON.parse(sql(`SELECT coalesce(jsonb_agg(jsonb_build_object('group_id',g.id,'addon_id',a.id)),'[]'::jsonb) FROM public.neroxa_storefront_addon_groups g JOIN public.neroxa_storefront_addons a ON a.group_id=g.id JOIN public.neroxa_storefront_product_addon_groups l ON l.group_id=g.id WHERE l.product_id='${A.p}' AND g.instance_id='${A.instance_id}' AND g.name='Opcional Entrega' AND a.name='Opcional pago fictício' AND a.price_delta=3 AND g.active AND a.active`)) : [];
+  if (restoredOptional.length > 1) throw Error("Ambiguous restored optional fixture");
+  const optGroup = restoredOptional[0]?.group_id ?? crypto.randomUUID(),
+    optAddon = restoredOptional[0]?.addon_id ?? crypto.randomUUID();
+  if (!restoredOptional.length) sql(
     `INSERT INTO public.neroxa_storefront_addon_groups(id,instance_id,name,required,min_selections,max_selections) VALUES('${optGroup}','${A.instance_id}','Opcional Entrega',false,0,1);INSERT INTO public.neroxa_storefront_addons(id,group_id,name,price_delta) VALUES('${optAddon}','${optGroup}','Opcional pago fictício',3);INSERT INTO public.neroxa_storefront_product_addon_groups(product_id,group_id) VALUES('${A.p}','${optGroup}');`,
   );
   for (const [index, f] of fixtures.entries()) {
