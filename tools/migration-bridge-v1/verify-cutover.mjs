@@ -390,7 +390,7 @@ try {
   check(
     "historical half item remains readable only by scoped Auth",
     detail.status === 200 &&
-      detail.data?.items?.length === 2 &&
+      detail.data?.items?.length === 3 &&
       detail.data.items.some((x) => x.is_half) &&
       detail.data?.history?.length === 1,
   );

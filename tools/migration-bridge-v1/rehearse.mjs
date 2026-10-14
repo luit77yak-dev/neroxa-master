@@ -214,6 +214,9 @@ try {
     zone = id(),
     orders = [id(), id(), id()];
   const keys = [id(), id(), id()];
+  const fulfillmentProfiles = JSON.parse(
+    fs.readFileSync(root + "/evidence/legacy-fulfillment-shape-readonly.json"),
+  )[0].profiles;
   const profiles = JSON.parse(
     fs.readFileSync(root + "/evidence/legacy-state-profiles-readonly.json"),
   )[0].profiles;
@@ -229,12 +232,15 @@ try {
       (seed += `INSERT INTO public.neroxa_storefront_products(id,instance_id,name,slug,price,metadata) VALUES(${quote(p)},${quote(store)},'Produto histórico ${i}', 'bridge-product-${i}',${30 + i * 10},'{}');`),
   );
   orders.forEach((o, i) => {
-    seed += `INSERT INTO public.neroxa_orders(id,organization_id,instance_id,order_number,customer_name,customer_phone,fulfillment,payment_method,status,subtotal,delivery_fee,total,idempotency_key,created_at) VALUES(${quote(o)},${quote(org)},${quote(store)},${i + 1},'Perfil sintético ${i}','0000000000${i}','DELIVERY','CASH',${quote(profiles[i].status)},70,7,77,${quote(keys[i])},'2025-01-01');`;
-    [0, 1].forEach((v) => {
-      const half = profiles[i].half_items > 0 && v === 0;
-      const adds =
-        profiles[i].addon_items > 0 && v === 0 ? JSON.stringify([{ id: productIds[2] }]) : "[]";
-      seed += `INSERT INTO public.neroxa_order_items(id,order_id,product_id,product_name,quantity,unit_price,line_total,addons,complements,is_half,second_product_id,second_product_name) VALUES(${quote(id())},${quote(o)},${quote(productIds[v])},'Snapshot histórico ${v}',1,${30 + v * 10},${30 + v * 10},${quote(adds)},'[]',${half ? "true" : "false"},${half ? quote(productIds[1]) : "NULL"},${half ? quote("Sabor histórico fictício") : "NULL"});`;
+    const f = fulfillmentProfiles[i],
+      amount = f.item_quantities.reduce((total, qty, v) => total + (30 + v * 10) * qty, 0),
+      fee = f.fulfillment === "DELIVERY" ? 7 : 0;
+    seed += `INSERT INTO public.neroxa_orders(id,organization_id,instance_id,order_number,customer_name,customer_phone,fulfillment,payment_method,status,subtotal,delivery_fee,total,idempotency_key,created_at,address_street,address_number,address_neighborhood) VALUES(${quote(o)},${quote(org)},${quote(store)},${i + 1},'Perfil sintético ${i}','0000000000${i}',${quote(f.fulfillment)},${quote(f.payment_method)},${quote(profiles[i].status)},${amount},${fee},${amount + fee},${quote(keys[i])},'2025-01-01',${f.has_street ? quote("Rua estritamente fictícia") : "NULL"},${f.has_number ? quote("123") : "NULL"},${f.has_neighborhood ? quote("Bairro sintético") : "NULL"});`;
+    f.item_quantities.forEach((qty, v) => {
+      const half = profiles[i].half_items > 0 && v === 0,
+        adds =
+          profiles[i].addon_items > 0 && v === 0 ? JSON.stringify([{ id: productIds[2] }]) : "[]";
+      seed += `INSERT INTO public.neroxa_order_items(id,order_id,product_id,product_name,quantity,unit_price,line_total,addons,complements,is_half,second_product_id,second_product_name) VALUES(${quote(id())},${quote(o)},${quote(productIds[v])},'Snapshot histórico ${v}',${qty},${30 + v * 10},${(30 + v * 10) * qty},${quote(adds)},'[]',${half ? "true" : "false"},${half ? quote(productIds[1]) : "NULL"},${half ? quote("Sabor histórico fictício") : "NULL"});`;
     });
     profiles[i].states.forEach(
       (event, k) =>

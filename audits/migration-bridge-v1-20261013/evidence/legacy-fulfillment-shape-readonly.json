@@ -1,0 +1,42 @@
+[
+  {
+    "profiles": [
+      {
+        "slot": 1,
+        "has_number": true,
+        "has_street": true,
+        "fulfillment": "DELIVERY",
+        "payment_method": "CARD_ON_SITE",
+        "item_quantities": [
+          2,
+          1
+        ],
+        "has_neighborhood": true
+      },
+      {
+        "slot": 2,
+        "has_number": false,
+        "has_street": false,
+        "fulfillment": "PICKUP",
+        "payment_method": "PIX",
+        "item_quantities": [
+          1
+        ],
+        "has_neighborhood": false
+      },
+      {
+        "slot": 3,
+        "has_number": false,
+        "has_street": false,
+        "fulfillment": "PICKUP",
+        "payment_method": "PIX",
+        "item_quantities": [
+          1,
+          1,
+          1
+        ],
+        "has_neighborhood": false
+      }
+    ]
+  }
+]
