@@ -134,12 +134,17 @@ jobs:
           export VITE_NEROXA_CHECKOUT_AMENDMENTS=true
           (cd delivery-candidate && node node_modules/vite/bin/vite.js build --mode homologation)
           test -f delivery-candidate/.output/server/index.mjs
-          openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
-            -keyout "$AB_WORKDIR/f02-browser-key.private.pem" \
-            -out "$AB_WORKDIR/f02-browser-cert.private.pem" \
-            -subj '/CN=a.synthetic.invalid' \
-            -addext 'subjectAltName=DNS:a.synthetic.invalid,DNS:b.synthetic.invalid,DNS:c.synthetic.invalid' > "$AB_WORKDIR/browser-openssl.private.log" 2>&1
-          sudo chown neroxa_test:neroxa_test "$AB_WORKDIR/f02-browser-key.private.pem" "$AB_WORKDIR/f02-browser-cert.private.pem"
+          # Do not loosen directory ownership: create synthetic TLS materials as the
+          # same dedicated unprivileged UID that owns the disposable AB_WORKDIR.
+          sudo -u neroxa_test env AB_WORKDIR="$AB_WORKDIR" sh -c '
+            openssl req -x509 -nodes -days 1 -newkey rsa:2048 \
+              -keyout "$AB_WORKDIR/f02-browser-key.private.pem" \
+              -out "$AB_WORKDIR/f02-browser-cert.private.pem" \
+              -subj "/CN=a.synthetic.invalid" \
+              -addext "subjectAltName=DNS:a.synthetic.invalid,DNS:b.synthetic.invalid,DNS:c.synthetic.invalid" \
+              > "$AB_WORKDIR/browser-openssl.private.log" 2>&1
+          '
+          sudo -u neroxa_test test -r "$AB_WORKDIR/f02-browser-key.private.pem"
           sudo sh -c "echo '127.0.0.1 a.synthetic.invalid b.synthetic.invalid c.synthetic.invalid' >> /etc/hosts"
           sudo setfacl -m u:neroxa_test:--x "$RUNNER_TEMP" "$RUNNER_TEMP/f02-playwright"
           sudo setfacl -R -m u:neroxa_test:rX "$RUNNER_TEMP/f02-playwright" "$GITHUB_WORKSPACE/delivery-candidate"
