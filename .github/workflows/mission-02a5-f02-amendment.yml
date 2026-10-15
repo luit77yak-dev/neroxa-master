@@ -7,6 +7,7 @@ on:
       - audits/02a5/f02-amendment/**
       - audits/02a5/F02-AMENDMENT-EXECUTION-MANIFEST.json
       - audits/02a5/amendment-history.candidate.sql
+      - audits/02a5/recovery-without-phone.candidate.sql
 permissions:
   contents: read
 jobs:
@@ -81,6 +82,7 @@ jobs:
           PY
       - name: Real Auth and buyer recut with test UID egress restriction
         run: |
+          set -euo pipefail
           sudo useradd --create-home --groups docker neroxa_test
           sudo chown -R neroxa_test:neroxa_test "$AB_WORKDIR"
           # Dedicated UID needs traversal/read of the audited workspace, not runner secrets.

@@ -16,7 +16,7 @@ fn AS (
  FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
  JOIN pg_roles r ON r.oid=p.proowner
  WHERE n.nspname IN ('public','private','neroxa_private')
- AND (p.proname IN ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment','neroxa_track_order_with_capability','neroxa_register_tracking_capability','neroxa_register_order_amendment_capability','neroxa_append_order_items_with_capability','neroxa_prepare_group_item','neroxa_assert_store_open')
+ AND (p.proname IN ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment','neroxa_track_order_with_capability','neroxa_register_tracking_capability','neroxa_register_order_amendment_capability','neroxa_append_order_items_with_capability','neroxa_prepare_group_item','neroxa_assert_store_open','neroxa_recover_group_order','neroxa_recovery_order_snapshot','neroxa_checkout_reserve_quota')
  OR p.prosrc ~* '(get_public_order_status|append_public_order_items_with_payment|append_public_order_items)')
 ),
 grants AS (

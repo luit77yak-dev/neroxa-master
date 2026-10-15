@@ -5,6 +5,11 @@
   "foundation_manifest_sha256": "561f68727e6114711cb251170505d12ddc12d5e2bf903f84c84b30d4c3abe385",
   "units": [
     {
+      "path": "audits/sql/checkout-durable-rate-limit.candidate.sql",
+      "sha256": "b75d348d626d6c4ea27163bf5d539ad3ae8d4d9103b54cff3a4d4deb6d5d0cbb",
+      "reason": "real HTTP adapter requires durable reserve_quota RPC and counters; missing in first run foundation"
+    },
+    {
       "path": "audits/sql/order-amendment-capability.candidate.sql",
       "sha256": "60f791be31aa94407edc71a570f994a6ea61fc1ab2610efc6ff3dfd54680ae69",
       "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
@@ -67,6 +72,12 @@
       "path": "audits/02a5/amendment-history.candidate.sql",
       "sha256": "1a2406fc6394f9626ceda25dbfe374ab6081af9b54a698f87b8bb88c07af3fc3",
       "predecessor_prosrc_md5": "32c5fbee5679eb0147f8b0bd3961f9fb"
+    },
+    {
+      "path": "audits/02a5/recovery-without-phone.candidate.sql",
+      "sha256": "46332b0bc0746a928143ca35c92ff957599f6f8693efec09beb3fd96efab067a",
+      "predecessor_wrapper_prosrc_md5": "a7b00a68fa486f741d813e15fb96035a",
+      "source_projection_body_md5": "2dbde8a81cc643899821d44f923322df"
     }
   ],
   "phone_gate": "BLOCKED; DO NOT APPLY",

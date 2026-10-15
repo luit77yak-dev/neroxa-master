@@ -63,6 +63,17 @@ export async function secureAmendment(c){
   // sixth must be rate limited. Group linking does not change prior replay output.
   await verify('SEC-17','fifth token request may replay','buyer capability',()=>request(),r=>r.http===200,true);
   await verify('SEC-17','sixth token request rate limited','buyer capability',()=>request(),r=>r.http===429,true);
+  const recoveryKey=crypto.randomUUID();
+  const recoveryPayload={organization_id:ids.O1,instance_id:ids.Astore,store_domain:'a.synthetic.invalid',idempotency_key:recoveryKey,customer_name:'Synthetic Recovery Buyer',customer_phone:'00000000004',fulfillment:'PICKUP',payment_method:'CASH',expected_total:31,items:[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Aaddon],expected_unit_price:31}]};
+  const recoveryCreated=await services.admin.rpc('create_public_order',{p_order:recoveryPayload});if(recoveryCreated.error)throw Error('Recovery grouped checkout fixture failed '+recoveryCreated.error.code);const recoveryOrder=Array.isArray(recoveryCreated.data)?recoveryCreated.data[0]:recoveryCreated.data;
+  const recover=(changes={})=>services.admin.rpc('neroxa_recover_group_order',{p_instance_id:ids.Astore,p_checkout_key:recoveryKey,p_order:recoveryPayload,...changes}).then(r=>({http:r.status,body:r.error??r.data}));
+  await verify('REC-01','service recovery preserves legitimate snapshot shape without phone dependency','service trusted checkout',()=>recover(),r=>r.http===200&&r.body?.order_id===recoveryOrder.order_id&&r.body?.instance_id===ids.Astore&&r.body?.total===31&&Array.isArray(r.body.items)&&r.body.items.length===1,true);
+  for(const actor of ['anon','admin_A'])await verify('REC-02','direct recovery RPC denied '+actor,actor,()=>rpc(actor,'neroxa_recover_group_order',{p_instance_id:ids.Astore,p_checkout_key:recoveryKey,p_order:recoveryPayload}),r=>[401,403].includes(r.http),true);
+  await verify('REC-03','recovery forged instance B denied','service trusted checkout',()=>recover({p_instance_id:ids.Bstore}),r=>r.http===403&&r.body.code==='42501',true);
+  await verify('REC-04','recovery payload tampering denied','service trusted checkout',()=>recover({p_order:{...recoveryPayload,customer_phone:'00000000999'}}),r=>r.http===403&&r.body.code==='42501',true);
+  sql(`UPDATE private.neroxa_group_order_intents SET recovery_expires_at=clock_timestamp()-interval '1 hour' WHERE order_id=${q(recoveryOrder.order_id)};`);
+  await verify('REC-05','expired recovery lease denied','service trusted checkout',()=>recover(),r=>r.http===410&&r.body.code==='PT410',true);
+  out.recovery='PASS service-only instance/key/payload/expiry; no phone RPC dependency; not T1 restore or post-gate proof';
   emit('SEC-18','official gate and post-gate rollback not authorized','BLOCKED',{reason:'consumer owners/versions/environment/bindings UNKNOWN; no disablement receipt, GUC or quarantine; discard clone only'});
   out.status='PASS secure recut only; legacy P0 remains FAIL';out.financeFinal=finance();
  }finally{await new Promise(r=>server.close(r));console.log('F02_AMENDMENT_SUMMARY='+JSON.stringify(out));}
