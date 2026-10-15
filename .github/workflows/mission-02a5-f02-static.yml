@@ -21,13 +21,11 @@ jobs:
           ref: 4ce88959a751066f96da4cbab8d1fc9ac29bb320
           path: delivery-audited
           persist-credentials: false
-      - name: Verify public standard runner and eligibility
-        env:
-          GH_TOKEN: \${{ github.token }}
+      - name: Verify public standard runner without a GitHub API token
         run: |
           test "$RUNNER_ENVIRONMENT" = "github-hosted"
-          test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
-          test "$(gh api repos/luit77yak-dev/pizza-perfect-plate --jq .private)" = false
+          python3 -c 'import json,os; e=json.load(open(os.environ["GITHUB_EVENT_PATH"])); assert e["repository"]["private"] is False and e["repository"]["visibility"] == "public"'
+          test "$(git -C delivery-audited rev-parse HEAD)" = 4ce88959a751066f96da4cbab8d1fc9ac29bb320
       - name: Scan immutable source without DB or secrets
         run: |
           python3 audits/02a5/f02/scan_consumers.py --master . --delivery delivery-audited \
