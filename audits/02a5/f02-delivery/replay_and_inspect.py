@@ -21,10 +21,12 @@ for i,f in enumerate(files,1):
     if f.name=='20260927130000_delivery_minimum_fee_plus_one.sql':
         import hashlib
         text_sql=raw.decode()
+        lf=chr(10)
         changes=[
-           ('SELECT c.*\\n        INTO v_crust\\n','SELECT c.price, c.name\\n        INTO v_crust_price, v_crust_name\\n'),
-           ('v_crust := NULL;','v_crust_price := 0; v_crust_name := NULL;'),
-           ('COALESCE(v_crust.price, 0)','COALESCE(v_crust_price, 0)')
+           ('SELECT c.*'+lf+'        INTO v_crust'+lf,
+            'SELECT c.price, c.name'+lf+'        INTO v_crust_price, v_crust_name'+lf),
+           ('v_crust := NULL;', 'v_crust_price := 0; v_crust_name := NULL;'),
+           ('COALESCE(v_crust.price, 0)', 'COALESCE(v_crust_price, 0)')
         ]
         for before,after in changes:
             if text_sql.count(before)!=1:raise AssertionError('BLOCKED compatibility source drift: '+before[:30])
@@ -38,7 +40,7 @@ for i,f in enumerate(files,1):
         print('DELIVERY_SQL_REPLAY=BLOCKED; index='+str(i)+'; file='+f.name+'; error='+error,flush=True)
         print('DELIVERY_POSTGRES_CATALOG=NOT_RUN; GATE=BLOCKED; POST_GATE=NOT_RUN',flush=True)
         sys.exit(2)
-print('DELIVERY_SQL_REPLAY=PASS; count='+str(len(files)),flush=True)
+print('DELIVERY_DERIVED_COMPATIBILITY_REPLAY=PASS; count='+str(len(files))+'; literal=False',flush=True)
 z=subprocess.run(base,input=pathlib.Path(a.catalog).read_bytes(),capture_output=True)
 if z.returncode:
     print('DELIVERY_POSTGRES_CATALOG=BLOCKED; catalog SELECT failed',flush=True);sys.exit(3)
