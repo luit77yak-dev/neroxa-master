@@ -1,0 +1,75 @@
+{
+  "profile": "F02-amendment-disposable-pre-gate",
+  "status": "CANDIDATE NOT YET EXECUTED",
+  "foundation": "BUYER-PRE-GATE-MANIFEST + exact catalog/19 predecessors, no Delivery migration concatenation",
+  "foundation_manifest_sha256": "561f68727e6114711cb251170505d12ddc12d5e2bf903f84c84b30d4c3abe385",
+  "units": [
+    {
+      "path": "audits/sql/order-amendment-capability.candidate.sql",
+      "sha256": "60f791be31aa94407edc71a570f994a6ea61fc1ab2610efc6ff3dfd54680ae69",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "objects": [
+        "private.neroxa_order_amendment_capabilities",
+        "private.neroxa_order_amendment_operations",
+        "public.calculate_public_order_line_price",
+        "public.neroxa_append_order_items_with_capability",
+        "public.neroxa_order_items",
+        "public.neroxa_orders",
+        "public.neroxa_register_order_amendment_capability",
+        "public.neroxa_storefront_products",
+        "public.neroxa_system_instances"
+      ],
+      "expected_signature": "public.neroxa_append_order_items_with_capability(uuid,uuid,text,uuid,jsonb)",
+      "executor": "normal postgres in separate native Supabase clone"
+    },
+    {
+      "path": "audits/sql/group-addons-capability.candidate.sql",
+      "sha256": "675fe171218eaf5c5aa6570aefed31dace35f63f0293cb0f146dc8f0d3491a5e",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "objects": [
+        "private.neroxa_order_amendment_capabilities",
+        "private.neroxa_order_amendment_operations",
+        "private.neroxa_prepare_group_item",
+        "private.neroxa_requires_group_contract",
+        "public.calculate_public_order_line_price",
+        "public.neroxa_append_order_items_with_capability",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_storefront_products",
+        "public.neroxa_system_instances"
+      ],
+      "expected_signature": "public.neroxa_append_order_items_with_capability(uuid,uuid,text,uuid,jsonb)",
+      "executor": "normal postgres in separate native Supabase clone"
+    },
+    {
+      "path": "audits/sql/store-availability-capability.candidate.sql",
+      "sha256": "cc0bb4ae8932550652a31dc2ca1e1751be5fa8bc449d487984ce9ad537edc499",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "objects": [
+        "private.neroxa_assert_store_open",
+        "private.neroxa_order_amendment_capabilities",
+        "private.neroxa_order_amendment_operations",
+        "private.neroxa_prepare_group_item",
+        "private.neroxa_requires_group_contract",
+        "public.calculate_public_order_line_price",
+        "public.neroxa_append_order_items_with_capability",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_storefront_products",
+        "public.neroxa_system_instances"
+      ],
+      "expected_signature": "public.neroxa_append_order_items_with_capability(uuid,uuid,text,uuid,jsonb)",
+      "executor": "normal postgres in separate native Supabase clone"
+    },
+    {
+      "path": "audits/02a5/amendment-history.candidate.sql",
+      "sha256": "1a2406fc6394f9626ceda25dbfe374ab6081af9b54a698f87b8bb88c07af3fc3",
+      "predecessor_prosrc_md5": "32c5fbee5679eb0147f8b0bd3961f9fb"
+    }
+  ],
+  "phone_gate": "BLOCKED; DO NOT APPLY",
+  "post_gate": "NOT RUN",
+  "rollback": "Discard clone; no unsafe grant restoration; no StaffPanel"
+}
