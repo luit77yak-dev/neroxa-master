@@ -36,8 +36,6 @@ begin
     'created_at',v_order.created_at,'updated_at',v_order.updated_at
   );
 end;
-$function$
-
 $snapshot$;
 REVOKE ALL ON FUNCTION private.neroxa_recovery_order_snapshot(uuid,uuid) FROM PUBLIC,anon,authenticated,service_role;
 DO $patch$

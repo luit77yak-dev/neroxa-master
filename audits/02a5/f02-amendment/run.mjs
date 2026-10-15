@@ -19,20 +19,8 @@ export async function secureAmendment(c){
  for(const unit of manifest.units){
  const body=fs.readFileSync(unit.path);
  if(crypto.createHash('sha256').update(body).digest('hex')!==unit.sha256)throw Error('Amendment SQL hash drift');
- let sqlText=body.toString('utf8');
- let record={path:unit.path,sha256:unit.sha256,status:'PASS exact file applied only to disposable clone'};
- if(unit.path==='audits/02a5/recovery-without-phone.candidate.sql'){
-  const dollar=String.fromCharCode(36);
-  const tag=x=>dollar+x+dollar;
-  const from=String.fromCharCode(10)+tag('function')+String.fromCharCode(10,10)+tag('snapshot')+';';
-  const to=String.fromCharCode(10)+tag('snapshot')+';';
-  if(sqlText.split(from).length!==2)throw Error('Recovery delimiter source drift; BLOCKED');
-  sqlText=sqlText.replace(from,to);
-  record={...record,status:'PASS derived syntax correction in disposable clone ONLY',derived_sha256:crypto.createHash('sha256').update(sqlText,'utf8').digest('hex'),release_equivalence:false,original_manifest_intact:true};
-  out.profile='DERIVED_RECOVERY_SQL_ONLY; no release equivalence';
- }
- sql("SET neroxa.mission02a2_disposable='on';"+sqlText);
- out.units.push(record);
+ sql("SET neroxa.mission02a2_disposable='on';"+body.toString('utf8'));
+ out.units.push({path:unit.path,sha256:unit.sha256,status:'PASS exact file applied only to disposable clone'});
 }
  c.resetDigests();sql("NOTIFY pgrst,'reload schema';");await new Promise(r=>setTimeout(r,2000));
  const snap=()=>{const b=digest();delete b['private.neroxa_tracking_ingress'];delete b['private.neroxa_checkout_quota_counters'];return {business:b,session:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM auth.sessions s;"),quota:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM private.neroxa_checkout_quota_counters s;")}};
