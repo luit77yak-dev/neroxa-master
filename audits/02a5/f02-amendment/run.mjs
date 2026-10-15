@@ -17,92 +17,22 @@ export async function secureAmendment(c){
  if(sql("SELECT current_setting('is_superuser');")!=='off')throw Error('Normal postgres required');
  report.amendment={scope:'PROVISIONAL SEC-01..18 mapping; official case definitions not supplied; real local REST/SQL/HTTP adapter, not hydrated TanStack',cases:[],units:[]};const out=report.amendment;
  for(const unit of manifest.units){
-  const body=fs.readFileSync(unit.path);
-  if(crypto.createHash('sha256').update(body).digest('hex')!==unit.sha256)throw Error('Amendment SQL hash drift');
-  let statement=body.toString('utf8');
-  let note={path:unit.path,sha256:unit.sha256,status:'PASS original SQL applied only to clone'};
-  if(unit.path==='audits/02a5/recovery-without-phone.candidate.sql'){
-    const dollar=String.fromCharCode(36);
-    const tag=name=>dollar+name+dollar;
-    const exact=String.fromCharCode(10)+tag('function')+String.fromCharCode(10,10)+tag('snapshot')+';';
-    const corrected=String.fromCharCode(10)+tag('snapshot')+';';
-    if(statement.split(exact).length!==2)throw Error('Recovery SQL delimiter layout drift; derived replay refused');
-    statement=statement.replace(exact,corrected);
-    note={...note,status:'PASS derived SQL applied only in disposable clone',derived_sha256:crypto.createHash('sha256').update(statement,'utf8').digest('hex'),original_sql_unmodified:true,release_equivalence:false};
-    out.profile='DERIVED_RECOVERY_DELIMITER_FIX_ONLY; release gate BLOCKED';
-  }
-  sql("SET neroxa.mission02a2_disposable='on';"+statement);
-  out.units.push(note);
-}
- c.resetDigests();sql("NOTIFY pgrst,'reload schema';");await new Promise(r=>setTimeout(r,2000));
- const snap=()=>{const b=digest();delete b['private.neroxa_tracking_ingress'];delete b['private.neroxa_checkout_quota_counters'];return {business:b,session:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM auth.sessions s;"),quota:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM private.neroxa_checkout_quota_counters s;")}};
- const stable=(a,b)=>JSON.stringify(a.business)===JSON.stringify(b.business)&&a.session===b.session;
- const emit=(id,name,status,details={})=>{const row={id,name,status,master:process.env.MISSION_SOURCE_SHA,delivery:process.env.MISSION_DELIVERY_SHA,run:process.env.MISSION_RUN_ID,...details};out.cases.push(row);console.log('F02_SEC_CASE='+JSON.stringify(row));return row;};
- const verify=async(id,name,actor,fn,predicate,deny=false)=>{const before=snap();let response;try{response=await fn();}catch(e){response={http:0,error:'transport/exception'};}const after=snap();const pass=predicate(response)&&(!deny||stable(before,after));emit(id,name,pass?'PASS':'FAIL',{actor,auth_uid:people[actor]?.id??null,http:response.http,sqlstate:response.body?.code??null,stateUnchanged:stable(before,after),before,after});if(!pass)throw Error('Secure amendment case failed '+id+' '+name);return response;};
- emit('SEC-01','legacy phone read pre-gate',report.f02Observed?.http===200?'FAIL':'BLOCKED',{severity:'P0',actor:'anon',http:report.f02Observed?.http,scope:'expected existing vulnerability, no official gate applied'});
- emit('SEC-02','legacy phone append pre-gate',report.append?.phoneAttack?.severity==='P0'?'FAIL':'BLOCKED',{severity:report.append?.phoneAttack?.severity,actor:'anon',http:report.append?.phoneAttack?.http,before:report.append?.phoneAttack?.before,after:report.append?.phoneAttack?.after});
- const key=crypto.randomUUID();const created=await services.admin.rpc('create_public_order',{p_order:{organization_id:ids.O1,instance_id:ids.Astore,store_domain:'a.synthetic.invalid',idempotency_key:key,customer_name:'Synthetic Amendment Buyer',customer_phone:'00000000003',fulfillment:'PICKUP',payment_method:'CASH',items:[{product_id:ids.Aproduct,quantity:1}]}});if(created.error)throw Error('Amendment checkout fixture failed '+created.error.code);const order=Array.isArray(created.data)?created.data[0]:created.data;
- const {issueTrackingOnce}=await import('../../../delivery-candidate/src/server/tracking-issuance.ts');
- const mint=fn=>issueTrackingOnce(async hash=>{const r=await services.admin.rpc(fn,{p_instance_id:ids.Astore,p_order_id:order.order_id,p_checkout_key:key,p_token_sha256:hash});if(r.error)throw Error('Capability registration failed '+r.error.code);return r.data;});
- const token=await mint('neroxa_register_order_amendment_capability');const track=await mint('neroxa_register_tracking_capability');if(!token||!track||token===track||await mint('neroxa_register_order_amendment_capability')!==undefined)throw Error('Separate one-time tokens invalid');
- const call=(changes={})=>services.admin.rpc('neroxa_append_order_items_with_capability',{p_instance_id:ids.Astore,p_order_id:order.order_id,p_token:token,p_request_key:crypto.randomUUID(),p_items:[{product_id:ids.Aproduct,quantity:1,unit_price:0.01}],...changes}).then(r=>({http:r.status,body:r.error??r.data}));
- const denied=r=>[400,401,403,409,423].includes(r.http);const rows=r=>r.http===200&&Array.isArray(r.body)&&r.body.length===1;
- for(const actor of ['anon','admin_A','staff_A','staff_none','common']){
-  await verify('SEC-03','new append direct RPC denied '+actor,actor,()=>rpc(actor,'neroxa_append_order_items_with_capability',{p_instance_id:ids.Astore,p_order_id:order.order_id,p_token:token,p_request_key:crypto.randomUUID(),p_items:[{product_id:ids.Aproduct,quantity:1}]}),r=>[401,403].includes(r.http),true);
-  await verify('SEC-03','capability registration direct RPC denied '+actor,actor,()=>rpc(actor,'neroxa_register_order_amendment_capability',{p_instance_id:ids.Astore,p_order_id:order.order_id,p_checkout_key:key,p_token_sha256:'f'.repeat(64)}),r=>[401,403].includes(r.http),true);
+ const body=fs.readFileSync(unit.path);
+ if(crypto.createHash('sha256').update(body).digest('hex')!==unit.sha256)throw Error('Amendment SQL hash drift');
+ let sqlText=body.toString('utf8');
+ let record={path:unit.path,sha256:unit.sha256,status:'PASS exact file applied only to disposable clone'};
+ if(unit.path==='audits/02a5/recovery-without-phone.candidate.sql'){
+  const dollar=String.fromCharCode(36);
+  const tag=x=>dollar+x+dollar;
+  const from=String.fromCharCode(10)+tag('function')+String.fromCharCode(10,10)+tag('snapshot')+';';
+  const to=String.fromCharCode(10)+tag('snapshot')+';';
+  if(sqlText.split(from).length!==2)throw Error('Recovery delimiter source drift; BLOCKED');
+  sqlText=sqlText.replace(from,to);
+  record={...record,status:'PASS derived syntax correction in disposable clone ONLY',derived_sha256:crypto.createHash('sha256').update(sqlText,'utf8').digest('hex'),release_equivalence:false,original_manifest_intact:true};
+  out.profile='DERIVED_RECOVERY_SQL_ONLY; no release equivalence';
  }
- const {handleOrderAmendmentRequest}=await import('../../../delivery-candidate/src/server/order-amendment.ts');const {orderAmendmentDependencies}=await import('../../../delivery-candidate/src/server/order-amendment-backend.ts');
- const env={NEROXA_PRIVATE_TRACKING_ENABLED:'true',NEROXA_BACKEND_MODE:'homologation',NEROXA_TEST_PROJECT_REF:'local-disposable',NEROXA_TRACKING_PROXY_CONTRACT:'direct-canonical-host-v1',SUPABASE_URL:url,NEROXA_DELIVERY_BACKEND_URL:url,NEROXA_TRACKING_CANONICAL_DOMAINS:'a.synthetic.invalid,b.synthetic.invalid,c.synthetic.invalid',NEROXA_TRACKING_QUOTA_SECRET:crypto.randomBytes(32).toString('hex'),NEROXA_CHECKOUT_RATE_LIMIT_SECRET:crypto.randomBytes(32).toString('hex'),NEROXA_CHECKOUT_GATEWAY_ENABLED:'true',NEROXA_CHECKOUT_AMENDMENTS_ENABLED:'true',NEROXA_GROUP_ADDONS_V1_ENABLED:'true'};
- const deps=orderAmendmentDependencies(env,services.admin);
- const server=http.createServer(async(req,res)=>{try{const host=req.headers.host;if(!['a.synthetic.invalid','b.synthetic.invalid','c.synthetic.invalid'].includes(host)){res.writeHead(403);res.end('{}');return;}const chunks=[];let size=0;for await(const chunk of req){size+=chunk.length;if(size>32768){res.writeHead(413);res.end('{}');return;}chunks.push(chunk);}const response=await handleOrderAmendmentRequest(new Request('https://'+host+req.url,{method:req.method,headers:req.headers,body:Buffer.concat(chunks)}),deps);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(await response.text());}catch{res.writeHead(503);res.end('{}');}});
- await new Promise(r=>server.listen(0,'127.0.0.1',r));
- const base={order_id:order.order_id,token,request_key:crypto.randomUUID(),items:[{product_id:ids.Aproduct,quantity:1,unit_price:0.01}]};
- const request=(body=base,headers={})=>new Promise((resolve,reject)=>{const req=http.request('http://127.0.0.1:'+server.address().port+'/api/order-amend',{method:'POST',headers:{Host:'a.synthetic.invalid',Origin:'https://a.synthetic.invalid','Content-Type':'application/json',...headers}},res=>{const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>{try{resolve({http:res.statusCode,body:JSON.parse(Buffer.concat(chunks).toString()),noStore:res.headers['cache-control']?.includes('no-store')});}catch{reject(Error('HTTP non-JSON; payload omitted'));}});});req.on('error',reject);req.end(JSON.stringify(body));});
- const finance=()=>JSON.parse(sql(`SELECT jsonb_build_object('total',o.total,'subtotal',o.subtotal,'line_sum',(SELECT sum(line_total) FROM neroxa_order_items WHERE order_id=o.id),'items',(SELECT count(*) FROM neroxa_order_items WHERE order_id=o.id),'history',(SELECT count(*) FROM neroxa_order_status_history WHERE order_id=o.id),'operations',(SELECT count(*) FROM private.neroxa_order_amendment_operations WHERE order_id=o.id),'unsettled',(SELECT bool_and(payment_state='NOT_SETTLED') FROM private.neroxa_order_amendment_operations WHERE order_id=o.id)) FROM neroxa_orders o WHERE id=${q(order.order_id)};`));
- try{
-  const before=finance();await verify('SEC-04','HTTP authorized amendment authoritative price and NOT_SETTLED','buyer capability',()=>request(),r=>r.http===200&&r.body.added_amount===30&&r.body.total===60&&r.body.payment_state==='NOT_SETTLED'&&r.noStore);const after=finance();if(after.items-before.items!==1||after.history-before.history!==1||after.operations-before.operations!==1||after.line_sum!==after.subtotal)throw Error('Amendment financial/history reconciliation failed');out.financialPositive={before,after};
-  await verify('SEC-05','identical HTTP retry one operation','buyer capability',()=>request(),r=>r.http===200&&r.body.total===60,true);
-  const concurrent={...base,request_key:crypto.randomUUID()};const beforeConcurrent=finance();const pair=await Promise.all([request(concurrent),request(concurrent)]);const afterConcurrent=finance();if(pair.some(r=>r.http!==200||r.body.total!==90)||afterConcurrent.items-beforeConcurrent.items!==1||afterConcurrent.operations-beforeConcurrent.operations!==1)throw Error('Concurrent amendment duplicated or failed');emit('SEC-06','same-key concurrency one mutation','PASS',{before:beforeConcurrent,after:afterConcurrent,http:pair.map(r=>r.http),actor:'buyer capability'});
-  await verify('SEC-07','request key conflict no mutation','service with buyer capability',()=>call({p_request_key:base.request_key,p_items:[{product_id:ids.Aproduct,quantity:2}]}),r=>r.http===400&&r.body.code==='22023',true);
-  for(const [id,x] of [['SEC-08','B'],['SEC-09','C']])await verify(id,'A capability cannot access '+x,'service with buyer capability',()=>call({p_instance_id:ids[x+'store'],p_order_id:ids[x+'order']}),r=>r.http===403&&r.body.code==='42501',true);
-  for(const secret of ['', 'x'.repeat(43)])await verify('SEC-10','missing/invalid token denied','service with bad capability',()=>call({p_token:secret}),denied,true);
-  for(const mode of ['expired','revoked']){sql(mode==='expired'?`UPDATE private.neroxa_order_amendment_capabilities SET created_at=clock_timestamp()-interval '3 hours',expires_at=clock_timestamp()-interval '1 hour' WHERE order_id=${q(order.order_id)};`:`UPDATE private.neroxa_order_amendment_capabilities SET revoked_at=clock_timestamp() WHERE order_id=${q(order.order_id)};`);await verify('SEC-11',mode+' capability denied','service with stale capability',()=>call(),r=>r.http===403&&r.body.code==='42501',true);sql(`UPDATE private.neroxa_order_amendment_capabilities SET revoked_at=NULL,created_at=clock_timestamp(),expires_at=clock_timestamp()+interval '2 hours' WHERE order_id=${q(order.order_id)};`);}
-  await verify('SEC-12','tracking token cannot append','service with tracking token',()=>call({p_token:track}),r=>r.http===403,true);
-  await verify('SEC-12','append token cannot track','service with append token',()=>services.admin.rpc('neroxa_track_order_with_capability',{p_instance_id:ids.Astore,p_order_id:order.order_id,p_token:token}).then(r=>({http:r.status,body:r.error??r.data})),r=>r.http===200&&r.body===null,true);
-  for(const x of ['B','C'])await verify('SEC-13','foreign product '+x+' denied','service with buyer capability',()=>call({p_items:[{product_id:ids[x+'product'],quantity:1}]}),denied,true);
-  await verify('SEC-13','category reference A product to B category denied','admin_A',()=>api('admin_A','neroxa_storefront_products','POST',{instance_id:ids.Astore,category_id:ids.Bcategory,name:'Synthetic forbidden category',slug:'synthetic-forbidden-category',price:1}),denied,true);
-  await verify('SEC-14','invalid quantity denied','service with buyer capability',()=>call({p_items:[{product_id:ids.Aproduct,quantity:0}]}),denied,true);
-  sql(`UPDATE neroxa_storefront_availability SET enabled=false WHERE instance_id=${q(ids.Astore)};`);await verify('SEC-15','closed store denied','service with buyer capability',()=>call(),r=>r.http===423,true);sql(`UPDATE neroxa_storefront_availability SET enabled=true WHERE instance_id=${q(ids.Astore)};UPDATE neroxa_orders SET status='PREPARING' WHERE id=${q(order.order_id)};`);await verify('SEC-15','preparing order denied','service with buyer capability',()=>call(),r=>r.http===400&&r.body.code==='22023',true);sql(`UPDATE neroxa_orders SET status='RECEIVED' WHERE id=${q(order.order_id)};INSERT INTO neroxa_storefront_product_addon_groups(product_id,group_id) VALUES(${q(ids.Aproduct)},${q(ids.Agroup)});`);
-  await verify('SEC-13','foreign addon denied','service with buyer capability',()=>call({p_items:[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Baddon],expected_unit_price:31}]}),denied,true);
-  const beforeGroup=finance();await verify('SEC-16','grouped price snapshot and history','service with buyer capability',()=>call({p_items:[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Aaddon],expected_unit_price:31}]}),r=>rows(r)&&Number(r.body[0].added_amount)===31);const afterGroup=finance();if(afterGroup.total!==121||afterGroup.history-beforeGroup.history!==1||afterGroup.unsettled!==true)throw Error('Grouped financial/history failed');out.grouped={before:beforeGroup,after:afterGroup};
-  for(const headers of [{Origin:'https://b.synthetic.invalid'},{'X-Forwarded-Host':'b.synthetic.invalid'},{Host:'b.synthetic.invalid'}])await verify('SEC-17','Host/Origin/forwarded mismatch denied','buyer capability',()=>request(base,headers),r=>r.http===403,true);
-  // Four legitimate HTTP calls consumed four reservations; fifth is idempotent,
-  // sixth must be rate limited. Group linking does not change prior replay output.
-  await verify('SEC-17','fifth token request may replay','buyer capability',()=>request(),r=>r.http===200,true);
-  await verify('SEC-17','sixth token request rate limited','buyer capability',()=>request(),r=>r.http===429,true);
-  const recoveryKey=crypto.randomUUID();
-  const recoveryPayload={organization_id:ids.O1,instance_id:ids.Astore,store_domain:'a.synthetic.invalid',idempotency_key:recoveryKey,customer_name:'Synthetic Recovery Buyer',customer_phone:'00000000004',fulfillment:'PICKUP',payment_method:'CASH',expected_total:31,items:[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Aaddon],expected_unit_price:31}]};
-  const recoveryCreated=await services.admin.rpc('create_public_order',{p_order:recoveryPayload});if(recoveryCreated.error)throw Error('Recovery grouped checkout fixture failed '+recoveryCreated.error.code);const recoveryOrder=Array.isArray(recoveryCreated.data)?recoveryCreated.data[0]:recoveryCreated.data;
-  const recover=(changes={})=>services.admin.rpc('neroxa_recover_group_order',{p_instance_id:ids.Astore,p_checkout_key:recoveryKey,p_order:recoveryPayload,...changes}).then(r=>({http:r.status,body:r.error??r.data}));
-  await verify('REC-01','service recovery preserves legitimate snapshot shape without phone dependency','service trusted checkout',()=>recover(),r=>r.http===200&&r.body?.order_id===recoveryOrder.order_id&&r.body?.instance_id===ids.Astore&&r.body?.total===31&&Array.isArray(r.body.items)&&r.body.items.length===1,true);
-  for(const actor of ['anon','admin_A'])await verify('REC-02','direct recovery RPC denied '+actor,actor,()=>rpc(actor,'neroxa_recover_group_order',{p_instance_id:ids.Astore,p_checkout_key:recoveryKey,p_order:recoveryPayload}),r=>[401,403].includes(r.http),true);
-  await verify('REC-03','recovery forged instance B denied','service trusted checkout',()=>recover({p_instance_id:ids.Bstore}),r=>r.http===403&&r.body.code==='42501',true);
-  await verify('REC-04','recovery payload tampering denied','service trusted checkout',()=>recover({p_order:{...recoveryPayload,customer_phone:'00000000999'}}),r=>r.http===403&&r.body.code==='42501',true);
-  sql(`UPDATE private.neroxa_group_order_intents SET recovery_expires_at=clock_timestamp()-interval '1 hour' WHERE order_id=${q(recoveryOrder.order_id)};`);
-  await verify('REC-05','expired recovery lease denied','service trusted checkout',()=>recover(),r=>r.http===410&&r.body.code==='PT410',true);
-  out.recovery='PASS service-only instance/key/payload/expiry; no phone RPC dependency; not T1 restore or post-gate proof';
-  emit('SEC-18','official gate and post-gate rollback not authorized','BLOCKED',{reason:'consumer owners/versions/environment/bindings UNKNOWN; no disablement receipt, GUC or quarantine; discard clone only'});
-  out.status='PASS secure recut only; legacy P0 remains FAIL';out.financeFinal=finance();
- }finally{await new Promise(r=>server.close(r));console.log('F02_AMENDMENT_SUMMARY='+JSON.stringify(out));}
-}
-+String.fromCharCode(10,10)+'$snapshot$;';
-    if(statement.split(exact).length!==2)throw Error('Recovery SQL delimiter layout drift; refuse derived replay');
-    statement=statement.replace(exact,String.fromCharCode(10)+'$snapshot$;');
-    note={...note,status:'PASS derived SQL applied only in disposable clone',derived_sha256:crypto.createHash('sha256').update(statement,'utf8').digest('hex'),original_sql_unmodified:true,release_equivalence:false};
-    out.profile='DERIVED_RECOVERY_DELIMITER_FIX_ONLY; release gate BLOCKED';
-  }
-  sql("SET neroxa.mission02a2_disposable='on';"+statement);
-  out.units.push(note);
+ sql("SET neroxa.mission02a2_disposable='on';"+sqlText);
+ out.units.push(record);
 }
  c.resetDigests();sql("NOTIFY pgrst,'reload schema';");await new Promise(r=>setTimeout(r,2000));
  const snap=()=>{const b=digest();delete b['private.neroxa_tracking_ingress'];delete b['private.neroxa_checkout_quota_counters'];return {business:b,session:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM auth.sessions s;"),quota:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM private.neroxa_checkout_quota_counters s;")}};
