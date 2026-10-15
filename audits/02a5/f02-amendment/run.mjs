@@ -22,9 +22,18 @@ export async function secureAmendment(c){
   let statement=body.toString('utf8');
   let note={path:unit.path,sha256:unit.sha256,status:'PASS original SQL applied only to clone'};
   if(unit.path==='audits/02a5/recovery-without-phone.candidate.sql'){
-    // Known extra SQL dollar delimiter, fixed ONLY in memory after validating the ORIGINAL source hash.
-    // This is a derived test profile and NOT a released or bit-for-bit-tested SQL migration.
-    const exact=String.fromCharCode(10)+'$function
+    const dollar=String.fromCharCode(36);
+    const tag=name=>dollar+name+dollar;
+    const exact=String.fromCharCode(10)+tag('function')+String.fromCharCode(10,10)+tag('snapshot')+';';
+    const corrected=String.fromCharCode(10)+tag('snapshot')+';';
+    if(statement.split(exact).length!==2)throw Error('Recovery SQL delimiter layout drift; derived replay refused');
+    statement=statement.replace(exact,corrected);
+    note={...note,status:'PASS derived SQL applied only in disposable clone',derived_sha256:crypto.createHash('sha256').update(statement,'utf8').digest('hex'),original_sql_unmodified:true,release_equivalence:false};
+    out.profile='DERIVED_RECOVERY_DELIMITER_FIX_ONLY; release gate BLOCKED';
+  }
+  sql("SET neroxa.mission02a2_disposable='on';"+statement);
+  out.units.push(note);
+}
  c.resetDigests();sql("NOTIFY pgrst,'reload schema';");await new Promise(r=>setTimeout(r,2000));
  const snap=()=>{const b=digest();delete b['private.neroxa_tracking_ingress'];delete b['private.neroxa_checkout_quota_counters'];return {business:b,session:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM auth.sessions s;"),quota:sql("SELECT count(*)||':'||md5(coalesce(string_agg(to_jsonb(s)::text,E'\n' ORDER BY to_jsonb(s)::text),'')) FROM private.neroxa_checkout_quota_counters s;")}};
  const stable=(a,b)=>JSON.stringify(a.business)===JSON.stringify(b.business)&&a.session===b.session;
