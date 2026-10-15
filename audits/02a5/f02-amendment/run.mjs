@@ -79,10 +79,16 @@ export async function secureAmendment(c){
   await verify('SEC-13','foreign addon denied','service with buyer capability',()=>call({p_items:[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Baddon],expected_unit_price:31}]}),denied,true);
   const beforeGroup=finance();await verify('SEC-16','grouped price snapshot and history','service with buyer capability',()=>call({p_items:[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Aaddon],expected_unit_price:31}]}),r=>rows(r)&&Number(r.body[0].added_amount)===31);const afterGroup=finance();if(afterGroup.total!==121||afterGroup.history-beforeGroup.history!==1||afterGroup.unsettled!==true)throw Error('Grouped financial/history failed');out.grouped={before:beforeGroup,after:afterGroup};
   for(const headers of [{Origin:'https://b.synthetic.invalid'},{'X-Forwarded-Host':'b.synthetic.invalid'},{Host:'b.synthetic.invalid'}])await verify('SEC-17','Host/Origin/forwarded mismatch denied','buyer capability',()=>request(base,headers),r=>r.http===403,true);
-  // Four legitimate HTTP calls consumed four reservations; fifth is idempotent,
-  // sixth must be rate limited. Group linking does not change prior replay output.
-  await verify('SEC-17','fifth token request may replay','buyer capability',()=>request(),r=>r.http===200,true);
-  await verify('SEC-17','sixth token request rate limited','buyer capability',()=>request(),r=>r.http===429,true);
+  // A fifth valid request must use the active GROUP_ADDONS_V1 contract.
+  // The old plain-mode replay returned 400 before any quota verdict.
+  // A sixth request uses a NEW idempotency key to prove quota rejection.
+  const quotaGroupedItems=[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Aaddon],expected_unit_price:31}];
+  const fifthGrouped={...base,request_key:crypto.randomUUID(),items:quotaGroupedItems};
+  const beforeFifth=finance();
+  await verify('SEC-17','fifth valid grouped amendment within quota','buyer capability',()=>request(fifthGrouped),r=>r.http===200&&r.body.added_amount===31&&r.body.payment_state==='NOT_SETTLED');
+  const afterFifth=finance();
+  if(afterFifth.items-beforeFifth.items!==1||afterFifth.operations-beforeFifth.operations!==1||afterFifth.history-beforeFifth.history!==1||afterFifth.total-beforeFifth.total!==31||afterFifth.line_sum!==afterFifth.subtotal)throw Error('SEC-17 quota fifth: financial mismatch');
+  await verify('SEC-17','sixth valid grouped amendment denied by quota','buyer capability',()=>request({...fifthGrouped,request_key:crypto.randomUUID()}),r=>r.http===429&&r.noStore,true);
   const recoveryKey=crypto.randomUUID();
   const recoveryPayload={organization_id:ids.O1,instance_id:ids.Astore,store_domain:'a.synthetic.invalid',idempotency_key:recoveryKey,customer_name:'Synthetic Recovery Buyer',customer_phone:'00000000004',fulfillment:'PICKUP',payment_method:'CASH',expected_total:31,items:[{product_id:ids.Aproduct,quantity:1,selection_contract:'GROUP_ADDONS_V1',group_addon_ids:[ids.Aaddon],expected_unit_price:31}]};
   const recoveryCreated=await services.admin.rpc('create_public_order',{p_order:recoveryPayload});if(recoveryCreated.error)throw Error('Recovery grouped checkout fixture failed '+recoveryCreated.error.code);const recoveryOrder=Array.isArray(recoveryCreated.data)?recoveryCreated.data[0]:recoveryCreated.data;
