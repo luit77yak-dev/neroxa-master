@@ -11,7 +11,7 @@ const report={scope:"REAL_CHROMIUM_COMPILED_DELIVERY_NATIVE_SUPABASE",status:"NO
   source:{master:process.env.MISSION_SOURCE_SHA,delivery:process.env.MISSION_DELIVERY_SHA},
   checks:[],failure:null,legacy_p0:"OPEN",gate:"BLOCKED",post_gate:"NOT RUN",productionApproved:false};
 const check=(name,ok)=>{report.checks.push({name,status:ok?"PASS":"FAIL"});if(!ok)throw Error(name);};
-let server,context,fd;
+let server,context,fd,browserPage;
 try {
  if(!/^neroxa-02a3-[0-9]+-buyer$/.test(project??"")||!work)throw Error("Isolated disposable project ID required");
  if(!fs.existsSync(path.join(delivery,".output/server/index.mjs")))throw Error("Normal candidate TanStack compiled server missing");
@@ -50,6 +50,7 @@ try {
    executablePath:process.env.CHROME_BIN,headless:true,ignoreHTTPSErrors:true,
    viewport:{width:390,height:844},args:["--no-sandbox"]});
  const page=context.pages()[0]??await context.newPage();
+ browserPage=page;
  const blocked=new Set(),legacy=[];
  await context.route("**/*",async route=>{
    const u=new URL(route.request().url());
@@ -65,6 +66,15 @@ try {
  await page.goto("https://a.synthetic.invalid:4173/",{waitUntil:"domcontentloaded",timeout:30000});
  const response=await catalog;
  check("real browser fetched native local catalog",response.status()===200);
+ const payload=await response.json().catch(()=>null);
+ const resolved=Array.isArray(payload)?payload[0]:payload;
+ report.catalogShape={
+   hasContext:!!resolved?.context, products:Array.isArray(resolved?.products)?resolved.products.length:null,
+   matchesSyntheticInstanceA:resolved?.context?.instance_id==="91000000-0000-4000-8000-000000000100",
+   groupContract:resolved?.selection_contract??null
+ };
+ check("catalog resolves synthetic instance A, never a fallback",report.catalogShape.matchesSyntheticInstanceA);
+ check("catalog returns at least one synthetic product",(report.catalogShape.products??0)>0);
  await page.getByText("Synthetic A",{exact:false}).first().waitFor({state:"visible",timeout:25000});
  check("real hydrated React storefront resolved synthetic shop A",true);
  check("no phone-only legacy RPC contacted by browser",legacy.length===0);
@@ -79,6 +89,17 @@ try {
  report.amendmentCapability="NOT RUN";
  report.storageRealtimeLogout="NOT RUN";
 } catch(e){
+ if(browserPage){
+   const content=await browserPage.locator("body").innerText({timeout:2500}).catch(()=>"");
+   report.renderDiagnostics={
+     bodyTextLength:content.length,
+     hasSyntheticStoreLabel:/synthetic a/i.test(content),
+     hasNoStoreMessage:/nenhuma loja|loja não encontrada/i.test(content),
+     hasCatalogError:/falha ao carregar|erro ao carregar|loja indisponível|backend sem contrato/i.test(content),
+     hasLoadingText:/carregando/i.test(content),
+     headingsCount:await browserPage.locator("h1,h2,h3").count().catch(()=>0)
+   };
+ }
  report.status="FAIL BROWSER PRE-GATE";
  report.failure={stage:report.stage,message:String(e?.message||e).slice(0,250).replace(/eyJ[A-Za-z0-9._-]+/g,"<jwt>")};
 } finally {
