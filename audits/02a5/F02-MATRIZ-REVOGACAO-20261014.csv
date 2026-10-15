@@ -1,0 +1,10 @@
+ID,Actor,Path,Expected_after_gate,Control,Status_now
+F02-01,anon,public.get_public_order_status(any overload),deny EXECUTE,buyer A HTTP200,NOT_RUN
+F02-02,authenticated,public.get_public_order_status(any overload),deny EXECUTE,admin A orders A,NOT_RUN
+F02-03,anon,public.append_public_order_items(any overload),deny EXECUTE,append capability future,NOT_RUN
+F02-04,anon,public.append_public_order_items_with_payment(any overload),deny EXECUTE,checkout real own,NOT_RUN
+F02-05,anon/authenticated,pg_proc/has_function_privilege for all overloads,false,privileged private RPC positive,NOT_RUN
+F02-06,buyer_A,private-tracking A with token,HTTP200 minimal response,quota reliable,PRE_GATE_HISTORICAL_PASS
+F02-07,buyer_A,private-tracking B/C with token A,deny and zero business effects,private A valid,PRE_GATE_HISTORICAL_PASS
+F02-08,staff_none,availability B PATCH,0 rows no digest change,admin B own positive,PRE_GATE_HISTORICAL_PASS
+F02-09,distributed consumer,external integrations,disabled/migrated evidenced,owner confirmation,UNKNOWN_BLOCKED
