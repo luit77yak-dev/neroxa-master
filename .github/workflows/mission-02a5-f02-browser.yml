@@ -110,9 +110,16 @@ jobs:
         run: |
           set -euo pipefail
           test "$RUNNER_ENVIRONMENT" = github-hosted
+          # The isolated test UID owns the private status file. Give the build runner
+          # temporary, narrow read permission; do not log secrets or loosen other files.
+          runner_uid="$(id -u)"
+          sudo setfacl -m "u:$runner_uid:--x" "$AB_WORKDIR"
+          sudo setfacl -m "u:$runner_uid:r--" "$AB_WORKDIR/status.private.env"
           set -a
           source "$AB_WORKDIR/status.private.env"
           set +a
+          sudo setfacl -x "u:$runner_uid" "$AB_WORKDIR/status.private.env"
+          sudo setfacl -x "u:$runner_uid" "$AB_WORKDIR"
           test "$(python3 -c 'import os,urllib.parse; print(urllib.parse.urlparse(os.environ["API_URL"]).hostname)')" = 127.0.0.1
           export SUPABASE_URL="$API_URL" NEROXA_DELIVERY_BACKEND_URL="$API_URL"
           export SUPABASE_SERVICE_ROLE_KEY="$SERVICE_ROLE_KEY" SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
@@ -132,6 +139,7 @@ jobs:
             -out "$AB_WORKDIR/f02-browser-cert.private.pem" \
             -subj '/CN=a.synthetic.invalid' \
             -addext 'subjectAltName=DNS:a.synthetic.invalid,DNS:b.synthetic.invalid,DNS:c.synthetic.invalid' > "$AB_WORKDIR/browser-openssl.private.log" 2>&1
+          sudo chown neroxa_test:neroxa_test "$AB_WORKDIR/f02-browser-key.private.pem" "$AB_WORKDIR/f02-browser-cert.private.pem"
           sudo sh -c "echo '127.0.0.1 a.synthetic.invalid b.synthetic.invalid c.synthetic.invalid' >> /etc/hosts"
           sudo setfacl -m u:neroxa_test:--x "$RUNNER_TEMP" "$RUNNER_TEMP/f02-playwright"
           sudo setfacl -R -m u:neroxa_test:rX "$RUNNER_TEMP/f02-playwright" "$GITHUB_WORKSPACE/delivery-candidate"

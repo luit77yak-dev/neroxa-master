@@ -52,7 +52,7 @@ try {
  const page=context.pages()[0]??await context.newPage();
  const blocked=new Set(),legacy=[];
  await context.route("**/*",async route=>{
-   const u=new URL(route.request().url);
+   const u=new URL(route.request().url());
    if(u.hostname==="a.synthetic.invalid"&&u.port==="4173")return route.continue();
    if(u.origin===backend.origin&&/^(\/rest\/v1\/|\/auth\/v1\/)/.test(u.pathname)){
      if(/\/rpc\/(?:get_public_order_status|append_public_order_items(?:_with_payment)?)$/.test(u.pathname))legacy.push(u.pathname);
