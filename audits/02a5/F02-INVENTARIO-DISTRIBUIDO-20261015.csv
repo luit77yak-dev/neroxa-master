@@ -1,0 +1,7 @@
+id,componente,ambiente,versao_ou_implantacao,estado_consumidor,classificacao_ambiente,decisor_mudanca,responsavel_tecnico,evidencia,residual
+F02-D01,food.neroxa.ia.br Storefront e Checkout,Vercel production,dpl_7Ctmw4c8JgZEXh8qJVzW5jjqL4Ho / 47e7d8aef66b0c458ed6f423cebeba99abfcc7a8,DEPENDENTE,DEMONSTRACAO_INTERNA_LEGADO_DISTRIBUIDO,Fundador da Neroxa,A_DEFINIR,Alias Vercel + RPCs no SHA distribuido,Tráfego desconhecido
+F02-D02,mvp.neroxa.ia.br Storefront e Checkout,Vercel production,dpl_7Ctmw4c8JgZEXh8qJVzW5jjqL4Ho / 47e7d8aef66b0c458ed6f423cebeba99abfcc7a8,DEPENDENTE,DEMONSTRACAO_INTERNA_LEGADO_DISTRIBUIDO,Fundador da Neroxa,A_DEFINIR,Alias Vercel + RPCs no SHA distribuido,Mesmo deployment e trafego desconhecido
+F02-C01,Storefront tracking por capability,Candidato Delivery PR42,4ce88959a751066f96da4cbab8d1fc9ac29bb320,MIGRADO_NO_CANDIDATO,NAO_DISTRIBUIDO,Sem autorizacao de deploy,Engenharia Neroxa,Codigo do candidato,Fluxo browser E2E pendente
+F02-C02,Append legado CheckoutPanel,Candidato Delivery PR42,4ce88959a751066f96da4cbab8d1fc9ac29bb320,DESATIVADO_NO_COMPONENTE,NAO_DISTRIBUIDO,Sem autorizacao de deploy,Engenharia Neroxa,Codigo do candidato,Financeiro/append completo pendente
+F02-T01,Scripts de testes historicos,GitHub Master,Scanner 38670223632,DEPENDENTE,TESTE_E_MIGRACAO,Coordenacao tecnica,Engenharia Neroxa,Scanner e lista de caminhos,Compatibilidade pos-gate pendente
+F02-U01,Consumidores externos adicionais,Nao confirmado,Nao confirmado,UNKNOWN,UNKNOWN,Coordenacao a identificar,UNKNOWN,Nenhuma evidencia conclusiva,Sem recibo de desativacao

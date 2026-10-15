@@ -1,0 +1,42 @@
+run,actor,target,resource,operation,phase,status,http,stateUnchanged,evidence
+38665211605,admin_A,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,admin_B,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,admin_C,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,staff_A,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,staff_none,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,common,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,staff_none,B,F01 baseline staff_none PATCH B,UPDATE,baseline,FAIL,200,False,run-38665211605-job-116195482660.log
+38665211605,anon,B,F02 baseline anonymous phone tracking,RPC,baseline,FAIL,200,True,run-38665211605-job-116195482660.log
+38665211605,admin_B,B,F01 authorized own availability positive,SELECT,candidate,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,staff_none,B,F01 candidate staff_none PATCH B,UPDATE,candidate,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,admin_A,B,admin_A foreign orders,SELECT,candidate,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,admin_A,C,admin_A foreign orders,SELECT,candidate,PASS,200,True,run-38665211605-job-116195482660.log
+38665211605,admin_A,A,admin_A own orders positive,SELECT,candidate,PASS,200,True,run-38665211605-job-116195482660.log
+38665665942,admin_A,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,admin_B,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,admin_C,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,staff_A,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,staff_none,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,common,session,Real Auth effective PostgreSQL identity,RPC,platform,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,staff_none,B,F01 baseline staff_none PATCH B,UPDATE,baseline,FAIL,200,False,run-38665665942-job-116196932383.log
+38665665942,anon,B,F02 baseline anonymous phone tracking,RPC,baseline,FAIL,200,True,run-38665665942-job-116196932383.log
+38665665942,admin_B,B,F01 authorized own availability positive,SELECT,candidate,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,admin_B,B,F01 own availability UPDATE positive,UPDATE,candidate,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,staff_none,B,F01 candidate staff_none PATCH B,UPDATE,candidate,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,admin_A,B,admin_A foreign orders,SELECT,candidate,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,admin_A,C,admin_A foreign orders,SELECT,candidate,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,admin_A,A,admin_A own orders positive,SELECT,candidate,PASS,200,True,run-38665665942-job-116196932383.log
+38665665942,anon,A,direct private tracking RPC denied,RPC,candidate,PASS,401,True,run-38665665942-job-116196932383.log
+38665665942,admin_A,A,direct private tracking RPC denied,RPC,candidate,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,anon,B,F02 pre-gate direct phone RPC remains unresolved,RPC,pre-gate-observation,FAIL,200,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,real HTTP A positive,HTTP/RPC quota,buyer-recut,PASS,200,NOT CAPTURED,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,missing token,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,wrong token,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,same-org cross B,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,cross C,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,spoofed proxy,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,foreign Origin,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,revoked capability,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,expired capability,HTTP/RPC quota,buyer-recut,PASS,403,True,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,durable quota125 concurrent;120 allowed,HTTP/RPC quota,buyer-recut,PASS,,NOT CAPTURED,run-38665665942-job-116196932383.log
+38665665942,buyer capability / server backend,synthetic A/B/C per case,real HTTP durable quota exhaustion,HTTP/RPC quota,buyer-recut,PASS,429,NOT CAPTURED,run-38665665942-job-116196932383.log

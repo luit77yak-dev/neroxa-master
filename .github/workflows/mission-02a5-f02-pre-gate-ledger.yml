@@ -1,0 +1,143 @@
+name: Mission 02A5 F02 PRE-GATE 21 status ledger (no cutover)
+on:
+  push:
+    branches: [security/mission-02a5-integration-local-20261014]
+    paths:
+      - .github/workflows/mission-02a5-f02-pre-gate-ledger.yml
+      - audits/02a5/f02/**
+permissions:
+  contents: read
+jobs:
+  buyer-pre-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
+      AB_PROJECT: neroxa-02a3-${{ github.run_id }}-buyer
+      AB_NETWORK: neroxa-02a5-${{ github.run_id }}-buyer
+      MISSION_PROFILE: master
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 4ce88959a751066f96da4cbab8d1fc9ac29bb320
+          path: delivery-candidate
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.0'
+      - name: Public standard eligibility and real capacity before pull
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo 'PUBLIC_STANDARD_RUNNER=true; billing basis docs.github.com/en/billing/concepts/product-billing/github-actions; no larger runner/cache/artifact uploads'
+          python3 tools/mission-02a3/preflight.py
+      - name: Locked app dependencies and pinned CLI; no commercial dotenv
+        run: |
+          find . -name '.env*' -not -path './.git/*' -not -path './node_modules/*' -type f -delete
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
+          echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
+          python3 audits/02a5/verify_manifest.py
+          python3 tools/mission-02a5/generate-buyer-run.py
+          python3 audits/02a5/f02/extend_pre_gate.py
+      - name: Unlinked native six-service stack, loopback binds
+        run: |
+          export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
+          echo "AB_WORKDIR=$AB_WORKDIR" >> "$GITHUB_ENV"
+          mkdir -m 700 "$AB_WORKDIR"
+          supabase init --workdir "$AB_WORKDIR"
+          python3 tools/ab-auth/configure.py
+          test ! -f "$AB_WORKDIR/supabase/.temp/project-ref"
+          test ! -d "$AB_WORKDIR/supabase/migrations"
+          docker network create --driver bridge --opt com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$AB_NETWORK"
+          python3 tools/ab-auth/docker_loopback.py > "$AB_WORKDIR/relay.private.log" 2>&1 &
+          echo $! > "$AB_WORKDIR/relay.pid"
+          for attempt in $(seq 1 30); do test -S "$AB_WORKDIR/docker-loopback.sock" && break; sleep 1; done
+          export DOCKER_HOST="unix://$AB_WORKDIR/docker-loopback.sock"
+          echo "DOCKER_HOST=$DOCKER_HOST" >> "$GITHUB_ENV"
+          if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit > "$AB_WORKDIR/start.private.log" 2>&1; then
+            python3 tools/ab-auth/start_failure.py
+            exit 1
+          fi
+          supabase status --workdir "$AB_WORKDIR" -o env > "$AB_WORKDIR/status.private.env"
+          chmod 600 "$AB_WORKDIR/status.private.env"
+          python3 - <<'PY'
+          import json,subprocess,os
+          expected=json.load(open('audits/02a5/EXPECTED-IMAGES.json'));seen={}
+          for line in subprocess.check_output(['docker','ps','--format','{{json .}}'],text=True).splitlines():
+            c=json.loads(line)
+            if c['Names'].endswith('_'+os.environ['AB_PROJECT']):seen[c['Image']]=subprocess.check_output(['docker','inspect',c['Names'],'--format','{{.Image}}'],text=True).strip()
+          assert seen==expected, 'BLOCKED: image identity drift'
+          print('IMAGE_IDENTITIES='+json.dumps(seen))
+          PY
+      - name: Real Auth and buyer recut with test UID egress restriction
+        run: |
+          sudo useradd --create-home --groups docker neroxa_test
+          sudo chown -R neroxa_test:neroxa_test "$AB_WORKDIR"
+          # Dedicated UID needs traversal/read of the audited workspace, not runner secrets.
+          ancestor="$GITHUB_WORKSPACE"
+          while [ "$ancestor" != / ]; do
+            sudo setfacl -m u:neroxa_test:--x "$ancestor"
+            ancestor=$(dirname "$ancestor")
+          done
+          sudo setfacl -R -m u:neroxa_test:rX "$GITHUB_WORKSPACE"
+          sudo -u neroxa_test test -r tools/mission-02a3/buyer-generated.private.mjs
+          echo 'TEST_UID_WORKSPACE_READ=PASS'
+          bash tools/mission-02a5/network.sh lock
+          trap 'bash tools/mission-02a5/network.sh unlock' EXIT
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+      - name: Read native PostgreSQL catalog (pre-gate ONLY)
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+        run: |
+          test "$RUNNER_ENVIRONMENT" = "github-hosted"
+          test "$AB_PROJECT" = "neroxa-02a3-$GITHUB_RUN_ID-buyer"
+          db="supabase_db_$AB_PROJECT"
+          docker ps --format '{{.Names}}' | grep -Fx "$db"
+          docker exec -i "$db" psql -X -q -A -t -U postgres -d postgres -v ON_ERROR_STOP=1 < audits/02a5/f02/catalog-pre-gate.readonly.sql > "$RUNNER_TEMP/f02-catalog.jsonl"
+          python3 - "$RUNNER_TEMP/f02-catalog.jsonl" <<'PY'
+          import json,sys,os,pathlib
+          content=[x.strip() for x in open(sys.argv[1]) if x.strip().startswith('{')]
+          assert len(content)==1,'one catalog result expected'
+          result=json.loads(content[0])
+          pathlib.Path(os.environ['RUNNER_TEMP'],'f02-pg-catalog-verified.json').write_text(json.dumps(result))
+          assert result['kind']=='F02_PRE_GATE_PG_CATALOG_ONLY'
+          present=sorted({f['name'] for f in result['functions'] if f['name'] in ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment')})
+          missing=sorted(set(('get_public_order_status','append_public_order_items','append_public_order_items_with_payment'))-set(present))
+          print('F02_CATALOG_LEGACY_COVERAGE='+json.dumps({'present':present,'missing':missing,'classification':'PARTIAL_IF_MISSING'}))
+          assert 'get_public_order_status' in present,'historical P0 function unexpectedly absent'
+          assert result['legacy_gate_applied'] is False
+          print('F02_CATALOG_PRE_GATE='+json.dumps(result,sort_keys=True))
+          print('F02_GATE=BLOCKED; POST_GATE=NOT_RUN; EXTERNAL_CONSUMERS=UNKNOWN')
+          PY
+      - name: Emit 21-case evidence ledger with strict per-case scope
+        if: always()
+        run: |
+          python3 audits/02a5/f02/record_pre_gate_21.py \
+            --buyer-log "$RUNNER_TEMP/f02-buyer-pre-gate.log" \
+            --catalog-json "$RUNNER_TEMP/f02-pg-catalog-verified.json" \
+            --output "$RUNNER_TEMP/f02-21-case-ledger.json"
+          test -s "$RUNNER_TEMP/f02-21-case-ledger.json"
+      - name: Cleanup only this disposable project
+        if: always()
+        run: |
+          bash tools/mission-02a5/network.sh unlock
+          if [ -n "${AB_WORKDIR:-}" ] && sudo test -d "$AB_WORKDIR"; then
+            sudo chown -R "$(id -u):$(id -g)" "$AB_WORKDIR"
+          fi
+          export DOCKER_HOST=unix:///var/run/docker.sock
+          if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
+            supabase stop --workdir "$AB_WORKDIR" --no-backup
+            if [ -f "$AB_WORKDIR/relay.pid" ]; then kill "$(cat "$AB_WORKDIR/relay.pid")" || true; fi
+          fi
+          docker --host=unix:///var/run/docker.sock network rm "$AB_NETWORK" || true
+          remaining=$(docker --host=unix:///var/run/docker.sock ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT)
+          test -z "$remaining"
+          echo 'CLEANUP=PASS; no project containers; no dumps or credentials uploaded'

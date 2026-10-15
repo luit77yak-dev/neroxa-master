@@ -1,0 +1,39 @@
+{
+  "profile": "BUYER-PRE-GATE only; NOT integrated release M",
+  "base": "catalog/19 predecessors exact original integrated manifest",
+  "sql": [
+    {
+      "path": "audits/02a2/scoped-order-access.candidate.sql",
+      "sha256": "648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c"
+    },
+    {
+      "path": "audits/02a4/availability-instance-scope.candidate.sql",
+      "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264"
+    },
+    {
+      "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+      "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49"
+    },
+    {
+      "path": "audits/02a4/delivery-live-session.candidate.sql",
+      "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e"
+    },
+    {
+      "path": "audits/02a4/storage-instance-images.candidate.sql",
+      "sha256": "5739b1226bb2d9ee7b760ddfaa8b0ffcd65048ec92dd938a41a194713795962e"
+    },
+    {
+      "path": "audits/02a4/private-tracking.candidate.sql",
+      "sha256": "7c1e7c5daf8588cc7eaeb8ad63825f15747c9660ab5391a8899697698e7112dd"
+    },
+    {
+      "path": "audits/02a5/tracking-ingress-quota.candidate.sql",
+      "sha256": "afb5c31c4588a26cc1e7c31cdc09d6f5360fce4fcef22281e5d3b80dcea60727"
+    }
+  ],
+  "bootstrap_sha256": "b3af7a3fbecf6bd648fa0433b43b1afd931ba48b54bf9fc688aefd4f27aa47ba",
+  "phone_gate": "NOT APPLIED; consumer evidence absent; direct phone P0 must be recorded, never approved",
+  "runtime": "only standard public GitHub-hosted disposable VM; real local Auth/REST/Postgres/Storage/Realtime",
+  "scope": "checkout RPC + primitive + shared buyer adapter over real HTTP; NOT TanStack checkout/browser E2E",
+  "rollback": "discard only this clone; no unsafe grants restored"
+}

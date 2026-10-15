@@ -1,0 +1,15 @@
+-- Local disposable candidate ONLY. After the three unchanged amendment units.
+-- No legacy ACL revocation and no consumer gate. Preserve NOT_SETTLED.
+BEGIN;
+DO $patch$
+DECLARE signature regprocedure := 'public.neroxa_append_order_items_with_capability(uuid,uuid,text,uuid,jsonb)'::regprocedure; definition text;
+BEGIN
+ IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' THEN RAISE EXCEPTION 'Disposable intent required'; END IF;
+ IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid=signature) IS DISTINCT FROM '32c5fbee5679eb0147f8b0bd3961f9fb' THEN RAISE EXCEPTION 'Amendment history predecessor drift'; END IF;
+ SELECT pg_get_functiondef(signature) INTO definition;
+ definition := replace(definition,$before$IF v_group THEN INSERT INTO public.neroxa_order_status_history(order_id,from_status,to_status,note) VALUES(p_order_id,v_order.status,v_order.status,'GROUP_ADDONS_V1 items appended; NOT_SETTLED'); END IF;$before$,$after$INSERT INTO public.neroxa_order_status_history(order_id,from_status,to_status,note) VALUES(p_order_id,v_order.status,v_order.status,CASE WHEN v_group THEN 'GROUP_ADDONS_V1 items appended; NOT_SETTLED' ELSE 'CAPABILITY items appended; NOT_SETTLED' END);$after$);
+ EXECUTE definition;
+ IF has_function_privilege('anon',signature,'EXECUTE') OR has_function_privilege('authenticated',signature,'EXECUTE') OR NOT has_function_privilege('service_role',signature,'EXECUTE') THEN RAISE EXCEPTION 'Unsafe amendment effective ACL'; END IF;
+END
+$patch$;
+COMMIT;

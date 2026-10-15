@@ -1,0 +1,29 @@
+# F02 — candidato amendment em clone descartável
+
+Fonte Master de entrada a405961b3c15bfa52a50b8c54b89831e1a08329e: único drift desde 12567f0 foi a decisão documental, lida antes de qualquer alteração. Fonte Delivery fixada 011275488660bfa1a9271b3e4c92e457f7638e34 (126 Node/build/tsc/lint locais PASS).
+
+Executar exclusivamente workflow público GitHub-hosted padrão. Foundation manifesto BUYER-PRE-GATE + catalog/19 predecessors, depois três SQLs originais do AMENDMENT-MANIFEST na ordem, depois amendment-history.candidate.sql. Não concatenar migrations Delivery; não editar originais. Os hashes e precondição prosrc do quarto overlay são registrados no manifesto específico. Profile não equivale ao release integrado.
+
+O ensaio repete leitura e escrita anônimas como FAIL P0 antes de instalar amendment. Depois usa a mesma factory de backend do endpoint, Auth/REST nativos, service_role somente no servidor/fixture e identidade real Auth nos acessos diretos. HTTP tem edge canônico simulado loopback e dados sintéticos. Não é E2E TanStack hidratado.
+
+SEC-01..SEC-18 são uma PROPOSTA provisória de mapeamento: a missão cita IDs sem seus critérios integrais. Foi solicitada a origem oficial; não afirmar aceitação desses critérios sem reconciliação. Detalhes reais são emitidos por operação, com digests e exceção documentada de contadores de quota. Não confundir a quota esperada com integridade dos dados de negócio.
+
+01 leitura por telefone (FAIL P0); 02 escrita por telefone (FAIL P0); 03 ACL direta da RPC/registro; 04 alteração legítima/preço/NOT_SETTLED/histórico; 05 retry idêntico; 06 concorrência; 07 chave conflitante; 08/09 A→B/C; 10 token ausente/falso; 11 expirado/revogado; 12 separação tracking/amendment; 13 produtos/categoria/addons cruzados; 14 quantidade inválida; 15 loja fechada/pedido PREPARING; 16 complementos e histórico; 17 Host/Origin/proxy/quota; 18 gate e reversão pós-gate BLOCKED.
+
+Flags do produto seguem desligadas por padrão; novo runtime nega ativação fora da configuração local descartável. Capabilities distintas de 32 bytes, emitidas uma vez e mantidas somente na memória do browser. Recarregar perde acesso e exige suporte; não implementar recuperação por telefone.
+
+Gate oficial BLOCKED e pós-gate NOT RUN: consumidores/owners/versões/bindings desconhecidos. Não produzir CONSUMER-DISABLEMENT, não forçar GUC, não executar SQL de quarentena. Os overloads text/enum e wrapper legado continuam inventariados, sem revogação nem correção declarada por ausência de overload. Defaults globais do Master não são alterados para evitar impacto comercial não validado. Verificar ACL efetiva das funções novas no clone; incompatibilidade antiga permanece bloqueio de cutover.
+
+Recuperação segura desta execução: antes de completar cada overlay, rollback de sua transação no próprio clone em erro; entre unidades já commitadas, descartar o clone e reconstruir o perfil exato. Nenhum inverso restaura grants inseguros ou StaffPanel. Cleanup obrigatório em todos os resultados.
+
+## First run retained, dependency and CI correction
+
+Run 38767393217 at 0d01e536a1bcdb263870f9c3fe962904ce327f86 reported workflow SUCCESS but the Node report was FAIL: missing private.neroxa_checkout_quota_counters. Two legacy P0 observations completed; 16 provisional SEC cases NOT RUN. All four amendment SQL units had applied; cleanup PASS. Preserve this discrepancy, never call it secure PASS. The corrected workflow explicitly sets pipefail and the ledger emitter fails if the Node report did not complete.
+
+The manifest now declares existing durable quota SQL before amendment and adds recovery-without-phone.candidate.sql afterward. The recovery helper preserves the old snapshot shape, accepts an instance instead of phone, uses SECURITY INVOKER in private with no PUBLIC/anon/authenticated/service_role EXECUTE. The service-only wrapper keeps exact key/payload/instance/lease authorization. Extra REC controls cover genuine grouped checkout recovery and denial, not T1 or post-gate proof. All legacy overloads remain unchanged and unsafe pre-gate; no claim that text/enum profiles are unified.
+
+## Ensaios de recuperação após falha no run 38768461410
+O último SQL de recuperação contém exatamente uma linha isolada `$function$` dentro de um bloco já aberto com `$snapshot$`. O erro do runner foi `unterminated dollar-quoted string`. O executor desta PR valida primeiro o hash SHA-256 **original** do arquivo fixado no manifesto e, somente para a VM e o clone descartável, elimina a linha espúria de um buffer em memória. O log registra o novo SHA-256 derivado e o perfil `DERIVED_RECOVERY_DELIMITER_FIX_ONLY`. O arquivo SQL e o manifesto originais permanecem INTACTOS. Um PASS eventual valida somente a derivação, nunca o SQL exato destinado ao release, nem o gate F02. Os dois P0 históricos continuam abertos; consumidores externos desconhecidos; pós-gate NOT RUN. Depois disso, Engenharia/Codex deverá corrigir um candidato SQL independente e repetir o teste com manifesto/hashes atualizados antes de qualquer homologação.
+
+## 15/10/2026 — reparo definitivo do candidato SQL (sem deploy)
+O SQL `audits/02a5/recovery-without-phone.candidate.sql` foi corrigido **na fonte versionada**: removida a linha espúria `$function$` imediatamente antes do terminador `$snapshot$;`. SHA256 pré-correção `46332b0bc0746a928143ca35c92ff957599f6f8693efec09beb3fd96efab067a`; novo SHA256 `b1ef02f71a9d087ef5bec59e93406f142e2bad5bec0e870e2b652904c3c307c4` idêntico ao observado no ensaio derivado anterior (run 38783768679). O manifesto registra ambos. O executor deixou de transformar SQL em memória: exige SHA original **do novo candidato**, executa diretamente em PostgreSQL descartável e falha caso o byte stream não corresponda ao manifesto. A existência de hash coincidente não substitui o novo ensaio: a instalação do SQL exato e controles permanecem pendentes até os logs. Gate legado BLOCKED; pós-gate NOT RUN; nenhum banco remoto ou cliente.

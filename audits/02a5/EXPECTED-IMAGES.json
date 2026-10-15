@@ -1,0 +1,8 @@
+{
+  "supabase/storage-api:v1.79.36": "sha256:12afd2170c5ca80880a4af472bcb89d28e090e3155a8bcee4246c1fb3991dcdd",
+  "postgrest/postgrest:v16.4": "sha256:1ad5f2ea5501150ec9c7953ae9bf04111ced39a53ca01fc0f08af6d0b7ba67be",
+  "supabase/realtime:v2.140.10": "sha256:7412151d218fc99aa324e95883f1e29d2008542c9f85e241873f50c3f6476c43",
+  "supabase/gotrue:v2.197.0": "sha256:1181bff5ba4ce440013a63cef9f4cf13024c432d705c9b1fbc9e5b949e852f48",
+  "kong:2.8.1": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a",
+  "supabase/postgres:17.11.0.004": "sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a"
+}

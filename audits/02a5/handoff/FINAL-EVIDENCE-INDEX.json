@@ -1,0 +1,253 @@
+[
+  {
+    "run_id": "38664863661",
+    "job_id": "116194351317",
+    "log": "run-38664863661-job-116194351317.log",
+    "resources": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 90855944192,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15205801984,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "images": {
+      "supabase/storage-api:v1.79.36": "sha256:12afd2170c5ca80880a4af472bcb89d28e090e3155a8bcee4246c1fb3991dcdd",
+      "postgrest/postgrest:v16.4": "sha256:1ad5f2ea5501150ec9c7953ae9bf04111ced39a53ca01fc0f08af6d0b7ba67be",
+      "supabase/realtime:v2.140.10": "sha256:7412151d218fc99aa324e95883f1e29d2008542c9f85e241873f50c3f6476c43",
+      "supabase/gotrue:v2.197.0": "sha256:1181bff5ba4ce440013a63cef9f4cf13024c432d705c9b1fbc9e5b949e852f48",
+      "kong:2.8.1": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a",
+      "supabase/postgres:17.11.0.004": "sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a"
+    },
+    "network_negative": {
+      "blocked": true,
+      "connect_code": 111,
+      "destination": "TEST-NET-2"
+    },
+    "cleanup": "FAIL/NOT PROVEN",
+    "summary_status": "NOT RUN before harness bootstrap"
+  },
+  {
+    "run_id": "38665211605",
+    "job_id": "116195482660",
+    "log": "run-38665211605-job-116195482660.log",
+    "resources": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91584753664,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15340646400,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "images": {
+      "supabase/storage-api:v1.79.36": "sha256:12afd2170c5ca80880a4af472bcb89d28e090e3155a8bcee4246c1fb3991dcdd",
+      "postgrest/postgrest:v16.4": "sha256:1ad5f2ea5501150ec9c7953ae9bf04111ced39a53ca01fc0f08af6d0b7ba67be",
+      "supabase/realtime:v2.140.10": "sha256:7412151d218fc99aa324e95883f1e29d2008542c9f85e241873f50c3f6476c43",
+      "supabase/gotrue:v2.197.0": "sha256:1181bff5ba4ce440013a63cef9f4cf13024c432d705c9b1fbc9e5b949e852f48",
+      "kong:2.8.1": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a",
+      "supabase/postgres:17.11.0.004": "sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a"
+    },
+    "network_negative": {
+      "blocked": true,
+      "connect_code": 111,
+      "destination": "TEST-NET-2"
+    },
+    "cleanup": "PASS",
+    "summary_status": "FAIL",
+    "error": {
+      "stage": "checkout RPC to capability to buyer HTTP",
+      "message": "Unexpected end of JSON input"
+    },
+    "stage": "checkout RPC to capability to buyer HTTP",
+    "checkout": null,
+    "f02": null,
+    "f02Observed": null,
+    "releaseGate": null,
+    "counts": {
+      "PASS": 11,
+      "FAIL": 2,
+      "BLOCKED": 0
+    },
+    "buyer": []
+  },
+  {
+    "run_id": "38665665942",
+    "job_id": "116196932383",
+    "log": "run-38665665942-job-116196932383.log",
+    "resources": {
+      "status": "PASS",
+      "driver": "overlay2",
+      "free_bytes": 91584745472,
+      "required_free_bytes": 30064771072,
+      "estimateGiB": {
+        "images_peak": 8,
+        "services_volumes": 5,
+        "dependencies_logs": 3,
+        "safety": 10
+      },
+      "available_memory_bytes": 15491575808,
+      "cpus": 4,
+      "free_runner_basis": "PUBLIC repository; standard ubuntu-latest only; no artifacts/cache/larger runner"
+    },
+    "images": {
+      "supabase/storage-api:v1.79.36": "sha256:12afd2170c5ca80880a4af472bcb89d28e090e3155a8bcee4246c1fb3991dcdd",
+      "postgrest/postgrest:v16.4": "sha256:1ad5f2ea5501150ec9c7953ae9bf04111ced39a53ca01fc0f08af6d0b7ba67be",
+      "supabase/realtime:v2.140.10": "sha256:7412151d218fc99aa324e95883f1e29d2008542c9f85e241873f50c3f6476c43",
+      "supabase/gotrue:v2.197.0": "sha256:1181bff5ba4ce440013a63cef9f4cf13024c432d705c9b1fbc9e5b949e852f48",
+      "kong:2.8.1": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a",
+      "supabase/postgres:17.11.0.004": "sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a"
+    },
+    "network_negative": {
+      "blocked": true,
+      "connect_code": 111,
+      "destination": "TEST-NET-2"
+    },
+    "cleanup": "PASS",
+    "summary_status": "PASS PARTIAL PRE-GATE",
+    "error": null,
+    "stage": "checkout RPC to capability to buyer HTTP",
+    "checkout": {
+      "status": "PASS RPC+shared adapter only; not TanStack browser E2E",
+      "order_id": "edc5e000-51b7-4d39-8c5f-c8f02c957a26",
+      "total": 30,
+      "retrySameOrder": true,
+      "tokenIssuedOnce": true,
+      "ordersForKey": "1"
+    },
+    "f02": "FAIL CONFIRMED P0 direct phone remains accessible",
+    "f02Observed": {
+      "http": 200,
+      "order_id": "91000000-0000-4000-8000-000000000203",
+      "status": "RECEIVED",
+      "has_phone": true,
+      "has_address": false
+    },
+    "releaseGate": "BLOCKED; phone consumer gate intentionally not applied; never certify this prefix as release M",
+    "counts": {
+      "PASS": 14,
+      "FAIL": 3,
+      "BLOCKED": 0
+    },
+    "buyer": [
+      {
+        "case": "real HTTP A positive",
+        "status": "PASS",
+        "http": 200,
+        "instance_id": "91000000-0000-4000-8000-000000000100",
+        "body": {
+          "order_id": "edc5e000-51b7-4d39-8c5f-c8f02c957a26",
+          "status": "RECEIVED",
+          "total": 30,
+          "items": [
+            {
+              "name": "Synthetic A",
+              "quantity": 1,
+              "line_total": 30
+            }
+          ]
+        }
+      },
+      {
+        "case": "missing token",
+        "status": "PASS",
+        "http": 403,
+        "body": {
+          "error": "Acompanhamento indispon\u00edvel."
+        },
+        "quotaBefore": "1",
+        "quotaAfter": "2",
+        "sideEffects": "business and capabilities unchanged; durable quota accounting separately captured"
+      },
+      {
+        "case": "wrong token",
+        "status": "PASS",
+        "http": 403,
+        "body": {
+          "error": "Acompanhamento indispon\u00edvel."
+        },
+        "quotaBefore": "2",
+        "quotaAfter": "3",
+        "sideEffects": "business and capabilities unchanged; durable quota accounting separately captured"
+      },
+      {
+        "case": "same-org cross B",
+        "status": "PASS",
+        "http": 403,
+        "body": {
+          "error": "Acompanhamento indispon\u00edvel."
+        },
+        "quotaBefore": "3",
+        "quotaAfter": "4",
+        "sideEffects": "business and capabilities unchanged; durable quota accounting separately captured"
+      },
+      {
+        "case": "cross C",
+        "status": "PASS",
+        "http": 403,
+        "body": {
+          "error": "Acompanhamento indispon\u00edvel."
+        },
+        "quotaBefore": "4",
+        "quotaAfter": "5",
+        "sideEffects": "business and capabilities unchanged; durable quota accounting separately captured"
+      },
+      {
+        "case": "spoofed proxy",
+        "status": "PASS",
+        "http": 403,
+        "body": {
+          "error": "Acompanhamento indispon\u00edvel."
+        },
+        "quotaBefore": "5",
+        "quotaAfter": "5",
+        "sideEffects": "business and capabilities unchanged; durable quota accounting separately captured"
+      },
+      {
+        "case": "foreign Origin",
+        "status": "PASS",
+        "http": 403,
+        "body": {
+          "error": "Acompanhamento indispon\u00edvel."
+        },
+        "quotaBefore": "5",
+        "quotaAfter": "5",
+        "sideEffects": "business and capabilities unchanged; durable quota accounting separately captured"
+      },
+      {
+        "case": "revoked capability",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "case": "expired capability",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "case": "durable quota125 concurrent;120 allowed",
+        "status": "PASS",
+        "allowed": 120,
+        "denied": 5
+      },
+      {
+        "case": "real HTTP durable quota exhaustion",
+        "status": "PASS",
+        "http": 429
+      }
+    ]
+  }
+]

@@ -1,0 +1,1227 @@
+{
+  "mission": "02A.5",
+  "profile": "M-integrated-candidate",
+  "status": "NOT APPLIED",
+  "productionApproved": false,
+  "base_commit": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+  "units": [
+    {
+      "path": "audits/ab-auth/master-catalog-20261009.json",
+      "sha256": "e7ed111d73ec8d63b514db8c39059d6b87ae97be74d54e0d682d38bc0e4cf858",
+      "id": "catalog",
+      "kind": "catalog",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [],
+      "executor": "build_schema.py then normal postgres (not superuser)",
+      "preconditions": [
+        "native local Auth/Storage initialized",
+        "empty public baseline"
+      ],
+      "objects": [
+        "historical public catalog"
+      ],
+      "consumer_impact": "reconstruction only",
+      "rollback": "discard clone only",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "captured application owners only during catalog reconstruction; inspect and reject native Auth/Storage owner changes"
+    },
+    {
+      "path": "audits/sql/instance-membership-foundation.candidate.sql",
+      "sha256": "7889d4d9bdc37cf01457a8d0608e997e143f8bbfd377130b16f72539487c72d0",
+      "id": "predecessor-01",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "catalog"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "public.neroxa_instance_members",
+        "public.neroxa_organization_members",
+        "public.neroxa_organization_role",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/storefront-instance-phase1.candidate.sql",
+      "sha256": "e4e75abc28a5c07b163a6e98f7a9c7be9fad3f8a2543c4635cfbf5d35193e462",
+      "id": "predecessor-02",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-01"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_settings",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/store-product-category-guard.candidate.sql",
+      "sha256": "385d4446003c5604f9e18a0ebbf1b5f1c92d83fd11655db6cdd9815e7547011e",
+      "id": "predecessor-03",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-02"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "public.neroxa_storefront_categories",
+        "public.neroxa_storefront_products",
+        "public.neroxa_validate_product_category_instance"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/storefront-tenant-integrity.candidate.sql",
+      "sha256": "c388d0dabb8c58988ef30c30b1f084c2acabf33ff23e798d278ac8d99ff99cf1",
+      "id": "predecessor-04",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-03"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "public.neroxa_guard_storefront_tenant",
+        "public.neroxa_orders",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_settings",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/storefront-parent-instance-guard.candidate.sql",
+      "sha256": "ec8afaa42ec5f590c1cbb1c98ff191d652779c3b0d97adc2ff4599f7389084c5",
+      "id": "predecessor-05",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-04"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "public.neroxa_prevent_instance_org_reassignment",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/store-isolation-policies.candidate.sql",
+      "sha256": "848d370e950ca8998ae8e3322c41f1484bb25e667c30d2cb1e8e2e1da087735c",
+      "id": "predecessor-06",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-05"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "public.neroxa_orders",
+        "public.neroxa_organization_role",
+        "public.neroxa_storefront_categories",
+        "public.neroxa_storefront_products",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/storefront-instance-phase2-cutover.candidate.sql",
+      "sha256": "f06c49a835128063c95d1dae7272502a1831ff1009c3a9dc430edae7b633855a",
+      "id": "predecessor-07",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-06"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_settings",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/storefront-settings-zones-rls.candidate.sql",
+      "sha256": "959170218f352c6d7b41e7dcc011ab8e092ded44e8a5a8e8855a1c8947f52c64",
+      "id": "predecessor-08",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-07"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "public.neroxa_has_platform_role",
+        "public.neroxa_is_platform_member",
+        "public.neroxa_organization_role",
+        "public.neroxa_platform_role",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_settings"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/storefront-admin-rpc.candidate.sql",
+      "sha256": "0e1c6e4a806a12f5631c556040e2ee06b29c3c37c789f53e1631c5f71a9bc753",
+      "id": "predecessor-09",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-08"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "public.get_admin_orders",
+        "public.neroxa_is_platform_member",
+        "public.neroxa_orders",
+        "public.neroxa_organization_role"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/storefront-rpcs-phase2.candidate.sql",
+      "sha256": "4d37407a16a8b962161c0aa807b444a95b033299fc1131cf1938421e4068b439",
+      "id": "predecessor-10",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-09"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "public.calculate_public_order_line_price",
+        "public.create_public_order",
+        "public.get_public_storefront_catalog",
+        "public.get_public_storefront_context",
+        "public.neroxa_is_platform_member",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_organization_role",
+        "public.neroxa_storefront_addon_groups",
+        "public.neroxa_storefront_addons",
+        "public.neroxa_storefront_categories",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_product_addon_groups",
+        "public.neroxa_storefront_products",
+        "public.neroxa_storefront_settings",
+        "public.neroxa_system_instances",
+        "public.update_admin_order_status"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/store-isolation-prerequisites.assert.sql",
+      "sha256": "9b2e0873c49d4358ef7e138f5c6ac9a6f4d673f9fa7107cb5fbb22403daa9c55",
+      "id": "predecessor-11",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-10"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/store-isolation-runtime-hardening.candidate.sql",
+      "sha256": "342bafbec2f94f1f03aab24731fa31700b7c20151334a2ec415564c412384c37",
+      "id": "predecessor-12",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-11"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "private.neroxa_has_platform_role",
+        "public.append_public_order_items_with_payment",
+        "public.calculate_public_order_line_price",
+        "public.neroxa_is_platform_member",
+        "public.neroxa_keep_store_instance",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_platform_members",
+        "public.neroxa_platform_role",
+        "public.neroxa_storefront_categories",
+        "public.neroxa_storefront_products",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/admin-order-rpc-acl.release-gate.candidate.sql",
+      "sha256": "dd50db6bf42a0b2c41065110d6a88f2ee7e26bf225538718a3ac2f96020666a4",
+      "id": "predecessor-13",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-12"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "public.get_admin_orders",
+        "public.update_admin_order_status"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/group-addons-pricing.candidate.sql",
+      "sha256": "3850db07fda4a794b00d13177c08138b3e0486e7e7abc5bc8eb05c608ac84a1d",
+      "id": "predecessor-14",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-13"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "private.neroxa_group_order_intents",
+        "private.neroxa_prepare_group_item",
+        "private.neroxa_requires_group_contract",
+        "public.append_public_order_items_with_payment",
+        "public.calculate_public_order_line_price",
+        "public.create_public_order",
+        "public.get_public_order_status",
+        "public.get_public_storefront_catalog",
+        "public.get_public_storefront_context",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_storefront_addon_groups",
+        "public.neroxa_storefront_addons",
+        "public.neroxa_storefront_categories",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_product_addon_groups",
+        "public.neroxa_storefront_products",
+        "public.neroxa_storefront_settings",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/store-availability.candidate.sql",
+      "sha256": "45da99d6ef1d4f0afadd65473b5c2ed7360f1e5766ec3af7aa6e61fdfbcb9daf",
+      "id": "predecessor-15",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-14"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "private.neroxa_assert_store_open",
+        "private.neroxa_group_order_intents",
+        "private.neroxa_guard_availability",
+        "private.neroxa_prepare_group_item",
+        "private.neroxa_public_availability",
+        "private.neroxa_requires_group_contract",
+        "private.neroxa_store_is_open",
+        "public.append_public_order_items_with_payment",
+        "public.calculate_public_order_line_price",
+        "public.create_public_order",
+        "public.get_public_storefront_catalog",
+        "public.get_public_storefront_context",
+        "public.neroxa_has_platform_role",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_organization_role",
+        "public.neroxa_platform_role",
+        "public.neroxa_storefront_addon_groups",
+        "public.neroxa_storefront_addons",
+        "public.neroxa_storefront_availability",
+        "public.neroxa_storefront_categories",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_product_addon_groups",
+        "public.neroxa_storefront_products",
+        "public.neroxa_storefront_settings",
+        "public.neroxa_storefront_special_days",
+        "public.neroxa_storefront_special_hours",
+        "public.neroxa_storefront_weekly_hours",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/checkout-recovery.candidate.sql",
+      "sha256": "acc820704864db99ade9c27352c6462163fdfb0fef5076b816c9963c06ca9022",
+      "id": "predecessor-16",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-15"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "private.neroxa_assert_store_open",
+        "private.neroxa_group_order_intents",
+        "private.neroxa_lease_group_intent",
+        "private.neroxa_prepare_group_item",
+        "private.neroxa_recovery_quota_counters",
+        "private.neroxa_requires_group_contract",
+        "public.calculate_public_order_line_price",
+        "public.create_public_order",
+        "public.get_public_order_status",
+        "public.get_public_storefront_context",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_recover_group_order",
+        "public.neroxa_recovery_reserve_quota",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_products",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/checkout-reconciliation.candidate.sql",
+      "sha256": "bf5da2fca7e7ca19ca084c070f422ee3112ca7f0d7408044660299f9e5b43c5a",
+      "id": "predecessor-17",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-16"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "private.neroxa_assert_store_open",
+        "private.neroxa_checkout_reconciliation",
+        "private.neroxa_group_order_intents",
+        "private.neroxa_prepare_group_item",
+        "private.neroxa_requires_group_contract",
+        "public.calculate_public_order_line_price",
+        "public.create_public_order",
+        "public.get_public_storefront_context",
+        "public.neroxa_has_platform_role",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_organization_role",
+        "public.neroxa_platform_role",
+        "public.neroxa_reconcile_checkout",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_products",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/operational-order-detail.candidate.sql",
+      "sha256": "beff5f1acf436176435806f697c89a21e646dd6f3b4eb4c031ef345763867790",
+      "id": "predecessor-18",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-17"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "public.get_admin_order_detail",
+        "public.get_admin_orders",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "path": "audits/sql/operational-order-transitions.candidate.sql",
+      "sha256": "4d4baf9edbcbd7d269c52b38ff3fde5cbeb1f7be40ea945eef6c5ebd7eae1180",
+      "id": "predecessor-19",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db",
+      "branch": "historical-catalog",
+      "depends_on": [
+        "predecessor-18"
+      ],
+      "executor": "postgres; non-superuser; no ALTER OWNER/RLS bypass",
+      "preconditions": [
+        "preceding exact unit committed",
+        "isolated clone"
+      ],
+      "objects": [
+        "neroxa_private.has_instance_role",
+        "public.neroxa_is_platform_member",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_organization_role",
+        "public.update_admin_order_status"
+      ],
+      "consumer_impact": "candidate historical contract; see SQL",
+      "rollback": "abort current transaction; after commit retain restrictive gates and roll forward",
+      "tests": [
+        "compile/invoke actual functions",
+        "ABC real Auth positive and negative",
+        "data+ACL before/after"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different historical catalog",
+        "unverified native service versions"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "id": "scoped-order-access.candidate.sql",
+      "path": "audits/02a2/scoped-order-access.candidate.sql",
+      "sha256": "648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "330520ade7abf297423d5ffeb24d406bc43f88ff",
+      "branch": "security/mission-02a2-scoped-admin-20261014",
+      "pr": 38,
+      "depends_on": [
+        "predecessor-19"
+      ],
+      "executor": "postgres; non-superuser; native Storage owner unchanged",
+      "preconditions": [
+        "neroxa.mission02a2_disposable=on",
+        "preceding units committed"
+      ],
+      "objects": [
+        "neroxa_private.has_delivery_instance_role",
+        "neroxa_private.has_instance_role",
+        "public.get_admin_order_detail",
+        "public.get_admin_orders",
+        "public.neroxa_instance_members",
+        "public.neroxa_is_platform_member",
+        "public.neroxa_order_items",
+        "public.neroxa_order_status_history",
+        "public.neroxa_orders",
+        "public.neroxa_organization_role",
+        "public.neroxa_platform_members",
+        "public.neroxa_storefront_addon_groups",
+        "public.neroxa_storefront_addons",
+        "public.neroxa_storefront_categories",
+        "public.neroxa_storefront_delivery_zones",
+        "public.neroxa_storefront_product_addon_groups",
+        "public.neroxa_storefront_products",
+        "public.neroxa_storefront_settings",
+        "public.neroxa_system_instances",
+        "public.update_admin_order_status"
+      ],
+      "consumer_impact": "real regression suite required",
+      "rollback": "transaction failure abort; postcommit retain deny and roll forward; never restore old helper/grants",
+      "tests": [
+        "ABC real Auth",
+        "before-after digests",
+        "own authorized positive"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different helper body",
+        "unverified function replacement"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "id": "availability-instance-scope.candidate.sql",
+      "path": "audits/02a4/availability-instance-scope.candidate.sql",
+      "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "172abae4bc5dc41348202915e61e4f1fd8918ab2",
+      "branch": "security/mission-02a4-availability-20261014",
+      "pr": 41,
+      "depends_on": [
+        "scoped-order-access.candidate.sql"
+      ],
+      "executor": "postgres; non-superuser; native Storage owner unchanged",
+      "preconditions": [
+        "neroxa.mission02a2_disposable=on",
+        "preceding units committed"
+      ],
+      "objects": [
+        "neroxa_private.has_delivery_instance_role",
+        "public.neroxa_organization_role"
+      ],
+      "consumer_impact": "real regression suite required",
+      "rollback": "transaction failure abort; postcommit retain deny and roll forward; never restore old helper/grants",
+      "tests": [
+        "ABC real Auth",
+        "before-after digests",
+        "own authorized positive"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different helper body",
+        "unverified function replacement"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "id": "addon-explicit-membership.candidate.sql",
+      "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+      "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "55dfd757410cf179e1e51744c6f15f224f26f810",
+      "branch": "security/mission-02a4-compat-harness-20261014",
+      "pr": 43,
+      "depends_on": [
+        "availability-instance-scope.candidate.sql"
+      ],
+      "executor": "postgres; non-superuser; native Storage owner unchanged",
+      "preconditions": [
+        "neroxa.mission02a2_disposable=on",
+        "preceding units committed"
+      ],
+      "objects": [
+        "neroxa_private.has_delivery_instance_role",
+        "public.neroxa_organization_role",
+        "public.neroxa_storefront_addon_groups",
+        "public.neroxa_storefront_addons"
+      ],
+      "consumer_impact": "real regression suite required",
+      "rollback": "transaction failure abort; postcommit retain deny and roll forward; never restore old helper/grants",
+      "tests": [
+        "ABC real Auth",
+        "before-after digests",
+        "own authorized positive"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different helper body",
+        "unverified function replacement"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "id": "delivery-live-session.candidate.sql",
+      "path": "audits/02a4/delivery-live-session.candidate.sql",
+      "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "branch": "security/mission-02a4-live-session-20261014",
+      "pr": 45,
+      "depends_on": [
+        "addon-explicit-membership.candidate.sql"
+      ],
+      "executor": "postgres; non-superuser; native Storage owner unchanged",
+      "preconditions": [
+        "neroxa.mission02a2_disposable=on",
+        "preceding units committed",
+        "helper prosrc md5=d2a409935bbbc1b97a2d8fc28ae46652",
+        "SELECT auth.sessions available without elevation"
+      ],
+      "objects": [
+        "neroxa_private.has_delivery_instance_role",
+        "neroxa_private.has_instance_role",
+        "public.neroxa_instance_members",
+        "public.neroxa_is_platform_member",
+        "public.neroxa_organization_role",
+        "public.neroxa_platform_members",
+        "public.neroxa_system_instances"
+      ],
+      "consumer_impact": "real regression suite required",
+      "rollback": "transaction failure abort; postcommit retain deny and roll forward; never restore old helper/grants",
+      "tests": [
+        "ABC real Auth",
+        "before-after digests",
+        "own authorized positive"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different helper body",
+        "unverified function replacement"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "id": "storage-instance-images.candidate.sql",
+      "path": "audits/02a4/storage-instance-images.candidate.sql",
+      "sha256": "5739b1226bb2d9ee7b760ddfaa8b0ffcd65048ec92dd938a41a194713795962e",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "bbfbfc35d3dfd566fcaa9bb50cce29e6f7ed941a",
+      "branch": "security/mission-02a4-storage-20261014",
+      "pr": 44,
+      "depends_on": [
+        "delivery-live-session.candidate.sql"
+      ],
+      "executor": "postgres; non-superuser; native Storage owner unchanged",
+      "preconditions": [
+        "neroxa.mission02a2_disposable=on",
+        "preceding units committed",
+        "product-images private bucket; png; 1MiB"
+      ],
+      "objects": [
+        "neroxa_private.delivery_image_path_scope",
+        "neroxa_private.has_delivery_instance_role",
+        "public.neroxa_organization_role",
+        "storage.objects"
+      ],
+      "consumer_impact": "real regression suite required",
+      "rollback": "transaction failure abort; postcommit retain deny and roll forward; never restore old helper/grants",
+      "tests": [
+        "ABC real Auth",
+        "before-after digests",
+        "own authorized positive"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different helper body",
+        "unverified function replacement"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "id": "private-tracking.candidate.sql",
+      "path": "audits/02a4/private-tracking.candidate.sql",
+      "sha256": "7c1e7c5daf8588cc7eaeb8ad63825f15747c9660ab5391a8899697698e7112dd",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "846e04090ccc29070525887f2ee29017fd019391",
+      "branch": "security/mission-02a4-private-tracking-20261014",
+      "pr": 42,
+      "depends_on": [
+        "storage-instance-images.candidate.sql"
+      ],
+      "executor": "postgres; non-superuser; native Storage owner unchanged",
+      "preconditions": [
+        "neroxa.mission02a2_disposable=on",
+        "preceding units committed"
+      ],
+      "objects": [
+        "private.neroxa_tracking_capabilities",
+        "public.neroxa_order_items",
+        "public.neroxa_orders",
+        "public.neroxa_register_tracking_capability",
+        "public.neroxa_system_instances",
+        "public.neroxa_track_order_with_capability"
+      ],
+      "consumer_impact": "real regression suite required",
+      "rollback": "transaction failure abort; postcommit retain deny and roll forward; never restore old helper/grants",
+      "tests": [
+        "ABC real Auth",
+        "before-after digests",
+        "own authorized positive"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different helper body",
+        "unverified function replacement"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    },
+    {
+      "id": "phone-rpc-quarantine.release-gate.sql",
+      "path": "audits/02a4/phone-rpc-quarantine.release-gate.sql",
+      "sha256": "b57a7082d603f1f2e15d9bc53487e47b8adb3188d8b8497332cbc76c06c47689",
+      "kind": "sql",
+      "repository": "luit77yak-dev/neroxa-master",
+      "source_sha": "846e04090ccc29070525887f2ee29017fd019391",
+      "branch": "security/mission-02a4-private-tracking-20261014",
+      "pr": 42,
+      "depends_on": [
+        "private-tracking.candidate.sql"
+      ],
+      "executor": "postgres; non-superuser; native Storage owner unchanged",
+      "preconditions": [
+        "neroxa.mission02a2_disposable=on",
+        "preceding units committed",
+        "verified consumer disablement evidence sha256",
+        "neroxa.legacy_phone_consumers_disabled=on"
+      ],
+      "objects": [
+        "public.neroxa_track_order_with_capability"
+      ],
+      "consumer_impact": "legacy phone unavailable",
+      "rollback": "transaction failure abort; postcommit retain deny and roll forward; never restore old helper/grants",
+      "tests": [
+        "ABC real Auth",
+        "before-after digests",
+        "own authorized positive"
+      ],
+      "incompatibilities": [
+        "Delivery L",
+        "different helper body",
+        "unverified function replacement"
+      ],
+      "roll_forward": "retain restrictive controls and data; reviewed incremental repair; never unsafe inverse grants",
+      "ownership_expected": "new application objects owned by normal postgres executor; CREATE OR REPLACE retains original owner and explicit ACL; inspect actual catalog before/after, no ALTER OWNER to pass"
+    }
+  ],
+  "order": [
+    "catalog",
+    "predecessor-01",
+    "predecessor-02",
+    "predecessor-03",
+    "predecessor-04",
+    "predecessor-05",
+    "predecessor-06",
+    "predecessor-07",
+    "predecessor-08",
+    "predecessor-09",
+    "predecessor-10",
+    "predecessor-11",
+    "predecessor-12",
+    "predecessor-13",
+    "predecessor-14",
+    "predecessor-15",
+    "predecessor-16",
+    "predecessor-17",
+    "predecessor-18",
+    "predecessor-19",
+    "scoped-order-access.candidate.sql",
+    "availability-instance-scope.candidate.sql",
+    "addon-explicit-membership.candidate.sql",
+    "delivery-live-session.candidate.sql",
+    "storage-instance-images.candidate.sql",
+    "private-tracking.candidate.sql",
+    "phone-rpc-quarantine.release-gate.sql"
+  ],
+  "consumer_gate": {
+    "path": "audits/02a5/CONSUMER-DISABLEMENT.json",
+    "required": true,
+    "default": "BLOCKED"
+  },
+  "separate_profiles": {
+    "L": "31 literal Delivery migrations at a99a7d743f9dbed8ece5d8b0880c4b9c543960c3 plus quarantine; never concatenate",
+    "amendment": "BLOCKED: independent SQL dependency/signature/pricing manifest required"
+  },
+  "version_contract": {
+    "node": "22",
+    "supabase_cli": "2.120.0",
+    "postgres_image": "supabase/postgres:17.11.0.004",
+    "runtime_image_ids": "Must measure in actual current clone; prior 02A4 IDs are reference only"
+  },
+  "tooling": [
+    {
+      "path": "tools/ab-auth/build_schema.py",
+      "sha256": "a0c64b9899046aa235977d0f8e52c6e4632e7636ad64a77cdffca9e224a43ad4",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    },
+    {
+      "path": "audits/ab-auth/source.json",
+      "sha256": "9a3157d2c106775ff97c8293d52db5d3d5da94f25cd71d9947977573a1c0e009",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "ccde094b7debbd57e5c7087bd433b98818794451065750d943fe997c259d3e1f",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    },
+    {
+      "path": "tools/mission-02a3/run.mjs",
+      "sha256": "b3af7a3fbecf6bd648fa0433b43b1afd931ba48b54bf9fc688aefd4f27aa47ba",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    },
+    {
+      "path": "tools/mission-02a3/native-realtime.mjs",
+      "sha256": "16714d20d11bde83a22d49ba5579d673e73e0c89fb6ce3deba75c16c7ecfadf4",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    },
+    {
+      "path": "tools/mission-02a4/availability.mjs",
+      "sha256": "9216732f7ffb0bc89d410afee7e4a08b72194350b54101c5a6fe19e818932f9e",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    },
+    {
+      "path": "tools/mission-02a4/addons.mjs",
+      "sha256": "e7920803bc79c8324d97ed6810eaaea4ca2fc281d83f6fa9f3c9fc54c1f87106",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    },
+    {
+      "path": "tools/mission-02a4/storage.mjs",
+      "sha256": "b8829305d79b59a1507a8e0a575f264cee465b2adb62568cf214c350695528d9",
+      "source_sha": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "role": "provenance only; old harness applies separate profiles and MUST NOT certify integrated M without adaptation"
+    }
+  ],
+  "application_gate": {
+    "status": "BLOCKED",
+    "reason": "full local stack insufficient capacity; consumer migration/runtime quota not validated; old harness not integrated",
+    "transaction_contract": "each SQL has its own BEGIN/COMMIT; chain is NOT a single atomic transaction; stop on first error; test fresh clone repeat and per-unit injected failures separately",
+    "catalog_reconstruction": "captured application owners restored by historical builder; NEVER alter Auth/Storage ownership, elevate executor or disable native RLS to pass a candidate"
+  }
+}
