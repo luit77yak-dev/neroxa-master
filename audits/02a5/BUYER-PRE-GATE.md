@@ -1,0 +1,15 @@
+# Buyer pre-gate recut, NOT integrated release M
+
+This independent disposable profile reconstructs the exact catalog and19predecessors, then applies scoped/availability/addon/live-session/Storage/tracking and the new ingress quota. It NEVER applies the coordinated phone release gate or manufactures consumer evidence. `verify_manifest.py --release-ready` remains BLOCKED. Do not mark integrated M or F01/F02 approved from this recut.
+
+Purpose: actual committed checkout RPC→shared32-byte issuance→real local HTTP→shared buyer adapter→native REST/Postgres. Real Auth identities/bootstrap are inherited by exact source hash; staff A has explicit grant+MFA, staff_none no grant. The server routing bridge is a simulated trusted direct edge accepting exactly three synthetic canonical hosts, not a proof of deployed proxy/TLS or TanStack checkout/confirmation hydration.
+
+Production cannot activate this candidate. Runtime requires all of: private flagtrue, homologation, local-disposable project, backend http127.0.0.1 with explicit port and same expected backend, `direct-canonical-host-v1`, allowlist `*.synthetic.invalid` and32-byte quota secret. No phone fallback, no forwarded headers, no token in URL/cookies/logs. API grant remains service-only, never a user impersonation.
+
+Quota is durable atomic fixed-window120/minute per canonical-domain HMAC; no trust in client IP headers. This minimum can be exhausted by another visitor, causing same-store denial of service; not a production rate-limit design or global multiregion authentication. Quota denial must not run context/tracking lookups. Business/capability digests include public/private tables and Storage; ingress accounting is captured separately as expected security bookkeeping, not concealed as zero side effects.
+
+Known baseline F01/F02 probes may FAIL as expected unsafe reproduction. Candidate availability should deny staff_none B with own-admin positive. Direct anonymous phone access is checked last; if it remains allowed this is an observed P0 FAIL and release remains blocked. Workflow success means selected buyer assertions executed, not universal security approval; inspect raw F02 check and summary.
+
+Not covered: first-call checkout concurrency, exact TanStack server checkout and browser confirmation/reload, coordinated external-consumer inventory, native Storage CRUD or Realtime/logout, append financial or T1. Runtime images must match EXPECTED-IMAGES.json. Test UID network policy leaves runner heartbeat UID untouched. Docker forwarding from native service bridge is denied externally. Audited tests have Docker socket access for local SQL; this is not isolation against a malicious test author.
+
+Next exact action after review: push the existing Master draft branch (workflow triggers only there on its own file/tools/selected SQL manifest). Fetch logs only after terminal run; preserve FAILs and cleanup. Do not rerun by changing bases/main or restoring unsafe grants. Any application/hash/owner/identity drift stops this profile without elevation.
