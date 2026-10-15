@@ -82,6 +82,15 @@ jobs:
         run: |
           sudo useradd --create-home --groups docker neroxa_test
           sudo chown -R neroxa_test:neroxa_test "$AB_WORKDIR"
+          # Dedicated UID needs traversal/read of the audited workspace, not runner secrets.
+          ancestor="$GITHUB_WORKSPACE"
+          while [ "$ancestor" != / ]; do
+            sudo setfacl -m u:neroxa_test:--x "$ancestor"
+            ancestor=$(dirname "$ancestor")
+          done
+          sudo setfacl -R -m u:neroxa_test:rX "$GITHUB_WORKSPACE"
+          sudo -u neroxa_test test -r tools/mission-02a3/buyer-generated.private.mjs
+          echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
           sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs
@@ -89,6 +98,10 @@ jobs:
         if: always()
         run: |
           bash tools/mission-02a5/network.sh unlock
+          if [ -n "${AB_WORKDIR:-}" ] && sudo test -d "$AB_WORKDIR"; then
+            sudo chown -R "$(id -u):$(id -g)" "$AB_WORKDIR"
+          fi
+          export DOCKER_HOST=unix:///var/run/docker.sock
           if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
             supabase stop --workdir "$AB_WORKDIR" --no-backup
             if [ -f "$AB_WORKDIR/relay.pid" ]; then kill "$(cat "$AB_WORKDIR/relay.pid")" || true; fi
