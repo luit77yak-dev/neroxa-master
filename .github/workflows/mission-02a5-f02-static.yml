@@ -1,0 +1,38 @@
+name: NEROXA F02 static consumer inventory (not release)
+on:
+  push:
+    branches: [security/mission-02a5-integration-local-20261014]
+    paths:
+      - 'audits/02a5/f02/**'
+      - '.github/workflows/mission-02a5-f02-static.yml'
+permissions:
+  contents: read
+jobs:
+  offline-inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 4ce88959a751066f96da4cbab8d1fc9ac29bb320
+          path: delivery-audited
+          persist-credentials: false
+      - name: Verify public standard runner and eligibility
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          test "$RUNNER_ENVIRONMENT" = "github-hosted"
+          test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
+          test "$(gh api repos/luit77yak-dev/pizza-perfect-plate --jq .private)" = false
+      - name: Scan immutable source without DB or secrets
+        run: |
+          python3 audits/02a5/f02/scan_consumers.py --master . --delivery delivery-audited \
+            --master-sha "$GITHUB_SHA" \
+            --delivery-sha 4ce88959a751066f96da4cbab8d1fc9ac29bb320 \
+            --output "$RUNNER_TEMP/f02-static-inventory.json"
+          test -s "$RUNNER_TEMP/f02-static-inventory.json"
+          echo 'STATIC_ONLY_PASS__EXTERNAL_UNKNOWN__NO_SQL_APPLIED__F02_OPEN'
