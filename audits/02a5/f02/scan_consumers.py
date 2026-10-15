@@ -5,7 +5,7 @@ from collections import Counter
 SYMBOL=re.compile(r"\b(get_public_order_status|append_public_order_items_with_payment|append_public_order_items)\b",re.I)
 RPC=re.compile(r"\b(?:supabase|backend|candidate|transport|client)?\s*\.?\s*rpc\s*\(",re.I)
 EXT={".ts",".tsx",".js",".mjs",".cjs",".py",".sql",".yml",".yaml",".sh"}
-SKIP={".git","node_modules",".vercel",".supabase","dist","build","coverage","__pycache__","vendor"}
+SKIP={".git","node_modules",".vercel",".supabase","dist","build","coverage","__pycache__","vendor","delivery-audited"}
 def kind(p):
  s=p.as_posix()
  if s.startswith("tests/") or "/tests/" in s or ".test." in s:return "TEST_ONLY"
