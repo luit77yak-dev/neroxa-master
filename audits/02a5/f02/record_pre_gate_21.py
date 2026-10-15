@@ -49,6 +49,8 @@ if buyer:
  attack=append.get('phoneAttack') or {}
  if attack.get('severity')=='P0' and attack.get('status')=='FAIL':
   record('PG-04','FAIL','P0 ANONYMOUS LEGACY APPEND MASTER PROFILE ONLY','HTTP='+str(attack.get('http'))+'; unauthorized return/mutation; before/after in F02_APPEND_PRE_GATE; Delivery enum NOT RUN')
+ elif attack.get('status')=='FAIL':
+  record('PG-04','BLOCKED','APPEND EXECUTED BUT AUTHORIZATION NOT PROVEN','HTTP='+str(attack.get('http'))+'; SQLSTATE='+str(attack.get('sqlstate'))+'; no P0 mutation observed; inspect functional/fixture rejection')
  elif attack.get('status')=='PASS':
   record('PG-04','PASS','MASTER PHONE APPEND DENIAL ONLY; OTHER OVERLOADS NOT RUN','HTTP='+str(attack.get('http'))+'; full integrated coverage NOT VERIFIED')
  else:
