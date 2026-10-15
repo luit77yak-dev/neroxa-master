@@ -1,0 +1,36 @@
+name: F02 executor eligibility only - no SQL or Supabase start
+on:
+  push:
+    branches: [security/mission-02a5-integration-local-20261014]
+    paths:
+      - .github/workflows/mission-02a5-executor-preflight.yml
+      - audits/02a5/executor-preflight/**
+permissions:
+  contents: read
+jobs:
+  executor-preflight:
+    if: github.repository == 'luit77yak-dev/neroxa-master' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Resources, six public image identities, scoped egress and cleanup only
+        run: python3 audits/02a5/executor-preflight/preflight.py
+      - name: Independent cleanup audit even after probe failure
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,subprocess,json
+          run=os.environ['GITHUB_RUN_ID'];name='neroxa-executor-'+run
+          def read(args):return subprocess.check_output(args,text=True).strip()
+          containers=read(['docker','--host=unix:///var/run/docker.sock','ps','-aq','--filter','name='+name])
+          networks=read(['docker','--host=unix:///var/run/docker.sock','network','ls','-q','--filter','name='+name])
+          user=subprocess.run(['id','neroxa_probe'],capture_output=True).returncode==0
+          chain='NXPROBE'+run[-12:]
+          rules=any(subprocess.run(['sudo',t,'-S',chain],capture_output=True).returncode==0 for t in ['iptables','ip6tables'])
+          clean=not containers and not networks and not user and not rules
+          print('EXECUTOR_INDEPENDENT_CLEANUP='+json.dumps({'status':'PASS' if clean else 'FAIL','containers':bool(containers),'networks':bool(networks),'uid':user,'chains':rules}))
+          assert clean,'cleanup incomplete; VM disposal is not a substitute for an executed cleanup PASS'
+          PY
