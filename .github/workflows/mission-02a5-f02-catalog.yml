@@ -93,6 +93,8 @@ jobs:
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
           sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs
       - name: Read native PostgreSQL catalog (pre-gate ONLY)
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
         run: |
           test "$RUNNER_ENVIRONMENT" = "github-hosted"
           test "$AB_PROJECT" = "neroxa-02a3-$GITHUB_RUN_ID-buyer"
