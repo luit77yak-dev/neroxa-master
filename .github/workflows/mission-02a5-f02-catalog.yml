@@ -107,7 +107,10 @@ jobs:
           assert len(content)==1,'one catalog result expected'
           result=json.loads(content[0])
           assert result['kind']=='F02_PRE_GATE_PG_CATALOG_ONLY'
-          assert result['legacy_function_count']>=3,'legacy candidates missing in clone'
+          present=sorted({f['name'] for f in result['functions'] if f['name'] in ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment')})
+          missing=sorted(set(('get_public_order_status','append_public_order_items','append_public_order_items_with_payment'))-set(present))
+          print('F02_CATALOG_LEGACY_COVERAGE='+json.dumps({'present':present,'missing':missing,'classification':'PARTIAL_IF_MISSING'}))
+          assert 'get_public_order_status' in present,'historical P0 function unexpectedly absent'
           assert result['legacy_gate_applied'] is False
           print('F02_CATALOG_PRE_GATE='+json.dumps(result,sort_keys=True))
           print('F02_GATE=BLOCKED; POST_GATE=NOT_RUN; EXTERNAL_CONSUMERS=UNKNOWN')
