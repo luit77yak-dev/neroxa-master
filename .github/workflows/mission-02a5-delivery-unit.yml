@@ -35,7 +35,11 @@ jobs:
           print('FREE_STANDARD_PUBLIC_GITHUB_RUNNER=PASS')
           PY
           test "$(git -C delivery-candidate rev-parse HEAD)" = 011275488660bfa1a9271b3e4c92e457f7638e34
+          # Versioned dotenv exists in the source checkout. Never inspect or echo it.
+          # Remove local dotenv files before running read-only, synthetic-only unit tests.
+          find delivery-candidate -type f -name '.env*' -not -path '*/.git/*' -delete
           test ! -e delivery-candidate/.env
+          echo 'VERSIONED_DOTENV_DISCARDED_WITHOUT_READING=PASS'
           echo 'F02_DELIVERY_SOURCE_PIN=011275488660bfa1a9271b3e4c92e457f7638e34'
       - name: Install lockfile only (no untrusted lifecycle hooks)
         working-directory: delivery-candidate
