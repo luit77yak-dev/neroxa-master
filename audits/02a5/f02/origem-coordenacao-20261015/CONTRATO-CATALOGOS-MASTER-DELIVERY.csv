@@ -1,0 +1,9 @@
+objeto,master_clone_run_38672488319,delivery_clone_derivado_run_38678827509,risco_ou_proxima_verificacao
+"public.get_public_order_status(uuid,text)",PRESENTE_DEF_ANON_AUTH,PRESENTE_DEF_ANON_AUTH,igual nome/assinatura; presente nos dois clones
+"public.append_public_order_items(uuid,text,jsonb)",AUSENTE_NESTE_PERFIL,PRESENTE_DEF_ANON_AUTH,ausência no Master não significa revogação Delivery
+"public.append_public_order_items_with_payment(uuid,text,jsonb,text)",PRESENTE_DEF_ANON_AUTH,AUSENTE_NESTE_PERFIL,assinatura Master com text
+"public.append_public_order_items_with_payment(uuid,text,jsonb,public.payment_method)",AUSENTE_NESTE_PERFIL,PRESENTE_DEF_ANON_AUTH,assinatura Delivery com enum
+"public.neroxa_recover_group_order(uuid,uuid,jsonb)",WRAPPER_SERVICE_ONLY_CALLS_STATUS,NAO_VISTO_NO_RECORTE,revisar compatibilidade após gate
+"public.neroxa_track_order_with_capability(uuid,uuid,text)",SERVICE_ONLY,NAO_VERIFICADO_NESSE_PERFIL,"controle positivo comprador no recorte Master, não pós-gate"
+pg_default_acl public FUNCTIONS,PERMISSIVO_PARA_ANON_AUTH,PERMISSIVO_PARA_ANON_AUTH,revisar função nova/overload; nenhuma ACL alterada
+views que mencionam literalmente RPC antiga,ZERO_NO_ESCOPO_CONSULTADO,ZERO_NO_ESCOPO_CONSULTADO,não exclui SQL dinâmico ou schema não incluído

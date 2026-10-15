@@ -4,7 +4,7 @@ on:
     branches: [security/mission-02a5-integration-local-20261014]
     paths:
       - .github/workflows/mission-02a5-f02-pre-gate-ledger.yml
-      - audits/02a5/f02/record_pre_gate_21.py
+      - audits/02a5/f02/**
 permissions:
   contents: read
 jobs:
@@ -46,6 +46,7 @@ jobs:
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
           python3 audits/02a5/verify_manifest.py
           python3 tools/mission-02a5/generate-buyer-run.py
+          python3 audits/02a5/f02/extend_pre_gate.py
       - name: Unlinked native six-service stack, loopback binds
         run: |
           export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
@@ -91,7 +92,7 @@ jobs:
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
       - name: Read native PostgreSQL catalog (pre-gate ONLY)
         env:
           DOCKER_HOST: unix:///var/run/docker.sock

@@ -1,0 +1,22 @@
+id,etapa,cenario,criterio,situacao_em_20261015
+PG-01,PRE-GATE,"Fixar SHA dos dois repositórios, perfil, manifests e hash de derivação",sha e origem documentados,HISTORICO_MASTER_DELIVERY_SEPARADOS
+PG-02,PRE-GATE,pg_proc regprocedure owners all overloads ACLs inherited default ACL views definer,registrar baseline separadamente,PASS_PARCIAL_HISTORICO
+PG-03,PRE-GATE,anon uuid + telefone acesso status A/B/C,P0 legado deve ser capturado como falha de segurança,FAIL_P0_HISTORICO
+PG-04,PRE-GATE,anon invoke append funcs e alterar dados por telefone,capturar privilégios e efeitos; não executar em dados reais,NOT_RUN_INTEGRADO
+PG-05,PRE-GATE,buyer A 32-byte capability verdadeira via HTTP,HTTP200 projeção mínima sem PII,PASS_HISTORICO_RECORTE
+PG-06,PRE-GATE,buyer token A tenta B/C; token falso/expirado/revogado; quota,negação e digests sem efeito,PASS_HISTORICO_RECORTE
+PG-07,PRE-GATE,staff sem store grant tenta PATCH B; admin B com grant,staff zero rows; admin B autorizado,PASS_HISTORICO_RECORTE
+PG-08,PRE-GATE,foto de orders/items/payments/storage e hash antes/depois,zero mudança indevida,NOT_RUN_INTEGRADO
+PG-09,PRE-GATE,inventário por consumidor implantação/ambiente/owner/sucessor,nenhum UNKNOWN para o corte; provas auditáveis,BLOCKED_CONSUMERS_UNKNOWN
+GT-01,GATE,validar recibos reais e pré-condições do gate oficial,não criar falso CONSUMER-DISABLEMENT nem forçar GUC,BLOCKED_NAO_EXECUTAR
+GT-02,GATE,executar gate somente no clone com recepção válida e idempotência,revogar PUBLIC anon authenticated em todas assinaturas,BLOCKED_NAO_EXECUTAR
+GT-03,GATE,verificar rol/permissões herdadas e wrappers SECURITY DEFINER,"execução efetiva negada, wrapper legítimo preservado",BLOCKED_NAO_EXECUTAR
+PO-01,POST-GATE,anon/authenticated via PostgREST tentam todas RPCs legadas,negação em cada overload + SQLSTATE/HTTP,NOT_RUN
+PO-02,POST-GATE,buyer A faz tracking privado legítimo,HTTP200 mínimo com token A,NOT_RUN
+PO-03,POST-GATE,"A token→B/C, inválido/expirado/revogado, quota",deny com rate limit e digest intacto,NOT_RUN
+PO-04,POST-GATE,staff A tenta modificar B; admin B opera B,isolamento e positivo preservados,NOT_RUN
+PO-05,POST-GATE,"checkout TanStack real, pagamento append sem bypass legado",fluxo completo e integridade dos totais,NOT_RUN
+PO-06,POST-GATE,wrapper neroxa_recover_group_order e owners,consumidor autorizado não quebra nem amplia acesso,NOT_RUN
+PO-07,POST-GATE,Auth/Storage/Realtime sessões e logout,ausência de egress/cross store,NOT_RUN
+PO-08,POST-GATE,digests orders/items/grants/prices/payments T1,sem alterações indevidas antes/depois,NOT_RUN
+PO-09,POST-GATE,"simular falha pré-commit no clone, depois pós-commit em 2º clone",rollback SQL transacional; roll-forward sem regrant,NOT_RUN

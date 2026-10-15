@@ -45,7 +45,14 @@ if buyer:
  if check('F02 pre-gate direct phone RPC remains unresolved','FAIL') and (buyer.get('f02Observed') or {}).get('http')==200:
   record('PG-03','FAIL','F02 P0 CONFIRMADO EM CLONE PRE-GATE','anon UUID+phone returns 200; NOT A RELEASE PASS')
  else:record('PG-03','NOT RUN','F02 POSITIVE ATTACK EVIDENCE MISSING','No exact direct phone evidence')
- record('PG-04','NOT RUN','APPEND VIA LEGACY PHONE NOT TESTED IN THIS PROFILE','ACL existence alone is not a mutation test')
+ append=buyer.get('append') or {}
+ attack=append.get('phoneAttack') or {}
+ if attack.get('severity')=='P0' and attack.get('status')=='FAIL':
+  record('PG-04','FAIL','P0 ANONYMOUS LEGACY APPEND MASTER PROFILE ONLY','HTTP='+str(attack.get('http'))+'; unauthorized return/mutation; before/after in F02_APPEND_PRE_GATE; Delivery enum NOT RUN')
+ elif attack.get('status')=='PASS':
+  record('PG-04','PASS','MASTER PHONE APPEND DENIAL ONLY; OTHER OVERLOADS NOT RUN','HTTP='+str(attack.get('http'))+'; full integrated coverage NOT VERIFIED')
+ else:
+  record('PG-04','NOT RUN','NO COMPLETED APPEND PROBE','No operation evidence; ACL alone is not mutation proof')
  if positive and str(checkout.get('status','')).startswith('PASS') and len(samples)>=11:
   record('PG-05','PASS','RECURSO COMPRADOR HTTP/ADAPTER; NAO TANSTACK E2E','checkout RPC token -> buyer HTTP 200, no PII; scoped')
   if all(x.get('status')=='PASS' for x in samples):
