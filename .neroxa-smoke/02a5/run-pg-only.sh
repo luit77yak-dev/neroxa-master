@@ -36,8 +36,34 @@ fi
 if [[ "$(gh api "repos/$GITHUB_REPOSITORY" --jq '.private')" != 'false' ]]; then
   echo 'STOP: repositório não comprovado público' >&2; exit 78
 fi
-# Reutiliza limite conservador do preflight histórico: 28GiB disco, 6GiB RAM, 2 CPUs.
-python3 tools/mission-02a3/preflight.py
+# PG-only: substitui o orçamento MULTISSERVIÇO de 28GiB do preflight 02A.3.
+# Limiares candidatos (nao sao tamanho garantido da imagem):
+# >=8GiB ANTES do pull; >=4GiB DEPOIS do pull, antes do start.
+# Verifica ambos os filesystems: RUNNER_TEMP e DockerRootDir.
+# Mantem Docker overlay2, >=6GiB de MemAvailable, >=2 CPUs e runner padrao.
+pg_resource_guard() {
+  python3 - "$1" <<'PYRESOURCE'
+import json, os, pathlib, shutil, subprocess, sys
+stage=sys.argv[1]
+assert stage in ('before-pull','after-pull'), 'STOP: fase de guarda desconhecida'
+assert os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted', 'STOP: runner nao elegivel'
+assert pathlib.Path.cwd().as_posix().startswith('/home/runner/'), 'STOP: workspace fora do runner'
+driver=subprocess.check_output(['docker','info','--format','{{.Driver}}'],text=True).strip()
+docker_root=subprocess.check_output(['docker','info','--format','{{.DockerRootDir}}'],text=True).strip()
+assert driver=='overlay2', 'STOP: Docker deve usar overlay2'
+assert docker_root.startswith('/') and pathlib.Path(docker_root).is_dir(), 'STOP: DockerRootDir desconhecido'
+assert os.environ.get('RUNNER_TEMP') and pathlib.Path(os.environ['RUNNER_TEMP']).is_dir(), 'STOP: RUNNER_TEMP ausente'
+free_temp=shutil.disk_usage(os.environ['RUNNER_TEMP']).free
+free_docker=shutil.disk_usage(docker_root).free
+mem=int(next(x.split()[1] for x in pathlib.Path('/proc/meminfo').read_text().splitlines() if x.startswith('MemAvailable:')))*1024
+cpus=os.cpu_count() or 0
+required=(8 if stage=='before-pull' else 4)*1024**3
+passed=free_temp>=required and free_docker>=required and mem>=6*1024**3 and cpus>=2
+print('PG_ONLY_RESOURCE_PREFLIGHT='+json.dumps({'stage':stage,'status':'PASS' if passed else 'BLOCKED','docker_driver':driver,'runner_temp_free_bytes':free_temp,'docker_root_free_bytes':free_docker,'required_free_bytes_each':required,'available_memory_bytes':mem,'cpus':cpus,'image_size_unverified':stage=='before-pull'},sort_keys=True))
+assert passed, 'STOP: recursos insuficientes na fase '+stage
+PYRESOURCE
+}
+pg_resource_guard before-pull
 
 # Tags podem se mover. A comparação a seguir é com ID da IMAGEM LOCAL histórica,
 # não com digest do manifesto de distribuição/arquitetura do registry.
@@ -55,6 +81,9 @@ actual="$(docker image inspect "$img" --format '{{.Id}}')"
 if [[ "$actual" != "$expected" ]]; then
   echo 'STOP: identidade de imagem diferente da evidência histórica' >&2; exit 78
 fi
+# A imagem efetivamente baixada pode consumir mais disco que a estimativa.
+# Reserva pos-pull obrigatoria: STOP antes de criar qualquer container.
+pg_resource_guard after-pull
 
 umask 077
 : "${RUNNER_TEMP:?}" "${GITHUB_RUN_ID:?}"

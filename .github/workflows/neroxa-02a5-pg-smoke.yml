@@ -57,7 +57,7 @@ jobs:
           expected_marker='NEROXA-02A5-PG-SMOKE-EXPLICIT-APPROVAL-20261016'
           actual_marker="$(cat channel/.neroxa-smoke/02a5/EXECUTE_ONCE)"
           test "$actual_marker" = "$expected_marker"
-          test "$(sha256sum channel/.neroxa-smoke/02a5/run-pg-only.sh | cut -d' ' -f1)" = '01ecdf85b428c0f71b33aeebb092ffffb995d49c07c9561d4f6f5e0d153f19e2'
+          test "$(sha256sum channel/.neroxa-smoke/02a5/run-pg-only.sh | cut -d' ' -f1)" = '3ac57645537645f2d6f880f2441dd16edce0fa84b9f0202181b72f8b426eef05'
           # Somente o script e as referencias imutaveis podem ser executados.
           bash -n channel/.neroxa-smoke/02a5/run-pg-only.sh
           test -f master/tools/mission-02a3/preflight.py
