@@ -118,7 +118,7 @@ cat > "$work/pg.env" <<EOF
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
 POSTGRES_USER=supabase_admin
 POSTGRES_DB=postgres
-PGDATA=/var/lib/postgresql/data/pgdata
+PGDATA=/var/lib/postgresql/data
 EOF
 chmod 600 "$work/pg.env"
 
