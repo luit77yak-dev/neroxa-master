@@ -126,8 +126,94 @@ chmod 600 "$work/pg.env"
 # sem host bind, sem docker.sock montado, sem outras imagens ou serviços.
 # --pull never impede atualização de tag durante o start.
 # Se a imagem precisar de configuração/serviços adicionais, STOP, não improvisar.
+# Diagnóstico restrito: nenhuma linha de log bruta é impressa.
+# Observa apenas o container nomeado deste run; stdout contém metadados de estado
+# e rótulos ESTÁTICOS para padrões reconhecidos, nunca strings do log/State.Error.
+diagnose_pg_startup() {
+  local phase="$1"
+  python3 - "$name" "$work/start.private.log" "$phase" <<'PYDIAG'
+import json, pathlib, re, subprocess, sys
+name, launch_file, phase = sys.argv[1:4]
+
+def capture(args, timeout=8):
+    try:
+        p = subprocess.run(args, capture_output=True, text=True, encoding='utf-8',
+                           errors='replace', timeout=timeout, check=False)
+        return p.returncode == 0, p.stdout or '', p.stderr or ''
+    except (OSError, subprocess.TimeoutExpired):
+        return False, '', ''
+
+ok, raw, _ = capture(['docker', 'inspect', '--format', '{{json .State}}', name])
+try:
+    state = json.loads(raw) if ok else {}
+    assert isinstance(state, dict)
+except (ValueError, AssertionError):
+    state = {}
+status = state.get('Status')
+if status not in ('created','running','paused','restarting','removing','exited','dead'):
+    status = 'UNKNOWN'
+exitcode = state.get('ExitCode')
+if type(exitcode) is not int or not 0 <= exitcode <= 255:
+    exitcode = None
+running = state.get('Running') if type(state.get('Running')) is bool else None
+oom = state.get('OOMKilled') if type(state.get('OOMKilled')) is bool else None
+
+logs_ok, stdout, stderr = capture(['docker','logs','--tail','120',name])
+# Docker CLI stderr may contain internal diagnostics; never emit it verbatim.
+log_text = (stdout + '\n' + stderr)[-150000:] if logs_ok else ''
+try:
+    launch_text = pathlib.Path(launch_file).read_text(encoding='utf-8',errors='replace')[-8192:]
+except OSError:
+    launch_text = ''
+# Somente rótulos pré-aprovados; capturas de regex e linhas originais são descartadas.
+patterns = (
+    ('READY_IN_LOG', r'database system is ready to accept connections'),
+    ('INITDB_ERROR', r'initdb:.*(?:error|fatal)'),
+    ('ROOT_USER_DENIED', r'cannot be run as root'),
+    ('DATA_DIRECTORY_PERMISSION', r'(?:data directory|pgdata|initdb).{0,100}(?:permission denied|operation not permitted)'),
+    ('PERMISSION_DENIED', r'permission denied|operation not permitted'),
+    ('CONFIGURATION_MISSING', r'(?:could not open configuration file|no such file or directory.{0,70}postgresql\.conf)'),
+    ('CONFIGURATION_INVALID', r'(?:unrecognized configuration parameter|invalid value for parameter|configuration file.{0,60}contains errors)'),
+    ('LIBRARY_LOAD_FAILURE', r'(?:could not load library|could not access file).{0,100}(?:\.so|library)'),
+    ('PGDATA_NOT_EMPTY', r'exists but is not empty'),
+    ('DISK_EXHAUSTION', r'no space left on device'),
+    ('SHARED_MEMORY_FAILURE', r'could not (?:resize|create) shared memory'),
+    ('OUT_OF_MEMORY_LOG', r'out of memory|oom-kill'),
+    ('POSTGRES_FATAL', r'\bfatal\s*:'),
+    ('POSTGRES_ERROR', r'\berror\s*:'),
+    ('SERVER_STARTING', r'database system is starting up'),
+)
+combined = log_text + '\n' + launch_text
+markers = [key for key, pattern in patterns if re.search(pattern, combined, re.I)]
+configuration = any(x in markers for x in (
+    'INITDB_ERROR','ROOT_USER_DENIED','DATA_DIRECTORY_PERMISSION','CONFIGURATION_MISSING',
+    'CONFIGURATION_INVALID','LIBRARY_LOAD_FAILURE','PGDATA_NOT_EMPTY','PERMISSION_DENIED'))
+if phase == 'docker_run_failed' and not state:
+    conclusion = 'DOCKER_RUN_FAILURE'
+elif oom is True or 'OUT_OF_MEMORY_LOG' in markers:
+    conclusion = 'OOM_OR_MEMORY_FAILURE'
+elif running is False:
+    conclusion = 'CONFIG_OR_INIT_FAILURE' if configuration else 'PROCESS_EXITED'
+elif configuration:
+    conclusion = 'CONFIG_OR_INIT_FAILURE'
+elif running is True and 'READY_IN_LOG' in markers:
+    conclusion = 'READINESS_PROBE_MISMATCH_SUSPECTED'
+elif running is True:
+    conclusion = 'READINESS_TIMEOUT'
+else:
+    conclusion = 'STATE_UNAVAILABLE'
+print('PG_START_DIAGNOSTIC=' + json.dumps({
+    'phase': phase, 'diagnostic_status':'OBSERVATIONAL_NOT_A_FIX',
+    'container_exists':bool(state), 'container_status':status,
+    'running':running, 'exit_code':exitcode,'oom_killed':oom,
+    'logs_available':logs_ok,'log_markers':markers,'classification':conclusion,
+    'redaction':'ALLOWLIST_ONLY_NO_RAW_LOGS_OR_STATE_ERROR'
+},ensure_ascii=True,sort_keys=True))
+PYDIAG
+}
+
 started=true
-docker run --detach --name "$name" \
+if ! docker run --detach --name "$name" \
   --label neroxa.mission=02a5-pg-only \
   --network none --pull never --restart no \
   --security-opt no-new-privileges \
@@ -135,19 +221,32 @@ docker run --detach --name "$name" \
   --tmpfs /var/lib/postgresql/data:rw,size=2g \
   --tmpfs /tmp:rw,size=128m \
   --env-file "$work/pg.env" \
-  "$img" postgres -c config_file=/etc/postgresql/postgresql.conf >/dev/null
+  "$img" postgres -c config_file=/etc/postgresql/postgresql.conf \
+  > /dev/null 2>"$work/start.private.log"; then
+  diagnose_pg_startup docker_run_failed
+  echo 'STOP: Docker run falhou; detalhes seguros em PG_START_DIAGNOSTIC' >&2
+  exit 78
+fi
 mode="$(docker inspect "$name" --format '{{.HostConfig.NetworkMode}}')"
 ports="$(docker inspect "$name" --format '{{json .HostConfig.PortBindings}}')"
 image_id="$(docker inspect "$name" --format '{{.Image}}')"
 if [[ "$mode" != none || ( "$ports" != null && "$ports" != '{}' ) || "$image_id" != "$expected" ]]; then
+  diagnose_pg_startup isolation_mismatch
   echo 'STOP: rede/portas/imagem divergentes' >&2; exit 78
 fi
 ready=false
 for _ in $(seq 1 30); do
   if docker exec "$name" pg_isready -U supabase_admin -d postgres >/dev/null 2>&1; then ready=true; break; fi
+  # Em caso de término precoce, preservar o container até emitir diagnóstico.
+  state_running="$(docker inspect "$name" --format '{{.State.Running}}' 2>/dev/null || echo unknown)"
+  [[ "$state_running" == true ]] || break
   sleep 1
 done
-[[ "$ready" == true ]] || { echo 'STOP: postgres standalone não inicializa com a receita imutável' >&2; exit 78; }
+if [[ "$ready" != true ]]; then
+  diagnose_pg_startup readiness_failed
+  echo 'STOP: PostgreSQL indisponível; diferenciar erro do processo, configuração e timeout pelo diagnóstico sanitizado' >&2
+  exit 78
+fi
 
 # ÚNICO SQL: transação de catálogo read-only, nenhuma aplicação instalada.
 docker exec -i "$name" psql -X -q -A -t -U supabase_admin -d postgres -v ON_ERROR_STOP=1 \
