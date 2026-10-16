@@ -1,0 +1,91 @@
+# PREPARACAO LOCAL — PUBLICACAO E DISPARO NAO AUTORIZADOS.
+# Canal de duas fases: publicacao SEM marcador; segundo push COM marcador somente
+# depois de decisao expressa da Coordenacao/Fundador sobre o canal e o smoke.
+name: NEROXA 02A.5 PG standalone smoke - isolated one shot
+on:
+  push:
+    branches:
+      - coord/02a5-pg-smoke-20261016
+    paths:
+      - .neroxa-smoke/02a5/EXECUTE_ONCE
+permissions:
+  contents: read
+concurrency:
+  group: neroxa-02a5-pg-smoke-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  pg-only:
+    # Nunca executar em branch criada pelo primeiro push; nao permitir rerun de job.
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/coord/02a5-pg-smoke-20261016' &&
+      github.event.created == false &&
+      github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout do canal exato que recebeu o marcador
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          path: channel
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Checkout Master congelado (fonte de preflight e imagem)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/neroxa-master
+          ref: c149f802adf1922be588319cc98a798c7b387ea8
+          path: master
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verificacao fail-closed de origem, SHA e push exclusivamente marcador
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'luit77yak-dev/neroxa-master'
+          test "$RUNNER_ENVIRONMENT" = 'github-hosted'
+          test "$(git -C channel rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C master rev-parse HEAD)" = 'c149f802adf1922be588319cc98a798c7b387ea8'
+          test -n "$BEFORE_SHA"
+          test "$BEFORE_SHA" != '0000000000000000000000000000000000000000'
+          git -C channel cat-file -e "$BEFORE_SHA^{commit}"
+          changed="$(git -C channel diff --name-only "$BEFORE_SHA" "$GITHUB_SHA")"
+          test "$changed" = '.neroxa-smoke/02a5/EXECUTE_ONCE'
+          expected_marker='NEROXA-02A5-PG-SMOKE-EXPLICIT-APPROVAL-20261016'
+          actual_marker="$(cat channel/.neroxa-smoke/02a5/EXECUTE_ONCE)"
+          test "$actual_marker" = "$expected_marker"
+          test "$(sha256sum channel/.neroxa-smoke/02a5/run-pg-only.sh | cut -d' ' -f1)" = '01ecdf85b428c0f71b33aeebb092ffffb995d49c07c9561d4f6f5e0d153f19e2'
+          # Somente o script e as referencias imutaveis podem ser executados.
+          bash -n channel/.neroxa-smoke/02a5/run-pg-only.sh
+          test -f master/tools/mission-02a3/preflight.py
+          test -f master/audits/02a5/EXPECTED-IMAGES.json
+          echo 'CHANNEL_CHECK=PASS; ONLY_MARKER_IN_TRIGGER_PUSH=YES; MASTER=c149f802...; SCRIPT_SHA=PASS'
+      - name: Smoke PostgreSQL estritamente congelado
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEROXA_PG_ONLY_AUTHORIZED: yes-explicitly
+        run: |
+          set -Eeuo pipefail
+          cd master
+          bash ../channel/.neroxa-smoke/02a5/run-pg-only.sh --run-after-specific-authorization
+      - name: Cleanup independente e verificacao final sem artefatos
+        if: always()
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          name="neroxa_pg02a5_${GITHUB_RUN_ID}"
+          path="${RUNNER_TEMP}/neroxa-pg-only-02a5-${GITHUB_RUN_ID}"
+          # Fallback estritamente delimitado, inclusive para falhas no job.
+          if docker --host=unix:///var/run/docker.sock container inspect "$name" >/dev/null 2>&1; then
+            docker --host=unix:///var/run/docker.sock rm -f "$name" >/dev/null
+          fi
+          if [ -d "$path" ]; then rm -rf -- "$path"; fi
+          test ! -e "$path"
+          docker --host=unix:///var/run/docker.sock info >/dev/null
+          test ! -n "$(docker --host=unix:///var/run/docker.sock ps -aq --filter label=neroxa.mission=02a5-pg-only)"
+          test ! -n "$(docker --host=unix:///var/run/docker.sock ps -aq --filter name=^/${name}$)"
+          echo 'CLEANUP=PASS; F01=NOT_RUN; F02=NOT_RUN; SEC18=BLOCKED'
