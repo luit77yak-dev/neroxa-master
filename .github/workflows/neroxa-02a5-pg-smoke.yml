@@ -7,7 +7,7 @@ on:
     branches:
       - coord/02a5-pg-smoke-20261016
     paths:
-      - .neroxa-smoke/02a5/EXECUTE_ONCE
+      - .neroxa-smoke/02a5/EXECUTE_DIAG_ONCE
 permissions:
   contents: read
 concurrency:
@@ -53,9 +53,9 @@ jobs:
           test "$BEFORE_SHA" != '0000000000000000000000000000000000000000'
           git -C channel cat-file -e "$BEFORE_SHA^{commit}"
           changed="$(git -C channel diff --name-only "$BEFORE_SHA" "$GITHUB_SHA")"
-          test "$changed" = '.neroxa-smoke/02a5/EXECUTE_ONCE'
-          expected_marker='NEROXA-02A5-PG-SMOKE-EXPLICIT-APPROVAL-20261016'
-          actual_marker="$(cat channel/.neroxa-smoke/02a5/EXECUTE_ONCE)"
+          test "$changed" = '.neroxa-smoke/02a5/EXECUTE_DIAG_ONCE'
+          expected_marker='NEROXA-02A5-PG-DIAG-EXPLICIT-APPROVAL-20261016'
+          actual_marker="$(cat channel/.neroxa-smoke/02a5/EXECUTE_DIAG_ONCE)"
           test "$actual_marker" = "$expected_marker"
           test "$(sha256sum channel/.neroxa-smoke/02a5/run-pg-only.sh | cut -d' ' -f1)" = '27ebfe3ae1bf4d9d3d5a8b7819d2cfde035dcb9c6816e1659811f140e9dccc6c'
           # Somente o script e as referencias imutaveis podem ser executados.
