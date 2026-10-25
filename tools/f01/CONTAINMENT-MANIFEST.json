@@ -1,0 +1,5 @@
+{
+  "path": "tools/f01/private-order-realtime-containment.candidate.sql",
+  "sha256": "80ae28eb0b47ca5e8ed247745ed3f6d7a7b96d7e980b08da805beea57ef60510",
+  "scope": "native disposable only; no production approval"
+}

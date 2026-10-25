@@ -17,7 +17,8 @@ jobs:
       MISSION_FOCUS: f01-all
       MISSION_ACTORS: all
       MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql,audits/02a4/delivery-live-session.candidate.sql
-      MISSION02A4_AVAILABILITY: 'true'
+      MISSION02A4_AVAILABILITY: 'false'
+      MISSION_F01_FOCUS: realtime-containment
       MISSION02A4_STORAGE: 'true'
       MISSION_MUTATION_PROBE: 'true'
     steps:
@@ -96,7 +97,7 @@ jobs:
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=true MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/f01-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=false MISSION_F01_FOCUS=realtime-containment MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/f01-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
       - name: Cleanup only this disposable project
         if: always()
         run: |

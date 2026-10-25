@@ -13,11 +13,17 @@ hook="""
  const {imageStorage}=await import('../mission-02a4/storage.mjs');await imageStorage(context);
  const {f01Storage}=await import('../f01/storage.mjs');await f01Storage(context);
  const {addonControls}=await import('../mission-02a4/addons.mjs');await addonControls(context);
- const {f01RealtimeEvents}=await import('../f01/realtime-events.mjs');await f01RealtimeEvents(context);
- await nativeRealtime(context);
- report.realtimeCoverage='native INSERT/UPDATE/DELETE A1 positive and A2/C negative observations; UPDATE grant revoke, logout retained and reconnect; consult per-case status';
+ const {realtimeContainment}=await import('../f01/realtime-containment.mjs');await realtimeContainment(context);
+ report.realtimeCoverage='private Postgres Changes intentionally suspended after demonstrated cross-tenant DELETE leak; REST polling and transport controls verified; see per-case results';
 """
 s=s.replace(needle,hook)
+# Re-run only the affected native Realtime/REST controls after the publication
+# change; retain the broad CRUD/Storage evidence from 40211924855.
+branch="if(['availability-only','storage-only'].includes(process.env.MISSION_FOCUS))"
+replacement="if(process.env.MISSION_F01_FOCUS==='realtime-containment'){const {realtimeContainment}=await import('../f01/realtime-containment.mjs');await realtimeContainment({sql,q,ids,people,services,env,url,report,api,rpc,check,digest,empty,one,fs,crypto,work,sleep,profile});}else "+branch
+assert s.count(branch)==1
+s=s.replace(branch,replacement)
+
 # Text uploads are outside the PNG-only contract; the stronger native PNG
 # CRUD matrix replaces this obsolete generic-storage call.
 s=s.replace("await storage('candidate');", "")
