@@ -1,0 +1,48 @@
+{
+  "state": "CANDIDATE; remote execution not authorized",
+  "base_master": "b8a2087ad96dde4f90c04a7c10c31281d663e9f8",
+  "delivery_commit": "0e8d02e6fc07566027f0efacd5a8e076b6decf46",
+  "original_and_derived_hash_checks": 66,
+  "files": [
+    {
+      "path": ".github/workflows/mission-02a3-isolation.yml",
+      "sha256": "01354d56d1bf28ea45d649b182cd4d7a18d5e7db7d79b3efa25a6b1b636872ee"
+    },
+    {
+      "path": "audits/02a5/hosted-admission/34-readiness.pending.sql",
+      "sha256": "1ce6575c0f8adb7a5969e0c7af2842d4732128ad862839d497a6bbc0f0b8cd57"
+    },
+    {
+      "path": "audits/02a5/hosted-admission/README.md",
+      "sha256": "1500311266f836b79a18284f44e3222c9b9135bb07ce78ad83e17400334bb711"
+    },
+    {
+      "path": "audits/02a5/hosted-admission/operational-input.template.json",
+      "sha256": "ee71f7375dbc6cd04ec1843d3a5cdc2b500d82478415f5391054ac786bcd7e7c"
+    },
+    {
+      "path": "tests/hosted-admission/local.test.mjs",
+      "sha256": "c0eeef58db903f5a7434798f4a7b6c561ccdc492591cff0a8ea5a5a2c59e9e11"
+    },
+    {
+      "path": "tests/hosted-admission/native.mjs",
+      "sha256": "6e31118a813fe0eaeec4bb960b1e5b178a466c6cb832dca680206ba0a926c0db"
+    },
+    {
+      "path": "tools/hosted-admission/inputs.mjs",
+      "sha256": "899c12edfdcfc7c2578370e4e41acfb2942a11997839eb93ce1f158225cd2ea7"
+    },
+    {
+      "path": "tools/hosted-admission/session.mjs",
+      "sha256": "0c690aa1348de55e974bd790877ccb51876153273bf6e5d26d8933c5a1b058ae"
+    },
+    {
+      "path": "vercel.json",
+      "sha256": "acc654dbffe0fc124c7c80fc7e918c765e7553951e8a442e0f6f9e3137a38dd5"
+    },
+    {
+      "path": "audits/02a5/hosted-admission/RESULTADO.json",
+      "sha256": "cdb611c281ef7b97e5c9030f2dd81e9e190d0c2ad7795ee9bcdfade3a00fdd05"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "state": "BLOCKED; explicit administrative input required for each of four configurations",
+  "instance_id": null,
+  "organization_id": null,
+  "activate": null,
+  "operators": [],
+  "hours": {"enabled": null, "timezone": null, "week": [], "exceptions": null},
+  "approval_reference": null,
+  "orphan_disposition": {"decision": null,"source_row_sha256": null,"organization_action": "NONE","contract_action": "NONE","subscription_action": "NONE"}
+}
