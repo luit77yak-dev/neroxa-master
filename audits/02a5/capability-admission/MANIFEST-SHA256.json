@@ -1,0 +1,8 @@
+{
+  "scope": "static admission preparation; no operational authorization",
+  "files": {
+    "ADMISSION.md": "340a2cc19eaaa576f6bde538910a97f57c44c7911b801293412708d0d0f55a3a",
+    "ORDER-AND-HASHES.json": "21234334ad2121147f023f301027fc6a802f44e9be81d0984a3bfc9585be6ba4",
+    "COMPATIBILITY.json": "262b7813778e53795334fe8d42d4a50b502339492cbba9dc96e1b163407deeff"
+  }
+}
