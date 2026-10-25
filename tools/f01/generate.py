@@ -11,11 +11,17 @@ hook="""
  const context={sql,q,ids,people,services,env,url,report,api,rpc,check,digest,empty,one,fs,crypto,work,sleep,profile};
  const {f01Controls}=await import('../f01/controls.mjs');await f01Controls(context);
  const {imageStorage}=await import('../mission-02a4/storage.mjs');await imageStorage(context);
+ const {f01Storage}=await import('../f01/storage.mjs');await f01Storage(context);
  const {addonControls}=await import('../mission-02a4/addons.mjs');await addonControls(context);
+ const {f01RealtimeEvents}=await import('../f01/realtime-events.mjs');await f01RealtimeEvents(context);
  await nativeRealtime(context);
- report.realtimeCoverage='native UPDATE A1 positive, A2/C negative, grant revoke, logout retained and reconnect; INSERT/DELETE events not covered';
+ report.realtimeCoverage='native INSERT/UPDATE/DELETE A1 positive and A2/C negative observations; UPDATE grant revoke, logout retained and reconnect; consult per-case status';
 """
 s=s.replace(needle,hook)
+# Text uploads are outside the PNG-only contract; the stronger native PNG
+# CRUD matrix replaces this obsolete generic-storage call.
+s=s.replace("await storage('candidate');", "")
+
 s=s.replace("'superuser',current_setting('is_superuser')", "'superuser',current_setting('is_superuser'),'bypassrls',(SELECT rolbypassrls FROM pg_roles WHERE rolname=current_user)")
 s=s.replace("r.body?.superuser==='off'", "r.body?.superuser==='off'&&r.body?.bypassrls===false")
 
