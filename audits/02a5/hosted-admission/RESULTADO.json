@@ -1,0 +1,95 @@
+{
+  "state": "CANDIDATE TESTED; HOSTED EXECUTION BLOCKED",
+  "workflow": "https://github.com/luit77yak-dev/neroxa-master/actions/runs/40224063525",
+  "master_tested_commit": "fd95406a31ca0ed440dc074e92469b459ed35163",
+  "delivery_tested_commit": "0e8d02e6fc07566027f0efacd5a8e076b6decf46",
+  "node": "22.23.0",
+  "local_tests": {
+    "delivery_focal_and_4_checkout_regressions": {
+      "PASS": 14,
+      "FAIL": 0
+    },
+    "master_focal": {
+      "PASS": 8,
+      "FAIL": 0
+    }
+  },
+  "native": {
+    "status": "PASS",
+    "cases": [
+      {
+        "name": "Real persistent native session observed; explicitly NOT hosted TLS",
+        "status": "PASS",
+        "pid": 330,
+        "superuser": "off"
+      },
+      {
+        "name": "Temporary unit/session guard survives explicit COMMIT; original 33 SQL not installed",
+        "status": "PASS"
+      },
+      {
+        "name": "Exclusive receipt reservation prevents resubmission",
+        "status": "PASS"
+      },
+      {
+        "name": "A second physical session cannot inherit the temporary admission",
+        "status": "PASS"
+      },
+      {
+        "name": "Real readiness refuses an incomplete backend; service-only metadata response",
+        "status": "PASS"
+      },
+      {
+        "name": "Readiness ACL denies anon/authenticated and permits service_role",
+        "status": "PASS"
+      },
+      {
+        "name": "Real denied readiness call anon retains incomplete error evidence",
+        "status": "PASS"
+      },
+      {
+        "name": "Real denied readiness call authenticated retains incomplete error evidence",
+        "status": "PASS"
+      },
+      {
+        "name": "Native stdout/stderr exclusive capture and reread hashes verified",
+        "status": "PASS"
+      }
+    ],
+    "remoteExecuted": false,
+    "installation33Repeated": false,
+    "hostedTls": "NOT RUN",
+    "realApproval": "ABSENT",
+    "serverPositive": "BLOCKED; no hosted activation",
+    "evidence": "private runner directory; log receipts only, no durability promise"
+  },
+  "typescript": "PASS",
+  "cleanup": "PASS",
+  "installation_33_units_repeated": false,
+  "remote_sql_executed": false,
+  "original_and_derived_unit_hashes": 66,
+  "original_release_recovery_workflow": "40220240520; reused, not rerun",
+  "full_received_log": {
+    "bytes": 80867,
+    "sha256": "de9ee84de16c31e1be1fe990c7c8ab72fc16b1d46e670e4e110544fe12cc8b52",
+    "reread_verified": true,
+    "custody": "private workspace; not immutable external retention"
+  },
+  "prs": {
+    "master": 52,
+    "delivery": 45
+  },
+  "administrative_blocks": [
+    "Orphan segregated retention approval; organization/contract/subscription unchanged",
+    "Explicit activation, existing operators and hours/timezone for each of four valid configurations",
+    "Authenticated trust key, validity policy, signed scopes and financial/window decisions",
+    "External evidence custody and proven recovery"
+  ],
+  "technical_blocks": [
+    "Actual hosted TLS/route/libpq not tested",
+    "Readiness positive on installed hosted schema not tested",
+    "Hosted identity/quiescence/cancel confirmation and current partial-state checks not established",
+    "Unknown legacy consumers and remote legacy access not cut"
+  ],
+  "commercial": "NOT RELEASED"
+}

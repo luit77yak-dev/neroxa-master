@@ -39,6 +39,10 @@
     {
       "path": "vercel.json",
       "sha256": "acc654dbffe0fc124c7c80fc7e918c765e7553951e8a442e0f6f9e3137a38dd5"
+    },
+    {
+      "path": "audits/02a5/hosted-admission/RESULTADO.json",
+      "sha256": "cdb611c281ef7b97e5c9030f2dd81e9e190d0c2ad7795ee9bcdfade3a00fdd05"
     }
   ]
 }
