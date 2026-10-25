@@ -3,6 +3,7 @@
 -- Preconditions OUTSIDE SQL: separately authorized window/operator; verified
 -- consumer suspension/migration; admission of the actual capability backend.
 BEGIN;
+SET LOCAL search_path=pg_catalog;
 SET LOCAL lock_timeout='5s';
 SET LOCAL statement_timeout='20s';
 DO $$ DECLARE r record; BEGIN
