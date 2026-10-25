@@ -1,0 +1,274 @@
+{
+  "status": "CANDIDATE; hosted execution CLOSED",
+  "release_id": "6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1",
+  "target_project": "iefaoaqzltvpfabyeelj",
+  "execution_authorized": false,
+  "approval": null,
+  "units": [
+    {
+      "order": 1,
+      "path": "audits/02a5/hosted-release/01-instance-membership-foundation.candidate.sql",
+      "sha256": "1bb568449ca372086b6980b6065dba6b4ac6a5fc50de7fdb9725746105e79388",
+      "source_path": "audits/sql/instance-membership-foundation.candidate.sql",
+      "source_sha256": "7889d4d9bdc37cf01457a8d0608e997e143f8bbfd377130b16f72539487c72d0",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 2,
+      "path": "audits/02a5/hosted-release/02-storefront-instance-phase1.candidate.sql",
+      "sha256": "dc5007ff533e09ffa7d648ebd4a0c157d9dc2dcda0b41458412b11ce55da5afd",
+      "source_path": "audits/sql/storefront-instance-phase1.candidate.sql",
+      "source_sha256": "e4e75abc28a5c07b163a6e98f7a9c7be9fad3f8a2543c4635cfbf5d35193e462",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 3,
+      "path": "audits/02a5/hosted-release/03-store-product-category-guard.candidate.sql",
+      "sha256": "9d1062b1adfe12b76b933d8533402677ae445ae0661aeb5721e2144ed74452aa",
+      "source_path": "audits/sql/store-product-category-guard.candidate.sql",
+      "source_sha256": "385d4446003c5604f9e18a0ebbf1b5f1c92d83fd11655db6cdd9815e7547011e",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 4,
+      "path": "audits/02a5/hosted-release/04-storefront-tenant-integrity.candidate.sql",
+      "sha256": "ff83a29a506303f3f6c496cd3065ff02fc39edf53087d32233bc6ef34e805271",
+      "source_path": "audits/sql/storefront-tenant-integrity.candidate.sql",
+      "source_sha256": "c388d0dabb8c58988ef30c30b1f084c2acabf33ff23e798d278ac8d99ff99cf1",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 5,
+      "path": "audits/02a5/hosted-release/05-storefront-parent-instance-guard.candidate.sql",
+      "sha256": "713c2728d406fb126d62f02480868bee40d74c09a774517f2057d8c16836bfa0",
+      "source_path": "audits/sql/storefront-parent-instance-guard.candidate.sql",
+      "source_sha256": "ec8afaa42ec5f590c1cbb1c98ff191d652779c3b0d97adc2ff4599f7389084c5",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 6,
+      "path": "audits/02a5/hosted-release/06-store-isolation-policies.candidate.sql",
+      "sha256": "e04aed0838ba0b37e23106379f96e108126cffd38fa19da999a3f32b23aabf76",
+      "source_path": "audits/sql/store-isolation-policies.candidate.sql",
+      "source_sha256": "848d370e950ca8998ae8e3322c41f1484bb25e667c30d2cb1e8e2e1da087735c",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 7,
+      "path": "audits/02a5/hosted-release/07-storefront-instance-phase2-cutover.candidate.sql",
+      "sha256": "b68345803706ee6e30c94725f3bd632b942af658aafb25f7c17d2078d6853c46",
+      "source_path": "audits/sql/storefront-instance-phase2-cutover.candidate.sql",
+      "source_sha256": "f06c49a835128063c95d1dae7272502a1831ff1009c3a9dc430edae7b633855a",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 8,
+      "path": "audits/02a5/hosted-release/08-storefront-settings-zones-rls.candidate.sql",
+      "sha256": "57fd847b2c6109ebd74d810a4829b9b0412563454782371edb3bc24a1708b89b",
+      "source_path": "audits/sql/storefront-settings-zones-rls.candidate.sql",
+      "source_sha256": "959170218f352c6d7b41e7dcc011ab8e092ded44e8a5a8e8855a1c8947f52c64",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 9,
+      "path": "audits/02a5/hosted-release/09-storefront-admin-rpc.candidate.sql",
+      "sha256": "a4744032562a6da91970e357687ed26145ad3a9b8806e1d748a740d21133be04",
+      "source_path": "audits/sql/storefront-admin-rpc.candidate.sql",
+      "source_sha256": "0e1c6e4a806a12f5631c556040e2ee06b29c3c37c789f53e1631c5f71a9bc753",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 10,
+      "path": "audits/02a5/hosted-release/10-storefront-rpcs-phase2.candidate.sql",
+      "sha256": "b4e0159b6e9592528e5b60ca8bc1adbe38ceebbe7b27a02f0fcdb7957f307e25",
+      "source_path": "audits/sql/storefront-rpcs-phase2.candidate.sql",
+      "source_sha256": "4d37407a16a8b962161c0aa807b444a95b033299fc1131cf1938421e4068b439",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 11,
+      "path": "audits/02a5/hosted-release/11-store-isolation-prerequisites.assert.sql",
+      "sha256": "d402dbc428110d491db83e8446c9e16b2ef7a29fef48995df794f96ffd7c70a1",
+      "source_path": "audits/sql/store-isolation-prerequisites.assert.sql",
+      "source_sha256": "9b2e0873c49d4358ef7e138f5c6ac9a6f4d673f9fa7107cb5fbb22403daa9c55",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 12,
+      "path": "audits/02a5/hosted-release/12-store-isolation-runtime-hardening.candidate.sql",
+      "sha256": "cb37aae25c707b62b4182ff2d841aef8f4120a4906d8203cd8ff70aab44ffb23",
+      "source_path": "audits/sql/store-isolation-runtime-hardening.candidate.sql",
+      "source_sha256": "342bafbec2f94f1f03aab24731fa31700b7c20151334a2ec415564c412384c37",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 13,
+      "path": "audits/02a5/hosted-release/13-admin-order-rpc-acl.release-gate.candidate.sql",
+      "sha256": "f02c30146ea6be3cecdedbef41da2186b4d7ecc6927134b18f1ac580db20d4c0",
+      "source_path": "audits/sql/admin-order-rpc-acl.release-gate.candidate.sql",
+      "source_sha256": "dd50db6bf42a0b2c41065110d6a88f2ee7e26bf225538718a3ac2f96020666a4",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 14,
+      "path": "audits/02a5/hosted-release/14-group-addons-pricing.candidate.sql",
+      "sha256": "01de3b20c4c48600415d97b1b49355ed4f44eb1dde9e831f67b641fa40eb4f53",
+      "source_path": "audits/sql/group-addons-pricing.candidate.sql",
+      "source_sha256": "3850db07fda4a794b00d13177c08138b3e0486e7e7abc5bc8eb05c608ac84a1d",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 15,
+      "path": "audits/02a5/hosted-release/15-store-availability.candidate.sql",
+      "sha256": "7785ad8974559d84b5910bf2e30625c00f7cf46fea47f467c5c33e532f3961d4",
+      "source_path": "audits/sql/store-availability.candidate.sql",
+      "source_sha256": "45da99d6ef1d4f0afadd65473b5c2ed7360f1e5766ec3af7aa6e61fdfbcb9daf",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 16,
+      "path": "audits/02a5/hosted-release/16-checkout-recovery.candidate.sql",
+      "sha256": "cc5a0d28b851e9b55b194e76ff56359ce20230e302d181f2cabc9b0c8228a8de",
+      "source_path": "audits/sql/checkout-recovery.candidate.sql",
+      "source_sha256": "acc820704864db99ade9c27352c6462163fdfb0fef5076b816c9963c06ca9022",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 17,
+      "path": "audits/02a5/hosted-release/17-checkout-reconciliation.candidate.sql",
+      "sha256": "4dee81cdb2fdc3d3c71654037607c5ae80149a3a2d460a3f7eabeb1a2a02c27b",
+      "source_path": "audits/sql/checkout-reconciliation.candidate.sql",
+      "source_sha256": "bf5da2fca7e7ca19ca084c070f422ee3112ca7f0d7408044660299f9e5b43c5a",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 18,
+      "path": "audits/02a5/hosted-release/18-operational-order-detail.candidate.sql",
+      "sha256": "26a4dff3c668027e51135898196d9b20eb319767412013a42d8a68ab7f1089f1",
+      "source_path": "audits/sql/operational-order-detail.candidate.sql",
+      "source_sha256": "beff5f1acf436176435806f697c89a21e646dd6f3b4eb4c031ef345763867790",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 19,
+      "path": "audits/02a5/hosted-release/19-operational-order-transitions.candidate.sql",
+      "sha256": "bd2afef436387598894bb2b9201aabe75cd6dd6543e0e86ccdc1a694aa8a8435",
+      "source_path": "audits/sql/operational-order-transitions.candidate.sql",
+      "source_sha256": "4d4baf9edbcbd7d269c52b38ff3fde5cbeb1f7be40ea945eef6c5ebd7eae1180",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 20,
+      "path": "audits/02a5/hosted-release/20-scoped-order-access.candidate.sql",
+      "sha256": "e294ebaed9e1ec161295e0ddf844a0232505296fb7e52588a114da0398c2fa13",
+      "source_path": "audits/02a2/scoped-order-access.candidate.sql",
+      "source_sha256": "648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 21,
+      "path": "audits/02a5/hosted-release/21-availability-instance-scope.candidate.sql",
+      "sha256": "2f088bafe0356afc28a4c2866a0d9af6e2ca9d35216833e388143d1fc9331ca3",
+      "source_path": "audits/02a4/availability-instance-scope.candidate.sql",
+      "source_sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 22,
+      "path": "audits/02a5/hosted-release/22-addon-explicit-membership.candidate.sql",
+      "sha256": "a41c67cdb3ad0562b08052d32b11190cc1e345e25e399b48921aaa421ac2a709",
+      "source_path": "audits/02a4/addon-explicit-membership.candidate.sql",
+      "source_sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 23,
+      "path": "audits/02a5/hosted-release/23-delivery-live-session.candidate.sql",
+      "sha256": "375ff0183245a6ba8bb9a81b2d8efd5a8e81c23d99ac019e0a7ae16619f44566",
+      "source_path": "audits/02a4/delivery-live-session.candidate.sql",
+      "source_sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 24,
+      "path": "audits/02a5/hosted-release/24-storage-instance-images.candidate.sql",
+      "sha256": "507efa49b6f9aa424f65d96e6df08d933a35364630ddc890bfdd296056de945e",
+      "source_path": "audits/02a4/storage-instance-images.candidate.sql",
+      "source_sha256": "5739b1226bb2d9ee7b760ddfaa8b0ffcd65048ec92dd938a41a194713795962e",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 25,
+      "path": "audits/02a5/hosted-release/25-private-tracking.candidate.sql",
+      "sha256": "eb99b5afc385d3fcdbb3d0e29fe0ae09a94d47478b395048561a73bfcb0b0ed3",
+      "source_path": "audits/02a4/private-tracking.candidate.sql",
+      "source_sha256": "7c1e7c5daf8588cc7eaeb8ad63825f15747c9660ab5391a8899697698e7112dd",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 26,
+      "path": "audits/02a5/hosted-release/26-tracking-ingress-quota.candidate.sql",
+      "sha256": "d0baafe6b9d91a586595eaecb33d22b961420a2c531371c1e8d24a8cd0aa0ead",
+      "source_path": "audits/02a5/tracking-ingress-quota.candidate.sql",
+      "source_sha256": "afb5c31c4588a26cc1e7c31cdc09d6f5360fce4fcef22281e5d3b80dcea60727",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 27,
+      "path": "audits/02a5/hosted-release/27-checkout-durable-rate-limit.candidate.sql",
+      "sha256": "5a5528524b88cd3166e57a6e22d7a2ecba73143c381793f403e95c5ded5f75af",
+      "source_path": "audits/sql/checkout-durable-rate-limit.candidate.sql",
+      "source_sha256": "b75d348d626d6c4ea27163bf5d539ad3ae8d4d9103b54cff3a4d4deb6d5d0cbb",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 28,
+      "path": "audits/02a5/hosted-release/28-order-amendment-capability.candidate.sql",
+      "sha256": "7f09e688a750c698072ebf9e26327d2c1e863ec38e427349eca52d9092c2851b",
+      "source_path": "audits/sql/order-amendment-capability.candidate.sql",
+      "source_sha256": "60f791be31aa94407edc71a570f994a6ea61fc1ab2610efc6ff3dfd54680ae69",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 29,
+      "path": "audits/02a5/hosted-release/29-group-addons-capability.candidate.sql",
+      "sha256": "743a28f6e1b4d1d7ba0f3d9c746284a0de47a0194e40b741b687ff0b965ed556",
+      "source_path": "audits/sql/group-addons-capability.candidate.sql",
+      "source_sha256": "675fe171218eaf5c5aa6570aefed31dace35f63f0293cb0f146dc8f0d3491a5e",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 30,
+      "path": "audits/02a5/hosted-release/30-store-availability-capability.candidate.sql",
+      "sha256": "8d8631efb5a6df255b5e70ac5b0ab9b22e08a52a54dd11cbac907f0f9e17b2d9",
+      "source_path": "audits/sql/store-availability-capability.candidate.sql",
+      "source_sha256": "cc0bb4ae8932550652a31dc2ca1e1751be5fa8bc449d487984ce9ad537edc499",
+      "context_guards_replaced": 0
+    },
+    {
+      "order": 31,
+      "path": "audits/02a5/hosted-release/31-amendment-history.candidate.sql",
+      "sha256": "b3e32d3ec6f86a339c820ab65d8e7fbefab60dbfad0294fef305806ee382184a",
+      "source_path": "audits/02a5/amendment-history.candidate.sql",
+      "source_sha256": "1a2406fc6394f9626ceda25dbfe374ab6081af9b54a698f87b8bb88c07af3fc3",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 32,
+      "path": "audits/02a5/hosted-release/32-recovery-without-phone.candidate.sql",
+      "sha256": "666c4bfcc503891bbb64b0ac64d20184137f83ab1dce16e1df109d2e08632fdd",
+      "source_path": "audits/02a5/recovery-without-phone.candidate.sql",
+      "source_sha256": "b1ef02f71a9d087ef5bec59e93406f142e2bad5bec0e870e2b652904c3c307c4",
+      "context_guards_replaced": 1
+    },
+    {
+      "order": 33,
+      "path": "audits/02a5/hosted-release/33-buyer-capabilities-atomic.candidate.sql",
+      "sha256": "9a070699310d18e91676749340b4fd50c9a2d78202003c5afdf4a13052c5aff2",
+      "source_path": "audits/02a5/buyer-capabilities-atomic.candidate.sql",
+      "source_sha256": "1485a05028bf46f0b3840d983ebc0187a689b894588ad705fdedd614382eb903",
+      "context_guards_replaced": 1
+    }
+  ],
+  "operational_admission": "No hosted transport/approval installed; missing pg_temp admission fails before any unit. Rehearsal admission is a separate real Docker identity/session proof, not a hosted receipt."
+}
