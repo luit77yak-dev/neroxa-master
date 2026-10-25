@@ -1,7 +1,7 @@
-name: F02 secure amendment disposable PRE-GATE (legacy P0 retained)
+name: F02 capability consumers and disposable revocation
 on:
   push:
-    branches: [security/mission-02a5-integration-local-20261014, fix/f02-capability-integration-20261025]
+    branches: [security/mission-02a5-integration-local-20261014, fix/f02-capability-integration-20261025, fix/f02-legacy-consumers-20261025]
     paths:
       - .github/workflows/mission-02a5-f02-amendment.yml
       - audits/02a5/f02-amendment/**
@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: luit77yak-dev/pizza-perfect-plate
-          ref: 213e5231708eb2c2508f2fe2b96ba510db95a74b
+          ref: 7ca9376f29ee205d4063e46546f5070313ab78a0
           path: delivery-candidate
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -57,7 +57,7 @@ jobs:
       - name: Frozen Delivery dependencies and regression tests
         working-directory: delivery-candidate
         run: |
-          test "$(git rev-parse HEAD)" = 213e5231708eb2c2508f2fe2b96ba510db95a74b
+          test "$(git rev-parse HEAD)" = 7ca9376f29ee205d4063e46546f5070313ab78a0
           bun install --frozen-lockfile --ignore-scripts
           node --experimental-strip-types --test tests/*.test.mjs
           bunx tsc --noEmit
@@ -114,8 +114,8 @@ jobs:
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=213e5231708eb2c2508f2fe2b96ba510db95a74b DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
-      - name: Read native PostgreSQL catalog (pre-gate ONLY)
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master AB_NETWORK="$AB_NETWORK" MISSION_REVOKE_SCOPE=THIS_RUN_LOCAL_CLONE_ONLY GITHUB_ACTIONS_SCOPE=disposable-workflow MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=7ca9376f29ee205d4063e46546f5070313ab78a0 DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+      - name: Read native PostgreSQL catalog after isolated revocation
         env:
           DOCKER_HOST: unix:///var/run/docker.sock
         run: |
@@ -135,9 +135,10 @@ jobs:
           missing=sorted(set(('get_public_order_status','append_public_order_items','append_public_order_items_with_payment'))-set(present))
           print('F02_CATALOG_LEGACY_COVERAGE='+json.dumps({'present':present,'missing':missing,'classification':'PARTIAL_IF_MISSING'}))
           assert 'get_public_order_status' in present,'historical P0 function unexpectedly absent'
-          assert result['legacy_gate_applied'] is False
+          assert result['legacy_gate_applied'] is True
+          assert result['consumer_disablement_evidenced'] is False
           print('F02_CATALOG_PRE_GATE='+json.dumps(result,sort_keys=True))
-          print('F02_GATE=BLOCKED; POST_GATE=NOT_RUN; EXTERNAL_CONSUMERS=UNKNOWN')
+          print('F02_PRODUCTION_GATE=BLOCKED; DISPOSABLE_POST_GATE=OBSERVED; EXTERNAL_CONSUMERS=UNVERIFIED')
           PY
       - name: Emit provisional SEC-01..18 with original security failures
         if: always()
