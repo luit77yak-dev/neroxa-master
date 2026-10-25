@@ -270,5 +270,10 @@
       "context_guards_replaced": 1
     }
   ],
-  "operational_admission": "No hosted transport/approval installed; missing pg_temp admission fails before any unit. Rehearsal admission is a separate real Docker identity/session proof, not a hosted receipt."
+  "operational_admission": "No hosted transport/approval installed; missing pg_temp admission fails before any unit. Rehearsal admission is a separate real Docker identity/session proof, not a hosted receipt.",
+  "recovery": {
+    "path": "audits/02a5/hosted-release/02-recover-after-commit.pending.sql",
+    "sha256": "3039e400a40d852d4d0a701581d45628b80931f23b9f9a964f25bb36301231ca",
+    "source_boundary": "original unit 2 COMMIT; explicit roll-forward, never original DDL replay"
+  }
 }
