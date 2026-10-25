@@ -1,0 +1,159 @@
+{
+  "scope": "shared real server handlers over HTTP + native PostgreSQL; not hydrated browser or production",
+  "source": {
+    "master": "63fb6f9e0077eddb572e4c2806e515c205e05fc8",
+    "delivery": "213e5231708eb2c2508f2fe2b96ba510db95a74b",
+    "run": "40148285090"
+  },
+  "workflow": "https://github.com/luit77yak-dev/neroxa-master/actions/runs/40148285090",
+  "native_integration": {
+    "status": "PASS_INTEGRATED_SHARED_HANDLERS",
+    "PASS": 15,
+    "FAIL": 0,
+    "cases": [
+      {
+        "name": "checkout HTTP server pricing and separate capabilities",
+        "status": "PASS",
+        "http": 200,
+        "finance": {
+          "items": 1,
+          "total": 31,
+          "history": 1,
+          "line_sum": 31,
+          "subtotal": 31,
+          "operations": 0
+        }
+      },
+      {
+        "name": "checkout same-key retry no credential reissuance",
+        "status": "PASS",
+        "ordersForKey": 1
+      },
+      {
+        "name": "checkout-issued token authorizes private tracking",
+        "status": "PASS",
+        "http": 200
+      },
+      {
+        "name": "checkout-issued token cannot track B",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "name": "checkout-issued token cannot track C",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "name": "missing tracking capability",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "name": "checkout-issued amendment token financial/history consistent",
+        "status": "PASS",
+        "http": 200,
+        "before": {
+          "items": 1,
+          "total": 31,
+          "history": 1,
+          "line_sum": 31,
+          "subtotal": 31,
+          "operations": 0
+        },
+        "after": {
+          "items": 2,
+          "total": 62,
+          "history": 2,
+          "line_sum": 62,
+          "subtotal": 62,
+          "operations": 1
+        }
+      },
+      {
+        "name": "integrated amendment idempotency",
+        "status": "PASS",
+        "http": 200
+      },
+      {
+        "name": "checkout-issued token cannot amend B",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "name": "checkout-issued token cannot amend C",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "name": "tracking capability cannot amend",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "name": "combined registration RPC denied anon",
+        "status": "PASS",
+        "http": 401
+      },
+      {
+        "name": "combined registration RPC denied admin_A",
+        "status": "PASS",
+        "http": 403
+      },
+      {
+        "name": "concurrent first checkout one order and one credential pair",
+        "status": "PASS",
+        "http": [
+          200,
+          200
+        ]
+      },
+      {
+        "name": "real second-registration failure rolls back both credentials; same-key retry recovers",
+        "status": "PASS",
+        "firstHTTP": 503,
+        "retryHTTP": 200,
+        "residual": {
+          "orders": 1,
+          "tracking": 0,
+          "amendment": 0
+        }
+      }
+    ]
+  },
+  "regression": {
+    "PASS": 130,
+    "FAIL": 0,
+    "typecheck": "PASS",
+    "runtime": "Node 22.23.0; Bun 1.3.4 frozen lock"
+  },
+  "previous_amendment_observations": {
+    "FAIL": 2,
+    "PASS": 41,
+    "BLOCKED": 1
+  },
+  "legacy": {
+    "read": {
+      "status": "FAIL_P0",
+      "http": 200,
+      "has_phone": true
+    },
+    "append": {
+      "status": "FAIL_P0",
+      "http": 200,
+      "state_changed": true
+    },
+    "revocation": "BLOCKED real consumer preconditions not satisfied",
+    "post_gate": "NOT RUN",
+    "disablement_receipt_created": false,
+    "disablement_GUC_set": false
+  },
+  "cleanup": "PASS",
+  "production_sql": false,
+  "deploy": false,
+  "merge": false,
+  "commercial": "NOT_RELEASED",
+  "F01": "OPEN",
+  "F02": "OPEN",
+  "SEC18": "BLOCKED"
+}
