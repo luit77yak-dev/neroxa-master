@@ -1,12 +1,12 @@
-name: Hosted release partial-COMMIT rehearsal
+name: Hosted admission focal controls (no release reinstall)
 on:
   push:
-    branches: [fix/f02-hosted-release-20261025]
+    branches: [fix/f02-hosted-admission-20261025]
     paths:
       - .github/workflows/mission-02a3-isolation.yml
-      - tools/hosted-release/**
-      - audits/02a5/hosted-release/MANIFEST.json
-      - 'audits/02a5/hosted-release/[0-9][0-9]-*.sql'
+      - tools/hosted-admission/**
+      - tests/hosted-admission/**
+      - audits/02a5/hosted-admission/34-readiness.pending.sql
 permissions:
   contents: read
 jobs:
@@ -33,6 +33,15 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22.23.0'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 0e8d02e6fc07566027f0efacd5a8e076b6decf46
+          path: delivery-candidate
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: '1.3.4'
       - name: Public standard eligibility and real capacity before pull
         env:
           GH_TOKEN: ${{ github.token }}
@@ -44,10 +53,12 @@ jobs:
       - name: Locked app dependencies and pinned CLI; no commercial dotenv
         run: |
           find . -name '.env*' -not -path './.git/*' -not -path './node_modules/*' -type f -delete
-          npm ci --ignore-scripts --no-audit --no-fund
           npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
-          python3 tools/hosted-release/derive.py
+          (cd delivery-candidate && bun install --frozen-lockfile --ignore-scripts)
+          (cd delivery-candidate && node --experimental-strip-types --test tests/hosted-admission.test.mjs tests/checkout-backend.test.mjs)
+          (cd delivery-candidate && bunx tsc --noEmit)
+          node --test tests/hosted-admission/local.test.mjs
       - name: Unlinked native six-service stack, loopback binds
         run: |
           export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
@@ -85,7 +96,7 @@ jobs:
           assert seen==expected, 'BLOCKED: image identity drift'
           print('IMAGE_IDENTITIES='+json.dumps(seen))
           PY
-      - name: Real Auth and buyer recut with test UID egress restriction
+      - name: Native session and readiness only, restricted test UID
         run: |
           set -euo pipefail
           sudo useradd --create-home --groups docker neroxa_test
@@ -97,11 +108,11 @@ jobs:
             ancestor=$(dirname "$ancestor")
           done
           sudo setfacl -R -m u:neroxa_test:rX "$GITHUB_WORKSPACE"
-          sudo -u neroxa_test test -r tools/hosted-release/rehearse.mjs
+          sudo -u neroxa_test test -r tests/hosted-admission/native.mjs
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=false MISSION_F01_FOCUS=realtime-containment MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/hosted-release/rehearse.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=false MISSION_F01_FOCUS=realtime-containment MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tests/hosted-admission/native.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
       - name: Cleanup only this disposable project
         if: always()
         run: |
