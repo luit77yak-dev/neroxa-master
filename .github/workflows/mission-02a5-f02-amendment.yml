@@ -1,7 +1,7 @@
 name: F02 capability consumers and disposable revocation
 on:
   push:
-    branches: [security/mission-02a5-integration-local-20261014, fix/f02-capability-integration-20261025, fix/f02-legacy-consumers-20261025]
+    branches: [security/mission-02a5-integration-local-20261014, fix/f02-capability-integration-20261025, fix/f02-legacy-consumers-20261025, fix/f02-final-rpc-cut-20261025]
     paths:
       - .github/workflows/mission-02a5-f02-amendment.yml
       - audits/02a5/f02-amendment/**
