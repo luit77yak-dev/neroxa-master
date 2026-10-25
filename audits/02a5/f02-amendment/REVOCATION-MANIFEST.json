@@ -1,0 +1,13 @@
+{
+  "scope": "THIS_RUN_LOCAL_CLONE_ONLY; external release remains BLOCKED",
+  "units": [
+    {
+      "path": "audits/02a4/phone-rpc-quarantine.release-gate.sql",
+      "sha256": "b57a7082d603f1f2e15d9bc53487e47b8adb3188d8b8497332cbc76c06c47689"
+    },
+    {
+      "path": "audits/sql/checkout-public-rpc-revoke.release-gate.candidate.sql",
+      "sha256": "17bea495aca5d6712a89d0108ee9c84bceb9e742595648e140377397192f9da2"
+    }
+  ]
+}
