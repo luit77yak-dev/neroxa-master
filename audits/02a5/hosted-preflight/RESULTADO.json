@@ -1,0 +1,53 @@
+{
+  "scope": "CANDIDATE; LOCAL ARTIFICIAL VALIDATION ONLY",
+  "base_pr": 52,
+  "base_commit": "0cb27bfe0a74babf2eba386a7fc52da231749b36",
+  "tests": {
+    "PASS": 18,
+    "FAIL": 0,
+    "node": "v24.19.0",
+    "command": "node --test tests/hosted-admission/preflight.test.mjs",
+    "native_database": "NOT RUN",
+    "hosted_connection": "NOT RUN",
+    "github_actions": "NOT RUN; workflow candidate outside active directory",
+    "node_22_23_0": "NOT RUN in this mission; specified by candidate workflow"
+  },
+  "static": {
+    "yaml_parse": "PASS; workflow_dispatch only",
+    "entry_closed_exit": 78,
+    "imports_inert": "PASS with spawn/fetch forbidden",
+    "original_and_derived_sql_hashes": 66,
+    "original_migrator_capture_workflow": "UNCHANGED"
+  },
+  "controls": {
+    "dedicated_role_and_pooler": "PASS ARTIFICIAL; nominal values NULL/CLOSED",
+    "signature_window_identity_scope": "PASS ARTIFICIAL",
+    "tls": "Configuration/binding negatives PASS ARTIFICIAL; actual TLS NOT RUN",
+    "timeout_cancellation": "PASS ARTIFICIAL controller; physical server proof BLOCKED",
+    "capture": "Exclusive bytes, SHA256/reread, defensive interpretation and local chain PASS ARTIFICIAL",
+    "protected_workflow": "Static/local gate checks PASS; real API/token metadata and approval NOT RUN"
+  },
+  "prior_local_failure": {
+    "PASS": 14,
+    "FAIL": 1,
+    "cause": "Artificial fixture confused exact wait with a quoted SQL predicate; fixture classification corrected; intended negative paths then verified"
+  },
+  "remote_operations_still_require_authorization": [
+    "Provision/limit/retire dedicated temporary PostgreSQL login and review effective PUBLIC privileges",
+    "Create/configure protected environment/ref with exclusive founder approval and no admin bypass",
+    "Deposit password and run-specific signed grant using secure environment secrets; public CA as reviewed variable",
+    "Authenticate trust key, approve/fill nominal policy and publish candidate manual workflow",
+    "Authorize one exact preflight including transient READ ONLY/session timeouts and own-session cancellation",
+    "Verify external custody/recovery destination and dispose login/grants/secrets after observed session termination"
+  ],
+  "not_authorized": [
+    "Migrations or DDL executor",
+    "Legacy RPC cutoff",
+    "Merge/deploy",
+    "HOLD release",
+    "Hosted connection during this mission"
+  ],
+  "F01": "OPEN",
+  "F02": "OPEN",
+  "commercial": "NOT RELEASED"
+}

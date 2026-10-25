@@ -39,7 +39,8 @@
       "fix/f01-native-isolation-20261025": false,
       "fix/f02-final-rpc-cut-20261025": false,
       "fix/f02-hosted-release-20261025": false,
-      "fix/f02-hosted-admission-20261025": false
+      "fix/f02-hosted-admission-20261025": false,
+      "fix/f02-readonly-preflight-20261025": false
     }
   }
 }

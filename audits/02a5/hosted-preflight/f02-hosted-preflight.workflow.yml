@@ -1,0 +1,70 @@
+# CANDIDATE ONLY, outside .github/workflows. Publishing/activation not authorized.
+# Policy is CLOSED. No automatic trigger and no infrastructure setup.
+name: F02 hosted read-only preflight
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  deployments: read
+concurrency:
+  group: f02-hosted-readonly-iefaoaqzltvpfabyeelj
+  cancel-in-progress: false
+jobs:
+  admission:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.0'
+      - name: Closed policy first, before any environment or SQL credential
+        run: node tools/hosted-admission/environment-gate.mjs --policy-only
+      - name: Verify existing protected environment using metadata only
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "$GITHUB_REF_PROTECTED" = true
+          test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
+          umask 077
+          gh api "repos/$GITHUB_REPOSITORY/environments/f02-hosted-preflight" > "$RUNNER_TEMP/f02-environment.json"
+          node tools/hosted-admission/environment-gate.mjs "$RUNNER_TEMP/f02-environment.json"
+  preflight:
+    needs: admission
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    environment:
+      name: f02-hosted-preflight
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 0e8d02e6fc07566027f0efacd5a8e076b6decf46
+          path: delivery-candidate
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.0'
+      - name: Verify existing client, no dependency installation
+        run: |
+          set -euo pipefail
+          command -v psql
+          psql --version
+      - name: One authorized preflight, no migration API or retry
+        env:
+          F02_ENVIRONMENT: f02-hosted-preflight
+          F02_PREFLIGHT_CA_PEM: ${{ vars.F02_PREFLIGHT_CA_PEM }}
+          F02_PREFLIGHT_GRANT: ${{ secrets.F02_PREFLIGHT_GRANT }}
+          F02_PREFLIGHT_PASSWORD: ${{ secrets.F02_PREFLIGHT_PASSWORD }}
+        run: node tools/hosted-admission/preflight-entry.mjs
+# No always() server cleanup, artifact upload, Docker, migration or auto retry.

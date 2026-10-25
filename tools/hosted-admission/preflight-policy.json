@@ -1,0 +1,17 @@
+{
+  "state": "CLOSED; reviewed nominal values and separate execution authorization required",
+  "project": "iefaoaqzltvpfabyeelj",
+  "environment": "f02-hosted-preflight",
+  "transport": "SUPAVISOR_SESSION",
+  "port": 5432,
+  "host": null,
+  "role": null,
+  "caSha256": null,
+  "ref": null,
+  "founderLogin": null,
+  "authority": {
+    "publicKeyPem": null,
+    "keySha256": null,
+    "maxValidityMs": null
+  }
+}
