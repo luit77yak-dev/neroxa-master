@@ -88,6 +88,7 @@ jobs:
           for line in subprocess.check_output(['docker','ps','--format','{{json .}}'],text=True).splitlines():
             c=json.loads(line)
             if c['Names'].endswith('_'+os.environ['AB_PROJECT']):seen[c['Image']]=subprocess.check_output(['docker','inspect',c['Names'],'--format','{{.Image}}'],text=True).strip()
+          print('IMAGE_IDENTITY_COMPARISON='+json.dumps({'expected':expected,'observed':seen},sort_keys=True))
           assert seen==expected, 'BLOCKED: image identity drift'
           print('IMAGE_IDENTITIES='+json.dumps(seen))
           PY
