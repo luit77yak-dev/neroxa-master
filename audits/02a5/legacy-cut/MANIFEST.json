@@ -1,0 +1,16 @@
+{
+  "status": "REMOTE BLOCKED: capability functions absent; no operational authorization",
+  "project_id": "iefaoaqzltvpfabyeelj",
+  "files": {
+    "preflight.remote.pending.sql": "c9a133607e647a1061732771c7018281d231b84a377319d98c01b5967ebce3c5",
+    "revoke-observed.sql": "31616e3f794133598b016e69218194ad0d1cc51cc03e36d1a7d4185bc8da47a9",
+    "remote-cut.pending.sql": "0a87701cec40ff91856757450ca82a4b4e95c2175d174dcb5594b39797f0b9b2",
+    "RECOVERY.md": "d5e3dbbb186b1a0ad79935da9215de080e7284c5e2cf4ee2c88c2632b4bca89a",
+    "RESULTADO.md": "bc1bfde42c54d58bd25ec2424ddebc5010a1cb63524cafa39e861a6c25e25b4f"
+  },
+  "not_covered": [
+    "Delivery inactive project uvyinrojuhizjqbuzdcy",
+    "remote identity/authentication/window and consumers",
+    "future migration recreation/default EXECUTE; no global default-ACL change"
+  ]
+}

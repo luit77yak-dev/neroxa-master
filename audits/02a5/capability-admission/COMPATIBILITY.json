@@ -1,0 +1,86 @@
+{
+  "decision": "NO-GO for hosted installation; preparation only",
+  "remote_project": "iefaoaqzltvpfabyeelj",
+  "sql_units": 33,
+  "classification": "33 hash-verified SQL units of the existing LAB chain, including one assertion; NOT a hosted migration package",
+  "existing_prerequisites": {
+    "postgres": "17.11",
+    "extensions": [
+      {
+        "name": "uuid-ossp",
+        "schema": "extensions",
+        "version": "1.1"
+      },
+      {
+        "name": "pgcrypto",
+        "schema": "extensions",
+        "version": "1.3"
+      }
+    ],
+    "schemas": [
+      "public",
+      "extensions",
+      "private"
+    ],
+    "auth_sessions_select_for_postgres": true,
+    "base_order_shape": "present, including idempotency_key and UUID size_id/crust_id",
+    "baseline_functions": "existing relevant function bodies match historical baseline; four definition diffs are qualification of public types, not behavior changes"
+  },
+  "missing_relations": [
+    "private.neroxa_checkout_quota_counters",
+    "private.neroxa_checkout_reconciliation",
+    "private.neroxa_group_order_intents",
+    "private.neroxa_order_amendment_capabilities",
+    "private.neroxa_order_amendment_operations",
+    "private.neroxa_recovery_quota_counters",
+    "private.neroxa_tracking_capabilities",
+    "private.neroxa_tracking_ingress",
+    "public.neroxa_instance_members",
+    "public.neroxa_storefront_availability",
+    "public.neroxa_storefront_special_days",
+    "public.neroxa_storefront_special_hours",
+    "public.neroxa_storefront_weekly_hours"
+  ],
+  "missing_columns": [
+    "public.neroxa_storefront_settings.instance_id",
+    "public.neroxa_storefront_delivery_zones.instance_id",
+    "public.neroxa_order_items.selection_snapshot"
+  ],
+  "structural_change": "settings primary key organization_id -> instance_id; no inbound settings FKs observed",
+  "aggregate_mapping": [
+    {
+      "source": "settings",
+      "one_instance": 4,
+      "zero_instances": 1,
+      "multiple_instances": 0
+    },
+    {
+      "source": "zones",
+      "one_instance": 1,
+      "zero_instances": 0,
+      "multiple_instances": 0
+    }
+  ],
+  "orders_at_read": {
+    "total": 0,
+    "missing_instance": 0,
+    "open_without_candidate_capabilities": 0
+  },
+  "tenant_mismatch_orders": 0,
+  "current_private_publication_members": [],
+  "runtime_block": "Delivery privateTrackingConfiguration requires http://127.0.0.1:port, local-disposable, homologation, and synthetic.invalid domains; orderAmendmentEnabled depends on it",
+  "sql_guard_block": "10 units explicitly require mission02a2_disposable; retain originals, do not force that flag on hosted backend",
+  "data_decisions_missing": [
+    "disposition of one settings row whose organization has no instance",
+    "explicit per-instance member grants; no automatic org-wide inheritance",
+    "valid per-instance enabled/timezone/schedule configuration: availability tables start empty/closed"
+  ],
+  "consumers": "PR50 observations reused: six URLs suspended per Coordination; six Edge sources without literal legacy reference; cached/external/dynamic consumers not proven absent",
+  "tests_reused": [
+    "40214203640 capability flows + full legacy ACL cut",
+    "40212763636 Realtime containment + polling",
+    "40211924855 broad native isolation/Storage; observed DELETE defect contained later"
+  ],
+  "new_native_tests": "NOT RUN; no candidate code changed, no repeated approved suites",
+  "recovery_gap": "partial-commit recovery on this populated hosted configuration not demonstrated; old empty-clone rollback does not prove it"
+}
