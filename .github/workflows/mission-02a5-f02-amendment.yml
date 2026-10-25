@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: luit77yak-dev/pizza-perfect-plate
-          ref: 7214b81f20a27412a4610fe5f982e909870b943a
+          ref: 213e5231708eb2c2508f2fe2b96ba510db95a74b
           path: delivery-candidate
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -57,7 +57,7 @@ jobs:
       - name: Frozen Delivery dependencies and regression tests
         working-directory: delivery-candidate
         run: |
-          test "$(git rev-parse HEAD)" = 7214b81f20a27412a4610fe5f982e909870b943a
+          test "$(git rev-parse HEAD)" = 213e5231708eb2c2508f2fe2b96ba510db95a74b
           bun install --frozen-lockfile --ignore-scripts
           node --experimental-strip-types --test tests/*.test.mjs
           bunx tsc --noEmit
@@ -107,7 +107,7 @@ jobs:
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=7214b81f20a27412a4610fe5f982e909870b943a DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=213e5231708eb2c2508f2fe2b96ba510db95a74b DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
       - name: Read native PostgreSQL catalog (pre-gate ONLY)
         env:
           DOCKER_HOST: unix:///var/run/docker.sock
