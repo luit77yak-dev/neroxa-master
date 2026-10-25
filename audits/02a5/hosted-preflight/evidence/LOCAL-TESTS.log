@@ -1,0 +1,26 @@
+✔ nominal dedicated role/pooler policy verifies while shipped policy remains CLOSED (2.22196ms)
+✔ preflight scope cannot authorize migration, server or wrong project/release (1.889886ms)
+✔ destination, identity, CA, session mode, commit and attempt all require signature binding (4.153679ms)
+✔ automatic events, unprotected refs, other environment and expiry are denied (0.458255ms)
+✔ native identity validation rejects privilege escalation, PUBLIC paths, wrong role and reconnect (0.846975ms)
+✔ missing, duplicated and wrong SQLSTATE cannot become timeout/cancellation PASS (0.941708ms)
+✔ cancel target is restricted to observed PID/start, same role and exact harmless wait (0.460809ms)
+✔ environment requires founder approval, branch protection and no admin bypass (0.284522ms)
+✔ unapproved invocation cannot access credentials or spawn any process (0.871261ms)
+✔ expiry across asynchronous credential retrieval blocks before any spawn (1.724316ms)
+✔ ARTIFICIAL ONLY: two processes prove controller completion, exclusive capture and credential removal (65.776125ms)
+✔ ARTIFICIAL ONLY: privileged identity blocks rather than trying a fallback role (35.356463ms)
+✔ ARTIFICIAL ONLY: pg_cancel_backend true without SQLSTATE cancellation is rejected (54.706156ms)
+✔ ARTIFICIAL ONLY: timeout cannot masquerade as explicit user cancellation (62.439554ms)
+✔ imports and candidate workflow expose no automatic remote trigger or migration entrypoint (3.70531ms)
+✔ imports are inert with subprocess and network facilities explicitly forbidden (41.990075ms)
+✔ actual shipped entry and environment gate exit BLOCKED without credentials (74.021224ms)
+✔ ARTIFICIAL ONLY: interpreted buffer cannot diverge from exclusively captured bytes (32.148028ms)
+ℹ tests 18
+ℹ suites 0
+ℹ pass 18
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 449.399395

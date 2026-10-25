@@ -1,0 +1,72 @@
+{
+  "state": "CLOSED; patch applied only to isolated candidate, not original PR52",
+  "base_commit": "0cb27bfe0a74babf2eba386a7fc52da231749b36",
+  "delivery_core_dependency": "0e8d02e6fc07566027f0efacd5a8e076b6decf46",
+  "files": [
+    {
+      "path": "audits/02a5/hosted-preflight/DELTA.patch",
+      "bytes": 42707,
+      "sha256": "2bfe037ee39d8f4e20ca8bee5a00ac05fb68d8feb3a22ae39a4f63d0f8c3dbfb"
+    },
+    {
+      "path": "audits/02a5/hosted-preflight/README.md",
+      "bytes": 7021,
+      "sha256": "5367b68c2a3e5701736289a92ef02f9a7cd27b3e3c4b181d6c97f8c7d4212c8b"
+    },
+    {
+      "path": "audits/02a5/hosted-preflight/RESULTADO.json",
+      "bytes": 2471,
+      "sha256": "82fb252a238f3d30822323b45b90e5de72fd6962b1ddf90992f7a57970557cce"
+    },
+    {
+      "path": "audits/02a5/hosted-preflight/evidence/LOCAL-TESTS.log",
+      "bytes": 1891,
+      "sha256": "0b39ece1d398128aa65b1a27c92e34aa88f7b61102afa1be4456fd84ababd5cf"
+    },
+    {
+      "path": "audits/02a5/hosted-preflight/f02-hosted-preflight.workflow.yml",
+      "bytes": 2805,
+      "sha256": "c982602789e270101c6828c592dcc52e49d174b7f138fb1cee2dd4114f85a6a4"
+    },
+    {
+      "path": "tests/hosted-admission/fake-preflight-child.mjs",
+      "bytes": 2771,
+      "sha256": "4651bcd3ff428d13507c0bb3df57226c102fff54073a8679b9c81d6d6c077c9a"
+    },
+    {
+      "path": "tests/hosted-admission/preflight.test.mjs",
+      "bytes": 13475,
+      "sha256": "e289599dd3b5da9b81a9b3be8df467c80fc8ce595d82f0c07c92d99dcd8cc768"
+    },
+    {
+      "path": "tools/hosted-admission/environment-gate.mjs",
+      "bytes": 1998,
+      "sha256": "32f40a6d6a565e7a783c1cf2775288d92ac3c724c3e57cab5a31999e385269da"
+    },
+    {
+      "path": "tools/hosted-admission/preflight-entry.mjs",
+      "bytes": 1487,
+      "sha256": "506707a3ddd2b74a14c2a0489996bfabf41985b885d3acedf8351279677d2f7a"
+    },
+    {
+      "path": "tools/hosted-admission/preflight-policy.json",
+      "bytes": 413,
+      "sha256": "eff99ed875beef37a4bb4168b0cbb89f5dd61f2fc777e35b83904657f51d1ce3"
+    },
+    {
+      "path": "tools/hosted-admission/preflight-queries.mjs",
+      "bytes": 5224,
+      "sha256": "fa899cbd294d3527f4bc6012dce33efd30064954ec689886ab2159e1e20a9f6b"
+    },
+    {
+      "path": "tools/hosted-admission/readonly-preflight.mjs",
+      "bytes": 11769,
+      "sha256": "f892256adf97a7ecabc3e40eb483b129069edc6b996e9f4610f77c49297dc852"
+    },
+    {
+      "path": "vercel.json",
+      "bytes": 1474,
+      "sha256": "d9790d2b3b5862188268620af147babf1ab3312ee0c81364a945619a5188d264"
+    }
+  ]
+}

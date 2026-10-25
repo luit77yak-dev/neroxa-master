@@ -1,0 +1,490 @@
+diff --git a/audits/02a5/hosted-preflight/f02-hosted-preflight.workflow.yml b/audits/02a5/hosted-preflight/f02-hosted-preflight.workflow.yml
+new file mode 100644
+index 0000000..3566091
+--- /dev/null
++++ b/audits/02a5/hosted-preflight/f02-hosted-preflight.workflow.yml
+@@ -0,0 +1,70 @@
++# CANDIDATE ONLY, outside .github/workflows. Publishing/activation not authorized.
++# Policy is CLOSED. No automatic trigger and no infrastructure setup.
++name: F02 hosted read-only preflight
++on:
++  workflow_dispatch:
++permissions:
++  contents: read
++  deployments: read
++concurrency:
++  group: f02-hosted-readonly-iefaoaqzltvpfabyeelj
++  cancel-in-progress: false
++jobs:
++  admission:
++    runs-on: ubuntu-latest
++    timeout-minutes: 2
++    steps:
++      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
++        with:
++          ref: ${{ github.sha }}
++          persist-credentials: false
++      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
++        with:
++          node-version: '22.23.0'
++      - name: Closed policy first, before any environment or SQL credential
++        run: node tools/hosted-admission/environment-gate.mjs --policy-only
++      - name: Verify existing protected environment using metadata only
++        env:
++          GH_TOKEN: ${{ github.token }}
++        run: |
++          set -euo pipefail
++          test "$GITHUB_EVENT_NAME" = workflow_dispatch
++          test "$GITHUB_RUN_ATTEMPT" = 1
++          test "$GITHUB_REF_PROTECTED" = true
++          test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
++          umask 077
++          gh api "repos/$GITHUB_REPOSITORY/environments/f02-hosted-preflight" > "$RUNNER_TEMP/f02-environment.json"
++          node tools/hosted-admission/environment-gate.mjs "$RUNNER_TEMP/f02-environment.json"
++  preflight:
++    needs: admission
++    runs-on: ubuntu-latest
++    timeout-minutes: 3
++    environment:
++      name: f02-hosted-preflight
++    steps:
++      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
++        with:
++          ref: ${{ github.sha }}
++          persist-credentials: false
++      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
++        with:
++          repository: luit77yak-dev/pizza-perfect-plate
++          ref: 0e8d02e6fc07566027f0efacd5a8e076b6decf46
++          path: delivery-candidate
++          persist-credentials: false
++      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
++        with:
++          node-version: '22.23.0'
++      - name: Verify existing client, no dependency installation
++        run: |
++          set -euo pipefail
++          command -v psql
++          psql --version
++      - name: One authorized preflight, no migration API or retry
++        env:
++          F02_ENVIRONMENT: f02-hosted-preflight
++          F02_PREFLIGHT_CA_PEM: ${{ vars.F02_PREFLIGHT_CA_PEM }}
++          F02_PREFLIGHT_GRANT: ${{ secrets.F02_PREFLIGHT_GRANT }}
++          F02_PREFLIGHT_PASSWORD: ${{ secrets.F02_PREFLIGHT_PASSWORD }}
++        run: node tools/hosted-admission/preflight-entry.mjs
++# No always() server cleanup, artifact upload, Docker, migration or auto retry.
+diff --git a/tests/hosted-admission/fake-preflight-child.mjs b/tests/hosted-admission/fake-preflight-child.mjs
+new file mode 100644
+index 0000000..96a5c5e
+--- /dev/null
++++ b/tests/hosted-admission/fake-preflight-child.mjs
+@@ -0,0 +1,30 @@
++// ARTIFICIAL process fixture. Never loads libpq, connects, or executes SQL.
++import fs from 'node:fs';
++const channel=process.env.TEST_CHANNEL,mode=process.env.TEST_MODE,role=process.env.TEST_ROLE,start=process.env.TEST_START;
++let pending='',timer;
++const stages=(codes,rows=[])=>rows.join('\n')+(rows.length?'\n':'')+codes.map((s,i)=>`NEROXA_STAGE_${i}_${s}`).join('\n')+'\n';
++const emit=(marker,text,err='')=>{if(err)process.stderr.write(err,()=>setTimeout(()=>process.stdout.write(text+marker+'\n'),3));else process.stdout.write(text+marker+'\n');};
++const state=()=>{try{return fs.readFileSync(channel,'utf8');}catch{return 'idle';}};
++process.stdin.on('data',b=>{
++ pending+=b.toString();const frame=/NEROXA_FRAME_[a-f0-9]{48}/.exec(pending);if(!frame)return;
++ const q=pending.slice(0,frame.index),marker=frame[0];pending='';
++ if(q.includes("'business_write'")) {
++  const row={db:'postgres',actor:role,session_actor:role,pid:process.env.TEST_SIDE==='A'?1001:1002,start,clock:new Date().toISOString(),read_only:'on',ssl:true,tls:'TLSv1.3',role:{rolsuper:false,rolbypassrls:false,rolcreaterole:false,rolcreatedb:false,rolreplication:false,rolinherit:false,rolcanlogin:true},database_create:false,schema_create:0,memberships:0,owns_business:0,business_write:0,business_read:0,definer_execute:0};
++  if(mode==='bypass')row.role.rolbypassrls=true;
++  emit(marker,stages(['00000','00000','00000'],[JSON.stringify(row)]));
++ } else if(q.includes('\nSELECT pg_catalog.pg_sleep(3);\n')) {
++  emit(marker,stages(['00000','00000','57014','00000']),'ERROR:  57014: canceling statement due to statement timeout\n');
++ } else if(q.includes('\nSELECT pg_catalog.pg_sleep(4);\n')) {
++  fs.writeFileSync(channel,'waiting');timer=setInterval(()=>{if(state()!=='cancelled')return;clearInterval(timer);fs.writeFileSync(channel,'idle');
++   const code=mode==='booleanOnly'?'00000':'57014',cause=mode==='wrongCause'?'statement timeout':'user request';
++   emit(marker,stages(['00000','00000',code,'00000']),code==='57014'?`ERROR:  57014: canceling statement due to ${cause}\n`:'');
++  },5);
++ } else if(q.includes('SELECT pg_catalog.pg_cancel_backend(a.pid)')) {
++  fs.writeFileSync(channel,'cancelled');emit(marker,stages(['00000','00000','00000'],['t']));
++ } else if(q.includes("'wait_active'")) {
++  const active=state()==='waiting';emit(marker,stages(['00000','00000','00000'],[JSON.stringify({pid:1001,start,state:active?'active':'idle',transaction_open:active,wait_active:active})]));
++ } else if(q.includes("'signature'")) {
++  emit(marker,stages(['00000','00000','00000'],[JSON.stringify([{signature:'SYNTHETIC_MISSING_FUNCTION',present:false}])]));
++ } else {process.stderr.write('Unexpected fixture input\n');process.exit(1);}
++});
++process.on('SIGTERM',()=>{clearInterval(timer);process.exit(0);});
+diff --git a/tests/hosted-admission/preflight.test.mjs b/tests/hosted-admission/preflight.test.mjs
+new file mode 100644
+index 0000000..4824258
+--- /dev/null
++++ b/tests/hosted-admission/preflight.test.mjs
+@@ -0,0 +1,109 @@
++import {test} from 'node:test';
++import assert from 'node:assert/strict';
++import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
++import {spawnSync} from 'node:child_process';
++import {fileURLToPath} from 'node:url';import {generateKeyPairSync,sign} from 'node:crypto';
++import {checkPreflight,validateIdentity,parseStages,runReadOnlyPreflight} from '../../tools/hosted-admission/readonly-preflight.mjs';
++import {validateEnvironment} from '../../tools/hosted-admission/environment-gate.mjs';
++import {observeTarget} from '../../tools/hosted-admission/preflight-queries.mjs';
++import {CapturedSession} from '../../tools/hosted-admission/session.mjs';
++import {canonical,sha256,PROJECT,RELEASE,verifyGrant} from '../../delivery-candidate/src/server/hosted-release-core.mjs';
++
++// TEST authority/host/role/CA. No operational credentials or approvals are produced.
++const {privateKey,publicKey}=generateKeyPairSync('ed25519');
++const ca=Buffer.from('SYNTHETIC CA; not a real certificate');
++const policy={state:'ADMITTED_FOR_PREFLIGHT',project:PROJECT,environment:'f02-hosted-preflight',transport:'SUPAVISOR_SESSION',port:5432,host:'synthetic.pooler.supabase.com',role:'synthetic_preflight',caSha256:sha256(ca),ref:'refs/heads/synthetic-protected',founderLogin:'SYNTHETIC_FOUNDER',authority:{publicKeyPem:publicKey.export({format:'pem',type:'spki'}),keySha256:sha256(publicKey.export({format:'der',type:'spki'})),maxValidityMs:120000}};
++const context={event:'workflow_dispatch',runAttempt:'1',runId:'123',ref:policy.ref,refProtected:true,commit:'a'.repeat(40),actor:'SYNTHETIC_OPERATOR',environment:policy.environment};
++const now=Date.now();
++const payload={version:1,scope:'HOSTED_PREFLIGHT',project:PROJECT,release:RELEASE,founder:policy.founderLogin,operator:context.actor,nonce:'b'.repeat(64),notBefore:now-1000,expires:now+110000,host:policy.host,role:policy.role,caSha256:policy.caSha256,transport:policy.transport,port:5432,commit:context.commit,ref:context.ref,runId:context.runId,runAttempt:'1',environment:policy.environment,operations:['identity','catalog','timeout','cancel'],maxDurationMs:30000};
++const receipt=p=>{const b=Buffer.from(canonical(p));return Buffer.from(canonical({payload:b.toString('base64'),signature:sign(null,b,privateKey).toString('base64')}));};
++const approval=receipt(payload),root=()=>fs.mkdtempSync(path.join(os.tmpdir(),'neroxa-readonly-artificial-'));
++const identity={db:'postgres',actor:policy.role,session_actor:policy.role,pid:1001,start:new Date(now-1000).toISOString(),clock:new Date(now).toISOString(),read_only:'on',ssl:true,tls:'TLSv1.3',role:{rolsuper:false,rolbypassrls:false,rolcreaterole:false,rolcreatedb:false,rolreplication:false,rolinherit:false,rolcanlogin:true},database_create:false,schema_create:0,memberships:0,owns_business:0,business_write:0,business_read:0,definer_execute:0};
++
++test('nominal dedicated role/pooler policy verifies while shipped policy remains CLOSED',()=>{
++ assert.equal(checkPreflight(policy,context,approval,ca,now).payload.role,policy.role);
++ const closed=JSON.parse(fs.readFileSync(new URL('../../tools/hosted-admission/preflight-policy.json',import.meta.url)));
++ assert.throws(()=>checkPreflight(closed,context,approval,ca,now));
++});
++test('preflight scope cannot authorize migration, server or wrong project/release',()=>{
++ assert.throws(()=>verifyGrant(approval,policy.authority,'SQL_RELEASE',now));
++ for(const change of [{scope:'SQL_RELEASE'},{scope:'HOSTED_SERVER'},{project:'other'},{release:'0'.repeat(64)}])assert.throws(()=>checkPreflight(policy,context,receipt({...payload,...change}),ca,now));
++});
++test('destination, identity, CA, session mode, commit and attempt all require signature binding',()=>{
++ for(const change of [{host:'other.pooler.supabase.com'},{role:'postgres'},{caSha256:'0'.repeat(64)},{transport:'TRANSACTION'},{port:6543},{commit:'c'.repeat(40)},{runId:'124'},{runAttempt:'2'},{operator:'other'},{operations:['identity']}])assert.throws(()=>checkPreflight(policy,context,receipt({...payload,...change}),ca,now));
++ assert.throws(()=>checkPreflight(policy,context,approval,Buffer.from('changed'),now));
++});
++test('automatic events, unprotected refs, other environment and expiry are denied',()=>{
++ for(const change of [{event:'push'},{runAttempt:'2'},{refProtected:false},{ref:'refs/heads/other'},{environment:'Production'}])assert.throws(()=>checkPreflight(policy,{...context,...change},approval,ca,now));
++ assert.throws(()=>checkPreflight(policy,context,approval,ca,payload.expires));
++});
++test('native identity validation rejects privilege escalation, PUBLIC paths, wrong role and reconnect',()=>{
++ assert.equal(validateIdentity(identity,policy.role,undefined,now).actor,policy.role);
++ for(const change of [{actor:'postgres'},{session_actor:'postgres'},{read_only:'off'},{ssl:false},{tls:'TLSv1.1'},{memberships:1},{database_create:true},{schema_create:1},{owns_business:1},{business_read:1},{business_write:1},{definer_execute:1},{business_read:null},{clock:new Date(now-6000).toISOString()}])assert.throws(()=>validateIdentity({...identity,...change},policy.role,undefined,now));
++ for(const k of ['rolsuper','rolbypassrls','rolcreaterole','rolcreatedb','rolreplication','rolinherit'])assert.throws(()=>validateIdentity({...identity,role:{...identity.role,[k]:true}},policy.role,undefined,now));
++ assert.throws(()=>validateIdentity({...identity,pid:1003},policy.role,identity,now));
++});
++test('missing, duplicated and wrong SQLSTATE cannot become timeout/cancellation PASS',()=>{
++ const bytes=Buffer.from('NEROXA_STAGE_0_00000\nNEROXA_STAGE_1_57014\n');
++ assert.deepEqual(parseStages(bytes,['00000','57014']).states,['00000','57014']);
++ for(const b of ['NEROXA_STAGE_1_57014\n','NEROXA_STAGE_0_00000\nNEROXA_STAGE_0_00000\n','NEROXA_STAGE_0_00000\nNEROXA_STAGE_1_00000\n'])assert.throws(()=>parseStages(Buffer.from(b),['00000','57014']));
++});
++test('cancel target is restricted to observed PID/start, same role and exact harmless wait',()=>{
++ const sql=observeTarget(identity,policy.role,true);assert.match(sql,/a.usename=current_user/);assert.match(sql,/a.backend_start=/);assert.match(sql,/a.pid<>pg_catalog.pg_backend_pid/);assert.match(sql,/a.query='SELECT pg_catalog.pg_sleep\(4\);'/);
++ assert.throws(()=>observeTarget({...identity,pid:'1001;DROP'},policy.role,true));
++ assert.throws(()=>observeTarget({...identity,start:"';SELECT"},policy.role,true));
++});
++const environment={name:policy.environment,can_admins_bypass:false,deployment_branch_policy:{protected_branches:true,custom_branch_policies:false},protection_rules:[{type:'required_reviewers',prevent_self_review:true,reviewers:[{type:'User',reviewer:{login:policy.founderLogin}}]}]};
++test('environment requires founder approval, branch protection and no admin bypass',()=>{
++ assert.equal(validateEnvironment(policy,environment).environment,policy.environment);
++ assert.equal(validateEnvironment(policy,{...environment,protection_rules:[{...environment.protection_rules[0],prevent_self_review:false}]}).environment,policy.environment);
++ for(const change of [{name:'Production'},{can_admins_bypass:true},{can_admins_bypass:undefined},{protection_rules:[]},{deployment_branch_policy:null}])assert.throws(()=>validateEnvironment(policy,{...environment,...change}));
++ assert.throws(()=>validateEnvironment(policy,{...environment,protection_rules:[{...environment.protection_rules[0],reviewers:[{type:'User',reviewer:{login:'OTHER'}}]}]}));
++});
++test('unapproved invocation cannot access credentials or spawn any process',async()=>{
++ let credentials=0,spawned=0;await assert.rejects(()=>runReadOnlyPreflight({policy:{...policy,state:'CLOSED'},context,approval,caBytes:ca,evidenceRoot:root(),credentialProvider:async()=>{credentials++;return'NEVER';},makeTransport:()=>{spawned++;throw Error('NEVER');}}));assert.equal(credentials,0);assert.equal(spawned,0);
++});
++test('expiry across asynchronous credential retrieval blocks before any spawn',async()=>{
++ let clock=now,spawned=0;await assert.rejects(()=>runReadOnlyPreflight({policy,context,approval,caBytes:ca,evidenceRoot:root(),now:()=>clock,credentialProvider:async()=>{clock=payload.expires;return'SYNTHETIC';},makeTransport:()=>{spawned++;throw Error('NEVER');}}));assert.equal(spawned,0);
++});
++
++const fixture=fileURLToPath(new URL('./fake-preflight-child.mjs',import.meta.url));
++async function artificial(mode='positive',evidenceRoot=root()) {
++ const channel=path.join(evidenceRoot,'fixture-channel'),start=new Date().toISOString();let count=0;const specifications=[];
++ const result=await runReadOnlyPreflight({policy,context,approval,caBytes:ca,evidenceRoot,credentialProvider:async()=>'SYNTHETIC PASSWORD:DO NOT LOG',makeTransport:(spec,dir)=>{
++  specifications.push(spec);const side=count++===0?'A':'B';
++  assert.equal(spec.env.PGHOST,policy.host);assert.equal(spec.env.PGUSER,policy.role+'.'+PROJECT);assert.equal(spec.env.PGSSLMODE,'verify-full');assert.ok(!JSON.stringify(spec.args).includes('PASSWORD'));assert.equal(spec.env.PGPASSWORD,undefined);assert.equal(spec.env.F02_PREFLIGHT_PASSWORD,undefined);
++  const port=new CapturedSession({command:process.execPath,args:[fixture],env:{PATH:process.env.PATH,TEST_CHANNEL:channel,TEST_SIDE:side,TEST_MODE:mode,TEST_ROLE:policy.role,TEST_START:start}},dir,{timeoutMs:2000});
++  if(mode==='tamperParsed'){const query=port.query.bind(port);port.query=async sql=>{const r=await query(sql);r.bytes[0]^=1;return r;};}
++  return port;
++ }});
++ return {result,specifications,evidenceRoot};
++}
++test('ARTIFICIAL ONLY: two processes prove controller completion, exclusive capture and credential removal',async()=>{
++ const {result,specifications,evidenceRoot}=await artificial();assert.equal(result.cancellation,'PASS');assert.equal(result.catalogReadiness,'BLOCKED');assert.equal(specifications.length,2);
++ assert.equal(fs.existsSync(specifications[0].env.PGPASSFILE),false);assert.ok(fs.existsSync(result.rawCaptureRoot));
++ const ledgerFiles=fs.readdirSync(result.rawCaptureRoot).filter(x=>/^\d{4}\.receipt\.json$/.test(x)).sort();let previous=null;for(const f of ledgerFiles){const bytes=fs.readFileSync(path.join(result.rawCaptureRoot,f));const rec=JSON.parse(bytes);assert.equal(rec.previousReceipt,previous);assert.equal(sha256(fs.readFileSync(rec.stdout)),rec.stdoutSha256);assert.equal(sha256(fs.readFileSync(rec.stderr)),rec.stderrSha256);previous=sha256(bytes);}assert.equal(previous,result.receiptChain);
++ await assert.rejects(()=>artificial('positive',evidenceRoot)); // reserved nonce cannot be reused
++});
++test('ARTIFICIAL ONLY: privileged identity blocks rather than trying a fallback role',async()=>{await assert.rejects(()=>artificial('bypass'));});
++test('ARTIFICIAL ONLY: pg_cancel_backend true without SQLSTATE cancellation is rejected',async()=>{const r=root();await assert.rejects(()=>artificial('booleanOnly',r));const w=fs.readdirSync(r).find(x=>x.startsWith('preflight-'));assert.match(fs.readFileSync(path.join(r,w,'A','0005.stdout'),'utf8'),/NEROXA_STAGE_2_00000/);assert.match(fs.readFileSync(path.join(r,w,'B','0004.stdout'),'utf8'),/^t\n/);});
++test('ARTIFICIAL ONLY: timeout cannot masquerade as explicit user cancellation',async()=>{const r=root();await assert.rejects(()=>artificial('wrongCause',r));const w=fs.readdirSync(r).find(x=>x.startsWith('preflight-'));assert.match(fs.readFileSync(path.join(r,w,'A','0005.stderr'),'utf8'),/due to statement timeout/);assert.match(fs.readFileSync(path.join(r,w,'B','0004.stdout'),'utf8'),/^t\n/);});
++test('imports and candidate workflow expose no automatic remote trigger or migration entrypoint',()=>{
++ const text=fs.readFileSync(new URL('../../audits/02a5/hosted-preflight/f02-hosted-preflight.workflow.yml',import.meta.url),'utf8');
++ assert.match(text,/workflow_dispatch:/);assert.doesNotMatch(text,/^\s+(push|pull_request|schedule|workflow_run):/m);assert.match(text,/needs: admission/);assert.match(text,/environment:\n\s+name: f02-hosted-preflight/);assert.doesNotMatch(text,/run:.*(submitUnit|rehearse|supabase start|psql.*-f)/);assert.match(text,/persist-credentials: false/);
++ const entry=fs.readFileSync(new URL('../../tools/hosted-admission/preflight-entry.mjs',import.meta.url),'utf8');assert.doesNotMatch(entry,/UnitAdmission|openHosted\(/);
++});
++
++test('imports are inert with subprocess and network facilities explicitly forbidden',()=>{
++ const target=new URL('../../tools/hosted-admission/preflight-entry.mjs',import.meta.url).href;
++ const script=`import cp from 'node:child_process';import {syncBuiltinESMExports} from 'node:module';cp.spawn=()=>{throw Error('FORBIDDEN SPAWN')};syncBuiltinESMExports();globalThis.fetch=()=>{throw Error('FORBIDDEN NETWORK')};await import(${JSON.stringify(target)});console.log('INERT');`;
++ const r=spawnSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8',env:{PATH:''}});assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),'INERT');
++});
++test('actual shipped entry and environment gate exit BLOCKED without credentials',()=>{
++ const here=fileURLToPath(new URL('../../',import.meta.url));
++ for(const args of [['tools/hosted-admission/environment-gate.mjs','--policy-only'],['tools/hosted-admission/preflight-entry.mjs']]){
++  const r=spawnSync(process.execPath,args,{cwd:here,encoding:'utf8',env:{PATH:''}});assert.equal(r.status,78);assert.match(r.stderr,/BLOCKED/);assert.equal(r.stdout,'');
++ }
++});
++
++test('ARTIFICIAL ONLY: interpreted buffer cannot diverge from exclusively captured bytes',async()=>{await assert.rejects(()=>artificial('tamperParsed'));});
+diff --git a/tools/hosted-admission/environment-gate.mjs b/tools/hosted-admission/environment-gate.mjs
+new file mode 100644
+index 0000000..b331491
+--- /dev/null
++++ b/tools/hosted-admission/environment-gate.mjs
+@@ -0,0 +1,24 @@
++import fs from 'node:fs';
++import {pathToFileURL} from 'node:url';
++
++/** Read-only API metadata is necessary; absence or unknown protection is BLOCKED. */
++export function validateEnvironment(policy,environment) {
++ if(policy?.state!=='ADMITTED_FOR_PREFLIGHT'||!policy.founderLogin||!policy.ref?.startsWith('refs/heads/')||policy.environment!=='f02-hosted-preflight')throw Error('Nominal policy CLOSED');
++ if(environment?.name!==policy.environment||environment.can_admins_bypass!==false||environment.deployment_branch_policy?.protected_branches!==true||environment.deployment_branch_policy?.custom_branch_policies!==false)throw Error('Environment/ref protection not demonstrated');
++ const review=environment.protection_rules?.find(x=>x.type==='required_reviewers');
++ if(typeof review?.prevent_self_review!=='boolean'||review.reviewers?.length!==1||review.reviewers[0].type!=='User'||review.reviewers[0].reviewer?.login!==policy.founderLogin)throw Error('Exclusive founder approval not enforced');
++ return Object.freeze({environment:policy.environment,ref:policy.ref,status:'PROTECTION_METADATA_VERIFIED; actual approval still required'});
++}
++
++if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href) {
++ try {
++  const policy=JSON.parse(fs.readFileSync('tools/hosted-admission/preflight-policy.json'));
++  if(process.argv[2]==='--policy-only') {
++   if(policy.state!=='ADMITTED_FOR_PREFLIGHT'||!policy.ref||!policy.founderLogin)throw Error('CLOSED');
++  } else {
++   const result=validateEnvironment(policy,JSON.parse(fs.readFileSync(process.argv[2])));
++   if(process.env.GITHUB_REF!==result.ref||process.env.GITHUB_REF_PROTECTED!=='true'||process.env.GITHUB_EVENT_NAME!=='workflow_dispatch'||process.env.GITHUB_RUN_ATTEMPT!=='1')throw Error('Manual protected first attempt required');
++   console.log('F02_ENVIRONMENT_METADATA=VERIFIED; founder approval still required');
++  }
++ } catch {console.error('F02_ENVIRONMENT=BLOCKED; no credentials or connections accessed');process.exitCode=78;}
++}
+diff --git a/tools/hosted-admission/preflight-entry.mjs b/tools/hosted-admission/preflight-entry.mjs
+new file mode 100644
+index 0000000..1268fe6
+--- /dev/null
++++ b/tools/hosted-admission/preflight-entry.mjs
+@@ -0,0 +1,13 @@
++import fs from 'node:fs';
++import path from 'node:path';
++import {pathToFileURL} from 'node:url';
++import {runReadOnlyPreflight} from './readonly-preflight.mjs';
++
++export async function main() {
++ const policy=JSON.parse(fs.readFileSync('tools/hosted-admission/preflight-policy.json'));
++ const context={event:process.env.GITHUB_EVENT_NAME,runAttempt:process.env.GITHUB_RUN_ATTEMPT,runId:process.env.GITHUB_RUN_ID,ref:process.env.GITHUB_REF,refProtected:process.env.GITHUB_REF_PROTECTED==='true',commit:process.env.GITHUB_SHA,actor:process.env.GITHUB_ACTOR,environment:process.env.F02_ENVIRONMENT};
++ const result=await runReadOnlyPreflight({policy,context,approval:process.env.F02_PREFLIGHT_GRANT,caBytes:process.env.F02_PREFLIGHT_CA_PEM,evidenceRoot:path.join(process.env.RUNNER_TEMP??'/NONEXISTENT','neroxa-f02-preflight-'+context.runId),credentialProvider:async()=>process.env.F02_PREFLIGHT_PASSWORD});
++ // Raw responses/credentials are never dumped into the public Actions log.
++ console.log('F02_PREFLIGHT_RESULT='+JSON.stringify({scope:result.scope,identity:result.identity,tls:result.tls,timeout:result.timeout,cancellation:result.cancellation,catalogReadiness:result.catalogReadiness,receiptSha256:result.receiptSha256,runId:result.runId,custody:result.custody}));
++}
++if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(()=>{console.error('F02_PREFLIGHT=BLOCKED; no retry; retained private evidence; server state not presumed');process.exitCode=78;});
+diff --git a/tools/hosted-admission/preflight-policy.json b/tools/hosted-admission/preflight-policy.json
+new file mode 100644
+index 0000000..98d3e83
+--- /dev/null
++++ b/tools/hosted-admission/preflight-policy.json
+@@ -0,0 +1,17 @@
++{
++  "state": "CLOSED; reviewed nominal values and separate execution authorization required",
++  "project": "iefaoaqzltvpfabyeelj",
++  "environment": "f02-hosted-preflight",
++  "transport": "SUPAVISOR_SESSION",
++  "port": 5432,
++  "host": null,
++  "role": null,
++  "caSha256": null,
++  "ref": null,
++  "founderLogin": null,
++  "authority": {
++    "publicKeyPem": null,
++    "keySha256": null,
++    "maxValidityMs": null
++  }
++}
+diff --git a/tools/hosted-admission/preflight-queries.mjs b/tools/hosted-admission/preflight-queries.mjs
+new file mode 100644
+index 0000000..051c902
+--- /dev/null
++++ b/tools/hosted-admission/preflight-queries.mjs
+@@ -0,0 +1,53 @@
++// Closed catalog/builtin queries. No caller-provided SQL, application RPC or DDL.
++export const IDENTITY = `SELECT pg_catalog.json_build_object(
++ 'db',current_database(),'actor',current_user,'session_actor',session_user,
++ 'pid',pg_catalog.pg_backend_pid(),
++ 'start',(SELECT backend_start FROM pg_catalog.pg_stat_activity WHERE pid=pg_catalog.pg_backend_pid()),
++ 'clock',pg_catalog.clock_timestamp(),'read_only',pg_catalog.current_setting('transaction_read_only'),
++ 'ssl',(SELECT ssl FROM pg_catalog.pg_stat_ssl WHERE pid=pg_catalog.pg_backend_pid()),
++ 'tls',(SELECT version FROM pg_catalog.pg_stat_ssl WHERE pid=pg_catalog.pg_backend_pid()),
++ 'role',(SELECT pg_catalog.row_to_json(r) FROM (SELECT rolsuper,rolbypassrls,rolcreaterole,rolcreatedb,rolreplication,rolinherit,rolcanlogin FROM pg_catalog.pg_roles WHERE rolname=current_user) r),
++ 'database_create',pg_catalog.has_database_privilege(current_user,current_database(),'CREATE'),
++ 'schema_create',(SELECT count(*) FROM pg_catalog.pg_namespace n WHERE n.nspname IN ('public','private','neroxa_private') AND pg_catalog.has_schema_privilege(current_user,n.oid,'CREATE')),
++ 'memberships',(SELECT count(*) FROM pg_catalog.pg_auth_members WHERE member=(SELECT oid FROM pg_catalog.pg_roles WHERE rolname=current_user)),
++ 'owns_business',(SELECT count(*) FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','private','neroxa_private') AND c.relowner=(SELECT oid FROM pg_catalog.pg_roles WHERE rolname=current_user)),
++ 'business_write',(SELECT count(*) FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','private','neroxa_private') AND c.relkind IN ('r','p','v','m','f') AND pg_catalog.has_table_privilege(current_user,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')),
++ 'business_read',(SELECT count(*) FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','private','neroxa_private') AND c.relkind IN ('r','p','v','m','f') AND pg_catalog.has_table_privilege(current_user,c.oid,'SELECT')),
++ 'definer_execute',(SELECT count(*) FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname IN ('public','private','neroxa_private') AND p.prosecdef AND pg_catalog.has_function_privilege(current_user,p.oid,'EXECUTE'))
++);`;
++
++export const CATALOG = `SELECT pg_catalog.json_agg(pg_catalog.json_build_object(
++ 'signature',e.signature,'present',p.oid IS NOT NULL,
++ 'owner',pg_catalog.pg_get_userbyid(p.proowner),'definer',p.prosecdef,
++ 'anon_execute',pg_catalog.has_function_privilege('anon',p.oid,'EXECUTE'),
++ 'authenticated_execute',pg_catalog.has_function_privilege('authenticated',p.oid,'EXECUTE')) ORDER BY e.signature)
++ FROM (VALUES
++ ('public.neroxa_register_buyer_capabilities(uuid,uuid,uuid,text,text)'),
++ ('public.neroxa_track_order_with_capability(uuid,uuid,text)'),
++ ('public.neroxa_append_order_items_with_capability(uuid,uuid,text,uuid,jsonb)'),
++ ('public.neroxa_recover_group_order(uuid,uuid,jsonb)'),
++ ('public.neroxa_capability_release_readiness()'),
++ ('public.get_public_order_status(uuid,text)'),
++ ('public.append_public_order_items_with_payment(uuid,text,jsonb,text)')
++ ) e(signature) LEFT JOIN pg_catalog.pg_proc p ON p.oid=pg_catalog.to_regprocedure(e.signature);`;
++
++// Every stage has an explicit psql SQLSTATE. ON_ERROR_STOP is disabled ONLY in
++// this closed preflight so the two expected cancellation errors can be observed.
++export function stages(parts) {
++ return parts.map((sql,i)=>`${sql}\n\\echo NEROXA_STAGE_${i}_:SQLSTATE`).join('\n');
++}
++export const READ_IDENTITY = stages(['BEGIN READ ONLY;', IDENTITY, 'ROLLBACK;']);
++export const READ_CATALOG = stages(['BEGIN READ ONLY;', CATALOG, 'ROLLBACK;']);
++export const TIMEOUT = stages(['BEGIN READ ONLY;', "SET LOCAL statement_timeout='1000ms';", 'SELECT pg_catalog.pg_sleep(3);', 'ROLLBACK;']);
++export const WAIT = stages(['BEGIN READ ONLY;', "SET LOCAL statement_timeout='5000ms';", 'SELECT pg_catalog.pg_sleep(4);', 'ROLLBACK;']);
++
++const literal = s=>"'"+s.replaceAll("'","''")+"'";
++// Target must be the previously authenticated A session, same role and start.
++export function observeTarget(target,role,cancel=false) {
++ if(!Number.isSafeInteger(target?.pid)||target.pid<=0||!/^\d{4}-\d\d-\d\dT[0-9:.]+(?:Z|[+-]\d\d:\d\d)$/.test(target.start)||!/^[a-z][a-z0-9_]{0,62}$/.test(role))throw Error('Invalid cancellation target');
++ const where=`a.pid=${target.pid} AND a.backend_start=${literal(target.start)}::timestamptz AND a.usename=${literal(role)} AND a.usename=current_user AND a.pid<>pg_catalog.pg_backend_pid()`;
++ // The only in-flight A statement allowed is our exact, fixed harmless wait.
++ const active=cancel?" AND a.state='active' AND a.query='SELECT pg_catalog.pg_sleep(4);'":"";
++ const value=cancel?'pg_catalog.pg_cancel_backend(a.pid)':"pg_catalog.json_build_object('pid',a.pid,'start',a.backend_start,'state',a.state,'transaction_open',a.xact_start IS NOT NULL,'wait_active',a.state='active' AND a.query LIKE 'SELECT pg_catalog.pg_sleep(%')";
++ return stages(['BEGIN READ ONLY;', `SELECT ${value} FROM pg_catalog.pg_stat_activity a WHERE ${where}${active};`, 'ROLLBACK;']);
++}
+diff --git a/tools/hosted-admission/readonly-preflight.mjs b/tools/hosted-admission/readonly-preflight.mjs
+new file mode 100644
+index 0000000..154e7a1
+--- /dev/null
++++ b/tools/hosted-admission/readonly-preflight.mjs
+@@ -0,0 +1,112 @@
++import fs from 'node:fs';
++import path from 'node:path';
++import {CapturedSession} from './session.mjs';
++import {verifyGrant,sha256,AdmissionBlocked,PROJECT} from '../../delivery-candidate/src/server/hosted-release-core.mjs';
++import {READ_IDENTITY,READ_CATALOG,TIMEOUT,WAIT,observeTarget} from './preflight-queries.mjs';
++
++const blocked = reason=>{throw new AdmissionBlocked(reason);};
++const freeze = x=>{if(x&&typeof x==='object'){Object.values(x).forEach(freeze);Object.freeze(x);}return x;};
++const forbidden = new Set(['postgres','supabase_admin','service_role','anon','authenticated','authenticator']);
++
++/** This scope cannot authorize UnitAdmission, SQL_RELEASE or a server deployment. */
++export function checkPreflight(policy,context,approval,caBytes,now=Date.now()) {
++ if(policy?.state!=='ADMITTED_FOR_PREFLIGHT'||policy.project!==PROJECT||policy.transport!=='SUPAVISOR_SESSION'||policy.port!==5432||!policy.host?.endsWith('.pooler.supabase.com')||!/^[a-z0-9.-]+$/.test(policy.host)||!/^[a-z][a-z0-9_]{0,62}$/.test(policy.role??'')||forbidden.has(policy.role)||!/^[a-f0-9]{64}$/.test(policy.caSha256??''))blocked('Preflight policy CLOSED/invalid');
++ if(context?.event!=='workflow_dispatch'||context.runAttempt!=='1'||context.refProtected!==true||context.ref!==policy.ref||context.environment!==policy.environment||policy.environment!=='f02-hosted-preflight'||!/^\d+$/.test(context.runId??'')||!/^[a-f0-9]{40}$/.test(context.commit??'')||!policy.founderLogin)blocked('Manual protected context required');
++ const grant=verifyGrant(approval,policy.authority,'HOSTED_PREFLIGHT',now),p=grant.payload;
++ if(p.host!==policy.host||p.role!==policy.role||p.caSha256!==policy.caSha256||p.transport!==policy.transport||p.port!==5432||p.commit!==context.commit||p.ref!==context.ref||p.runId!==context.runId||p.runAttempt!=='1'||p.environment!==policy.environment||p.founder!==policy.founderLogin||p.operator!==context.actor||!Array.isArray(p.operations)||JSON.stringify([...p.operations].sort())!==JSON.stringify(['cancel','catalog','identity','timeout'])||!Number.isSafeInteger(p.maxDurationMs)||p.maxDurationMs<1||p.maxDurationMs>120000)blocked('Signed preflight identity/destination/attempt mismatch');
++ if(sha256(Buffer.from(caBytes))!==policy.caSha256)blocked('CA bytes changed/unapproved');
++ return grant;
++}
++
++export function validateIdentity(row,role,previous,now=Date.now()) {
++ if(row?.db!=='postgres'||row.actor!==role||row.session_actor!==role||row.read_only!=='on'||row.ssl!==true||!/^TLSv1\.[23]$/.test(row.tls??'')||!Number.isSafeInteger(row.pid)||row.pid<=0||!Number.isFinite(Date.parse(row.start))||Math.abs(Date.parse(row.clock)-now)>5000||row.role?.rolcanlogin!==true||row.database_create!==false)blocked('Observed read session not admitted');
++ for(const k of ['rolsuper','rolbypassrls','rolcreaterole','rolcreatedb','rolreplication','rolinherit'])if(row.role[k]!==false)blocked('Privileged/inheriting login rejected');
++ for(const k of ['memberships','owns_business','business_write','business_read','definer_execute','schema_create'])if(!Number.isSafeInteger(row[k])||row[k]!==0)blocked('Effective privileges exceed catalog-only preflight');
++ if(previous&&(row.pid!==previous.pid||row.start!==previous.start))blocked('Session reconnected/replaced');
++ return freeze(structuredClone(row));
++}
++
++/** stdout has an exact stage ledger; SQLSTATE success alone is never cancellation proof. */
++export function parseStages(bytes,expected) {
++ const original=Buffer.from(bytes),digest=sha256(original),text=original.toString('utf8');
++ if(!Buffer.from(text).equals(original))blocked('Invalid UTF-8 response');
++ const states=[],rows=[];
++ for(const line of text.split('\n').filter(x=>x.length)) {
++  const m=/^NEROXA_STAGE_(\d+)_([0-9A-Z]{5})$/.exec(line);
++  if(m){if(Number(m[1])!==states.length)blocked('Stage missing/duplicated/reordered');states.push(m[2]);}
++  else rows.push(line);
++ }
++ if(JSON.stringify(states)!==JSON.stringify(expected)||sha256(original)!==digest)blocked('Unexpected/incomplete SQLSTATE ledger');
++ return {rows:Object.freeze(rows),states:Object.freeze(states)};
++}
++
++function jsonRow(result) {
++ if(result.rows.length!==1)blocked('Expected exactly one observation');
++ try{return JSON.parse(result.rows[0]);}catch{blocked('Invalid observation JSON');}
++}
++
++/** No imports or constructors here open a connection. Only this explicit call can. */
++export async function runReadOnlyPreflight({policy,context,approval,caBytes,evidenceRoot,credentialProvider,now=Date.now,makeTransport=(spec,root)=>new CapturedSession(spec,root,{timeoutMs:10000,maxBytes:65536}),wait=ms=>new Promise(resolve=>setTimeout(resolve,ms))}) {
++ // Canonical private copies before any callback; test dependency injection is not an env API.
++ policy=freeze(structuredClone(policy));context=freeze(structuredClone(context));approval=Buffer.from(approval??'');caBytes=Buffer.from(caBytes??'');
++ const initial=checkPreflight(policy,context,approval,caBytes,now()),began=performance.now();
++ const guard=()=>{const g=checkPreflight(policy,context,approval,caBytes,now());if(g.receiptSha256!==initial.receiptSha256||performance.now()-began>=g.payload.maxDurationMs)blocked('Preflight deadline/approval changed');return g;};
++ const password=await credentialProvider();guard();
++ if(typeof password!=='string'||!password||Buffer.byteLength(password)>4096||/[\r\n\0]/.test(password))blocked('Credential unavailable/invalid');
++ fs.mkdirSync(evidenceRoot,{recursive:true,mode:0o700});const st=fs.statSync(evidenceRoot);
++ if(st.uid!==process.getuid()||(st.mode&0o077))blocked('Private evidence root required');
++ const claim=path.join(evidenceRoot,initial.payload.nonce+'.reserved');
++ fs.writeFileSync(claim,JSON.stringify({receiptSha256:initial.receiptSha256,runId:context.runId,commit:context.commit,state:'RESERVED; no retry'}),{flag:'wx',mode:0o600});
++ const work=fs.mkdtempSync(path.join(evidenceRoot,'preflight-')),caPath=path.join(work,'ca.pem'),passPath=path.join(work,'pgpass');
++ fs.writeFileSync(caPath,caBytes,{flag:'wx',mode:0o600});
++ const esc=s=>s.replaceAll('\\','\\\\').replaceAll(':','\\:');
++ const login=policy.role+'.'+PROJECT;
++ fs.writeFileSync(passPath,[policy.host,'5432','postgres',login,password].map(esc).join(':')+'\n',{flag:'wx',mode:0o600});
++ const env={PATH:process.env.PATH,PGHOST:policy.host,PGPORT:'5432',PGDATABASE:'postgres',PGUSER:login,PGSSLMODE:'verify-full',PGSSLROOTCERT:caPath,PGPASSFILE:passPath,PGCONNECT_TIMEOUT:'5',PGAPPNAME:'neroxa-f02-preflight-'+context.runId};
++ const spec=freeze({command:'psql',args:['-X','--no-password','-q','-A','-t','-v','ON_ERROR_STOP=0','-v','VERBOSITY=verbose'],env});
++ let a,b,uncertain=false,sequence=0,previousReceipt=null,totalCaptured=0;
++ const call=async(port,sql,expected)=>{guard();if(port.blocked)blocked('Captured session BLOCKED');const r=await port.query(sql);guard();if(port.blocked||r.receipt?.complete!==true)blocked('Incomplete response');const bytes=Buffer.from(r.bytes),out=fs.readFileSync(r.receipt.stdout),err=fs.readFileSync(r.receipt.stderr);
++  if(out.length!==r.receipt.stdoutBytes||sha256(out)!==r.receipt.stdoutSha256||err.length!==r.receipt.stderrBytes||sha256(err)!==r.receipt.stderrSha256||!out.subarray(0,bytes.length).equals(bytes)||!/^NEROXA_FRAME_[a-f0-9]{48}\n$/.test(out.subarray(bytes.length).toString()))blocked('Raw capture/interpretation integrity');
++  totalCaptured+=out.length+err.length;if(totalCaptured>65536||++sequence>32)blocked('Aggregate preflight capture budget');
++  const ledger=Buffer.from(JSON.stringify({...r.receipt,sequence,previousReceipt,requestSha256:sha256(Buffer.from(sql))}));
++  const file=path.join(work,String(sequence).padStart(4,'0')+'.receipt.json');fs.writeFileSync(file,ledger,{flag:'wx',mode:0o600});
++  if(!fs.readFileSync(file).equals(ledger))blocked('Receipt reread integrity');previousReceipt=sha256(ledger);
++  return {...parseStages(bytes,expected),stderr:Buffer.from(err)};};
++ try {
++  guard();a=makeTransport(spec,path.join(work,'A'));guard();b=makeTransport(freeze(structuredClone(spec)),path.join(work,'B'));guard();
++  const priorA=validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,undefined,now());
++  const priorB=validateIdentity(jsonRow(await call(b,READ_IDENTITY,['00000','00000','00000'])),policy.role,undefined,now());
++  if(priorA.pid===priorB.pid)blocked('Two simultaneous distinct sessions required');
++  const catalog=jsonRow(await call(a,READ_CATALOG,['00000','00000','00000']));
++  const timeout=await call(a,TIMEOUT,['00000','00000','57014','00000']);
++  if(timeout.rows.length||! /ERROR:\s+57014:\s+canceling statement due to statement timeout/.test(timeout.stderr.toString()))blocked('Timeout cause not authenticated by captured error');
++  validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorA,now());
++  const afterTimeout=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
++  if(afterTimeout.wait_active!==false||afterTimeout.state!=='idle'||afterTimeout.transaction_open!==false)blocked('Timeout termination not independently observed');
++  // Starts one harmless wait. Attach the rejection immediately so failure cannot be lost.
++  const pending=call(a,WAIT,['00000','00000','57014','00000']).then(value=>({value}),error=>({error}));
++  let active=false;
++  for(let i=0;i<10;i++) {
++   guard();const x=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
++   if(x.wait_active===true){active=true;break;}await wait(50);guard();
++  }
++  if(!active)blocked('Authorized wait not observed; no signal sent');
++  const cancel=await call(b,observeTarget(priorA,policy.role,true),['00000','00000','00000']);
++  if(JSON.stringify(cancel.rows)!=='["t"]')blocked('Cancellation target/request not confirmed');
++  const end=await pending;if(end.error)throw end.error;if(end.value.rows.length||! /ERROR:\s+57014:\s+canceling statement due to user request/.test(end.value.stderr.toString()))blocked('Cancellation cause not authenticated by captured error');
++  validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorA,now());
++  validateIdentity(jsonRow(await call(b,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorB,now());
++  const afterCancel=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
++  if(afterCancel.wait_active!==false||afterCancel.state!=='idle'||afterCancel.transaction_open!==false)blocked('Cancellation completion not independently observed');
++  guard();
++  return freeze({scope:'HOSTED_PREFLIGHT ONLY; not migration',identity:'PASS',tls:'PASS; configured libpq verify-full and observed TLS, contingent on real transport',timeout:'PASS',cancellation:'PASS',catalog,catalogReadiness:catalog?.some(x=>!x.present)?'BLOCKED':'REQUIRES_SEPARATE_REVIEW',receiptSha256:initial.receiptSha256,runId:context.runId,rawCaptureRoot:work,receiptChain:previousReceipt,custody:'LOCAL ONLY; external recovery not established'});
++ } catch(e) {uncertain=true;throw new AdmissionBlocked('Preflight BLOCKED; retained evidence; no retry or server cleanup');}
++ finally {
++  // Only close our clients and remove the local credential. Never server teardown,
++  // role revocation, artifact upload or evidence deletion; none imply server cancellation.
++  let closeFailed=false;for(const p of [a,b])try{p?.close();}catch{closeFailed=true;}
++  try{fs.unlinkSync(passPath);}catch{closeFailed=true;}
++  fs.writeFileSync(path.join(work,'FINAL.json'),JSON.stringify({state:uncertain?'BLOCKED; server state may require observation':'CLIENTS_CLOSED; no server cleanup',remoteCleanup:false,serverTerminationConfirmed:false,localCloseFailed:closeFailed}),{flag:'wx',mode:0o600});
++  if(closeFailed)blocked('Local closure/credential removal uncertain; HOLD');
++ }
++}
+diff --git a/vercel.json b/vercel.json
+index 3613fe2..94ed1d2 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -39,7 +39,8 @@
+       "fix/f01-native-isolation-20261025": false,
+       "fix/f02-final-rpc-cut-20261025": false,
+       "fix/f02-hosted-release-20261025": false,
+-      "fix/f02-hosted-admission-20261025": false
++      "fix/f02-hosted-admission-20261025": false,
++      "fix/f02-readonly-preflight-20261025": false
+     }
+   }
+ }
