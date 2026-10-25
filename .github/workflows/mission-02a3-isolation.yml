@@ -2,7 +2,11 @@ name: Hosted release partial-COMMIT rehearsal
 on:
   push:
     branches: [fix/f02-hosted-release-20261025]
-    paths: [.github/workflows/mission-02a3-isolation.yml, tools/hosted-release/**, audits/02a5/hosted-release/**]
+    paths:
+      - .github/workflows/mission-02a3-isolation.yml
+      - tools/hosted-release/**
+      - audits/02a5/hosted-release/MANIFEST.json
+      - 'audits/02a5/hosted-release/[0-9][0-9]-*.sql'
 permissions:
   contents: read
 jobs:
