@@ -1,7 +1,7 @@
 name: F02 secure amendment disposable PRE-GATE (legacy P0 retained)
 on:
   push:
-    branches: [security/mission-02a5-integration-local-20261014]
+    branches: [security/mission-02a5-integration-local-20261014, fix/f02-capability-integration-20261025]
     paths:
       - .github/workflows/mission-02a5-f02-amendment.yml
       - audits/02a5/f02-amendment/**
@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: luit77yak-dev/pizza-perfect-plate
-          ref: 011275488660bfa1a9271b3e4c92e457f7638e34
+          ref: 7214b81f20a27412a4610fe5f982e909870b943a
           path: delivery-candidate
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -50,6 +50,17 @@ jobs:
           python3 audits/02a5/verify_manifest.py
           python3 tools/mission-02a5/generate-buyer-run.py
           python3 audits/02a5/f02-amendment/generate.py
+      - name: Pin existing Bun and validate exact Delivery candidate
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: '1.3.4'
+      - name: Frozen Delivery dependencies and regression tests
+        working-directory: delivery-candidate
+        run: |
+          test "$(git rev-parse HEAD)" = 7214b81f20a27412a4610fe5f982e909870b943a
+          bun install --frozen-lockfile --ignore-scripts
+          node --experimental-strip-types --test tests/*.test.mjs
+          bunx tsc --noEmit
       - name: Unlinked native six-service stack, loopback binds
         run: |
           export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
@@ -96,7 +107,7 @@ jobs:
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=011275488660bfa1a9271b3e4c92e457f7638e34 DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=7214b81f20a27412a4610fe5f982e909870b943a DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/buyer-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
       - name: Read native PostgreSQL catalog (pre-gate ONLY)
         env:
           DOCKER_HOST: unix:///var/run/docker.sock

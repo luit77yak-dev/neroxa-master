@@ -1,6 +1,6 @@
 {
   "profile": "F02-amendment-disposable-pre-gate",
-  "status": "CANDIDATE SQL FIXED; EXACT HASH REPLAY NOT YET VERIFIED",
+  "status": "CANDIDATE integration extension; native run pending",
   "foundation": "BUYER-PRE-GATE-MANIFEST + exact catalog/19 predecessors, no Delivery migration concatenation",
   "foundation_manifest_sha256": "561f68727e6114711cb251170505d12ddc12d5e2bf903f84c84b30d4c3abe385",
   "units": [
@@ -80,6 +80,11 @@
       "source_projection_body_md5": "2dbde8a81cc643899821d44f923322df",
       "previous_candidate_sha256": "46332b0bc0746a928143ca35c92ff957599f6f8693efec09beb3fd96efab067a",
       "change_note": "Remove one stray $function$ delimiter before $snapshot$; exact candidate replay required"
+    },
+    {
+      "path": "audits/02a5/buyer-capabilities-atomic.candidate.sql",
+      "sha256": "1485a05028bf46f0b3840d983ebc0187a689b894588ad705fdedd614382eb903",
+      "reason": "Atomic tracking+amendment issuance for real checkout handler; no legacy gate change"
     }
   ],
   "phone_gate": "BLOCKED; DO NOT APPLY",
