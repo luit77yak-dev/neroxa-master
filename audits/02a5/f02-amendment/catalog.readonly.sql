@@ -46,7 +46,7 @@ views AS (
  AND pg_get_viewdef(c.oid,true) ~* '(get_public_order_status|append_public_order_items_with_payment|append_public_order_items)'
 )
 SELECT jsonb_build_object(
- 'kind','F02_PRE_GATE_PG_CATALOG_ONLY','legacy_gate_applied',(SELECT count(*)>0 AND bool_and(NOT anon_execute AND NOT authenticated_execute) FROM fn WHERE name IN ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment')),
+ 'kind','F02_NATIVE_ACTUAL_ACL','legacy_gate_applied',(SELECT count(*)>0 AND bool_and(NOT anon_execute AND NOT authenticated_execute) FROM fn WHERE name IN ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment')),
  'consumer_disablement_evidenced',false,'release_approved',false,
  'legacy_function_count',(SELECT count(*) FROM fn WHERE name IN ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment')),
  'functions',coalesce((SELECT jsonb_agg(to_jsonb(f)-'oid' ORDER BY signature) FROM fn f),'[]'::jsonb),

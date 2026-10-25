@@ -48,6 +48,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
           python3 audits/02a5/verify_manifest.py
+          MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_DELIVERY_SHA=7ca9376f29ee205d4063e46546f5070313ab78a0 node --input-type=module -e 'import {consumerInventory} from "./audits/02a5/f02-amendment/consumer-inventory.mjs";const i=consumerInventory();console.log("F02_SOURCE_INVENTORY="+JSON.stringify({status:i.status,sources:i.sources.map(({files,...s})=>s),rpcCalls:i.calls}));'
           python3 tools/mission-02a5/generate-buyer-run.py
           python3 audits/02a5/f02-amendment/generate.py
       - name: Pin existing Bun and validate exact Delivery candidate
@@ -130,14 +131,14 @@ jobs:
           assert len(content)==1,'one catalog result expected'
           result=json.loads(content[0])
           pathlib.Path(os.environ['RUNNER_TEMP'],'f02-pg-catalog-verified.json').write_text(json.dumps(result))
-          assert result['kind']=='F02_PRE_GATE_PG_CATALOG_ONLY'
+          assert result['kind']=='F02_NATIVE_ACTUAL_ACL'
           present=sorted({f['name'] for f in result['functions'] if f['name'] in ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment')})
           missing=sorted(set(('get_public_order_status','append_public_order_items','append_public_order_items_with_payment'))-set(present))
           print('F02_CATALOG_LEGACY_COVERAGE='+json.dumps({'present':present,'missing':missing,'classification':'PARTIAL_IF_MISSING'}))
           assert 'get_public_order_status' in present,'historical P0 function unexpectedly absent'
           assert result['legacy_gate_applied'] is True
           assert result['consumer_disablement_evidenced'] is False
-          print('F02_CATALOG_PRE_GATE='+json.dumps(result,sort_keys=True))
+          print('F02_CATALOG_ACTUAL_ACL='+json.dumps(result,sort_keys=True))
           print('F02_PRODUCTION_GATE=BLOCKED; DISPOSABLE_POST_GATE=OBSERVED; EXTERNAL_CONSUMERS=UNVERIFIED')
           PY
       - name: Emit provisional SEC-01..18 with original security failures
