@@ -76,6 +76,12 @@ jobs:
           for attempt in $(seq 1 30); do test -S "$AB_WORKDIR/docker-loopback.sock" && break; sleep 1; done
           export DOCKER_HOST="unix://$AB_WORKDIR/docker-loopback.sock"
           echo "DOCKER_HOST=$DOCKER_HOST" >> "$GITHUB_ENV"
+          # The upstream PostgreSQL tag was republished. Reuse the ORIGINAL image,
+          # not a newly admitted image: immutable manifest -> unchanged frozen config ID.
+          pg='supabase/postgres@sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5'
+          docker --host=unix:///var/run/docker.sock pull --platform linux/amd64 "$pg"
+          test "$(docker --host=unix:///var/run/docker.sock image inspect "$pg" --format '{{.Id}}')" = "$(python3 -c 'import json; print(json.load(open("audits/02a5/EXPECTED-IMAGES.json"))["supabase/postgres:17.11.0.004"])')"
+          docker --host=unix:///var/run/docker.sock tag "$pg" supabase/postgres:17.11.0.004
           if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit > "$AB_WORKDIR/start.private.log" 2>&1; then
             python3 tools/ab-auth/start_failure.py
             exit 1
