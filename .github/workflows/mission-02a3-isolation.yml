@@ -1,8 +1,12 @@
-name: F01 native A1 A2 C isolation
+name: Hosted release partial-COMMIT rehearsal
 on:
   push:
-    branches: [fix/f01-native-isolation-20261025]
-    paths: [.github/workflows/mission-02a3-isolation.yml, tools/f01/**]
+    branches: [fix/f02-hosted-release-20261025]
+    paths:
+      - .github/workflows/mission-02a3-isolation.yml
+      - tools/hosted-release/**
+      - audits/02a5/hosted-release/MANIFEST.json
+      - 'audits/02a5/hosted-release/[0-9][0-9]-*.sql'
 permissions:
   contents: read
 jobs:
@@ -43,7 +47,7 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
-          python3 tools/f01/generate.py
+          python3 tools/hosted-release/derive.py
       - name: Unlinked native six-service stack, loopback binds
         run: |
           export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
@@ -93,11 +97,11 @@ jobs:
             ancestor=$(dirname "$ancestor")
           done
           sudo setfacl -R -m u:neroxa_test:rX "$GITHUB_WORKSPACE"
-          sudo -u neroxa_test test -r tools/mission-02a3/f01-generated.private.mjs
+          sudo -u neroxa_test test -r tools/hosted-release/rehearse.mjs
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=false MISSION_F01_FOCUS=realtime-containment MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/f01-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=false MISSION_F01_FOCUS=realtime-containment MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/hosted-release/rehearse.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
       - name: Cleanup only this disposable project
         if: always()
         run: |

@@ -1,0 +1,83 @@
+{
+  "source": "c2b1f0f6519aec8f1e5cf7f40fea9af123e37055",
+  "run": 40220240520,
+  "run_url": "https://github.com/luit77yak-dev/neroxa-master/actions/runs/40220240520",
+  "cases": [
+    {
+      "name": "No admission blocks before first migration",
+      "status": "PASS"
+    },
+    {
+      "name": "Wrong release ID denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Wrong unit denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Expired session denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Fault after original intermediate COMMIT leaves independently observed partial state",
+      "status": "PASS"
+    },
+    {
+      "name": "Synthetic orphan retained byte-equivalent in private escrow, never assigned",
+      "status": "PASS"
+    },
+    {
+      "name": "Explicit reversal before cutover restores the exact synthetic source row",
+      "status": "PASS"
+    },
+    {
+      "name": "Explicit roll-forward backfill recovers after COMMIT, not replaying DDL",
+      "status": "PASS"
+    },
+    {
+      "name": "Recovery restores no old ACL or grants",
+      "status": "PASS",
+      "baselineAclCaptured": true
+    },
+    {
+      "name": "New capability tables and RPCs installed",
+      "status": "PASS"
+    },
+    {
+      "name": "Service-only capability entrypoints; private tables inaccessible",
+      "status": "PASS"
+    },
+    {
+      "name": "All four legitimate settings preserved, no unsafe default opening or access grants",
+      "status": "PASS"
+    },
+    {
+      "name": "Realtime private financial publication remains contained",
+      "status": "PASS"
+    },
+    {
+      "name": "Legacy phone RPCs not cut in this mission",
+      "status": "PASS"
+    }
+  ],
+  "units_installed": 33,
+  "scope": "native disposable rehearsal of hosted SQL candidate; NOT hosted execution/authentication",
+  "cleanup": "PASS",
+  "operational_admission": "BLOCKED; no hosted transport/signer execution admitted",
+  "data_disposition": "real source unchanged; synthetic escrow/reversal only",
+  "real_data_findings": {
+    "orphan_org_status": "CANCELLED, active=true",
+    "commercial_contract": "ACTIVE/SIGNED",
+    "subscription": "TRIAL; no cancelled_at",
+    "instances_orders_zones_members": 0,
+    "platform_roles": "4 active global roles; not explicit instance operators",
+    "schedules": "no hours/timezone sources found in current inspected catalog; scheduling_enabled is not a schedule"
+  },
+  "remaining": [
+    "explicit decision for commercial lifecycle inconsistency before real settings disposition",
+    "approved per-instance operator and timezone/hour maps",
+    "actual hosted transport/session admission and server configuration; existing runtime remains local-only",
+    "no customer RPC cut or public access release authorized"
+  ]
+}
