@@ -1,112 +1,110 @@
-name: Mission 02A3 real isolated profiles
+name: F01 native A1 A2 C isolation
 on:
   push:
-    branches: [security/mission-02a4-live-session-20261014]
-    paths: [.github/workflows/mission-02a3-isolation.yml, tools/mission-02a3/**, tools/mission-02a4/**, audits/02a4/**]
+    branches: [fix/f01-native-isolation-20261025]
+    paths: [.github/workflows/mission-02a3-isolation.yml, tools/f01/**]
 permissions:
   contents: read
 jobs:
-  real-profile:
+  native-isolation:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - profile: master
-            focus: matrix
-            actors: admin_A,admin_B,admin_C
-          - profile: master
-            focus: matrix
-            actors: staff_A,staff_none,common,anon
-          - profile: master
-            focus: availability-only
-            actors: all
-          - profile: master
-            focus: addons-realtime
-            actors: all
-          - profile: master
-            focus: storage-only
-            actors: all
+    timeout-minutes: 25
     env:
-      MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql,audits/02a4/delivery-live-session.candidate.sql
-      MISSION02A4_AVAILABILITY: ${{ matrix.focus == 'availability-only' }}
-      MISSION02A4_STORAGE: ${{ matrix.focus == 'storage-only' }}
-      MISSION_ACTORS: ${{ matrix.actors }}
-      MISSION_PROFILE: ${{ matrix.profile }}
-      MISSION_MUTATION_PROBE: "true"
-      MISSION_FOCUS: ${{ matrix.focus }}
       SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
-      AB_PROJECT: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
-      AB_NETWORK: neroxa-02a3-${{ github.run_id }}-${{ matrix.profile }}
+      AB_PROJECT: neroxa-02a3-${{ github.run_id }}-buyer
+      AB_NETWORK: neroxa-02a5-${{ github.run_id }}-buyer
+      MISSION_PROFILE: master
+      MISSION_FOCUS: f01-all
+      MISSION_ACTORS: all
+      MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql,audits/02a4/delivery-live-session.candidate.sql
+      MISSION02A4_AVAILABILITY: 'true'
+      MISSION02A4_STORAGE: 'true'
+      MISSION_MUTATION_PROBE: 'true'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          repository: luit77yak-dev/pizza-perfect-plate
-          ref: a99a7d743f9dbed8ece5d8b0880c4b9c543960c3
-          path: delivery-legacy
-          persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22.23.0'
-      - name: Verify public standard runner eligibility
+      - name: Public standard eligibility and real capacity before pull
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
           test "$RUNNER_ENVIRONMENT" = github-hosted
-          echo 'PUBLIC_STANDARD_RUNNER_ELIGIBLE=true; no cache/artifact upload configured'
-      - name: Reclaim only disposable hosted SDKs and measure actual capacity
-        run: |
-          test "$GITHUB_ACTIONS" = true
-          case "$PWD" in /home/runner/*) ;; *) exit 1;; esac
-          df -h "$RUNNER_TEMP"
-          if [ "$(df --output=avail -B1 "$RUNNER_TEMP" | tail -1)" -lt 30064771072 ]; then
-            sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL
-          fi
+          echo 'PUBLIC_STANDARD_RUNNER=true; billing basis docs.github.com/en/billing/concepts/product-billing/github-actions; no larger runner/cache/artifact uploads'
           python3 tools/mission-02a3/preflight.py
-      - name: Pinned dependencies; no app environment or customer data
+      - name: Locked app dependencies and pinned CLI; no commercial dotenv
         run: |
-          test "$(git -C delivery-legacy rev-parse HEAD)" = a99a7d743f9dbed8ece5d8b0880c4b9c543960c3
+          find . -name '.env*' -not -path './.git/*' -not -path './node_modules/*' -type f -delete
           npm ci --ignore-scripts --no-audit --no-fund
           npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
-          find . -name .env -not -path './node_modules/*' -not -path './.git/*' -exec rm -- {} +
-      - name: Unlinked platform with real Auth REST Storage Realtime
+          python3 tools/f01/generate.py
+      - name: Unlinked native six-service stack, loopback binds
         run: |
-          export AB_WORKDIR="$RUNNER_TEMP/02a3-$MISSION_PROFILE-$GITHUB_RUN_ID"
+          export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
           echo "AB_WORKDIR=$AB_WORKDIR" >> "$GITHUB_ENV"
           mkdir -m 700 "$AB_WORKDIR"
           supabase init --workdir "$AB_WORKDIR"
           python3 tools/ab-auth/configure.py
-          test ! -d "$AB_WORKDIR/supabase/migrations"
           test ! -f "$AB_WORKDIR/supabase/.temp/project-ref"
+          test ! -d "$AB_WORKDIR/supabase/migrations"
           docker network create --driver bridge --opt com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$AB_NETWORK"
           python3 tools/ab-auth/docker_loopback.py > "$AB_WORKDIR/relay.private.log" 2>&1 &
           echo $! > "$AB_WORKDIR/relay.pid"
           for attempt in $(seq 1 30); do test -S "$AB_WORKDIR/docker-loopback.sock" && break; sleep 1; done
           export DOCKER_HOST="unix://$AB_WORKDIR/docker-loopback.sock"
           echo "DOCKER_HOST=$DOCKER_HOST" >> "$GITHUB_ENV"
+          # The upstream PostgreSQL tag was republished. Reuse the ORIGINAL image,
+          # not a newly admitted image: immutable manifest -> unchanged frozen config ID.
+          pg='supabase/postgres@sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5'
+          docker --host=unix:///var/run/docker.sock pull --platform linux/amd64 "$pg"
+          test "$(docker --host=unix:///var/run/docker.sock image inspect "$pg" --format '{{.Id}}')" = "$(python3 -c 'import json; print(json.load(open("audits/02a5/EXPECTED-IMAGES.json"))["supabase/postgres:17.11.0.004"])')"
+          docker --host=unix:///var/run/docker.sock tag "$pg" supabase/postgres:17.11.0.004
           if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit > "$AB_WORKDIR/start.private.log" 2>&1; then
             python3 tools/ab-auth/start_failure.py
             exit 1
           fi
           supabase status --workdir "$AB_WORKDIR" -o env > "$AB_WORKDIR/status.private.env"
           chmod 600 "$AB_WORKDIR/status.private.env"
-          docker ps --format '{{.Names}} {{.Image}} {{.Status}}'
-          df -h "$RUNNER_TEMP"
-      - name: Real identities and candidate rehearsal; deny all external test egress
+          python3 - <<'PY'
+          import json,subprocess,os
+          expected=json.load(open('audits/02a5/EXPECTED-IMAGES.json'));seen={}
+          for line in subprocess.check_output(['docker','ps','--format','{{json .}}'],text=True).splitlines():
+            c=json.loads(line)
+            if c['Names'].endswith('_'+os.environ['AB_PROJECT']):seen[c['Image']]=subprocess.check_output(['docker','inspect',c['Names'],'--format','{{.Image}}'],text=True).strip()
+          print('IMAGE_IDENTITY_COMPARISON='+json.dumps({'expected':expected,'observed':seen},sort_keys=True))
+          assert seen==expected, 'BLOCKED: image identity drift'
+          print('IMAGE_IDENTITIES='+json.dumps(seen))
+          PY
+      - name: Real Auth and buyer recut with test UID egress restriction
         run: |
-          bash tools/mission-02a3/network.sh lock
-          trap 'bash tools/mission-02a3/network.sh unlock' EXIT
-          node tools/mission-02a3/run.mjs
+          set -euo pipefail
+          sudo useradd --create-home --groups docker neroxa_test
+          sudo chown -R neroxa_test:neroxa_test "$AB_WORKDIR"
+          # Dedicated UID needs traversal/read of the audited workspace, not runner secrets.
+          ancestor="$GITHUB_WORKSPACE"
+          while [ "$ancestor" != / ]; do
+            sudo setfacl -m u:neroxa_test:--x "$ancestor"
+            ancestor=$(dirname "$ancestor")
+          done
+          sudo setfacl -R -m u:neroxa_test:rX "$GITHUB_WORKSPACE"
+          sudo -u neroxa_test test -r tools/mission-02a3/f01-generated.private.mjs
+          echo 'TEST_UID_WORKSPACE_READ=PASS'
+          bash tools/mission-02a5/network.sh lock
+          trap 'bash tools/mission-02a5/network.sh unlock' EXIT
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=true MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/f01-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
       - name: Cleanup only this disposable project
         if: always()
         run: |
-          bash tools/mission-02a3/network.sh unlock
+          bash tools/mission-02a5/network.sh unlock
+          if [ -n "${AB_WORKDIR:-}" ] && sudo test -d "$AB_WORKDIR"; then
+            sudo chown -R "$(id -u):$(id -g)" "$AB_WORKDIR"
+          fi
+          export DOCKER_HOST=unix:///var/run/docker.sock
           if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
             supabase stop --workdir "$AB_WORKDIR" --no-backup
             if [ -f "$AB_WORKDIR/relay.pid" ]; then kill "$(cat "$AB_WORKDIR/relay.pid")" || true; fi
@@ -114,4 +112,4 @@ jobs:
           docker --host=unix:///var/run/docker.sock network rm "$AB_NETWORK" || true
           remaining=$(docker --host=unix:///var/run/docker.sock ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT)
           test -z "$remaining"
-          echo 'CLEANUP=PASS no project containers; runner disposable; no dumps or tokens uploaded'
+          echo 'CLEANUP=PASS; no project containers; no dumps or credentials uploaded'
