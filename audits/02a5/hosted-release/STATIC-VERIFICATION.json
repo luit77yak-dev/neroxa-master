@@ -1,0 +1,203 @@
+{
+  "scope": "static only; not operational authentication",
+  "units": [
+    {
+      "order": 1,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 2,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 3,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 4,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 5,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 6,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 7,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 8,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 9,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 10,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 11,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 12,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 13,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 14,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 15,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 16,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 17,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 18,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 19,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 20,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 21,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 22,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 23,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 24,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 25,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 26,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 27,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 28,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 29,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 30,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 31,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 32,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    },
+    {
+      "order": 33,
+      "source_and_postimage_hashes": "PASS",
+      "explicit_commits_preserved": true,
+      "grant_revoke_lines_preserved": true
+    }
+  ]
+}

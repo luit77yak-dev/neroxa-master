@@ -1,0 +1,281 @@
+--- original/audits/sql/instance-membership-foundation.candidate.sql
++++ audits/02a5/hosted-release/01-instance-membership-foundation.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 7889d4d9bdc37cf01457a8d0608e997e143f8bbfd377130b16f72539487c72d0; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',1) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- CANDIDATE / NOT EXECUTED. Requires isolated Master-compatible test database.
+--- original/audits/sql/storefront-instance-phase1.candidate.sql
++++ audits/02a5/hosted-release/02-storefront-instance-phase1.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: e4e75abc28a5c07b163a6e98f7a9c7be9fad3f8a2543c4635cfbf5d35193e462; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',2) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- PHASE 1 CANDIDATE ONLY. Run in isolated compatible clone first.
+--- original/audits/sql/store-product-category-guard.candidate.sql
++++ audits/02a5/hosted-release/03-store-product-category-guard.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 385d4446003c5604f9e18a0ebbf1b5f1c92d83fd11655db6cdd9815e7547011e; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',3) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Candidate only. Do not deploy before reviewing dependencies and running tests.
+--- original/audits/sql/storefront-tenant-integrity.candidate.sql
++++ audits/02a5/hosted-release/04-storefront-tenant-integrity.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: c388d0dabb8c58988ef30c30b1f084c2acabf33ff23e798d278ac8d99ff99cf1; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',4) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Isolated test candidate: enforce instance/org consistency and immutable tenancy.
+--- original/audits/sql/storefront-parent-instance-guard.candidate.sql
++++ audits/02a5/hosted-release/05-storefront-parent-instance-guard.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: ec8afaa42ec5f590c1cbb1c98ff191d652779c3b0d97adc2ff4599f7389084c5; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',5) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- CANDIDATE: prevent reassignment of an instance to another organization.
+--- original/audits/sql/store-isolation-policies.candidate.sql
++++ audits/02a5/hosted-release/06-store-isolation-policies.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 848d370e950ca8998ae8e3322c41f1484bb25e667c30d2cb1e8e2e1da087735c; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',6) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Candidate policy replacement, depends on instance-membership-foundation.candidate.sql
+--- original/audits/sql/storefront-instance-phase2-cutover.candidate.sql
++++ audits/02a5/hosted-release/07-storefront-instance-phase2-cutover.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: f06c49a835128063c95d1dae7272502a1831ff1009c3a9dc430edae7b633855a; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',7) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- PHASE 2 STRUCTURAL CUTOVER CANDIDATE. ISOLATED DATABASE ONLY.
+--- original/audits/sql/storefront-settings-zones-rls.candidate.sql
++++ audits/02a5/hosted-release/08-storefront-settings-zones-rls.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 959170218f352c6d7b41e7dcc011ab8e092ded44e8a5a8e8855a1c8947f52c64; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',8) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- CANDIDATE ONLY: execute after settings/zones instance_id NOT NULL cutover.
+--- original/audits/sql/storefront-admin-rpc.candidate.sql
++++ audits/02a5/hosted-release/09-storefront-admin-rpc.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 0e1c6e4a806a12f5631c556040e2ee06b29c3c37c789f53e1631c5f71a9bc753; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',9) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- CANDIDATE: admin order RPCs only; isolated database verification required.
+--- original/audits/sql/storefront-rpcs-phase2.candidate.sql
++++ audits/02a5/hosted-release/10-storefront-rpcs-phase2.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 4d37407a16a8b962161c0aa807b444a95b033299fc1131cf1938421e4068b439; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',10) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- ISOLATED TEST CANDIDATE: full functions preserved from Master schema inspection.
+--- original/audits/sql/store-isolation-prerequisites.assert.sql
++++ audits/02a5/hosted-release/11-store-isolation-prerequisites.assert.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 9b2e0873c49d4358ef7e138f5c6ac9a6f4d673f9fa7107cb5fbb22403daa9c55; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',11) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- EXECUTABLE IN ISOLATED DB ONLY after candidate schema and policies have been applied.
+--- original/audits/sql/store-isolation-runtime-hardening.candidate.sql
++++ audits/02a5/hosted-release/12-store-isolation-runtime-hardening.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 342bafbec2f94f1f03aab24731fa31700b7c20151334a2ec415564c412384c37; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',12) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- CANDIDATE ONLY. Tested against full historical catalog + real local Auth.
+--- original/audits/sql/admin-order-rpc-acl.release-gate.candidate.sql
++++ audits/02a5/hosted-release/13-admin-order-rpc-acl.release-gate.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: dd50db6bf42a0b2c41065110d6a88f2ee7e26bf225538718a3ac2f96020666a4; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',13) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW CANDIDATE ONLY. Never run remotely without coordinated approval.
+--- original/audits/sql/group-addons-pricing.candidate.sql
++++ audits/02a5/hosted-release/14-group-addons-pricing.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 3850db07fda4a794b00d13177c08138b3e0486e7e7abc5bc8eb05c608ac84a1d; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',14) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW ONLY; depends on full phase2 + runtime hardening. Never remote-install automatically.
+--- original/audits/sql/store-availability.candidate.sql
++++ audits/02a5/hosted-release/15-store-availability.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 45da99d6ef1d4f0afadd65473b5c2ed7360f1e5766ec3af7aa6e61fdfbcb9daf; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',15) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW ONLY: explicit new availability contract; after GROUP pricing.
+--- original/audits/sql/checkout-recovery.candidate.sql
++++ audits/02a5/hosted-release/16-checkout-recovery.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: acc820704864db99ade9c27352c6462163fdfb0fef5076b816c9963c06ca9022; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',16) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW ONLY. After availability; legacy rows are NOT given a new recovery lease.
+--- original/audits/sql/checkout-reconciliation.candidate.sql
++++ audits/02a5/hosted-release/17-checkout-reconciliation.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: bf5da2fca7e7ca19ca084c070f422ee3112ca7f0d7408044660299f9e5b43c5a; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',17) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW ONLY: explicit operator reconciliation; no payment or append authorization.
+--- original/audits/sql/operational-order-detail.candidate.sql
++++ audits/02a5/hosted-release/18-operational-order-detail.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: beff5f1acf436176435806f697c89a21e646dd6f3b4eb4c031ef345763867790; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',18) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW ONLY; after existing admin ACL and instance authorization.
+--- original/audits/sql/operational-order-transitions.candidate.sql
++++ audits/02a5/hosted-release/19-operational-order-transitions.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 4d4baf9edbcbd7d269c52b38ff3fde5cbeb1f7be40ea945eef6c5ebd7eae1180; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',19) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ BEGIN;
+--- original/audits/02a2/scoped-order-access.candidate.sql
++++ audits/02a5/hosted-release/20-scoped-order-access.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',20) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW CANDIDATE ONLY / DB TESTS NOT RUN. Not an automatic migration.
+@@ -6,3 +9,3 @@
+ DO $guard$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' THEN
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',20) THEN
+   RAISE EXCEPTION '02A2 disposable intent missing'; END IF;
+--- original/audits/02a4/availability-instance-scope.candidate.sql
++++ audits/02a5/hosted-release/21-availability-instance-scope.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',21) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Disposable Master profile only, after exact 02A2 manifest and scoped-order-access.
+@@ -4,3 +7,3 @@
+ DO $$ DECLARE t text; BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' OR
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',21) OR
+  to_regprocedure('neroxa_private.has_delivery_instance_role(uuid,public.neroxa_organization_role[])') IS NULL THEN
+--- original/audits/02a4/addon-explicit-membership.candidate.sql
++++ audits/02a5/hosted-release/22-addon-explicit-membership.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',22) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Master M + explicit scope caps (02A2); not the Delivery legacy profile.
+@@ -3,3 +6,3 @@
+ DO $$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' OR NOT EXISTS(SELECT 1 FROM pg_policy WHERE polrelid='public.neroxa_storefront_addon_groups'::regclass AND polname='mission02a2_scope_cap') THEN RAISE EXCEPTION 'Explicit instance caps required'; END IF;
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',22) OR NOT EXISTS(SELECT 1 FROM pg_policy WHERE polrelid='public.neroxa_storefront_addon_groups'::regclass AND polname='mission02a2_scope_cap') THEN RAISE EXCEPTION 'Explicit instance caps required'; END IF;
+ END $$;
+--- original/audits/02a4/delivery-live-session.candidate.sql
++++ audits/02a5/hosted-release/23-delivery-live-session.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',23) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Master M only, after scoped02A2 and exact manifest. No Auth schema DDL.
+@@ -3,3 +6,3 @@
+ DO $$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' OR
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',23) OR
+  (SELECT md5(prosrc) FROM pg_proc WHERE oid=to_regprocedure('neroxa_private.has_delivery_instance_role(uuid,public.neroxa_organization_role[])')) IS DISTINCT FROM 'd2a409935bbbc1b97a2d8fc28ae46652' THEN RAISE EXCEPTION 'Unexpected scoped helper / disposable context'; END IF;
+--- original/audits/02a4/storage-instance-images.candidate.sql
++++ audits/02a5/hosted-release/24-storage-instance-images.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 5739b1226bb2d9ee7b760ddfaa8b0ffcd65048ec92dd938a41a194713795962e; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',24) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- M only; native Storage RLS already enabled. No ownership/role changes.
+@@ -3,3 +6,3 @@
+ DO $$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' OR
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',24) OR
+  NOT coalesce((SELECT relrowsecurity FROM pg_class WHERE oid='storage.objects'::regclass),false) THEN RAISE EXCEPTION 'Disposable native Storage RLS required'; END IF;
+--- original/audits/02a4/private-tracking.candidate.sql
++++ audits/02a5/hosted-release/25-private-tracking.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 7c1e7c5daf8588cc7eaeb8ad63825f15747c9660ab5391a8899697698e7112dd; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',25) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Preparatory server-only contract. NOT an enabled buyer endpoint.
+@@ -3,3 +6,3 @@
+ DO $$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' OR to_regclass('public.neroxa_orders') IS NULL THEN RAISE EXCEPTION 'Disposable Master baseline required'; END IF;
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',25) OR to_regclass('public.neroxa_orders') IS NULL THEN RAISE EXCEPTION 'Disposable Master baseline required'; END IF;
+ END $$;
+--- original/audits/02a5/tracking-ingress-quota.candidate.sql
++++ audits/02a5/hosted-release/26-tracking-ingress-quota.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: afb5c31c4588a26cc1e7c31cdc09d6f5360fce4fcef22281e5d3b80dcea60727; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',26) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Isolated pre-gate buyer profile only. NOT an automatic migration or release gate.
+@@ -3,3 +6,3 @@
+ DO $$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' OR
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',26) OR
+  to_regprocedure('public.neroxa_track_order_with_capability(uuid,uuid,text)') IS NULL OR
+--- original/audits/sql/checkout-durable-rate-limit.candidate.sql
++++ audits/02a5/hosted-release/27-checkout-durable-rate-limit.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: b75d348d626d6c4ea27163bf5d539ad3ae8d4d9103b54cff3a4d4deb6d5d0cbb; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',27) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- ISOLATED RELEASE CANDIDATE. NEVER APPLY TO PRODUCTION DURING AUDIT.
+--- original/audits/sql/order-amendment-capability.candidate.sql
++++ audits/02a5/hosted-release/28-order-amendment-capability.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 60f791be31aa94407edc71a570f994a6ea61fc1ab2610efc6ff3dfd54680ae69; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',28) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- DRAFT / ISOLATED TEST CANDIDATE — NEVER APPLY TO PRODUCTION.
+--- original/audits/sql/group-addons-capability.candidate.sql
++++ audits/02a5/hosted-release/29-group-addons-capability.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 675fe171218eaf5c5aa6570aefed31dace35f63f0293cb0f146dc8f0d3491a5e; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',29) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- REVIEW ONLY; after capability and group pricing. Existing ACLs retained.
+--- original/audits/sql/store-availability-capability.candidate.sql
++++ audits/02a5/hosted-release/30-store-availability-capability.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: cc0bb4ae8932550652a31dc2ca1e1751be5fa8bc449d487984ce9ad537edc499; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',30) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ BEGIN;
+--- original/audits/02a5/amendment-history.candidate.sql
++++ audits/02a5/hosted-release/31-amendment-history.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 1a2406fc6394f9626ceda25dbfe374ab6081af9b54a698f87b8bb88c07af3fc3; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',31) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Local disposable candidate ONLY. After the three unchanged amendment units.
+@@ -6,3 +9,3 @@
+ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' THEN RAISE EXCEPTION 'Disposable intent required'; END IF;
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',31) THEN RAISE EXCEPTION 'Disposable intent required'; END IF;
+  IF (SELECT md5(prosrc) FROM pg_catalog.pg_proc WHERE oid=signature) IS DISTINCT FROM '32c5fbee5679eb0147f8b0bd3961f9fb' THEN RAISE EXCEPTION 'Amendment history predecessor drift'; END IF;
+--- original/audits/02a5/recovery-without-phone.candidate.sql
++++ audits/02a5/hosted-release/32-recovery-without-phone.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: b1ef02f71a9d087ef5bec59e93406f142e2bad5bec0e870e2b652904c3c307c4; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',32) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Disposable candidate only: remove phone RPC dependency from service-only recovery.
+@@ -4,3 +7,3 @@
+ DO $$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on' THEN RAISE EXCEPTION 'Disposable intent required'; END IF;
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',32) THEN RAISE EXCEPTION 'Disposable intent required'; END IF;
+  IF (SELECT md5(prosrc) FROM pg_proc WHERE oid='public.neroxa_recover_group_order(uuid,uuid,jsonb)'::regprocedure) IS DISTINCT FROM 'a7b00a68fa486f741d813e15fb96035a' THEN RAISE EXCEPTION 'Recovery wrapper predecessor drift'; END IF;
+--- original/audits/02a5/buyer-capabilities-atomic.candidate.sql
++++ audits/02a5/hosted-release/33-buyer-capabilities-atomic.candidate.sql
+@@ -1 +1,4 @@
++-- Derived candidate for iefaoaqzltvpfabyeelj; no operational admission.
++-- Source SHA256: 1485a05028bf46f0b3840d983ebc0187a689b894588ad705fdedd614382eb903; original content/comments preserved below.
++DO $release$ BEGIN IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',33) THEN RAISE EXCEPTION 'Release transport/session admission required'; END IF; END $release$;
+ -- Disposable integration candidate; no production application authorized.
+@@ -4,3 +7,3 @@
+ DO $$ BEGIN
+- IF current_setting('neroxa.mission02a2_disposable',true) IS DISTINCT FROM 'on'
++ IF NOT pg_temp.neroxa_release_admitted('6611843683eeade08d666b51b8bf4a476e3a7442d20d7f91fe84f70ded0437c1',33)
+  THEN RAISE EXCEPTION 'Disposable candidate baseline required'; END IF;
