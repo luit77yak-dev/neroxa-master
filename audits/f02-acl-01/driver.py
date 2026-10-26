@@ -508,8 +508,10 @@ def cleanup(state):
             attempt('lab_owner', lambda: command(['sudo', 'chown', '-R', str(state['runner_uid']) + ':' + str(os.getgid()), str(lab)]))
         env = dict(os.environ, AB_NETWORK=state['network'], DOCKER_HOST='unix:///var/run/docker.sock')
         ids = attempt('inventory_containers', lambda: containers(state), [])
-        if ids and (lab / 'supabase/config.toml').is_file():
-            attempt('supabase_stop', lambda: command(['supabase', 'stop', '--workdir', str(lab), '--no-backup'], env=env))
+        def stop_if_configured():
+            if ids and (lab / 'supabase/config.toml').is_file():
+                command(['supabase', 'stop', '--workdir', str(lab), '--no-backup'], env=env)
+        attempt('supabase_stop', stop_if_configured)
         # Separate inventory failure must not prevent termination of known services.
         ids = attempt('remaining_containers', lambda: containers(state), ids)
         for container in ids:
