@@ -1,0 +1,49 @@
+# INACTIVE: intentionally outside .github/workflows. Future activation is a separate decision.
+name: F02 ACL 01 focal laboratory candidate
+on:
+  workflow_dispatch:
+    inputs:
+      approved_sha:
+        description: Exact reviewed commit SHA containing the activated driver
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: f02-acl-01
+  cancel-in-progress: false
+jobs:
+  focal:
+    if: github.repository == 'luit77yak-dev/neroxa-master' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Require reviewed dispatch SHA
+        env:
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+        run: |
+          [[ "$APPROVED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$APPROVED_SHA" = "$GITHUB_SHA"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 011275488660bfa1a9271b3e4c92e457f7638e34
+          path: delivery-candidate
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.0
+      - name: Prepare existing CLI version
+        run: |
+          npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
+          echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Focal test with mandatory cleanup
+        run: python3 audits/f02-acl-01/driver.py run
+      - name: Independent cleanup admission
+        if: always()
+        run: python3 audits/f02-acl-01/driver.py audit

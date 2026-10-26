@@ -1,0 +1,31 @@
+{
+  "base_master": "c149f802adf1922be588319cc98a798c7b387ea8",
+  "delivery_repository": "luit77yak-dev/pizza-perfect-plate",
+  "delivery_sha": "011275488660bfa1a9271b3e4c92e457f7638e34",
+  "dependencies": {
+    "audits/02a5/EXPECTED-IMAGES.json": "737ed51c7b9753478b854837f976e0e6d2482ed4e1aad2eb7ae79d9b5e442ca0",
+    "audits/ab-auth/master-catalog-20261009.json": "e7ed111d73ec8d63b514db8c39059d6b87ae97be74d54e0d682d38bc0e4cf858",
+    "audits/ab-auth/source.json": "9a3157d2c106775ff97c8293d52db5d3d5da94f25cd71d9947977573a1c0e009",
+    "audits/sql/order-amendment-capability.candidate.sql": "60f791be31aa94407edc71a570f994a6ea61fc1ab2610efc6ff3dfd54680ae69",
+    "tools/ab-auth/build_schema.py": "a0c64b9899046aa235977d0f8e52c6e4632e7636ad64a77cdffca9e224a43ad4",
+    "tools/ab-auth/configure.py": "56f91d23d3e2c886ade8db0484987cd50bbc3293c36ce68c800f3c6bc428f70f",
+    "tools/ab-auth/docker_loopback.py": "ba1d29d5ae8cf76428d00c45454f3df4e1ac48edf26e974dd5ec86c22f81fd26",
+    "tools/mission-02a3/preflight.py": "fb92b5fe11244e15bfeef1096f9909b9f33e71dc3aa33c08868bdc987286fbd0",
+    "tools/mission-02a5/network.sh": "ec57ccb0388b551e3ede57e651c8ce764feec37d91f172336215471d774f7833"
+  },
+  "files": {
+    "DRIFT-ADDENDUM.md": "a4a06d5e66018d01acd39bd8f1266cc41686b2da6c194073f086e58d81cd610e",
+    "README.md": "bb9fb39af3cc7c637729250ee6f5308e012543d14bf74caf063ebdbef6728aa6",
+    "STATIC-REVIEW.md": "63958a7d92ad9a680073944ee7abd82be9e1a8b73932208b7f1b93f285f1dbb2",
+    "driver.py": "b9c5f81b39dd6b543e620b698d97cf69489756baedf3b6957d175747d4ae348d",
+    "fixtures.sql": "7b32b79f5d157d5e902c1b7d7610a550b5ec34180e4d10d178b2c598f11e8d17",
+    "revoke.sql": "7764c50d74775d93f3efd7ab28d60bf371a60ad8fa2e6a2b96863cc41cd667a4",
+    "workflow.candidate.yml": "c402906c2ededf4a1e22a9449b45b6d787fc0268fc37c023aced00c59bd47690"
+  },
+  "helper": {
+    "definition_md5": "b8fcc43700775f8600d52cbced33f189",
+    "definition_sha256": "97be7523846e2095f5588936b13539ea8596baeef238c3a3c20cc4be25f111d5",
+    "source_md5": "bf8a60da54fda7d28e1003d892d7e116"
+  },
+  "historical_run": "38785111675"
+}
