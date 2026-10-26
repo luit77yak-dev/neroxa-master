@@ -1,82 +1,105 @@
-# F02-ACL-01 — candidato estático de ensaio focal
+# F02-ACL-01 — candidato V2 estático
 
-**Nenhuma execução de SQL, Docker ou Actions nesta missão. F01/F02 abertos; Comercial NÃO LIBERADO.**
+**SEM EXECUÇÃO. F01/F02 abertos; Comercial NÃO LIBERADO.**
+Base da revisão: `3979bd893ce56823e2a7b816e41ad10efc0e3654` (V1).
+Branch local: `work/f02-acl-01-driver-v2-20261026`. Nada publicado.
 
-Novo diretório independente. Nenhum arquivo compartilhado ou congelado foi alterado.
-O único SQL de correção é `revoke.sql`. `fixtures.sql` contém somente dados fictícios
-identificáveis e uma role local NOLOGIN sem memberships. Não cria a identidade real.
+## Delta autorizado
 
-## Base e dependências
+1. Cleanup acumula falhas por etapa e audita todos os domínios; nenhuma falha interrompe deliberadamente as outras remoções. Operações ausentes viram no-op; falhas transitórias continuam BLOCKED nesta tentativa e podem ser retomadas por `recover`. PASS só após todas as tentativas sem erros e todos os checks PASS.
+2. SIGINT/SIGTERM solicitam unwind para cleanup; durante a limpeza sinais suaves não interrompem as etapas restantes. O template tem etapas `always()` separadas para `recover` e `audit`. SIGKILL, perda da VM, cancelamento forçado ou limite global do job podem impedir ambas; recibo ausente/incompleto nunca é PASS.
+3. As seis imagens são carregadas e seus IDs exatos comparados antes de qualquer serviço. PostgreSQL continua fixado pelo digest aprovado. A mesma bridge agora é `--internal`; o mesmo `network.sh` é instalado e suas regras IPv4/IPv6 conferidas antes de `supabase start`. O relay histórico permanece intacto; `guarded_relay.py` envolve apenas sua criação de contêineres, exige imagem admitida e rede exata, resolve a imagem para ID imutável e preserva os bindings loopback.
+4. O resultado `RESOURCE_PREFLIGHT` deve existir uma única vez, ser JSON, ter `status=PASS` e atingir os limites numéricos. Código zero sozinho não basta; `python3 -E` também impede PYTHONOPTIMIZE herdado.
+5. `vercel.json` recebe apenas `git.deploymentEnabled["work/f02-acl-01-driver-v2-20261026"]=false`. Nenhum header, configuração anterior ou arquivo de workflow ativo muda. Allowlist admite somente o diretório focal e esse arquivo, cujo delta semântico é conferido contra V1.
 
-- Master: `c149f802adf1922be588319cc98a798c7b387ea8`.
-- Delivery: `011275488660bfa1a9271b3e4c92e457f7638e34`, apenas checkout e conferência de SHA; sem importar seu schema legado.
-- Histórico informado/inspecionado: execução `38785111675`; comprova componentes do laboratório, não este driver.
-- Supabase CLI `2.120.0`, Node `22.23.0`, VM padrão GitHub `ubuntu-24.04`.
-- PostgreSQL `supabase/postgres@sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5`.
-- Image ID linux/amd64 exigido: `sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a`.
-- O digest é candidato identificado documentalmente; disponibilidade/ID serão verificados por pull somente na execução futura. A tag mutável não basta.
-- Auth, REST, Storage, Realtime, Kong: IDs integrais em `audits/02a5/EXPECTED-IMAGES.json`, verificados antes dos testes.
-- `manifest.json` fixa SHA256 dos arquivos novos e componentes reutilizados. CLI/action pins seguem o laboratório existente; não constituem dependências novas auditadas integralmente.
+Adicionalmente, os positivos conferem pedidos/itens/histórico persistidos: IDs, nomes,
+metades, tamanho/borda, adicionais/complementos, notas, quantidade, preço unitário,
+valor de cada linha, subtotal, taxa e total. O teste negativo continua exigindo
+EXECUTE=false, SQLSTATE 42501, ausência de memberships e nenhum SECURITY DEFINER
+executável nos schemas de aplicação. Os grants explícitos são comparados integralmente.
 
-Reutilização direta, sem editar: `tools/ab-auth/build_schema.py`, `configure.py`,
-`docker_loopback.py`, `tools/mission-02a3/preflight.py`,
-`tools/mission-02a5/network.sh`, catálogo Master e EXPECTED-IMAGES.
-A reconstrução usa DDL/metadados capturados, sem dump de linhas nem exportação hospedada.
-O helper precisa corresponder aos três hashes aprovados e à ACL, owner postgres,
-SECURITY DEFINER e config exatos. Diferença em qualquer ponto encerra o ensaio.
-Isso não certifica equivalência de todo o schema hospedado atual.
+## Bases e dependências preservadas
 
-## Menor caminho operacional preparado
+- Master histórico: `c149f802adf1922be588319cc98a798c7b387ea8`; execução histórica `38785111675` não valida V2.
+- Delivery: `luit77yak-dev/pizza-perfect-plate` em `011275488660bfa1a9271b3e4c92e457f7638e34`; somente checkout/conferência, sem importar schema legado.
+- CLI Supabase `2.120.0`, Node `22.23.0`, runner padrão público `ubuntu-24.04`.
+- PG: `supabase/postgres@sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5`.
+- Image ID PG: `sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a`.
+- Outros cinco serviços: tags/IDs congelados de `audits/02a5/EXPECTED-IMAGES.json`; divergência no pull bloqueia antes do start. Nenhuma imagem foi baixada nesta missão.
+- Reutilizados sem alteração: `tools/ab-auth/build_schema.py`, `configure.py`, `docker_loopback.py`, `tools/mission-02a3/preflight.py`, `tools/mission-02a5/network.sh`, catálogos, SQL capability e EXPECTED-IMAGES.
+- O configure histórico exige workdir diretamente abaixo de RUNNER_TEMP: somente nessa chamada o driver fornece o diretório de recuperação como RUNNER_TEMP. Configuração gerada continua dentro do mesmo laboratório isolado, sem link, seeds ou migrations.
 
-1. Revisar este candidato e seus hashes. Validar autorização futura de execução e a neutralização de deploys automáticos antes de publicar qualquer branch.
-2. Em decisão posterior, ativar somente `workflow.candidate.yml` em `.github/workflows`, atualizar a admissibilidade de caminhos do driver e manifest e revisar o novo SHA. A ativação é deliberadamente bloqueada pelo guard atual, que só aceita delta neste diretório.
-3. Disparar manualmente pelo SHA exato revisado, em repositório público, VM padrão nova e tentativa 1. Não usar secrets/environments hospedados. Não executar o workflow histórico inteiro.
-4. O driver verifica ancestry/base, Delivery, árvore limpa, hashes, credenciais ausentes, recursos mínimos (28 GiB disco, 6 GiB memória e 2 CPUs pelo preflight existente), Docker local e ausência de colisões. Após início exige 18 GiB livres.
-5. Inicializa stack local não vinculada, seeds/migrations ausentes, seis imagens exatas, bindings loopback. SQL somente por socket dentro do contêiner inspecionado; REST/Auth apenas loopback. Bloqueia egress do UID de teste e bridge antes de importar o catálogo.
-6. Reconstrói schema, valida preimagem, insere fixtures, recarrega cache REST, testa antes, aplica um REVOKE e compara catálogo/dados. Repete positivos e negativos.
-7. `finally` remove stack/volumes/rede, regras, UID/processos, relay, ACLs de travessia e material local de Auth. Auditoria independente exige recibo PASS e inventário final sem resíduos. `result.json` contém somente metadados da função/resultados; nunca tokens/senhas.
+Preimagem exata mantida: MD5 prosrc `bf8a60da54fda7d28e1003d892d7e116`, MD5 definição
+`b8fcc43700775f8600d52cbced33f189`, SHA256 definição
+`97be7523846e2095f5588936b13539ea8596baeef238c3a3c20cc4be25f111d5`.
+Owner postgres, SECURITY DEFINER, `search_path=public` e ACL inicial exatos são obrigatórios.
+`fixtures.sql`, `revoke.sql`, adendo de drift e arquivos históricos permanecem inalterados.
+Reconstrução inicial reproduz DDL/grants em banco vazio; após o checkpoint somente o
+REVOKE de PUBLIC do helper é permitido. Não há substituição do helper nem aplicação do gate A.
 
-O comando futuro é `python3 audits/f02-acl-01/driver.py run`; `audit` confere cleanup.
-`exercise` é uma etapa interna sob UID isolado, não uma interface para conexão hospedada.
-Template permanece **inativo**, fora de `.github/workflows`; nada será disparado ao criar
-este candidato local. Publicação remota não realizada, pois a nova branch não possui
-exclusão explícita no Vercel existente; nenhuma alteração compartilhada foi feita para contornar isso.
+## Recuperação e isolamento
 
-## Matriz preparada — todos os testes abaixo NÃO EXECUTADOS
+O registro `state.json` é privado, gravado atomicamente e permanece sob posse do runner,
+fora de `lab`, que é o único diretório transferido ao UID de teste. Apenas uma cópia
+sanitizada é legível pelo teste. Intenções são registradas antes das alterações relevantes;
+a recuperação valida run, SHA, caminhos, proprietário e identidades determinísticas.
+UID numérico e bridge registrados permitem remover regras após uma limpeza parcial
+que já tenha apagado o usuário ou a rede. ACLs de workspace/ancestrais são capturadas
+e restauradas integralmente, incluindo máscaras.
+O inventário final cobre contêineres com labels próprio/histórico, volumes, rede, processos
+do teste/relay, UID/home, regras, ACLs e material temporário. Restrições de saída são
+mantidas se ainda houver processos ou contêineres vivos.
 
-| Verificação | Critério futuro |
+Transporte SQL continua apenas por docker exec/socket no banco local inspecionado;
+HTTP/Auth apenas em 127.0.0.1, sem proxies ou redirects. Nenhum segredo hospedado é
+aceito. O UID ainda possui Docker, como no harness histórico: este é ensaio confiável,
+não sandbox contra código hostil. Não se afirma impossibilidade absoluta de acesso
+externo pelo runner administrativo. O admission guard do relay rejeita configurações
+inesperadas; compatibilidade efetiva da CLI com esse guard está NÃO EXECUTADA.
+
+## Matriz preparada — NÃO EXECUTADA
+
+| Teste | Critério futuro |
 |---|---|
-| Imagem/recursos/SHAs/isolamento | Todos os guards passam antes de reconstruir dados |
-| Preimagem | MD5 prosrc e definição + SHA256 definição, owner, config, ACL exatos |
-| Helper explícito, antes/depois | postgres/anon/authenticated/service_role retornam 54 |
-| Preço composto | maior metade 44 + borda 3 + adicional 2 + complemento 5 |
-| Checkout Auth real e anon, antes/depois | REST total 108; quantidade 2; linhas consistentes |
-| Replay checkout | Mesma resposta, sem mudança em pedidos/itens/histórico |
-| Adição legada, antes/depois | Mais 30, subtotal/total/soma das linhas 138 |
-| Controle negativo inicial | Role fictícia sem memberships possui EXECUTE via PUBLIC |
-| Delta focal | Só ACL do helper muda; nenhum outro grant, função, política ou dado muda |
-| Negativo final | has_function_privilege=false, chamada gera 42501, sem writes, definer_execute=0 nos schemas de aplicação |
-| Capability/replay opcional | Só com duas definições exatas já presentes; nunca instalar candidato nem trocar helper |
-| Cleanup | Sem contêineres/volumes/redes novos, processos/UID/regras/ACLs/keys temporárias |
+| Recursos/SHAs/manifest | JSON PASS, limites, árvore limpa, base/Delivery exatos |
+| Imagens/isolamento anterior | Seis IDs, digest PG, bridge interna, regras verificadas antes de criar serviços |
+| Preimagem | Três hashes, owner, search_path, ACL exatos |
+| Helper antes/depois | postgres/anon/authenticated/service_role: preço composto 54 |
+| Checkout anon/Auth local real | Quantidade 2, preço 54, total 108; campos persistidos exatos |
+| Replay checkout | Resposta idêntica, sem alteração em pedidos/itens/histórico |
+| Adição legada | Mais uma linha de 30; campos exatos e total 138 |
+| Negativo inicial | Probe NOLOGIN, sem privilégios elevados/memberships; acesso somente via PUBLIC |
+| Delta focal | Apenas `=X/postgres` removido, nenhum outro grant/objeto/dado alterado |
+| Negativo final | EXECUTE=false, chamada 42501, sem writes; definer_execute=0 no escopo de aplicação |
+| Capability/replay | NOT_RUN/BLOCKED na base sem dependências; nunca instalar candidato para viabilizá-lo |
+| Cleanup/recovery/audit | Repetição idempotente e todos os domínios limpos; ausência de recibo não é PASS |
 
-Capability não está no catálogo histórico: na base fixada será **NOT_RUN**, sem conclusão
-sobre esse fluxo. Dependência parcial ou versão diferente deve falhar fechado. Se a
-admissão exigir capability, este candidato permanece BLOCKED para essa conclusão;
-seria necessária nova autorização de escopo, não alteração silenciosa do laboratório.
-Replay não é atribuído à adição legada, que não possui contrato idempotente.
+Os testes reais de cancelamento, repetição do cleanup e falhas parciais permanecem
+NÃO EXECUTADOS. O checkout usado é PICKUP; este ensaio não cobre todo checkout Delivery,
+F01, segurança das RPCs legadas, TLS/pooler ou provisionamento de credenciais.
 
-## Limites e admissão
+## Publicação e próxima admissão
 
-A revisão estática não prova comportamento SQL, ausência de regressão, disponibilidade
-da imagem, cache do PostgREST, limpeza operacional ou equivalência hospedada atual.
-Timeout/cancelamento abrupto pode impedir `finally`; a etapa always e a destruição da
-VM são camadas adicionais, e recibo ausente nunca é PASS. O UID possui Docker como no
-harness histórico: isolamento é para ensaio confiável, não sandbox contra código hostil.
-Não há proteção contra cancelamento forçado equivalente a uma execução concluída.
+Template permanece fora de `.github/workflows`. Nenhuma branch foi publicada, PR aberta,
+Action/SQL/Docker executado, configuração remota alterada ou custo contratado.
+A exclusão exata Vercel foi preparada e conferida estaticamente contra a documentação
+oficial; a branch não corresponde às regras true existentes (não há nenhuma).
+Os gatilhos versionados foram inspecionados: nenhum push da nova branch seleciona os
+workflows ativos. Hooks externos, integrações hospedadas, configuração aplicada e efeito
+operacional do primeiro push não foram verificados. Publicação continua dependente de
+admissão separada desses pontos; não reutilizar branches históricas.
 
-Admissão futura exige: SHA final aprovado; publicação sem deploy; ativação separada
-com guard/manifest reconciliados; imagem/demais hashes efetivos; preimagem exata;
-positivos antes/depois e negativos PASS; delta único; cleanup PASS. Capability continua
-limitado ao disponível. Não extrapolar PASS focal para provisionamento, F01/F02 ou comercial.
-Custo esperado: runner Linux padrão em repo público, sem serviços pagos, sem artefatos
-ou cache; elegibilidade/franquia/políticas atuais da conta não verificadas nesta missão.
+Execução futura: `python3 -E audits/f02-acl-01/driver.py run`; recuperação `recover`;
+auditoria `audit`. Ainda não autorizadas. Ativar o template exige nova decisão, inclusão
+exata do workflow na allowlist, reconciliação do manifesto e aprovação de novo SHA.
+Não mover o template nem relaxar o guard por iniciativa própria.
+
+Prontidão: candidato para nova revisão estática independente. Operação continua BLOCKED
+até admissão e provas reais de imagem, isolamento, testes e cleanup. Capability permanece
+limitado às dependências existentes. Runner público padrão é o custo esperado, sem
+recursos pagos; elegibilidade/políticas financeiras atuais da conta NÃO VERIFICADAS.
+
+Fontes consultadas para as configurações, sem operação remota:
+- https://vercel.com/docs/project-configuration/git-configuration
+- https://docs.docker.com/reference/cli/docker/network/create/
+- https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-cancellation

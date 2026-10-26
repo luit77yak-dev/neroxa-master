@@ -6,6 +6,7 @@ Never accepts a database URL, host, password, arbitrary SQL file or remote ref.
 import hashlib
 import json
 import os
+import pwd
 from pathlib import Path
 import re
 import shutil
@@ -19,6 +20,10 @@ import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
+V1 = '3979bd893ce56823e2a7b816e41ad10efc0e3654'
+BRANCH = 'work/f02-acl-01-driver-v2-20261026'
+PROJECT_LABEL = 'com.neroxa.f02-acl-01.project'
+PRIVATE_FILES = ('status.private.env', 'start.private.log', 'relay.private.log', 'baseline.sql', 'exercise-state.json', 'docker-loopback.sock')
 BASE = 'c149f802adf1922be588319cc98a798c7b387ea8'
 DELIVERY = '011275488660bfa1a9271b3e4c92e457f7638e34'
 PG = 'supabase/postgres@sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5'
@@ -54,8 +59,17 @@ def read_state():
 
 
 def save(path, value):
-    path.write_text(json.dumps(value, sort_keys=True, indent=2) + '\n')
-    path.chmod(0o600)
+    # Atomic, private recovery ledger; no partial JSON after a soft interruption.
+    temporary = path.with_name('.' + path.name + '.' + uuid.uuid4().hex)
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    try:
+        with os.fdopen(fd, 'w') as out:
+            out.write(json.dumps(value, sort_keys=True, indent=2) + '\n')
+            out.flush()
+            os.fsync(out.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def sql(state, text, denied=False):
@@ -170,6 +184,43 @@ def capability(state, order, key):
     return 'PASS: exact optional definitions; authoritative price and replay'
 
 
+def persisted(state, order, key, amended):
+    snapshot = business(state)
+    orders = [o for o in snapshot['orders'] if o['id'] == order]
+    items = [i for i in snapshot['items'] if i['order_id'] == order]
+    history = [h for h in snapshot['history'] if h['order_id'] == order]
+    require(len(orders) == 1 and len(items) == (2 if amended else 1), 'PERSISTED_ROW_COUNTS')
+    o = orders[0]
+    expected = {'instance_id': fixture_id(3), 'organization_id': fixture_id(1),
+        'idempotency_key': key, 'fulfillment': 'PICKUP', 'payment_method': 'CASH',
+        'status': 'RECEIVED', 'customer_name': 'Fictitious F02 ACL buyer', 'customer_phone': '00000000001'}
+    require(all(o.get(k) == v for k, v in expected.items()), 'PERSISTED_ORDER_FIELDS')
+    total = 138 if amended else 108
+    require(float(o['subtotal']) == total and float(o['total']) == total
+            and float(o['delivery_fee']) == 0, 'PERSISTED_ORDER_AMOUNTS')
+    compound = [i for i in items if i['second_product_id'] == fixture_id(12)]
+    require(len(compound) == 1, 'PERSISTED_COMPOUND_COUNT')
+    first = compound[0]
+    fields = {'product_id': fixture_id(11), 'product_name': 'Fictitious pizza A',
+        'second_product_name': 'Fictitious pizza B', 'is_half': True,
+        'size_id': fixture_id(21), 'crust_id': fixture_id(22),
+        'size_name': 'Fictitious size', 'crust_name': 'Fictitious crust',
+        'addons': [{'id': fixture_id(13)}], 'complements': [{'productId': fixture_id(14)}],
+        'quantity': 2, 'notes': 'F02 synthetic line'}
+    require(all(first.get(k) == v for k, v in fields.items()) and float(first['unit_price']) == 54
+            and float(first['line_total']) == 108 and float(first['crust_price']) == 3, 'PERSISTED_COMPOUND_FIELDS')
+    if amended:
+        simple = [i for i in items if i['second_product_id'] is None]
+        require(len(simple) == 1, 'PERSISTED_ADDITION_COUNT')
+        added = simple[0]
+        fields = {'product_id': fixture_id(11), 'product_name': 'Fictitious pizza A',
+                  'quantity': 1, 'is_half': False, 'size_id': None, 'crust_id': None,
+                  'addons': [], 'complements': [], 'notes': None}
+        require(all(added.get(k) == v for k, v in fields.items()) and float(added['unit_price']) == 30
+                and float(added['line_total']) == 30, 'PERSISTED_ADDITION_FIELDS')
+    require(len(history) == 1 and history[0]['to_status'] == 'RECEIVED', 'PERSISTED_HISTORY')
+
+
 def positives(state, phase, user_token):
     results = {}
     addon = json.dumps([{'id': fixture_id(13)}])
@@ -185,12 +236,15 @@ def positives(state, phase, user_token):
         key = str(uuid.uuid4())
         item = {'product_id': fixture_id(11), 'second_product_id': fixture_id(12),
                 'size_id': fixture_id(21), 'crust_id': fixture_id(22), 'quantity': 2,
-                'addons': json.loads(addon), 'complements': json.loads(complement)}
+                'addons': json.loads(addon), 'complements': json.loads(complement),
+                'is_half': True, 'size_name': 'Fictitious size', 'crust_name': 'Fictitious crust',
+                'crust_price': 3, 'notes': 'F02 synthetic line'}
         payload = {'p_order': {'organization_id': fixture_id(1), 'idempotency_key': key,
             'customer_name': 'Fictitious F02 ACL buyer', 'customer_phone': '00000000001',
             'fulfillment': 'PICKUP', 'payment_method': 'CASH', 'items': [item]}}
         code, rows = http(state, 'rpc/create_public_order', payload, token)
         require(code == 200 and len(rows) == 1 and float(rows[0]['total']) == 108, 'CHECKOUT:' + actor)
+        persisted(state, rows[0]['order_id'], key, False)
         before = business(state)
         code2, replay = http(state, 'rpc/create_public_order', payload, token)
         require(code2 == 200 and rows == replay and business(state) == before, 'CHECKOUT_REPLAY:' + actor)
@@ -204,14 +258,17 @@ def positives(state, phase, user_token):
         check = scalar(state, "json_build_object('subtotal',o.subtotal,'total',o.total,'lines',(SELECT sum(line_total) FROM public.neroxa_order_items WHERE order_id=o.id)) FROM public.neroxa_orders o WHERE id=" + lit(order))
         require(float(check['subtotal']) == 138 and float(check['total']) == 138
                 and float(check['lines']) == 138, 'FINANCIAL_TOTALS')
-        results[actor] = 'PASS: checkout 108, replay without writes, addition 30, total/lines 138'
+        persisted(state, order, key, True)
+        results[actor] = 'PASS: persisted order/items/options/quantity/history; checkout 108; replay without writes; addition 30; total 138'
         results['capability_' + actor] = capability(state, order, key)
     return {'phase': phase, 'checks': results}
 
 
 def exercise():
     work, path = read_state()
-    state = json.loads(path.read_text())
+    work = work / 'lab'
+    state = json.loads((work / 'exercise-state.json').read_text())
+    require(state['lab'] == str(work) and os.getuid() == state['test_uid'], 'EXERCISE_IDENTITY')
     local_identity(state)
     env = {}
     for line in (work / 'status.private.env').read_text().splitlines():
@@ -228,7 +285,7 @@ def exercise():
     code, session = http(state, 'token?grant_type=password', {
         'email': 'f02-acl-01@example.invalid', 'password': password}, state['anon'], auth=True)
     require(code == 200 and session.get('access_token'), 'LOCAL_AUTH_SIGNIN')
-    subprocess.run(['python3', str(ROOT / 'tools/ab-auth/build_schema.py'), str(work / 'baseline.sql')],
+    subprocess.run(['python3', '-E', str(ROOT / 'tools/ab-auth/build_schema.py'), str(work / 'baseline.sql')],
                    check=True, capture_output=True, cwd=ROOT)
     sql(state, (work / 'baseline.sql').read_text())
     expected = json.loads((HERE / 'manifest.json').read_text())['helper']
@@ -298,9 +355,10 @@ def exercise():
 def integrity():
     manifest = json.loads((HERE / 'manifest.json').read_text())
     require(command(['git', 'rev-parse', 'HEAD']) == os.environ.get('GITHUB_SHA'), 'CHECKOUT_SHA')
-    command(['git', 'merge-base', '--is-ancestor', BASE, 'HEAD'])
+    command(['git', 'merge-base', '--is-ancestor', V1, 'HEAD'])
     changed = command(['git', 'diff', '--name-only', BASE, 'HEAD']).splitlines()
-    require(changed and all(p.startswith('audits/f02-acl-01/') for p in changed), 'NON_FOCAL_SOURCE_DELTA')
+    require(changed and all(p.startswith('audits/f02-acl-01/') or p == 'vercel.json' for p in changed), 'NON_FOCAL_SOURCE_DELTA')
+    verify_vercel()
     require(not command(['git', 'status', '--porcelain', '--untracked-files=no']), 'DIRTY_CHECKOUT')
     untracked = command(['git', 'ls-files', '--others', '--exclude-standard']).splitlines()
     require(all(p == 'delivery-candidate/' or p.startswith('delivery-candidate/') for p in untracked), 'UNTRACKED_SOURCE')
@@ -317,88 +375,249 @@ def integrity():
                 'HOSTED_CREDENTIAL_ENV')
 
 
-def audit(state):
-    remaining = command(DOCKER + ['ps', '-aq', '--filter', 'label=com.supabase.cli.project=' + state['project']])
-    volumes = set(command(DOCKER + ['volume', 'ls', '-q']).splitlines())
-    network = command(DOCKER + ['network', 'ls', '-q', '--filter', 'name=^' + state['network'] + '$'])
-    require(not remaining and not network and volumes == set(state['volumes_before']), 'CLEANUP_DOCKER')
-    require(subprocess.run(['id', 'neroxa_test'], capture_output=True).returncode != 0, 'CLEANUP_UID')
+def verify_vercel():
+    prior = json.loads(command(['git', 'show', V1 + ':vercel.json']))
+    current = json.loads((ROOT / 'vercel.json').read_text())
+    require(BRANCH not in prior['git']['deploymentEnabled'], 'VERCEL_PREEXISTING_BRANCH')
+    prior['git']['deploymentEnabled'][BRANCH] = False
+    require(current == prior, 'VERCEL_NON_FOCAL_DELTA')
+    require(os.environ.get('GITHUB_REF') == 'refs/heads/' + BRANCH, 'DISPATCH_BRANCH')
+
+
+def validate_state(state):
+    work, _ = read_state()
+    project = 'neroxa-02a3-' + os.environ['GITHUB_RUN_ID'] + '-acl01'
+    require(os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted', 'RECOVERY_VM_ONLY')
+    require(state['source_sha'] == os.environ.get('GITHUB_SHA'), 'RECOVERY_SHA')
+    require(state['run'] == os.environ['GITHUB_RUN_ID'] and state['project'] == project
+            and state['network'] == project and state['db'] == 'supabase_db_' + project, 'STATE_IDENTITY')
+    require(state['work'] == str(work) and state['lab'] == str(work / 'lab')
+            and state['runner_uid'] == os.getuid(), 'STATE_PATH_OWNER')
+
+
+def network_ready(state):
+    network = json.loads(command(DOCKER + ['network', 'inspect', state['network']]))[0]
+    require(network['Id'] == state['network_id'] and network['Driver'] == 'bridge'
+            and network['Internal'] is True and network['EnableIPv6'] is False, 'ISOLATION_NETWORK')
+    require(state['bridge'] == 'br-' + network['Id'][:12], 'ISOLATION_BRIDGE')
+    command(['sudo', 'iptables', '-C', 'DOCKER-USER', '-i', state['bridge'], '!', '-o', state['bridge'], '-j', 'REJECT'])
     for tool in ['iptables', 'ip6tables']:
-        rules = command(['sudo', tool, '-S'])
-        require('NEROXA02A5' not in rules, 'CLEANUP_RULES')
-        if state.get('bridge'):
-            require(state['bridge'] not in rules, 'CLEANUP_BRIDGE_RULE')
-    if state.get('test_uid'):
-        require(subprocess.run(['pgrep', '-u', str(state['test_uid'])], capture_output=True).returncode == 1, 'CLEANUP_TEST_PROCESSES')
-        require('user:' + str(state['test_uid']) + ':' not in command(['getfacl', '-R', '-n', '-cp', str(ROOT)]), 'CLEANUP_WORKSPACE_ACL')
-        for ancestor in ROOT.parents:
-            if ancestor != Path('/'):
-                require('user:' + str(state['test_uid']) + ':' not in command(['getfacl', '-n', '-cp', str(ancestor)]), 'CLEANUP_TRAVERSAL_ACL')
-    require(not (Path(state['work']) / 'status.private.env').exists(), 'CLEANUP_LOCAL_KEYS')
-    if state.get('relay_pid'):
-        # Exact process identity, avoiding killing or misclassifying a reused PID.
-        cmdline = Path('/proc') / str(state['relay_pid']) / 'cmdline'
-        require(not cmdline.exists() or b'tools/ab-auth/docker_loopback.py' not in cmdline.read_bytes(), 'CLEANUP_RELAY')
+        command(['sudo', tool, '-C', 'OUTPUT', '-m', 'owner', '--uid-owner', str(state['test_uid']), '-j', 'NEROXA02A5'])
+        require(command(['sudo', tool, '-S', 'NEROXA02A5']).splitlines() == [
+            '-N NEROXA02A5', '-A NEROXA02A5 -o lo -j RETURN', '-A NEROXA02A5 -j REJECT'], 'ISOLATION_CHAIN')
+
+
+def containers(state):
+    found = set()
+    for label in [PROJECT_LABEL, 'com.supabase.cli.project']:
+        found.update(command(DOCKER + ['ps', '-aq', '--filter', 'label=' + label + '=' + state['project']]).splitlines())
+    return sorted(found)
+
+
+def relay_pids(state):
+    found = []
+    for proc in Path('/proc').iterdir():
+        if not proc.name.isdigit():
+            continue
+        try:
+            if proc.stat().st_uid != state['runner_uid']:
+                continue
+            args = (proc / 'cmdline').read_bytes().split(b'\0')
+            if str(HERE / 'guarded_relay.py').encode() in args and state['project'].encode() in args:
+                found.append(int(proc.name))
+        except FileNotFoundError:
+            pass
+    return found
+
+
+def acl_snapshot():
+    paths = [*ROOT.parents[:-1]]
+    return command(['getfacl', '-R', '-n', '-p', str(ROOT)]) + '\n' + '\n'.join(
+        command(['getfacl', '-n', '-p', str(p)]) for p in paths) + '\n'
+
+
+def test_uid(state):
+    try:
+        entry = pwd.getpwnam('neroxa_test')
+    except KeyError:
+        return state.get('test_uid')
+    require(state.get('user_intent') and entry.pw_dir == '/home/neroxa_test'
+            and (state.get('test_uid') is None or state['test_uid'] == entry.pw_uid), 'TEST_UID_OWNERSHIP')
+    return entry.pw_uid
+
+
+def audit(state):
+    """Check EVERY domain, even when an earlier check errors. No early PASS."""
+    results = {}
+    def check(name, action):
+        try:
+            require(action(), name)
+            results[name] = 'PASS'
+        except Exception:
+            results[name] = 'BLOCKED'
+    check('containers', lambda: not containers(state))
+    check('volumes', lambda: set(command(DOCKER + ['volume', 'ls', '-q']).splitlines()) == set(state['volumes_before']))
+    check('network', lambda: not command(DOCKER + ['network', 'ls', '-q', '--filter', 'name=^' + state['network'] + '$']))
+    check('user', lambda: subprocess.run(['id', 'neroxa_test'], capture_output=True).returncode == 1)
+    def processes_absent():
+        uid = test_uid(state)
+        return uid is None or subprocess.run(['pgrep', '-u', str(uid)], capture_output=True).returncode == 1
+    check('test_processes', processes_absent)
+    check('relay_processes', lambda: not relay_pids(state))
+    for tool in ['iptables', 'ip6tables']:
+        def rules_absent(tool=tool):
+            rules = command(['sudo', tool, '-S'])
+            return 'NEROXA02A5' not in rules and (not state.get('bridge') or state['bridge'] not in rules)
+        check(tool, rules_absent)
+    if state.get('acl_intent'):
+        check('workspace_acl', lambda: acl_snapshot() == (Path(state['work']) / 'acl.private.restore').read_text())
+    check('work_acl', lambda: 'user:' + str(state.get('test_uid', -1)) + ':' not in command(['getfacl', '-n', '-cp', state['work']]))
+    check('local_material', lambda: all(not (Path(state['lab']) / n).exists() for n in PRIVATE_FILES))
+    check('home', lambda: not (Path('/home/neroxa_test').exists() or Path('/home/neroxa_test').is_symlink()) if state.get('user_intent') else True)
+    return results
 
 
 def cleanup(state):
+    """Idempotent recovery. Every independent action and audit is attempted."""
     errors = []
-    def attempt(args):
+    work, lab = Path(state['work']), Path(state['lab'])
+    def attempt(name, action, default=None):
         try:
-            command(args)
+            return action()
         except Exception:
-            errors.append(Path(args[0]).name)
-    work = Path(state['work'])
-    if work.exists():
-        attempt(['sudo', 'chown', '-R', str(os.getuid()) + ':' + str(os.getgid()), str(work)])
-    # Stop the isolated test process group before removing its egress restrictions.
-    if state.get('test_uid'):
-        for sig in ['-TERM', '-KILL']:
-            if subprocess.run(['pgrep', '-u', str(state['test_uid'])], capture_output=True).returncode == 0:
-                subprocess.run(['sudo', 'pkill', sig, '-u', str(state['test_uid'])], capture_output=True, timeout=10)
-                time.sleep(0.2)
-    env = dict(os.environ, AB_NETWORK=state['network'], DOCKER_HOST='unix:///var/run/docker.sock')
+            errors.append(name)
+            return default
+    # Further soft cancellation cannot abandon the other cleanup actions.
+    old_signals = {sig: signal.signal(sig, signal.SIG_IGN) for sig in (signal.SIGINT, signal.SIGTERM)}
     try:
-        command(['bash', 'tools/mission-02a5/network.sh', 'unlock'], env=env)
-    except Exception:
-        errors.append('network-unlock')
-    work = Path(state['work'])
-    if (work / 'supabase/config.toml').is_file():
-        try:
-            command(['supabase', 'stop', '--workdir', str(work), '--no-backup'], env=env)
-        except Exception:
-            errors.append('supabase-stop')
-    # Explicit inventory and labels prevent removal of unrelated resources.
-    ids = command(DOCKER + ['ps', '-aq', '--filter', 'label=com.supabase.cli.project=' + state['project']]).splitlines()
-    if ids:
-        attempt(DOCKER + ['rm', '-f'] + ids)
-    for volume in set(command(DOCKER + ['volume', 'ls', '-q']).splitlines()) - set(state['volumes_before']):
-        info = json.loads(command(DOCKER + ['volume', 'inspect', volume]))[0]
-        if (info.get('Labels') or {}).get('com.supabase.cli.project') == state['project'] or volume.endswith('_' + state['project']):
-            attempt(DOCKER + ['volume', 'rm', volume])
-    if command(DOCKER + ['network', 'ls', '-q', '--filter', 'name=^' + state['network'] + '$']):
-        attempt(DOCKER + ['network', 'rm', state['network']])
-    if state.get('relay_pid'):
-        p = Path('/proc') / str(state['relay_pid']) / 'cmdline'
-        if p.exists() and b'tools/ab-auth/docker_loopback.py' in p.read_bytes():
-            os.kill(state['relay_pid'], signal.SIGTERM)
-            for _ in range(30):
-                if not p.exists():
-                    break
-                time.sleep(0.1)
-    if state.get('test_uid'):
-        attempt(['sudo', 'setfacl', '-R', '-x', 'u:' + str(state['test_uid']), str(ROOT)])
-        for ancestor in ROOT.parents:
-            if ancestor != Path('/'):
-                attempt(['sudo', 'setfacl', '-x', 'u:' + str(state['test_uid']), str(ancestor)])
-        attempt(['sudo', 'userdel', '--remove', 'neroxa_test'])
-    if work.exists():
-        attempt(['sudo', 'chown', '-R', str(os.getuid()) + ':' + str(os.getgid()), str(work)])
-        for name in ['status.private.env', 'start.private.log', 'relay.private.log', 'baseline.sql']:
-            (work / name).unlink(missing_ok=True)
-    audit(state)
-    require(not errors, 'CLEANUP_COMMAND_FAILURE')
-    save(work / 'cleanup.json', {'status': 'PASS', 'scope': state['project']})
+        uid = attempt('resolve_uid', lambda: test_uid(state))
+        if uid is not None and state.get('test_uid') is None:
+            state['test_uid'] = uid
+            attempt('persist_recovered_uid', lambda: save(work / 'state.json', state))
+        if uid is not None:
+            for sig in ['-TERM', '-KILL']:
+                def stop_uid(sig=sig):
+                    r = subprocess.run(['pgrep', '-u', str(uid)], capture_output=True, timeout=10)
+                    require(r.returncode in (0, 1), 'PGREP_ERROR')
+                    if r.returncode == 0:
+                        killed = subprocess.run(['sudo', 'pkill', sig, '-u', str(uid)], capture_output=True, timeout=10)
+                        require(killed.returncode in (0, 1), 'PKILL_ERROR')
+                        time.sleep(0.2)
+                attempt('test_processes_' + sig, stop_uid)
+        if lab.exists():
+            attempt('lab_owner', lambda: command(['sudo', 'chown', '-R', str(state['runner_uid']) + ':' + str(os.getgid()), str(lab)]))
+        env = dict(os.environ, AB_NETWORK=state['network'], DOCKER_HOST='unix:///var/run/docker.sock')
+        ids = attempt('inventory_containers', lambda: containers(state), [])
+        if ids and (lab / 'supabase/config.toml').is_file():
+            attempt('supabase_stop', lambda: command(['supabase', 'stop', '--workdir', str(lab), '--no-backup'], env=env))
+        # Separate inventory failure must not prevent termination of known services.
+        ids = attempt('remaining_containers', lambda: containers(state), ids)
+        for container in ids:
+            attempt('container_remove', lambda container=container: command(DOCKER + ['rm', '-f', container]))
+        volumes = attempt('inventory_volumes', lambda: command(DOCKER + ['volume', 'ls', '-q']).splitlines(), [])
+        for volume in set(volumes) - set(state['volumes_before']):
+            def remove_volume(volume=volume):
+                info = json.loads(command(DOCKER + ['volume', 'inspect', volume]))[0]
+                if (info.get('Labels') or {}).get('com.supabase.cli.project') == state['project'] or volume.endswith('_' + state['project']):
+                    command(DOCKER + ['volume', 'rm', volume])
+            attempt('volume_remove', remove_volume)
+        # Recorded numeric UID/bridge survive user/network removal in a partial cleanup.
+        # This permits recovery even when the historical unlock can no longer resolve them.
+        def safe_to_unlock():
+            require(not containers(state), 'RETAIN_ISOLATION_WITH_LIVE_CONTAINERS')
+            require(uid is None or subprocess.run(['pgrep', '-u', str(uid)], capture_output=True).returncode == 1, 'RETAIN_ISOLATION_WITH_LIVE_PROCESSES')
+            return True
+        safe = attempt('isolation_release_check', safe_to_unlock, False)
+        if safe and state.get('network_lock_intent'):
+            def remove_rule(tool, selector):
+                exists = subprocess.run(['sudo', tool, '-C'] + selector, capture_output=True, timeout=10)
+                require(exists.returncode in (0, 1), 'FIREWALL_QUERY_ERROR')
+                if exists.returncode == 0:
+                    command(['sudo', tool, '-D'] + selector)
+            if uid is not None:
+                for tool in ['iptables', 'ip6tables']:
+                    attempt(tool + '_uid_rule', lambda tool=tool: remove_rule(tool, ['OUTPUT', '-m', 'owner', '--uid-owner', str(uid), '-j', 'NEROXA02A5']))
+            if state.get('bridge'):
+                attempt('bridge_rule', lambda: remove_rule('iptables', ['DOCKER-USER', '-i', state['bridge'], '!', '-o', state['bridge'], '-j', 'REJECT']))
+            attempt('network_unlock', lambda: command(['bash', 'tools/mission-02a5/network.sh', 'unlock'], env=env))
+        def remove_network():
+            if command(DOCKER + ['network', 'ls', '-q', '--filter', 'name=^' + state['network'] + '$']):
+                command(DOCKER + ['network', 'rm', state['network']])
+        attempt('network_remove', remove_network)
+        pids = attempt('relay_inventory', lambda: relay_pids(state), [])
+        for pid in pids:
+            def stop_relay(pid=pid):
+                for sig in (signal.SIGTERM, signal.SIGKILL):
+                    if pid in relay_pids(state):
+                        try:
+                            os.kill(pid, sig)
+                        except ProcessLookupError:
+                            pass
+                        time.sleep(0.2)
+                try:
+                    os.waitpid(pid, os.WNOHANG)
+                except ChildProcessError:
+                    pass
+            attempt('relay_stop', stop_relay)
+        if state.get('acl_intent'):
+            attempt('acl_restore', lambda: command(['sudo', 'setfacl', '--restore=-'], text=(work / 'acl.private.restore').read_text()))
+        if uid is not None:
+            def remove_work_acl():
+                text = command(['getfacl', '-n', '-cp', str(work)])
+                if 'user:' + str(uid) + ':' in text:
+                    command(['sudo', 'setfacl', '-x', 'u:' + str(uid), str(work)])
+            attempt('work_acl_restore', remove_work_acl)
+        if state.get('user_intent'):
+            def remove_user():
+                try:
+                    pwd.getpwnam('neroxa_test')
+                except KeyError:
+                    return
+                require(test_uid(state) == uid, 'USER_OWNERSHIP')
+                command(['sudo', 'userdel', 'neroxa_test'])
+            attempt('user_remove', remove_user)
+            def remove_home():
+                home = Path('/home/neroxa_test')
+                if home.exists():
+                    require(uid is not None and not home.is_symlink() and home.stat().st_uid == uid, 'HOME_OWNERSHIP')
+                    command(['sudo', 'rm', '-rf', '--', str(home)])
+            attempt('home_remove', remove_home)
+        for name in PRIVATE_FILES:
+            attempt('material_remove_' + name.replace('.', '_'), lambda name=name: (lab / name).unlink(missing_ok=True))
+        # Each check records a failure rather than skipping the remaining domains.
+        checks = audit(state)
+        receipt = {'status': 'PASS' if not errors and all(v == 'PASS' for v in checks.values()) else 'BLOCKED',
+                   'scope': state['project'], 'errors': errors, 'checks': checks}
+        attempt('receipt_write', lambda: save(work / 'cleanup.json', receipt))
+        require(not errors and receipt['status'] == 'PASS', 'CLEANUP_INCOMPLETE')
+        return receipt
+    finally:
+        for sig, handler in old_signals.items():
+            signal.signal(sig, handler)
+
+
+def recover():
+    work, path = read_state()
+    if not path.exists():
+        require(not work.exists(), 'INCOMPLETE_STATE')
+        print('F02_ACL01_RECOVERY=NOT_STARTED')
+        return
+    require(path.stat().st_uid == os.getuid() and path.stat().st_mode & 0o077 == 0, 'RECOVERY_LEDGER_OWNER')
+    state = json.loads(path.read_text())
+    validate_state(state)
+    cleanup(state)
+    print('F02_ACL01_RECOVERY=PASS')
+
+
+def resource_preflight():
+    output = command(['python3', '-E', 'tools/mission-02a3/preflight.py'])
+    rows = [line.removeprefix('RESOURCE_PREFLIGHT=') for line in output.splitlines() if line.startswith('RESOURCE_PREFLIGHT=')]
+    require(len(rows) == 1, 'RESOURCE_RESULT_REQUIRED')
+    result = json.loads(rows[0])
+    require(result.get('status') == 'PASS', 'RESOURCE_STATUS_NOT_PASS')
+    require(result.get('driver') != 'vfs' and result.get('free_bytes', 0) >= 28 * 1024**3
+            and result.get('available_memory_bytes', 0) >= 6 * 1024**3 and result.get('cpus', 0) >= 2, 'RESOURCE_VALUES')
+    return result
 
 
 def run():
@@ -408,87 +627,122 @@ def run():
     require(event['repository']['full_name'] == 'luit77yak-dev/neroxa-master' and event['repository']['private'] is False, 'PUBLIC_REPOSITORY')
     require(str(ROOT).startswith('/home/runner/'), 'WORKSPACE_LOCATION')
     integrity()
-    command(['python3', 'tools/mission-02a3/preflight.py'])
-    require(subprocess.run(['id', 'neroxa_test'], capture_output=True).returncode != 0, 'TEST_UID_COLLISION')
+    resources = resource_preflight()
+    require(subprocess.run(['id', 'neroxa_test'], capture_output=True).returncode == 1
+            and not (Path('/home/neroxa_test').exists() or Path('/home/neroxa_test').is_symlink()), 'TEST_UID_COLLISION')
     for tool in ['iptables', 'ip6tables']:
         require('NEROXA02A5' not in command(['sudo', tool, '-S']), 'CHAIN_COLLISION')
     work, state_path = read_state()
     require(not work.exists(), 'WORKDIR_COLLISION')
-    work.mkdir(mode=0o700)
     run_id = os.environ['GITHUB_RUN_ID']
     project = 'neroxa-02a3-' + run_id + '-acl01'
-    state = {'run': run_id, 'project': project, 'network': project, 'db': 'supabase_db_' + project,
-             'work': str(work), 'volumes_before': command(DOCKER + ['volume', 'ls', '-q']).splitlines()}
-    require(not command(DOCKER + ['ps', '-aq', '--filter', 'label=com.supabase.cli.project=' + project]), 'PROJECT_CONTAINER_COLLISION')
+    require(not command(DOCKER + ['ps', '-aq', '--filter', 'label=' + PROJECT_LABEL + '=' + project])
+            and not command(DOCKER + ['ps', '-aq', '--filter', 'label=com.supabase.cli.project=' + project]), 'PROJECT_CONTAINER_COLLISION')
     require(not command(DOCKER + ['network', 'ls', '-q', '--filter', 'name=^' + project + '$']), 'PROJECT_NETWORK_COLLISION')
+    before_volumes = command(DOCKER + ['volume', 'ls', '-q']).splitlines()
+    require(not any(v.endswith('_' + project) for v in before_volumes), 'PROJECT_VOLUME_COLLISION')
+    work.mkdir(mode=0o700)
+    lab = work / 'lab'
+    state = {'run': run_id, 'project': project, 'network': project, 'db': 'supabase_db_' + project,
+             'work': str(work), 'lab': str(lab), 'runner_uid': os.getuid(), 'volumes_before': before_volumes,
+             'source_sha': os.environ['GITHUB_SHA'], 'resources': resources}
     save(state_path, state)
-    env = dict(os.environ, AB_WORKDIR=str(work), AB_PROJECT=project, AB_NETWORK=project,
-               SUPABASE_INTERNAL_IMAGE_REGISTRY='docker.io')
+    env = dict(os.environ, AB_WORKDIR=str(lab), AB_PROJECT=project, AB_NETWORK=project,
+               SUPABASE_INTERNAL_IMAGE_REGISTRY='docker.io', PYTHONOPTIMIZE='0')
+    def checkpoint(**values):
+        state.update(values)
+        save(state_path, state)
     try:
-        command(['supabase', 'init', '--workdir', str(work)], env=env)
-        command(['python3', 'tools/ab-auth/configure.py'], env=env)
-        require(not (work / 'supabase/.temp/project-ref').exists() and not (work / 'supabase/migrations').exists(), 'LINKED_OR_MIGRATIONS')
-        command(DOCKER + ['pull', '--platform', 'linux/amd64', PG], timeout=600)
-        require(command(DOCKER + ['image', 'inspect', PG, '--format', '{{.Id}}']) == PG_ID, 'IMMUTABLE_IMAGE_ID')
-        command(DOCKER + ['tag', PG, 'supabase/postgres:17.11.0.004'])
-        command(DOCKER + ['network', 'create', '--driver', 'bridge', '--opt', 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1', project])
-        require(command(DOCKER + ['network', 'inspect', project, '--format', '{{.EnableIPv6}}']) == 'false', 'BRIDGE_IPV6')
-        state['bridge'] = 'br-' + command(DOCKER + ['network', 'inspect', project, '--format', '{{.Id}}'])[:12]
-        save(state_path, state)
-        with (work / 'relay.private.log').open('w') as log:
-            relay = subprocess.Popen(['python3', 'tools/ab-auth/docker_loopback.py'], env=env, cwd=ROOT, stdout=log, stderr=log)
-        state['relay_pid'] = relay.pid
-        save(state_path, state)
+        lab.mkdir(mode=0o700)
+        command(['supabase', 'init', '--workdir', str(lab)], env=env)
+        # Historical configure requires AB_WORKDIR directly below RUNNER_TEMP.
+        configure_env = dict(env, RUNNER_TEMP=str(work))
+        command(['python3', '-E', 'tools/ab-auth/configure.py'], env=configure_env)
+        require(not (lab / 'supabase/.temp/project-ref').exists() and not (lab / 'supabase/migrations').exists(), 'LINKED_OR_MIGRATIONS')
+        expected = json.loads((ROOT / 'audits/02a5/EXPECTED-IMAGES.json').read_text())
+        for tag, wanted in expected.items():
+            ref = PG if tag == 'supabase/postgres:17.11.0.004' else tag
+            command(DOCKER + ['pull', '--platform', 'linux/amd64', ref], timeout=600)
+            require(command(DOCKER + ['image', 'inspect', ref, '--format', '{{.Id}}']) == wanted, 'PRE_START_IMAGE_ID')
+            if ref != tag:
+                command(DOCKER + ['tag', ref, tag])
+        checkpoint(images_verified=True, user_intent=True)
+        command(['sudo', 'useradd', '--create-home', '--groups', 'docker', 'neroxa_test'])
+        checkpoint(test_uid=pwd.getpwnam('neroxa_test').pw_uid)
+        command(DOCKER + ['network', 'create', '--internal', '--driver', 'bridge', '--opt',
+                         'com.docker.network.bridge.host_binding_ipv4=127.0.0.1', project])
+        network = json.loads(command(DOCKER + ['network', 'inspect', project]))[0]
+        checkpoint(network_id=network['Id'], bridge='br-' + network['Id'][:12], network_lock_intent=True)
+        command(['bash', 'tools/mission-02a5/network.sh', 'lock'], env=env)
+        network_ready(state)
+        checkpoint(isolation_verified=True)
+        with (lab / 'relay.private.log').open('w') as log:
+            subprocess.Popen(['python3', '-E', str(HERE / 'guarded_relay.py'), project], env=env, cwd=ROOT, stdout=log, stderr=log)
         for _ in range(100):
-            if (work / 'docker-loopback.sock').exists():
+            if (lab / 'docker-loopback.sock').is_socket():
                 break
             time.sleep(0.1)
-        require((work / 'docker-loopback.sock').is_socket(), 'RELAY_NOT_READY')
-        env['DOCKER_HOST'] = 'unix://' + str(work / 'docker-loopback.sock')
-        command(['supabase', 'start', '--workdir', str(work), '--network-id', project,
+        require((lab / 'docker-loopback.sock').is_socket(), 'RELAY_NOT_READY')
+        env['DOCKER_HOST'] = 'unix://' + str(lab / 'docker-loopback.sock')
+        network_ready(state)
+        command(['supabase', 'start', '--workdir', str(lab), '--network-id', project,
                  '--exclude', 'studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit'], env=env, timeout=600)
-        expected = json.loads((ROOT / 'audits/02a5/EXPECTED-IMAGES.json').read_text())
-        seen = {}
-        ids = command(DOCKER + ['ps', '-q', '--filter', 'label=com.supabase.cli.project=' + project]).splitlines()
-        for container in ids:
+        seen = []
+        for container in containers(state):
             info = json.loads(command(DOCKER + ['inspect', container]))[0]
-            seen[info['Config']['Image']] = info['Image']
+            seen.append(info['Image'])
+            require(info['Config']['Labels'].get(PROJECT_LABEL) == project and not info['HostConfig'].get('Privileged'), 'STACK_IDENTITY')
+            require(set(info['NetworkSettings']['Networks']) == {project}, 'STACK_NETWORK')
             for binds in (info['HostConfig'].get('PortBindings') or {}).values():
                 require(all(b['HostIp'] == '127.0.0.1' for b in binds or []), 'STACK_BIND')
-        require(seen == expected, 'SIX_IMAGE_IDENTITY_DRIFT')
+        require(sorted(seen) == sorted(expected.values()), 'SIX_IMAGE_IDENTITY_DRIFT')
         local_identity(state)
         require(shutil.disk_usage(ROOT).free >= 18 * 1024**3, 'POST_START_DISK')
-        status = command(['supabase', 'status', '--workdir', str(work), '-o', 'env'], env=env)
-        (work / 'status.private.env').write_text(status + '\n')
-        (work / 'status.private.env').chmod(0o600)
-        command(['sudo', 'useradd', '--create-home', '--groups', 'docker', 'neroxa_test'])
-        state['test_uid'] = int(command(['id', '-u', 'neroxa_test']))
-        save(state_path, state)
-        command(['sudo', 'chown', '-R', 'neroxa_test:neroxa_test', str(work)])
+        status = command(['supabase', 'status', '--workdir', str(lab), '-o', 'env'], env=env)
+        (lab / 'status.private.env').write_text(status + '\n')
+        (lab / 'status.private.env').chmod(0o600)
+        save(lab / 'exercise-state.json', state)
+        (work / 'acl.private.restore').write_text(acl_snapshot())
+        (work / 'acl.private.restore').chmod(0o600)
+        checkpoint(acl_intent=True)
+        command(['sudo', 'setfacl', '-m', 'u:neroxa_test:--x', str(work)])
+        command(['sudo', 'chown', '-R', 'neroxa_test:neroxa_test', str(lab)])
         for ancestor in [ROOT, *ROOT.parents]:
             if ancestor != Path('/'):
                 command(['sudo', 'setfacl', '-m', 'u:neroxa_test:--x', str(ancestor)])
         command(['sudo', 'setfacl', '-R', '-m', 'u:neroxa_test:rX', str(ROOT)])
-        command(['bash', 'tools/mission-02a5/network.sh', 'lock'], env=env)
+        network_ready(state)
         command(['sudo', '-u', 'neroxa_test', 'env', '-i', 'PATH=' + os.environ['PATH'],
                  'HOME=/home/neroxa_test', 'GITHUB_RUN_ID=' + run_id,
-                 'RUNNER_TEMP=' + os.environ['RUNNER_TEMP'], 'python3', str(HERE / 'driver.py'), 'exercise'], timeout=600)
+                 'RUNNER_TEMP=' + os.environ['RUNNER_TEMP'], 'python3', '-E', str(HERE / 'driver.py'), 'exercise'], timeout=600)
     finally:
         cleanup(state)
-    print('F02_ACL01=' + json.dumps(json.loads((work / 'result.json').read_text())))
+    print('F02_ACL01=' + json.dumps(json.loads((lab / 'result.json').read_text())))
+
+
+def interrupted(signum, frame):
+    raise InterruptedError('SOFT_CANCELLATION')
 
 
 def main():
     require(len(sys.argv) == 2, 'MODE_REQUIRED')
     mode = sys.argv[1]
+    if mode in ('run', 'recover'):
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            signal.signal(sig, interrupted)
     if mode == 'run':
         run()
     elif mode == 'exercise':
         exercise()
+    elif mode == 'recover':
+        recover()
     elif mode == 'audit':
         work, path = read_state()
         if path.exists():
-            audit(json.loads(path.read_text()))
+            state = json.loads(path.read_text())
+            validate_state(state)
+            checks = audit(state)
+            require(all(v == 'PASS' for v in checks.values()), 'INDEPENDENT_AUDIT_INCOMPLETE')
             require(json.loads((work / 'cleanup.json').read_text())['status'] == 'PASS', 'CLEANUP_RECEIPT')
             print('F02_ACL01_INDEPENDENT_AUDIT=PASS')
         else:
@@ -502,7 +756,6 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as exc:
-        # No traceback/HTTP payload/keys are emitted by an automated failure.
         code = str(exc) if isinstance(exc, RuntimeError) and re.fullmatch(r'[A-Za-z0-9_:/ .-]+', str(exc)) else type(exc).__name__
         print('F02_ACL01=BLOCKED;' + code)
         sys.exit(78)

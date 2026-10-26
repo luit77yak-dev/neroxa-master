@@ -28,3 +28,29 @@ Nenhum custo foi contratado. O custo zero esperado do runner público padrão é
 condicional à elegibilidade/políticas GitHub atuais, não conferidas na conta.
 
 F01/F02 permanecem abertos. Comercial NÃO LIBERADO.
+
+## V2 — 2026-10-26 — revisão da implementação estática
+
+Base V1 preservada pelo commit `3979bd893ce56823e2a7b816e41ad10efc0e3654`.
+As declarações acima descrevem V1. Nesta V2 há delta autorizado em `vercel.json`:
+exclusivamente a nova branch com deploymentEnabled=false, sem efeito remoto aplicado.
+
+Preparados os cinco ajustes P1: limpeza resiliente/idempotente e auditoria completa;
+retomada independente; SIGTERM; seis imagens e rede admitidas antes de serviços;
+preflight estruturado obrigatório; exclusão Vercel/allowlist exatas. Novo wrapper focal
+reutiliza o relay histórico sem modificá-lo e rejeita imagem/rede não admitidas.
+Positivos agora verificam campos persistidos, e não apenas somas.
+
+Verificações estáticas: AST Python, parse JSON/YAML, sintaxe dos blocos shell, hashes
+da preimagem e dependências, comparação dos SQLs/arquivos congelados com V1,
+ordem dos guards no código, diff focal e delta semântico único do vercel.json.
+Manifesto atualizado, sem hash circular; o próximo commit ancora o manifesto.
+
+NÃO EXECUTADO: driver, imports do driver, SQL, contêineres, pulls, Actions, simulações
+de falha/cancelamento e testes de idempotência. Os resultados de testes continuam
+planejados. Eficácia hospedada da exclusão Vercel e integrações externas NÃO VERIFICADAS.
+Compatibilidade operacional do guard antecipado com CLI 2.120.0 NÃO VERIFICADA;
+um desvio de rede/imagem será BLOCKED antes de criar o respectivo contêiner.
+
+Parecer limitado: pronto para nova revisão independente estática; sem admissão de
+publicação ou execução. F01/F02 abertos. Comercial NÃO LIBERADO.

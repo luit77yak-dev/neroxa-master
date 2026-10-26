@@ -1,5 +1,5 @@
 # INACTIVE: intentionally outside .github/workflows. Future activation is a separate decision.
-name: F02 ACL 01 focal laboratory candidate
+name: F02 ACL 01 focal laboratory V2 candidate
 on:
   workflow_dispatch:
     inputs:
@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   focal:
-    if: github.repository == 'luit77yak-dev/neroxa-master' && github.event.repository.private == false
+    if: github.repository == 'luit77yak-dev/neroxa-master' && github.event.repository.private == false && github.ref == 'refs/heads/work/f02-acl-01-driver-v2-20261026'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     steps:
@@ -43,7 +43,11 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
           echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Focal test with mandatory cleanup
-        run: python3 audits/f02-acl-01/driver.py run
+        run: python3 -E audits/f02-acl-01/driver.py run
+      - name: Resume cleanup independently of the test process
+        if: always()
+        timeout-minutes: 10
+        run: python3 -E audits/f02-acl-01/driver.py recover
       - name: Independent cleanup admission
         if: always()
-        run: python3 audits/f02-acl-01/driver.py audit
+        run: python3 -E audits/f02-acl-01/driver.py audit

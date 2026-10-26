@@ -1,5 +1,7 @@
 {
   "base_master": "c149f802adf1922be588319cc98a798c7b387ea8",
+  "base_v1": "3979bd893ce56823e2a7b816e41ad10efc0e3654",
+  "candidate_branch": "work/f02-acl-01-driver-v2-20261026",
   "delivery_repository": "luit77yak-dev/pizza-perfect-plate",
   "delivery_sha": "011275488660bfa1a9271b3e4c92e457f7638e34",
   "dependencies": {
@@ -11,21 +13,24 @@
     "tools/ab-auth/configure.py": "56f91d23d3e2c886ade8db0484987cd50bbc3293c36ce68c800f3c6bc428f70f",
     "tools/ab-auth/docker_loopback.py": "ba1d29d5ae8cf76428d00c45454f3df4e1ac48edf26e974dd5ec86c22f81fd26",
     "tools/mission-02a3/preflight.py": "fb92b5fe11244e15bfeef1096f9909b9f33e71dc3aa33c08868bdc987286fbd0",
-    "tools/mission-02a5/network.sh": "ec57ccb0388b551e3ede57e651c8ce764feec37d91f172336215471d774f7833"
+    "tools/mission-02a5/network.sh": "ec57ccb0388b551e3ede57e651c8ce764feec37d91f172336215471d774f7833",
+    "vercel.json": "853d8755caca6c2d23fc082cab28710909264b0723cac587b5ef5192ca6dcf41"
   },
   "files": {
     "DRIFT-ADDENDUM.md": "a4a06d5e66018d01acd39bd8f1266cc41686b2da6c194073f086e58d81cd610e",
-    "README.md": "bb9fb39af3cc7c637729250ee6f5308e012543d14bf74caf063ebdbef6728aa6",
-    "STATIC-REVIEW.md": "63958a7d92ad9a680073944ee7abd82be9e1a8b73932208b7f1b93f285f1dbb2",
-    "driver.py": "b9c5f81b39dd6b543e620b698d97cf69489756baedf3b6957d175747d4ae348d",
+    "README.md": "a9ef11e5b1195a0633c06751aca4699323db0ea8641d45cdb8e5c75dbecc50b1",
+    "STATIC-REVIEW.md": "ed80cfa2db54fa0060098c9562482bb6b07da6f8254c071b1e4aa977ec7c548e",
+    "driver.py": "c7def4ee0014b8adf7c93393c56a8a7ccabf26f312bd7b7a6c5878bd0af0d318",
     "fixtures.sql": "7b32b79f5d157d5e902c1b7d7610a550b5ec34180e4d10d178b2c598f11e8d17",
+    "guarded_relay.py": "25c6f6f9b310b45762d7805f06be9ba674f72183bd70d946c1854fc18a644385",
     "revoke.sql": "7764c50d74775d93f3efd7ab28d60bf371a60ad8fa2e6a2b96863cc41cd667a4",
-    "workflow.candidate.yml": "c402906c2ededf4a1e22a9449b45b6d787fc0268fc37c023aced00c59bd47690"
+    "workflow.candidate.yml": "0ded68c2a75d95300254ba535105db871df4c42ebf8cbc1bbe3db16408e1b668"
   },
   "helper": {
     "definition_md5": "b8fcc43700775f8600d52cbced33f189",
     "definition_sha256": "97be7523846e2095f5588936b13539ea8596baeef238c3a3c20cc4be25f111d5",
     "source_md5": "bf8a60da54fda7d28e1003d892d7e116"
   },
-  "historical_run": "38785111675"
+  "historical_run": "38785111675",
+  "revision": "V2"
 }
