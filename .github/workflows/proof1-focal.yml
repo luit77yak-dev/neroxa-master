@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm_single_attempt:
-        description: Type PROVA1 once to admit this single focal run
+        description: Type PROVA1_T02 for the separately authorized second diagnostic attempt
         required: true
         type: string
       candidate_sha:
@@ -20,6 +20,9 @@ jobs:
   proof1-focal:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
     env:
       SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
       AB_PROJECT: neroxa-02a3-${{ github.run_id }}-buyer
@@ -48,15 +51,56 @@ jobs:
           CONFIRM_SINGLE_ATTEMPT: ${{ inputs.confirm_single_attempt }}
         run: |
           set -euo pipefail
-          test "$CONFIRM_SINGLE_ATTEMPT" = PROVA1
-          test "$GITHUB_REF_NAME" = proof1-focal-dispatch
+          test "$CONFIRM_SINGLE_ATTEMPT" = PROVA1_T02
+          test "$GITHUB_REPOSITORY" = luit77yak-dev/neroxa-master
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_REF" = refs/heads/proof1-focal-attempt02-20261101
+          test "$GITHUB_RUN_NUMBER" = 2
           [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$GITHUB_SHA" = "$CANDIDATE_SHA"
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$CANDIDATE_SHA" != 9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97
+          test "$CANDIDATE_SHA" != 2635237c8f457fc3a378cf7322c3e5eaaf58fd93
           test "$GITHUB_RUN_ATTEMPT" = 1
-          prior=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/proof1-focal.yml/runs?head_sha=$GITHUB_SHA&per_page=100" --jq ".workflow_runs[] | select(.id != $GITHUB_RUN_ID) | .id")
-          test -z "$prior"
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/workflows/proof1-focal.yml/runs?per_page=100" > "$RUNNER_TEMP/proof1-history.json"
+          python3 - <<'PYHISTORY'
+          import json,os,re
+          pages=json.load(open(os.environ['RUNNER_TEMP']+'/proof1-history.json'))
+          assert isinstance(pages,list) and pages
+          expected_total=pages[0].get('total_count')
+          assert type(expected_total) is int and expected_total>=0, 'Missing/invalid total_count; STOP'
+          runs=[]
+          for page in pages:
+            assert type(page.get('total_count')) is int and page['total_count']==expected_total, 'Divergent page counts; STOP'
+            assert isinstance(page.get('workflow_runs'),list)
+            runs.extend(page['workflow_runs'])
+          assert len(runs)==expected_total, 'Incomplete history; STOP'
+          for item in runs:
+            assert isinstance(item,dict)
+            assert all(type(item.get(k)) is int and item[k]>0 for k in ['id','workflow_id','run_number','run_attempt'])
+            assert item['workflow_id']==403793720 and item.get('path')=='.github/workflows/proof1-focal.yml'
+            assert item.get('event')=='workflow_dispatch' and isinstance(item.get('head_branch'),str)
+            assert re.fullmatch('[0-9a-f]{40}',item.get('head_sha',''))
+          assert len({r['run_number'] for r in runs})==len(runs), 'Duplicate run number; STOP'
+          assert len({r['id'] for r in runs})==len(runs), 'Ambiguous history; STOP'
+          current=[r for r in runs if r['id']==int(os.environ['GITHUB_RUN_ID'])]
+          assert len(current)==1
+          r=current[0]
+          assert r['workflow_id']==403793720 and r['run_number']==2 and r['run_attempt']==1
+          assert r['event']=='workflow_dispatch' and r['head_branch']=='proof1-focal-attempt02-20261101'
+          assert r['head_sha']==os.environ['CANDIDATE_SHA']
+          previous=[r for r in runs if r['run_number']<2]
+          assert len(previous)==1
+          p=previous[0]
+          assert p['id']==41339698296 and p['workflow_id']==403793720 and p['run_number']==1 and p['run_attempt']==1
+          assert p['head_branch']=='proof1-focal-dispatch' and p['event']=='workflow_dispatch'
+          assert p['head_sha']=='9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97' and p['conclusion']=='failure'
+          assert not any(x['id']!=r['id'] and (x['run_number']==2 or x['head_sha']==r['head_sha']) for x in runs)
+          PYHISTORY
           test "$(git cat-file -t b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d)" = commit
           git merge-base --is-ancestor b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d HEAD
+          git merge-base --is-ancestor 2635237c8f457fc3a378cf7322c3e5eaaf58fd93 HEAD
+          git diff --quiet 9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97 -- audits/02a5/EXPECTED-IMAGES.json audits/02a5/INTEGRATED-MANIFEST.json audits/02a5/verify_manifest.py tools/mission-02a3/preflight.py audits/proof1-focal/driver.mjs audits/proof1-focal/generate.py tools/mission-02a5/network.sh
           git diff --quiet b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d -- audits/sql tools/ab-auth tools/mission-02a3/run.mjs audits/02a2/MANIFEST-02A2.json audits/02a5/BUYER-PRE-GATE-MANIFEST.json audits/02a5/F02-AMENDMENT-EXECUTION-MANIFEST.json
           test "$(git -C delivery-candidate rev-parse HEAD)" = 7ca9376f29ee205d4063e46546f5070313ab78a0
           printf 'EXECUTOR_SHA=%s\nMASTER_SOURCE_SHA=%s\nDELIVERY_SOURCE_SHA=%s\n' "$GITHUB_SHA" "$MISSION_SOURCE_SHA" "$MISSION_DELIVERY_SHA"
@@ -64,12 +108,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
           test "$RUNNER_ENVIRONMENT" = github-hosted
           echo 'PUBLIC_STANDARD_RUNNER=true; billing basis docs.github.com/en/billing/concepts/product-billing/github-actions; no larger runner/cache/artifact uploads'
           python3 tools/mission-02a3/preflight.py
       - name: Locked app dependencies and pinned CLI; no commercial dotenv
         run: |
+          set -euo pipefail
           find . -name '.env*' -not -path './.git/*' -not -path './node_modules/*' -type f -delete
           npm ci --ignore-scripts --no-audit --no-fund
           npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
@@ -77,7 +123,9 @@ jobs:
           python3 audits/02a5/verify_manifest.py
           python3 audits/proof1-focal/generate.py
       - name: Unlinked native six-service stack, loopback binds
+        id: lab
         run: |
+          set -euo pipefail
           export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
           echo "AB_WORKDIR=$AB_WORKDIR" >> "$GITHUB_ENV"
           mkdir -m 700 "$AB_WORKDIR"
@@ -134,7 +182,7 @@ jobs:
           sudo -u neroxa_test test -r tools/mission-02a3/proof1-focal-generated.private.mjs
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
-          trap 'bash tools/mission-02a5/network.sh unlock' EXIT
+          trap 'rc=$?; bash tools/mission-02a5/network.sh unlock || rc=1; exit "$rc"' EXIT
           sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master AB_NETWORK="$AB_NETWORK" MISSION_REVOKE_SCOPE=THIS_RUN_LOCAL_CLONE_ONLY GITHUB_ACTIONS_SCOPE=disposable-workflow MISSION_SOURCE_SHA=b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=7ca9376f29ee205d4063e46546f5070313ab78a0 DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/proof1-focal-generated.private.mjs | tee "$RUNNER_TEMP/proof1-focal.log"
       - name: Require three focal assertions
         if: always()
@@ -142,13 +190,31 @@ jobs:
           set -euo pipefail
           test -f "$RUNNER_TEMP/proof1-focal.log"
           result=$(grep 'PROVA1_FOCAL_RESULT=' "$RUNNER_TEMP/proof1-focal.log" | tail -n 1 | sed 's/^.*PROVA1_FOCAL_RESULT=//')
-          python3 -c 'import json,sys; r=json.loads(sys.argv[1]); assert r["status"]=="PASS PROVA1_FOCAL"; c={x["id"]:x["status"] for x in r["proof1"]["checks"]}; assert c=={"negative-read":"PASS","negative-write":"PASS","positive-capability":"PASS"}' "$result"
+          test "$(grep -c '^PROVA1_FOCAL_RESULT=' "$RUNNER_TEMP/proof1-focal.log")" = 1
+          python3 -c 'import json,sys; r=json.loads(sys.argv[1]); assert r["status"]=="PASS PROVA1_FOCAL"; checks=r["proof1"]["checks"]; assert len(checks)==3; c={x["id"]:x["status"] for x in checks}; assert c=={"negative-read":"PASS","negative-write":"PASS","positive-capability":"PASS"}' "$result"
       - name: Cleanup only this disposable project
-        if: always()
+        if: ${{ always() && steps.lab.outcome != 'skipped' }}
+        env:
+          LAB_OUTCOME: ${{ steps.lab.outcome }}
         run: |
+          set +e
           set -uo pipefail
           cleanup_failed=0
+          cleanup_unknown=0
+          case "${LAB_OUTCOME:-}" in success|failure|cancelled) ;; *) echo 'CLEANUP_UNCERTAIN=lab outcome unavailable'; cleanup_unknown=1 ;; esac
+          expected_workdir="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
+          if [ -z "${AB_WORKDIR:-}" ]; then AB_WORKDIR="$expected_workdir"; cleanup_unknown=1; fi
+          if [ "$AB_WORKDIR" != "$expected_workdir" ]; then echo 'CLEANUP_ERROR=workdir scope mismatch'; AB_WORKDIR=''; cleanup_failed=1; cleanup_unknown=1; fi
+          network_id=$(docker --host=unix:///var/run/docker.sock network inspect "$AB_NETWORK" --format '{{.Id}}' 2>/dev/null || true)
+          project_bridge=''
+          if [ -n "$network_id" ]; then project_bridge="br-${network_id:0:12}"; fi
           bash tools/mission-02a5/network.sh unlock || { echo 'CLEANUP_ERROR=network unlock'; cleanup_failed=1; }
+          for save in iptables-save ip6tables-save; do
+            if rules=$(sudo "$save"); then
+              if grep -q NEROXA02A5 <<< "$rules"; then echo 'CLEANUP_ERROR=UID firewall remains'; cleanup_failed=1; fi
+              if [ -n "$project_bridge" ] && grep -Fq -- "-i $project_bridge " <<< "$rules"; then echo 'CLEANUP_ERROR=project bridge firewall remains'; cleanup_failed=1; fi
+            else echo 'CLEANUP_ERROR=firewall inventory'; cleanup_failed=1; cleanup_unknown=1; fi
+          done
           if [ -n "${AB_WORKDIR:-}" ] && sudo test -d "$AB_WORKDIR"; then
             sudo chown -R "$(id -u):$(id -g)" "$AB_WORKDIR" || { echo 'CLEANUP_ERROR=workdir ownership'; cleanup_failed=1; }
           fi
@@ -156,17 +222,25 @@ jobs:
           if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
             supabase stop --workdir "$AB_WORKDIR" --no-backup || { echo 'CLEANUP_ERROR=supabase stop'; cleanup_failed=1; }
           fi
+          if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/relay.private.log" ]; then
+            if [ ! -f "$AB_WORKDIR/relay.pid" ] || [ -z "$network_id" ]; then echo 'CLEANUP_UNCERTAIN=relay or bridge identity unavailable'; cleanup_unknown=1; fi
+          fi
           if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/relay.pid" ]; then
-            relay_pid=$(cat "$AB_WORKDIR/relay.pid")
-            kill "$relay_pid" 2>/dev/null || true
-            for _ in $(seq 1 10); do kill -0 "$relay_pid" 2>/dev/null || break; sleep 1; done
-            if kill -0 "$relay_pid" 2>/dev/null; then echo 'CLEANUP_ERROR=relay reap'; cleanup_failed=1; fi
+            relay_pid=$(cat "$AB_WORKDIR/relay.pid") || { echo 'CLEANUP_ERROR=relay PID read'; cleanup_failed=1; cleanup_unknown=1; relay_pid=''; }
+            if [[ "$relay_pid" =~ ^[0-9]+$ ]] && [ "$relay_pid" -gt 1 ]; then
+              kill "$relay_pid" 2>/dev/null || true
+              for _ in $(seq 1 10); do kill -0 "$relay_pid" 2>/dev/null || break; sleep 1; done
+              if kill -0 "$relay_pid" 2>/dev/null; then echo 'CLEANUP_ERROR=relay reap'; cleanup_failed=1; fi
+            else echo 'CLEANUP_ERROR=invalid relay PID'; cleanup_failed=1; cleanup_unknown=1; fi
           fi
           if docker network inspect "$AB_NETWORK" >/dev/null 2>&1; then docker network rm "$AB_NETWORK" || { echo 'CLEANUP_ERROR=network removal'; cleanup_failed=1; }; fi
-          remaining=$(docker ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT 2>/dev/null) || { echo 'CLEANUP_ERROR=container inventory'; cleanup_failed=1; remaining=unknown; }
+          networks=$(docker network ls --filter name="^${AB_NETWORK}$" --format '{{.Name}}') || { echo 'CLEANUP_ERROR=network inventory'; cleanup_failed=1; cleanup_unknown=1; networks=unknown; }
+          if [ -n "$networks" ]; then echo 'CLEANUP_ERROR=network absent not confirmed'; cleanup_failed=1; fi
+          remaining=$(docker ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT 2>/dev/null) || { echo 'CLEANUP_ERROR=container inventory'; cleanup_failed=1; cleanup_unknown=1; remaining=unknown; }
           if [ "$remaining" != unknown ] && [ -n "$remaining" ]; then echo 'CLEANUP_ERROR=containers remain'; cleanup_failed=1; fi
           if [ -n "${AB_WORKDIR:-}" ] && [ -e "$AB_WORKDIR" ]; then rm -rf -- "$AB_WORKDIR" || { echo 'CLEANUP_ERROR=workdir removal'; cleanup_failed=1; }; fi
           if [ -n "${AB_WORKDIR:-}" ] && [ -e "$AB_WORKDIR" ]; then echo 'CLEANUP_ERROR=workdir remains'; cleanup_failed=1; fi
           rm -f "$RUNNER_TEMP/proof1-focal.log" || { echo 'CLEANUP_ERROR=focal log removal'; cleanup_failed=1; }
-          test "$cleanup_failed" -eq 0
+          if [ "$cleanup_unknown" -ne 0 ]; then echo 'CLEANUP=UNKNOWN'; exit 1; fi
+          if [ "$cleanup_failed" -ne 0 ]; then echo 'CLEANUP=FAIL'; exit 1; fi
           echo 'CLEANUP=PASS; focal services, relay, network and private workdir absent'
