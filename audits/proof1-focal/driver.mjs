@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import http from 'node:http';
 
 const units = [
   ...JSON.parse(fs.readFileSync('audits/02a5/BUYER-PRE-GATE-MANIFEST.json')).sql,
@@ -9,7 +10,7 @@ const sha = b => crypto.createHash('sha256').update(b).digest('hex');
 const clean = x => JSON.stringify(x);
 
 export async function proof1Focal(c) {
-  const {sql,q,ids,services,report,rpc,crypto:crypt,sleep}=c;
+  const {sql,q,ids,services,report,rpc,crypto:crypt,sleep,url}=c;
   report.proof1={source:{master:process.env.MISSION_SOURCE_SHA,delivery:process.env.MISSION_DELIVERY_SHA},checks:[]};
   report.stage='install exact manifest units into disposable database';
   for (const u of units) {
@@ -46,9 +47,14 @@ export async function proof1Focal(c) {
   if(created.error) throw Error('Synthetic checkout failed: '+created.error.code);
   const order=Array.isArray(created.data)?created.data[0]:created.data;
   if(!order?.order_id) throw Error('Synthetic checkout returned no order id');
-  const token=crypt.randomBytes(32).toString('base64url');
-  const tokenHash=crypt.createHash('sha256').update(token).digest('hex');
-  for (const fn of ['neroxa_register_tracking_capability','neroxa_register_order_amendment_capability']) {
+  const trackingToken=crypt.randomBytes(32).toString('base64url');
+  const amendmentToken=crypt.randomBytes(32).toString('base64url');
+  const registrations=[
+    ['neroxa_register_tracking_capability',trackingToken],
+    ['neroxa_register_order_amendment_capability',amendmentToken],
+  ];
+  for (const [fn,token] of registrations) {
+    const tokenHash=crypt.createHash('sha256').update(token).digest('hex');
     const r=await services.admin.rpc(fn,{p_instance_id:ids.Astore,p_order_id:order.order_id,p_checkout_key:key,p_token_sha256:tokenHash});
     if(r.error) throw Error('Capability registration failed: '+fn+' '+r.error.code);
   }
@@ -65,13 +71,39 @@ export async function proof1Focal(c) {
   report.proof1.checks.push({id:'negative-write',status:'PASS',http:write.http,sqlstate:write.body?.code??null,stateUnchanged:true});
   report.stage='positive capability';
   const positiveBefore=snapshot(order.order_id);
-  const tracked=await services.admin.rpc('neroxa_track_order_with_capability',{p_instance_id:ids.Astore,p_order_id:order.order_id,p_token:token});
-  if(tracked.error||tracked.data?.order_id!==order.order_id) throw Error('Authorized tracking capability failed');
-  const append=await services.admin.rpc('neroxa_append_order_items_with_capability',{p_instance_id:ids.Astore,p_order_id:order.order_id,p_token:token,p_request_key:crypt.randomUUID(),p_items:[{product_id:ids.Aproduct,quantity:1,unit_price:30}]});
-  if(append.error) throw Error('Authorized amendment capability failed: '+append.error.code);
+  // Exercise the candidate's actual public HTTP handlers. Service credentials remain inside
+  // the route dependencies; the simulated client presents only each opaque buyer capability.
+  const {handlePrivateTrackingRequest}=await import('../../delivery-candidate/src/server/private-tracking.ts');
+  const {privateTrackingDependencies}=await import('../../delivery-candidate/src/server/private-tracking-backend.ts');
+  const {handleOrderAmendmentRequest}=await import('../../delivery-candidate/src/server/order-amendment.ts');
+  const {orderAmendmentDependencies}=await import('../../delivery-candidate/src/server/order-amendment-backend.ts');
+  const runtime={NEROXA_PRIVATE_TRACKING_ENABLED:'true',NEROXA_BACKEND_MODE:'homologation',NEROXA_TEST_PROJECT_REF:'local-disposable',NEROXA_TRACKING_PROXY_CONTRACT:'direct-canonical-host-v1',SUPABASE_URL:url,NEROXA_DELIVERY_BACKEND_URL:url,NEROXA_TRACKING_CANONICAL_DOMAINS:'a.synthetic.invalid,b.synthetic.invalid,c.synthetic.invalid',NEROXA_TRACKING_QUOTA_SECRET:crypt.randomBytes(32).toString('hex'),NEROXA_CHECKOUT_RATE_LIMIT_SECRET:crypt.randomBytes(32).toString('hex'),NEROXA_CHECKOUT_GATEWAY_ENABLED:'true',NEROXA_CHECKOUT_AMENDMENTS_ENABLED:'true',NEROXA_GROUP_ADDONS_V1_ENABLED:'false'};
+  const trackingDeps=privateTrackingDependencies(runtime,services.admin);
+  const amendmentDeps=orderAmendmentDependencies(runtime,services.admin);
+  const server=http.createServer(async(req,res)=>{try{
+    const host=req.headers.host??'';
+    if(!['a.synthetic.invalid','b.synthetic.invalid','c.synthetic.invalid'].includes(host)){res.writeHead(403);res.end('{}');return;}
+    const chunks=[];for await(const chunk of req)chunks.push(chunk);
+    const request=new Request('https://'+host+req.url,{method:req.method,headers:req.headers,body:Buffer.concat(chunks)});
+    const response=req.url==='/api/order-track'?await handlePrivateTrackingRequest(request,trackingDeps):req.url==='/api/order-amend'?await handleOrderAmendmentRequest(request,amendmentDeps):Response.json({}, {status:404});
+    res.writeHead(response.status,Object.fromEntries(response.headers));res.end(await response.text());
+  }catch{res.writeHead(503);res.end('{}');}});
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  const request=(path,body,bearerToken)=>new Promise((resolve,reject)=>{
+    const headers={Host:'a.synthetic.invalid',Origin:'https://a.synthetic.invalid','Content-Type':'application/json'};
+    if(bearerToken)headers.Authorization='Bearer '+bearerToken;
+    const req=http.request('http://127.0.0.1:'+server.address().port+path,{method:'POST',headers},res=>{const chunks=[];res.on('data',x=>chunks.push(x));res.on('end',()=>{try{resolve({http:res.statusCode,body:JSON.parse(Buffer.concat(chunks).toString()),cacheControl:res.headers['cache-control']??''});}catch{reject(Error('Buyer HTTP response was not JSON'));}});});req.on('error',reject);req.end(JSON.stringify(body));
+  });
+  let tracked,append;
+  try {
+    tracked=await request('/api/order-track',{order_id:order.order_id},trackingToken);
+    if(tracked.http!==200||tracked.body?.order_id!==order.order_id||JSON.stringify(tracked.body).includes('customer_')||!tracked.cacheControl.includes('no-store')) throw Error('Authorized public tracking handler failed');
+    append=await request('/api/order-amend',{order_id:order.order_id,token:amendmentToken,request_key:crypt.randomUUID(),items:[{product_id:ids.Aproduct,quantity:1}]});
+    if(append.http!==200||append.body?.order_id!==order.order_id||append.body?.payment_state!=='NOT_SETTLED') throw Error('Authorized public amendment handler failed');
+  } finally { await new Promise(resolve=>server.close(resolve)); }
   const afterPositive=snapshot(order.order_id);
   const oldTotal=Number(positiveBefore.order.total),newTotal=Number(afterPositive.order.total);
-  if(JSON.stringify(tracked.data).includes('customer_phone')||afterPositive.items?.length!==positiveBefore.items?.length+1||newTotal-oldTotal!==30||afterPositive.order.payment_method!==positiveBefore.order.payment_method) throw Error('Capability positive did not preserve one scoped, correctly priced mutation');
-  report.proof1.checks.push({id:'positive-capability',status:'PASS',readOrder:tracked.data.order_id,appendRows:Array.isArray(append.data)?append.data.length:1,changedOnce:true,totalDelta:30,paymentPreserved:true});
+  if(afterPositive.items?.length!==positiveBefore.items?.length+1||newTotal-oldTotal!==30||afterPositive.order.payment_method!==positiveBefore.order.payment_method||Number(append.body.total)!==newTotal) throw Error('Capability positive did not preserve one scoped, correctly priced mutation');
+  report.proof1.checks.push({id:'positive-capability',status:'PASS',readHttp:tracked.http,appendHttp:append.http,readOrder:tracked.body.order_id,changedOnce:true,totalDelta:30,paymentPreserved:true,clientCredentials:'tracking + amendment capabilities only'});
   report.proof1.status='PASS';
 }

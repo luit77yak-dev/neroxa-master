@@ -6,6 +6,10 @@ on:
         description: Type PROVA1 once to admit this single focal run
         required: true
         type: string
+      candidate_sha:
+        description: Exact reviewed commit SHA checked out by this run
+        required: true
+        type: string
 permissions:
   actions: read
   contents: read
@@ -40,10 +44,14 @@ jobs:
       - name: Admit one focal run and frozen source identities
         env:
           GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CONFIRM_SINGLE_ATTEMPT: ${{ inputs.confirm_single_attempt }}
         run: |
           set -euo pipefail
-          test "${{ inputs.confirm_single_attempt }}" = PROVA1
+          test "$CONFIRM_SINGLE_ATTEMPT" = PROVA1
           test "$GITHUB_REF_NAME" = proof1-focal-dispatch
+          [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$GITHUB_SHA" = "$CANDIDATE_SHA"
           test "$GITHUB_RUN_ATTEMPT" = 1
           prior=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/proof1-focal.yml/runs?head_sha=$GITHUB_SHA&per_page=100" --jq ".workflow_runs[] | select(.id != $GITHUB_RUN_ID) | .id")
           test -z "$prior"
