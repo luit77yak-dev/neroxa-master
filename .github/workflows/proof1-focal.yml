@@ -95,7 +95,13 @@ jobs:
           # not a newly admitted image: immutable manifest -> unchanged frozen config ID.
           pg='supabase/postgres@sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5'
           docker --host=unix:///var/run/docker.sock pull --platform linux/amd64 "$pg"
-          test "$(docker --host=unix:///var/run/docker.sock image inspect "$pg" --format '{{.Id}}')" = "$(python3 -c 'import json; print(json.load(open("audits/02a5/EXPECTED-IMAGES.json"))["supabase/postgres:17.11.0.004"])')"
+          observed_id="$(docker --host=unix:///var/run/docker.sock image inspect "$pg" --format '{{.Id}}')"
+          expected_id="$(python3 -c 'import json; print(json.load(open("audits/02a5/EXPECTED-IMAGES.json"))["supabase/postgres:17.11.0.004"])')"
+          printf 'POSTGRES_IMAGE_ID_OBSERVED=%s\n' "$observed_id"
+          printf 'POSTGRES_IMAGE_ID_EXPECTED=%s\n' "$expected_id"
+          test -n "$observed_id"
+          test -n "$expected_id"
+          test "$observed_id" = "$expected_id"
           docker --host=unix:///var/run/docker.sock tag "$pg" supabase/postgres:17.11.0.004
           if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit > "$AB_WORKDIR/start.private.log" 2>&1; then
             python3 tools/ab-auth/start_failure.py
