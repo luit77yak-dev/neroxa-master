@@ -56,16 +56,17 @@ jobs:
           test "$GITHUB_ACTOR" = luit77yak-dev
           test "$GITHUB_ACTOR_ID" = 333551887
           test "$GITHUB_EVENT_NAME" = workflow_dispatch
-          test "$GITHUB_REF" = refs/heads/proof1-focal-attempt02-20261101
-          test "$GITHUB_RUN_NUMBER" = 3
+          test "$GITHUB_REF" = refs/heads/proof1-s12-attempt04-20261102
+          test "$GITHUB_RUN_NUMBER" = 4
           [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$GITHUB_SHA" = "$CANDIDATE_SHA"
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
-          test "$(git rev-parse HEAD^)" = c4571fbe69385169ce3494457c413a03246a28d3
+          test "$(git rev-parse HEAD^)" = a4724c9cb242bfd6201694a3638873f9d024fe30
           changed_files=$(git diff-tree --no-commit-id --name-only -r HEAD)
           test "$changed_files" = .github/workflows/proof1-focal.yml
           branch_sha=$(gh api "repos/$GITHUB_REPOSITORY/branches/$GITHUB_REF_NAME" --jq .commit.sha)
           test "$branch_sha" = "$CANDIDATE_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/branches/$GITHUB_REF_NAME" --jq .protected)" = true
           test "$CANDIDATE_SHA" != 9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97
           test "$CANDIDATE_SHA" != 2635237c8f457fc3a378cf7322c3e5eaaf58fd93
           test "$GITHUB_RUN_ATTEMPT" = 1
@@ -75,7 +76,7 @@ jobs:
           pages=json.load(open(os.environ['RUNNER_TEMP']+'/proof1-history.json'))
           assert isinstance(pages,list) and pages, 'Missing history pages; STOP'
           expected_total=pages[0].get('total_count')
-          assert type(expected_total) is int and expected_total==3, 'Expected exactly historical runs 1/2 plus this one-shot run 3; STOP'
+          assert type(expected_total) is int and expected_total==4, 'Expected exactly historical runs 1/2/3 plus this one-shot run 4; STOP'
           runs=[]
           for page in pages:
             assert type(page.get('total_count')) is int and page['total_count']==expected_total, 'Divergent page counts; STOP'
@@ -90,22 +91,25 @@ jobs:
             assert re.fullmatch('[0-9a-f]{40}',item.get('head_sha',''))
             actor=item.get('actor') or {}
             assert actor.get('login')=='luit77yak-dev' and actor.get('id')==333551887, 'Unexpected dispatch account; STOP'
-          assert {r['run_number'] for r in runs}=={1,2,3}, 'Missing, duplicate, or additional run number; STOP'
-          assert len({r['id'] for r in runs})==3, 'Ambiguous history; STOP'
+          assert {r['run_number'] for r in runs}=={1,2,3,4}, 'Missing, duplicate, or additional run number; STOP'
+          assert len({r['id'] for r in runs})==4, 'Ambiguous history; STOP'
           by_number={r['run_number']:r for r in runs}
-          first,second,current=(by_number[n] for n in (1,2,3))
+          first,second,third,current=(by_number[n] for n in (1,2,3,4))
           assert first['id']==41339698296 and first['run_attempt']==1
           assert first['head_branch']=='proof1-focal-dispatch' and first['head_sha']=='9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97'
           assert first['event']=='workflow_dispatch' and first['status']=='completed' and first['conclusion']=='failure'
           assert second['id']==41359945472 and second['run_attempt']==1
           assert second['head_branch']=='proof1-focal-attempt02-20261101' and second['head_sha']=='9067264f5f4213ed44820e42066a6c25d7c313c3'
           assert second['event']=='workflow_dispatch' and second['status']=='completed' and second['conclusion']=='failure'
+          assert third['id']==41446648940 and third['run_attempt']==1
+          assert third['head_branch']=='proof1-focal-attempt02-20261101' and third['head_sha']=='6bb8214568b49ba144941d0acc83e0a6ccc35e67'
+          assert third['event']=='workflow_dispatch' and third['status']=='completed' and third['conclusion']=='failure'
           assert current['id']==int(os.environ['GITHUB_RUN_ID'])
-          assert current['workflow_id']==403793720 and current['run_number']==3 and current['run_attempt']==1
-          assert current['event']=='workflow_dispatch' and current['head_branch']=='proof1-focal-attempt02-20261101'
+          assert current['workflow_id']==403793720 and current['run_number']==4 and current['run_attempt']==1
+          assert current['event']=='workflow_dispatch' and current['head_branch']=='proof1-s12-attempt04-20261102'
           assert current['head_sha']==os.environ['CANDIDATE_SHA']
           assert current['status']=='in_progress' and current.get('conclusion') is None
-          assert all(x['status']=='completed' for x in (first,second)), 'Historical run still active; STOP'
+          assert all(x['status']=='completed' for x in (first,second,third)), 'Historical run still active; STOP'
           assert not any(x is not current and x['head_sha']==current['head_sha'] for x in runs), 'Candidate SHA already consumed; STOP'
           assert sum(x['status']!='completed' for x in runs)==1, 'Concurrent focal execution; STOP'
           PYHISTORY
