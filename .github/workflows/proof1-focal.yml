@@ -112,7 +112,10 @@ jobs:
           test "$(git cat-file -t b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d)" = commit
           git merge-base --is-ancestor b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d HEAD
           git merge-base --is-ancestor 2635237c8f457fc3a378cf7322c3e5eaaf58fd93 HEAD
-          git diff --quiet 9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97 -- audits/02a5/EXPECTED-IMAGES.json audits/02a5/INTEGRATED-MANIFEST.json audits/02a5/verify_manifest.py tools/mission-02a3/preflight.py audits/proof1-focal/driver.mjs audits/proof1-focal/generate.py tools/mission-02a5/network.sh
+          # Keep historical invariants anchored to the original focal commit.
+          git diff --quiet 9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97 -- audits/02a5/EXPECTED-IMAGES.json audits/02a5/INTEGRATED-MANIFEST.json audits/02a5/verify_manifest.py tools/mission-02a3/preflight.py
+          # Keep the reviewed focal source files anchored to the immutable S3 composition.
+          git diff --quiet aea58822a68393d481419eb17ab658b5dc9d45cc -- audits/proof1-focal/driver.mjs audits/proof1-focal/generate.py tools/mission-02a5/network.sh
           git diff --quiet b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d -- audits/sql tools/ab-auth tools/mission-02a3/run.mjs audits/02a2/MANIFEST-02A2.json audits/02a5/BUYER-PRE-GATE-MANIFEST.json audits/02a5/F02-AMENDMENT-EXECUTION-MANIFEST.json
           test "$(git -C delivery-candidate rev-parse HEAD)" = 7ca9376f29ee205d4063e46546f5070313ab78a0
           printf 'EXECUTOR_SHA=%s\nMASTER_SOURCE_SHA=%s\nDELIVERY_SOURCE_SHA=%s\n' "$GITHUB_SHA" "$MISSION_SOURCE_SHA" "$MISSION_DELIVERY_SHA"
@@ -276,7 +279,11 @@ jobs:
             else AB_WORKDIR=; if [ "${LAB_OUTCOME:-}" != skipped ]; then cleanup_unknown=1; cleanup_resources_inactive=0; fi
             fi
           fi
-          if [ "$AB_WORKDIR" != "$expected_workdir" ]; then echo 'CLEANUP_FAIL=workdir scope mismatch'; AB_WORKDIR=''; cleanup_failed=1; cleanup_unknown=1; cleanup_resources_inactive=0; fi
+          if [ -z "${AB_WORKDIR:-}" ] && [ "${LAB_OUTCOME:-}" = skipped ] && [ ! -e "$expected_workdir" ]; then
+            echo 'CLEANUP_WORKDIR=not-created-before-lab'
+          elif [ "$AB_WORKDIR" != "$expected_workdir" ]; then
+            echo 'CLEANUP_FAIL=workdir scope mismatch'; AB_WORKDIR=''; cleanup_failed=1; cleanup_unknown=1; cleanup_resources_inactive=0
+          fi
           export DOCKER_HOST=unix:///var/run/docker.sock
           # Services and their consumers are stopped while egress restrictions remain installed.
           if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
