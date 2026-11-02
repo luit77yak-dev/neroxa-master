@@ -61,6 +61,11 @@ jobs:
           [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$GITHUB_SHA" = "$CANDIDATE_SHA"
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          test "$(git rev-parse HEAD^)" = c4571fbe69385169ce3494457c413a03246a28d3
+          changed_files=$(git diff-tree --no-commit-id --name-only -r HEAD)
+          test "$changed_files" = .github/workflows/proof1-focal.yml
+          branch_sha=$(gh api "repos/$GITHUB_REPOSITORY/branches/$GITHUB_REF_NAME" --jq .commit.sha)
+          test "$branch_sha" = "$CANDIDATE_SHA"
           test "$CANDIDATE_SHA" != 9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97
           test "$CANDIDATE_SHA" != 2635237c8f457fc3a378cf7322c3e5eaaf58fd93
           test "$GITHUB_RUN_ATTEMPT" = 1
