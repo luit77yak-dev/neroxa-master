@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm_single_attempt:
-        description: Type PROVA1_T02 for the separately authorized second diagnostic attempt
+        description: Type PROVA1_ONE_SHOT only after separate authorization for this exact candidate SHA
         required: true
         type: string
       candidate_sha:
@@ -51,11 +51,13 @@ jobs:
           CONFIRM_SINGLE_ATTEMPT: ${{ inputs.confirm_single_attempt }}
         run: |
           set -euo pipefail
-          test "$CONFIRM_SINGLE_ATTEMPT" = PROVA1_T02
+          test "$CONFIRM_SINGLE_ATTEMPT" = PROVA1_ONE_SHOT
           test "$GITHUB_REPOSITORY" = luit77yak-dev/neroxa-master
+          test "$GITHUB_ACTOR" = luit77yak-dev
+          test "$GITHUB_ACTOR_ID" = 333551887
           test "$GITHUB_EVENT_NAME" = workflow_dispatch
           test "$GITHUB_REF" = refs/heads/proof1-focal-attempt02-20261101
-          test "$GITHUB_RUN_NUMBER" = 2
+          test "$GITHUB_RUN_NUMBER" = 3
           [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
           test "$GITHUB_SHA" = "$CANDIDATE_SHA"
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
@@ -66,9 +68,9 @@ jobs:
           python3 - <<'PYHISTORY'
           import json,os,re
           pages=json.load(open(os.environ['RUNNER_TEMP']+'/proof1-history.json'))
-          assert isinstance(pages,list) and pages
+          assert isinstance(pages,list) and pages, 'Missing history pages; STOP'
           expected_total=pages[0].get('total_count')
-          assert type(expected_total) is int and expected_total>=0, 'Missing/invalid total_count; STOP'
+          assert type(expected_total) is int and expected_total==3, 'Expected exactly historical runs 1/2 plus this one-shot run 3; STOP'
           runs=[]
           for page in pages:
             assert type(page.get('total_count')) is int and page['total_count']==expected_total, 'Divergent page counts; STOP'
@@ -81,21 +83,26 @@ jobs:
             assert item['workflow_id']==403793720 and item.get('path')=='.github/workflows/proof1-focal.yml'
             assert item.get('event')=='workflow_dispatch' and isinstance(item.get('head_branch'),str)
             assert re.fullmatch('[0-9a-f]{40}',item.get('head_sha',''))
-          assert len({r['run_number'] for r in runs})==len(runs), 'Duplicate run number; STOP'
-          assert len({r['id'] for r in runs})==len(runs), 'Ambiguous history; STOP'
-          current=[r for r in runs if r['id']==int(os.environ['GITHUB_RUN_ID'])]
-          assert len(current)==1
-          r=current[0]
-          assert r['workflow_id']==403793720 and r['run_number']==2 and r['run_attempt']==1
-          assert r['event']=='workflow_dispatch' and r['head_branch']=='proof1-focal-attempt02-20261101'
-          assert r['head_sha']==os.environ['CANDIDATE_SHA']
-          previous=[r for r in runs if r['run_number']<2]
-          assert len(previous)==1
-          p=previous[0]
-          assert p['id']==41339698296 and p['workflow_id']==403793720 and p['run_number']==1 and p['run_attempt']==1
-          assert p['head_branch']=='proof1-focal-dispatch' and p['event']=='workflow_dispatch'
-          assert p['head_sha']=='9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97' and p['conclusion']=='failure'
-          assert not any(x['id']!=r['id'] and (x['run_number']==2 or x['head_sha']==r['head_sha']) for x in runs)
+            actor=item.get('actor') or {}
+            assert actor.get('login')=='luit77yak-dev' and actor.get('id')==333551887, 'Unexpected dispatch account; STOP'
+          assert {r['run_number'] for r in runs}=={1,2,3}, 'Missing, duplicate, or additional run number; STOP'
+          assert len({r['id'] for r in runs})==3, 'Ambiguous history; STOP'
+          by_number={r['run_number']:r for r in runs}
+          first,second,current=(by_number[n] for n in (1,2,3))
+          assert first['id']==41339698296 and first['run_attempt']==1
+          assert first['head_branch']=='proof1-focal-dispatch' and first['head_sha']=='9dc3913fb8a7e4e96b668c5b5c0c7c696a2f4b97'
+          assert first['event']=='workflow_dispatch' and first['status']=='completed' and first['conclusion']=='failure'
+          assert second['id']==41359945472 and second['run_attempt']==1
+          assert second['head_branch']=='proof1-focal-attempt02-20261101' and second['head_sha']=='9067264f5f4213ed44820e42066a6c25d7c313c3'
+          assert second['event']=='workflow_dispatch' and second['status']=='completed' and second['conclusion']=='failure'
+          assert current['id']==int(os.environ['GITHUB_RUN_ID'])
+          assert current['workflow_id']==403793720 and current['run_number']==3 and current['run_attempt']==1
+          assert current['event']=='workflow_dispatch' and current['head_branch']=='proof1-focal-attempt02-20261101'
+          assert current['head_sha']==os.environ['CANDIDATE_SHA']
+          assert current['status']=='in_progress' and current.get('conclusion') is None
+          assert all(x['status']=='completed' for x in (first,second)), 'Historical run still active; STOP'
+          assert not any(x is not current and x['head_sha']==current['head_sha'] for x in runs), 'Candidate SHA already consumed; STOP'
+          assert sum(x['status']!='completed' for x in runs)==1, 'Concurrent focal execution; STOP'
           PYHISTORY
           test "$(git cat-file -t b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d)" = commit
           git merge-base --is-ancestor b4158a9422a0f8b4a1d059c2109fa3f9eb3acb8d HEAD
