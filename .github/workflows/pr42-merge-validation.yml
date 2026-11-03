@@ -1,0 +1,56 @@
+name: PR42 private-tracking lightweight integration validation
+on:
+  push:
+    branches:
+      - audit/pr42-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout isolated PR42 combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Check candidate hash, guards and scripts (no SQL execution)
+        run: |
+          set -euo pipefail
+          node --check tools/mission-02a3/run.mjs
+          node --check tools/mission-02a4/tracking.mjs
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          config=json.loads(pathlib.Path('vercel.json').read_text())
+          for branch in (
+             'audit/pr42-merge-check-20261103',
+             'security/mission-02a4-private-tracking-20261014',
+             'security/mission-02a3-real-isolation-20261014'):
+              assert config['git']['deploymentEnabled'].get(branch) is False, 'Vercel deploy enabled for '+branch
+          manifest=json.loads(pathlib.Path('audits/02a4/MANIFEST.json').read_text())
+          assert manifest['profile']=='M+tracking independently of availability fix'
+          for path,expected in manifest['files'].items():
+              assert hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()==expected, 'File digest mismatch: '+path
+          track=pathlib.Path('audits/02a4/private-tracking.candidate.sql').read_text()
+          gate=pathlib.Path('audits/02a4/phone-rpc-quarantine.release-gate.sql').read_text()
+          assert 'mission02a2_disposable' in track and 'mission02a2_disposable' in gate
+          assert 'legacy_phone_consumers_disabled' in gate
+          assert 'GRANT EXECUTE' in track and 'TO service_role' in track
+          assert 'REVOKE ALL' in gate and 'get_public_order_status' in gate
+          assert pathlib.Path('audits/02a4/CONSUMIDORES-F02.md').is_file()
+          print('CANDIDATE-HASH-AND-GUARDS=PASS; NO SQL RUN; NO DEPLOY')
+          PY
