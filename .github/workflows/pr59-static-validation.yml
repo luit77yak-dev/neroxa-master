@@ -1,0 +1,61 @@
+name: PR59 focal availability evidence and guarded candidate check
+on:
+  push:
+    branches:
+      - audit/pr59-availability-validation-20261103
+permissions:
+  contents: read
+jobs:
+  static:
+    name: validate-scope-manifest-and-P0-fix-evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated PR59 source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify integrity (NO DATABASE; NO SQL EXECUTION)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,json,csv,hashlib,subprocess,ast
+          root=pathlib.Path('.')
+          main='e38323a6a457f518d38f53b874cf5f4202e7fea6'
+          changed=subprocess.check_output(['git','diff','--name-only',main,'HEAD'],text=True).splitlines()
+          audit={x for x in changed if x.startswith('audits/02a4/')}
+          expected= audit|{'vercel.json','.github/workflows/pr59-static-validation.yml'}
+          assert len(audit)==19,(len(audit),sorted(audit))
+          assert set(changed)==expected,sorted(set(changed)-expected)
+          assert sum(x.endswith('.json') for x in audit)==14
+          assert sum(x.endswith('.md') for x in audit)==2
+          assert sum(x.endswith('.sql') for x in audit)==1
+          assert sum(x.endswith('.py') for x in audit)==2
+          for f in audit:
+              if f.endswith('.json'):json.loads((root/f).read_text())
+              if f.endswith('.py'):ast.parse((root/f).read_text(),filename=f)
+          manifest=json.loads((root/'audits/02a4/MANIFEST.json').read_text())
+          candidate='audits/02a4/availability-instance-scope.candidate.sql'
+          source_hash='67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264'
+          assert manifest['files'][candidate]==source_hash
+          assert manifest['baseMasterCandidate']=='648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c'
+          sql=(root/candidate).read_bytes()
+          assert hashlib.sha256(sql).hexdigest()==source_hash
+          for marker in (b'neroxa.mission02a2_disposable',b'AS RESTRICTIVE',b'REVOKE ALL',b'BEGIN;',b'COMMIT;'):
+              assert marker in sql,marker
+          result=json.loads((root/'audits/02a4/evidence/selected-profile-results.json').read_text())
+          a=next(p for p in result if p['profile']=='f01-attempt2')
+          assert (a['counts']['pass'],a['counts']['fail'],a['counts']['blocked'])==(739,7,1)
+          assert a['status']=='FAIL' and a['cleanup'] is True
+          before_after=json.loads((root/'audits/02a4/evidence/P0-availability-before-after.json').read_text())
+          assert len(before_after)>0
+          before=[x for x in before_after if x.get('source')=='baseline-matrix' and x.get('status')=='FAIL']
+          after=[x for x in before_after if x.get('source')=='f01-attempt2' and x.get('status')=='PASS']
+          assert before and after,(len(before),len(after))
+          cfg=json.loads((root/'vercel.json').read_text())
+          assert cfg['git']['deploymentEnabled']['audit/pr59-availability-validation-20261103'] is False
+          print('PR59_SCOPE=PASS 19 files | SQL_SHA256=PASS | BASELINE_P0_PRESERVED | FOCAL_FIX_EVIDENCE=PASS')
+          print('GLOBAL_F01=FAIL 739/7/1 | SQL_REMOTE=NOT_RUN | PRODUCTION=NOT_AUTHORIZED')
+          PY

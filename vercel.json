@@ -18,5 +18,10 @@
         }
       ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "audit/pr59-availability-validation-20261103": false
+    }
+  }
 }
