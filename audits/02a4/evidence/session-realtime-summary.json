@@ -1,0 +1,447 @@
+{
+  "actorBatch": "all",
+  "mission": "02A.3",
+  "profile": "master",
+  "scope": "addons-realtime",
+  "status": "PASS PARTIAL PROFILE",
+  "stage": "addons-realtime",
+  "productionApproved": false,
+  "limitations": [
+    "Historical structural catalog is not installed production schema.",
+    "Master CRM scope differs from store customer PII.",
+    "Legacy schema has no shop-instance field; A/B ownership is fixture lineage, not added fake isolation."
+  ],
+  "versions": {
+    "postgres": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "node": "v22.23.0"
+  },
+  "images": [
+    {
+      "name": "supabase_storage_neroxa-02a3-38650424558-master",
+      "tag": "supabase/storage-api:v1.79.36",
+      "imageId": "sha256:12afd2170c5ca80880a4af472bcb89d28e090e3155a8bcee4246c1fb3991dcdd"
+    },
+    {
+      "name": "supabase_rest_neroxa-02a3-38650424558-master",
+      "tag": "postgrest/postgrest:v16.4",
+      "imageId": "sha256:1ad5f2ea5501150ec9c7953ae9bf04111ced39a53ca01fc0f08af6d0b7ba67be"
+    },
+    {
+      "name": "supabase_realtime_neroxa-02a3-38650424558-master",
+      "tag": "supabase/realtime:v2.140.10",
+      "imageId": "sha256:7412151d218fc99aa324e95883f1e29d2008542c9f85e241873f50c3f6476c43"
+    },
+    {
+      "name": "supabase_auth_neroxa-02a3-38650424558-master",
+      "tag": "supabase/gotrue:v2.197.0",
+      "imageId": "sha256:1181bff5ba4ce440013a63cef9f4cf13024c432d705c9b1fbc9e5b949e852f48"
+    },
+    {
+      "name": "supabase_kong_neroxa-02a3-38650424558-master",
+      "tag": "kong:2.8.1",
+      "imageId": "sha256:3cefb958bcd694597b65adc00053a762b1f9a6df3c6031af528d052d75a64e1a"
+    },
+    {
+      "name": "supabase_db_neroxa-02a3-38650424558-master",
+      "tag": "supabase/postgres:17.11.0.004",
+      "imageId": "sha256:94fe95acfce6e1d41106ff2abd4c08e7932a6941d453499a56f8a620a473de1a"
+    }
+  ],
+  "appliedCandidate": {
+    "path": "audits/02a2/scoped-order-access.candidate.sql",
+    "sha256": "648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c"
+  },
+  "rollback": {
+    "status": "PASS",
+    "dataPreserved": true,
+    "aclPreserved": true,
+    "unsafePrivilegesRestoredInServingEnvironment": false
+  },
+  "applicationDataIntegrity": {
+    "status": "PASS",
+    "before": {
+      "storage.buckets": "1:79f269bef48e1a49dc4d4d6bf11575b1",
+      "storage.objects": "3:82ea5a3715c88d66d1afe282905335da",
+      "public.neroxa_plans": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_orders": "3:7cd8cff9e322c1ba44c0272a0bc8d041",
+      "public.neroxa_systems": "1:86c1449ef54ad0729fff15d8ed516b86",
+      "public.neroxa_products": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_contracts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_proposals": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_audit_logs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_order_items": "3:9392870f8765176f164af14b1ddb1513",
+      "public.neroxa_organizations": "2:cc4d2aab187930abdb657cf3bd6042d7",
+      "public.neroxa_plan_features": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_plan_products": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_subscriptions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_payment_events": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_system_domains": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_billing_records": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_client_contacts": "1:629765b50533523828a2e2daa54757ce",
+      "public.neroxa_support_tickets": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_instance_members": "4:52a5c7c870ea5d4b7188786015ae6594",
+      "public.neroxa_platform_members": "2:095a10c49f9465f569fea7ec13c43c1e",
+      "public.neroxa_support_messages": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_system_instances": "3:1137bb5f6c7006c827bf7c148275c117",
+      "public.neroxa_checkout_sessions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_platform_settings": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_provisioning_jobs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_addons": "3:15dd657588a380af976a8f876a4c3cb0",
+      "public.neroxa_contract_signatures": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_products": "3:72bb111fd78e12b5b5860da6507ff267",
+      "public.neroxa_storefront_settings": "3:3cea160d7b080549c5de584a7cd75900",
+      "public.neroxa_order_status_history": "3:3efbfb07a0a9e6b270fe1d7ab7db4e2a",
+      "public.neroxa_organization_members": "3:abae4b9b13431f3d469a71234c0bc8a2",
+      "public.neroxa_storefront_categories": "3:376ae6bbc070f1f216ec7e16c5057356",
+      "public.neroxa_storefront_addon_groups": "3:ad16ad644422baa577c86a5bfd014f4e",
+      "public.neroxa_storefront_availability": "3:b6a177ef79d386cef52f2092783714d6",
+      "public.neroxa_storefront_special_days": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_weekly_hours": "3:13503052e8a1bdef58b696ad366f81c5",
+      "public.neroxa_storefront_special_hours": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_delivery_zones": "3:9bf8d451cbc6132314567b7e75ab44b4",
+      "public.neroxa_storefront_product_addon_groups": "3:c8fd52f1ad189468e50594f3f42eba24"
+    },
+    "after": {
+      "storage.buckets": "1:79f269bef48e1a49dc4d4d6bf11575b1",
+      "storage.objects": "3:82ea5a3715c88d66d1afe282905335da",
+      "public.neroxa_plans": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_orders": "3:7cd8cff9e322c1ba44c0272a0bc8d041",
+      "public.neroxa_systems": "1:86c1449ef54ad0729fff15d8ed516b86",
+      "public.neroxa_products": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_contracts": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_proposals": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_audit_logs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_order_items": "3:9392870f8765176f164af14b1ddb1513",
+      "public.neroxa_organizations": "2:cc4d2aab187930abdb657cf3bd6042d7",
+      "public.neroxa_plan_features": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_plan_products": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_subscriptions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_payment_events": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_system_domains": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_billing_records": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_client_contacts": "1:629765b50533523828a2e2daa54757ce",
+      "public.neroxa_support_tickets": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_instance_members": "4:52a5c7c870ea5d4b7188786015ae6594",
+      "public.neroxa_platform_members": "2:095a10c49f9465f569fea7ec13c43c1e",
+      "public.neroxa_support_messages": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_system_instances": "3:1137bb5f6c7006c827bf7c148275c117",
+      "public.neroxa_checkout_sessions": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_platform_settings": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_provisioning_jobs": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_addons": "3:15dd657588a380af976a8f876a4c3cb0",
+      "public.neroxa_contract_signatures": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_products": "3:72bb111fd78e12b5b5860da6507ff267",
+      "public.neroxa_storefront_settings": "3:3cea160d7b080549c5de584a7cd75900",
+      "public.neroxa_order_status_history": "3:3efbfb07a0a9e6b270fe1d7ab7db4e2a",
+      "public.neroxa_organization_members": "3:abae4b9b13431f3d469a71234c0bc8a2",
+      "public.neroxa_storefront_categories": "3:376ae6bbc070f1f216ec7e16c5057356",
+      "public.neroxa_storefront_addon_groups": "3:ad16ad644422baa577c86a5bfd014f4e",
+      "public.neroxa_storefront_availability": "3:b6a177ef79d386cef52f2092783714d6",
+      "public.neroxa_storefront_special_days": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_weekly_hours": "3:13503052e8a1bdef58b696ad366f81c5",
+      "public.neroxa_storefront_special_hours": "0:d41d8cd98f00b204e9800998ecf8427e",
+      "public.neroxa_storefront_delivery_zones": "3:9bf8d451cbc6132314567b7e75ab44b4",
+      "public.neroxa_storefront_product_addon_groups": "3:c8fd52f1ad189468e50594f3f42eba24"
+    }
+  },
+  "additionalCandidates": [
+    {
+      "path": "audits/02a4/availability-instance-scope.candidate.sql",
+      "sha256": "67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264",
+      "atomicRollback": "PASS",
+      "dataPreserved": true
+    },
+    {
+      "path": "audits/02a4/addon-explicit-membership.candidate.sql",
+      "sha256": "a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49",
+      "atomicRollback": "PASS",
+      "dataPreserved": true
+    },
+    {
+      "path": "audits/02a4/delivery-live-session.candidate.sql",
+      "sha256": "bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e",
+      "atomicRollback": "PASS",
+      "dataPreserved": true
+    }
+  ],
+  "realtimeHealth": {
+    "http": 200,
+    "healthy": true
+  },
+  "realtimeInitializationAttempts": [
+    {
+      "channel": "A",
+      "attempt": 1,
+      "status": "error",
+      "reason": "InitializingProjectConnection: Realtime is initializing the project connection"
+    },
+    {
+      "channel": "A",
+      "attempt": 2,
+      "status": "ok",
+      "reason": null
+    },
+    {
+      "channel": "B",
+      "attempt": 1,
+      "status": "ok",
+      "reason": null
+    }
+  ],
+  "realtimeServerReadiness": {
+    "expected": 2,
+    "observed": 2,
+    "boundedWaitMs": 30000
+  },
+  "authLogout": {
+    "authApiSuccess": true,
+    "authErrorCode": null,
+    "serverSessionAbsent": true
+  },
+  "reconnectProtocol": [
+    {
+      "topic": "realtime:02a4-reconnect-A",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "realtime:02a4-reconnect-B",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "realtime:02a4-reconnect-A",
+      "event": "system",
+      "status": "ok"
+    },
+    {
+      "topic": "realtime:02a4-reconnect-B",
+      "event": "system",
+      "status": "ok"
+    },
+    {
+      "topic": "realtime:02a4-reconnect-B",
+      "event": "postgres_changes",
+      "status": null
+    }
+  ],
+  "reconnectEvents": {
+    "A": [],
+    "B": [
+      "91000000-0000-4000-8000-000000000203"
+    ]
+  },
+  "realtimeProtocol": [
+    {
+      "topic": "realtime:02a3-native-A",
+      "event": "phx_reply",
+      "status": "error"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "realtime:02a3-native-A",
+      "event": "phx_reply",
+      "status": "ok",
+      "subscriptionCount": 1
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "realtime:02a3-native-B",
+      "event": "phx_reply",
+      "status": "ok",
+      "subscriptionCount": 1
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "realtime:02a3-native-B",
+      "event": "system",
+      "status": "ok",
+      "message": "Subscribed to PostgreSQL",
+      "extension": "postgres_changes"
+    },
+    {
+      "topic": "realtime:02a3-native-A",
+      "event": "system",
+      "status": "ok",
+      "message": "Subscribed to PostgreSQL",
+      "extension": "postgres_changes"
+    },
+    {
+      "topic": "realtime:02a3-native-A",
+      "event": "postgres_changes",
+      "status": null
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    },
+    {
+      "topic": "phoenix",
+      "event": "phx_reply",
+      "status": "ok"
+    }
+  ],
+  "realtimeMarkersSeen": {
+    "A": [
+      {
+        "id": "91000000-0000-4000-8000-000000000103",
+        "marker": "Synthetic native event"
+      }
+    ],
+    "B": []
+  },
+  "realtimeReplication": {
+    "slots": [
+      {
+        "active": true,
+        "plugin": "pgoutput",
+        "lag_bytes": -1
+      },
+      {
+        "active": true,
+        "plugin": "wal2json",
+        "lag_bytes": 0
+      }
+    ],
+    "publication": {
+      "insert": true,
+      "update": true,
+      "delete": true
+    }
+  },
+  "realtimeSanitizedDiagnostics": [
+    "22:54:26.037 project=realtime-dev external_id=realtime-dev error_code=DatabaseIpVersionIsIpv4 [warning] DatabaseIpVersionIsIpv4: Tenant database host supabase_db_neroxa-02a3-38650424558-master resolved to an IPv4 address",
+    "22:54:30.584 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:54:34.039 project=realtime-dev external_id=realtime-dev error_code=DatabaseIpVersionIsIpv4 [warning] DatabaseIpVersionIsIpv4: Tenant database host supabase_db_neroxa-02a3-38650424558-master resolved to an IPv4 address",
+    "22:54:35.002 [info] Starting Elixir.Realtime.RateCounter for: {:channel, :subscription_errors, \"realtime-dev\"}",
+    "22:54:35.585 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:54:40.586 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:54:45.587 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:54:50.588 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:54:55.589 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:55:00.590 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:55:05.591 project=realtime-dev [info] Billing metrics: [:realtime, :connections]",
+    "22:55:10.592 project=realtime-dev [info] Billing metrics: [:realtime, :connections]"
+  ],
+  "counts": {
+    "pass": 34,
+    "fail": 3,
+    "blocked": 0
+  },
+  "realtimeChecks": [
+    {
+      "name": "Realtime native join A",
+      "phase": "candidate",
+      "status": "PASS",
+      "responseStatus": "ok",
+      "reason": null
+    },
+    {
+      "name": "Realtime native join B",
+      "phase": "candidate",
+      "status": "PASS",
+      "responseStatus": "ok",
+      "reason": null
+    },
+    {
+      "name": "Realtime A own event",
+      "phase": "candidate",
+      "status": "PASS",
+      "events": 1
+    },
+    {
+      "name": "Realtime B private event",
+      "phase": "candidate",
+      "status": "PASS",
+      "events": 0
+    },
+    {
+      "name": "Realtime existing channel after grant revoke",
+      "phase": "candidate",
+      "status": "PASS",
+      "events": 0
+    },
+    {
+      "name": "Realtime native retained connection after Auth logout",
+      "phase": "candidate",
+      "status": "PASS",
+      "events": 0,
+      "scope": "stale access JWT kept deliberately, no SDK auto-disconnect; distinguish server revocation from client cleanup"
+    },
+    {
+      "name": "Realtime reconnect live B positive",
+      "phase": "candidate",
+      "status": "PASS",
+      "events": 1
+    },
+    {
+      "name": "Realtime reconnect stale A JWT",
+      "phase": "candidate",
+      "status": "PASS",
+      "events": 0
+    }
+  ]
+}

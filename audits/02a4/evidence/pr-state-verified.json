@@ -1,0 +1,126 @@
+{
+  "time": "2026-10-14T23:05:54.453768+00:00",
+  "prs": [
+    {
+      "baseRefName": "audit/independent-recovery-v1-20261014",
+      "headRefName": "security/delivery-02a-panel-gate-20261014",
+      "headRefOid": "b324c1499ff3feda7cb6b56fec3c2ac63bc56052",
+      "isDraft": true,
+      "number": 38,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/pizza-perfect-plate/pull/38",
+      "repo": "pizza-perfect-plate"
+    },
+    {
+      "baseRefName": "security/delivery-02a-panel-gate-20261014",
+      "headRefName": "security/mission-02a2-validation-20261014",
+      "headRefOid": "ad41822e4622e3b14bcb650d7be84126f78b80f6",
+      "isDraft": true,
+      "number": 39,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/pizza-perfect-plate/pull/39",
+      "repo": "pizza-perfect-plate"
+    },
+    {
+      "baseRefName": "security/delivery-02a-panel-gate-20261014",
+      "headRefName": "security/mission-02a2-legacy-quarantine-20261014",
+      "headRefOid": "7fe0e05ca899de3182872921591cbaccd840e58c",
+      "isDraft": true,
+      "number": 40,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/pizza-perfect-plate/pull/40",
+      "repo": "pizza-perfect-plate"
+    },
+    {
+      "baseRefName": "security/mission-02a2-legacy-quarantine-20261014",
+      "headRefName": "security/mission-02a4-legacy-replay-20261014",
+      "headRefOid": "a99a7d743f9dbed8ece5d8b0880c4b9c543960c3",
+      "isDraft": true,
+      "number": 41,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/pizza-perfect-plate/pull/41",
+      "repo": "pizza-perfect-plate"
+    },
+    {
+      "baseRefName": "main",
+      "headRefName": "audit/store-isolation-candidate-20261011",
+      "headRefOid": "229059e5702bdad3ffa96d3373d878061ab90261",
+      "isDraft": true,
+      "number": 37,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/37",
+      "repo": "neroxa-master"
+    },
+    {
+      "baseRefName": "audit/independent-recovery-v1-20261014",
+      "headRefName": "security/mission-02a2-scoped-admin-20261014",
+      "headRefOid": "330520ade7abf297423d5ffeb24d406bc43f88ff",
+      "isDraft": true,
+      "number": 38,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/38",
+      "repo": "neroxa-master"
+    },
+    {
+      "baseRefName": "security/mission-02a2-scoped-admin-20261014",
+      "headRefName": "security/mission-02a3-real-isolation-20261014",
+      "headRefOid": "57e8930d9be66b51f28828fab2057b809dcc65a9",
+      "isDraft": true,
+      "number": 40,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/40",
+      "repo": "neroxa-master"
+    },
+    {
+      "baseRefName": "security/mission-02a3-real-isolation-20261014",
+      "headRefName": "security/mission-02a4-availability-20261014",
+      "headRefOid": "ac390cd0c2099a0a442333e4618bb8479f5cb4a8",
+      "isDraft": true,
+      "number": 41,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/41",
+      "repo": "neroxa-master"
+    },
+    {
+      "baseRefName": "security/mission-02a3-real-isolation-20261014",
+      "headRefName": "security/mission-02a4-private-tracking-20261014",
+      "headRefOid": "846e04090ccc29070525887f2ee29017fd019391",
+      "isDraft": true,
+      "number": 42,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/42",
+      "repo": "neroxa-master"
+    },
+    {
+      "baseRefName": "security/mission-02a4-availability-20261014",
+      "headRefName": "security/mission-02a4-compat-harness-20261014",
+      "headRefOid": "55dfd757410cf179e1e51744c6f15f224f26f810",
+      "isDraft": true,
+      "number": 43,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/43",
+      "repo": "neroxa-master"
+    },
+    {
+      "baseRefName": "security/mission-02a4-availability-20261014",
+      "headRefName": "security/mission-02a4-storage-20261014",
+      "headRefOid": "bbfbfc35d3dfd566fcaa9bb50cce29e6f7ed941a",
+      "isDraft": true,
+      "number": 44,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/44",
+      "repo": "neroxa-master"
+    },
+    {
+      "baseRefName": "security/mission-02a4-compat-harness-20261014",
+      "headRefName": "security/mission-02a4-live-session-20261014",
+      "headRefOid": "a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0",
+      "isDraft": true,
+      "number": 45,
+      "state": "OPEN",
+      "url": "https://github.com/luit77yak-dev/neroxa-master/pull/45",
+      "repo": "neroxa-master"
+    }
+  ],
+  "originalHeadsUnchanged": true
+}
