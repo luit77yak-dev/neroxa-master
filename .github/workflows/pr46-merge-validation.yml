@@ -1,0 +1,62 @@
+name: PR46 audit-only integration validation
+on:
+  push:
+    branches:
+      - audit/pr46-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-artifact-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout isolated combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Audit-only static integrity and release boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 audits/02a5/verify_manifest.py
+          python3 -m unittest discover -s audits/02a5 -p 'test_manifest.py'
+          python3 - <<'PY'
+          import json,pathlib,subprocess,sys
+          root=pathlib.Path('audits/02a5')
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          for branch in ('audit/pr46-merge-check-20261103','security/mission-02a5-integration-local-20261014','security/mission-02a4-live-session-20261014'):
+              assert cfg['git']['deploymentEnabled'].get(branch) is False,branch
+          manifest=json.loads((root/'INTEGRATED-MANIFEST.json').read_text())
+          assert manifest['status']=='NOT APPLIED'
+          assert manifest['productionApproved'] is False
+          assert len(manifest['units'])==27
+          for path in root.rglob('*.json'):
+              json.loads(path.read_text())
+          changed=subprocess.check_output(['git','diff','--name-only','a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0','HEAD'],text=True).splitlines()
+          assert not any(p.startswith('supabase/migrations/') for p in changed),'unexpected production migration'
+          result=subprocess.run([sys.executable,'audits/02a5/verify_manifest.py','--release-ready'],capture_output=True,text=True)
+          assert result.returncode!=0,'Release gate incorrectly approved'
+          assert 'BLOCKED' in result.stdout,'Expected explicit release block'
+          print('AUDIT_INTEGRITY=PASS; RELEASE_READY=BLOCKED; SQL_NOT_EXECUTED')
+          PY
+          for f in tools/mission-02a5/*.mjs audits/02a5/f02/*.mjs audits/02a5/f02-amendment/*.mjs audits/02a5/f02-integration/*.mjs; do
+            if test -f "$f"; then node --check "$f"; fi
+          done
+          for f in tools/mission-02a5/*.sh; do
+            if test -f "$f"; then bash -n "$f"; fi
+          done
