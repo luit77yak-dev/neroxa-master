@@ -18,5 +18,10 @@
         }
       ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "audit/pr37-evidence-slice-20261103": false
+    }
+  }
 }
