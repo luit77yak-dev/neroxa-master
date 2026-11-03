@@ -1,0 +1,59 @@
+name: PR47 checkout-atomic lightweight integration validation
+on:
+  push:
+    branches:
+      - audit/pr47-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-candidate-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout combined PR47 candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Validate atomic buyer candidate and explicit no-release gates
+        run: |
+          set -euo pipefail
+          python3 audits/02a5/verify_manifest.py
+          node --check audits/02a5/f02-amendment/integrated-checkout.mjs
+          python3 -m py_compile audits/02a5/f02-amendment/generate.py
+          python3 - <<'PY'
+          import json,pathlib,hashlib,subprocess
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          for b in ('audit/pr47-merge-check-20261103','fix/f02-capability-integration-20261025','security/mission-02a5-integration-local-20261014'):
+              assert cfg['git']['deploymentEnabled'].get(b) is False, b
+          root=pathlib.Path('audits/02a5')
+          m=json.loads((root/'F02-AMENDMENT-EXECUTION-MANIFEST.json').read_text())
+          assert 'BLOCKED' in m['phone_gate'] and m['post_gate']=='NOT RUN'
+          match=[u for u in m['units'] if u['path']=='audits/02a5/buyer-capabilities-atomic.candidate.sql']
+          assert len(match)==1
+          assert hashlib.sha256(pathlib.Path(match[0]['path']).read_bytes()).hexdigest()==match[0]['sha256']
+          sql=pathlib.Path(match[0]['path']).read_text()
+          assert 'neroxa_register_buyer_capabilities' in sql and 'FOR UPDATE OF o' in sql
+          assert 'GRANT EXECUTE' in sql and 'TO service_role' in sql
+          assert "mission02a2_disposable" in sql
+          report=json.loads((root/'F02-INTEGRATION-20261025.json').read_text())
+          assert report['native_integration']['PASS']==15 and report['native_integration']['FAIL']==0
+          for path in root.rglob('*.json'):json.loads(path.read_text())
+          changed=subprocess.check_output(['git','diff','--name-only','758d06f8e8d58e619150f77c1f070ea2f7bb5739','HEAD'],text=True).splitlines()
+          assert not any(p.startswith('supabase/migrations/') for p in changed)
+          print('PR47_STATIC_CHECK=PASS; F02_LEGACY=BLOCKED; SQL_NOT_RUN')
+          PY
