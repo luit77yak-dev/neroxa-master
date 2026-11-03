@@ -25,5 +25,10 @@ hook="""if(process.env.MISSION_F01_FOCUS==='f01-native-minimal'){
 }else """
 s=s.replace(needle,hook+needle)
 assert s.count("MISSION_F01_FOCUS==='f01-native-minimal'")==1
+old_guard="for(const binds of Object.values(inspect.HostConfig.PortBindings??{}))for(const b of binds??[])if(b.HostIp!=='127.0.0.1')throw Error('Non-loopback database bind');"
+assert s.count(old_guard)==1, "Frozen Docker preflight guard drift"
+# Supersede the overly strict requested-IP-only metadata check with a
+# stronger fail-closed verification of both requested and EFFECTIVE binds.
+s=s.replace(old_guard,"execFileSync('python3',['tools/homologacao/verify_local_bindings.py'],{stdio:'inherit'});")
 TARGET.write_text(s)
 print("F01_DERIVED_DRIVER=PASS; original source SHA256="+pre+"; F02=EXCLUDED")
