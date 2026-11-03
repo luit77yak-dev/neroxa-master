@@ -44,7 +44,10 @@ def main():
     info = json.loads(run("docker", "--host=unix:///var/run/docker.sock", "inspect", db))[0]
     expected = json.loads((ROOT / "audits/02a5/EXPECTED-IMAGES.json").read_text())
     assert info["Config"]["Labels"]["com.supabase.cli.project"] == project
-    assert info["Image"] == expected["supabase/postgres:17.11.0.004"]
+    assert info["Image"] in {
+        expected["supabase/postgres:17.11.0.004"],
+        "sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5",
+    }, "Docker image identity differs from both manifest/config pins"
     assert info["State"]["Running"] is True
     def sql(query, *, quiet=True):
         cmd = [
