@@ -1,0 +1,36 @@
+name: F01-F02 frozen baseline static verification
+on:
+  push:
+    branches:
+      - audit/f01-f02-baseline-static-20261103
+permissions:
+  contents: read
+jobs:
+  static:
+    name: immutable-snapshot-and-33-release-unit-hashes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout frozen PR51 branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify static baseline generation and exact source hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/homologacao/verify_baseline_static.py
+          python3 - <<'PY'
+          import subprocess
+          base='b8a2087ad96dde4f90c04a7c10c31281d663e9f8'
+          changed=set(subprocess.check_output(
+            ['git','diff','--name-only',base,'HEAD'],text=True).splitlines())
+          expected={
+            'tools/homologacao/verify_baseline_static.py',
+            'audits/homologacao-f01-f02/README.md',
+            '.github/workflows/f01-f02-baseline-static.yml'
+          }
+          assert changed==expected,sorted(changed^expected)
+          print('DELTA_SCOPE=PASS; three static files; no source or SQL candidate changed')
+          PY
