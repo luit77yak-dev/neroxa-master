@@ -44,7 +44,7 @@ export async function f01MinimalControls(c) {
     sql(`UPDATE public.neroxa_instance_members SET active=true WHERE instance_id=${q(ids.Astore)} AND user_id=${q(people.staff_A.id)};`);
   }
   const selected=report.checks.slice(start);
-  if(selected.length!==19 || selected.some(x=>x.status!=='PASS')) throw new Error('F01 focal count or status drift: '+selected.length);
+  if(selected.length!==20 || selected.some(x=>x.status!=='PASS')) throw new Error('F01 focal count or status drift: '+selected.length);
   report.f01Focal={status:'PASS LOCAL ONLY',checks:selected.length,source:'frozen PR51 with audited candidate hashes',syntheticFixtures:true,hosted:false,f02:'NOT_RUN'};
   console.log('F01_FOCAL_SUMMARY='+JSON.stringify(report.f01Focal));
 }

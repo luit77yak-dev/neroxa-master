@@ -3,7 +3,7 @@
 **ONLY DISPOSABLE PostgreSQL/Auth on public standard GitHub runner.**
 Start from frozen PR51 plus established image-identity fix, no changes to tracked SQL candidates, PR #51, main, hosted Supabase, Delivery backend or Vercel config.
 
-The frozen driver `tools/mission-02a3/run.mjs` is derived in the runner with original SHA checked by `tools/f01/generate.py` and a single narrow branch injected by `tools/homologacao/build_f01_focal.py`. It installs its exact catalog and historical predecessor order, creates six genuine local Auth users (incl. TOTP AAL2), fake A1/A2 same org + C other org, applies the candidate scope/availability/addon/live-session SQL with manifest checks, and then executes **19 focal F01 checks** for real RLS operations, no-grant staff, positive B update/restore and membership revocation.
+The frozen driver `tools/mission-02a3/run.mjs` is derived in the runner with original SHA checked by `tools/f01/generate.py` and a single narrow branch injected by `tools/homologacao/build_f01_focal.py`. It installs its exact catalog and historical predecessor order, creates six genuine local Auth users (incl. TOTP AAL2), fake A1/A2 same org + C other org, applies the candidate scope/availability/addon/live-session SQL with manifest checks, and then executes **20 focal F01 checks** for real RLS operations, no-grant staff, positive B update/restore and membership revocation.
 
 The existing `tools/f01/realtime-containment.mjs` is then run unchanged to prove private order events removed from the public Realtime publication, independent positive transport, polling and logout. The script must reject a non-PASS containment.
 
