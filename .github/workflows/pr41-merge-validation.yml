@@ -1,0 +1,55 @@
+name: PR41 availability lightweight integration validation
+on:
+  push:
+    branches:
+      - audit/pr41-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact PR41 combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Verify candidate and evidence (no SQL execution)
+        run: |
+          set -euo pipefail
+          node --check tools/mission-02a3/run.mjs
+          node --check tools/mission-02a4/availability.mjs
+          python3 -m py_compile audits/02a4/extract-evidence.py audits/02a4/verify-realtime-proof.py
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          mapping=cfg['git']['deploymentEnabled']
+          for branch in ('audit/pr41-merge-check-20261103','security/mission-02a4-availability-20261014','security/mission-02a3-real-isolation-20261014'):
+              assert mapping.get(branch) is False, 'deployment not disabled: '+branch
+          root=pathlib.Path('audits/02a4')
+          manifest=json.loads((root/'MANIFEST.json').read_text())
+          for path,expected in manifest['files'].items():
+              got=hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
+              assert got==expected,(path,got,expected)
+          sql=(root/'availability-instance-scope.candidate.sql').read_text()
+          assert 'mission02a2_disposable' in sql
+          assert 'AS RESTRICTIVE' in sql
+          assert 'CREATE POLICY' in sql
+          for path in (root/'evidence').glob('*.json'):
+              json.loads(path.read_text())
+          print('STATIC EVIDENCE AND SQL HASH=PASS; NO SQL EXECUTED')
+          PY
