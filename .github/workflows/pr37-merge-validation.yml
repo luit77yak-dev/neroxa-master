@@ -1,0 +1,41 @@
+name: PR37 merged-code lightweight validation
+on:
+  push:
+    branches:
+      - audit/pr37-merge-check-20261103
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: lint-test-build-format
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout isolated merge candidate
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Check formatting on changed files
+        shell: bash
+        run: |
+          git diff --name-only --diff-filter=ACMRT origin/main...HEAD |
+            grep -E '\.(ts|tsx|js|jsx|json|md|css|yml|yaml)$' > /tmp/pr37-format-files || true
+          if [ -s /tmp/pr37-format-files ]; then
+            xargs -d '\n' npx prettier --check < /tmp/pr37-format-files
+          fi
