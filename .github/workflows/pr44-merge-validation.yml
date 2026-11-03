@@ -1,0 +1,56 @@
+name: PR44 Storage lightweight integration validation
+on:
+  push:
+    branches:
+      - audit/pr44-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-storage-static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout combined PR44 with latest base
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.x'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Verify Storage candidate, manifest and scripts without SQL execution
+        run: |
+          set -euo pipefail
+          node --check tools/mission-02a3/run.mjs
+          node --check tools/mission-02a4/storage.mjs
+          python3 - <<'PY'
+          import json,hashlib,pathlib,subprocess
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          for branch in ('audit/pr44-merge-check-20261103','security/mission-02a4-storage-20261014','security/mission-02a4-availability-20261014'):
+              assert cfg['git']['deploymentEnabled'].get(branch) is False, branch
+          manifest=json.loads(pathlib.Path('audits/02a4/MANIFEST.json').read_text())
+          assert len(manifest['files'])==2
+          for path,sha in manifest['files'].items():
+              assert hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()==sha,path
+          sql=pathlib.Path('audits/02a4/storage-instance-images.candidate.sql').read_text()
+          assert 'mission02a2_disposable' in sql
+          assert 'SECURITY INVOKER' in sql
+          assert 'AS RESTRICTIVE' in sql
+          assert 'mission02a4_no_anon_images' in sql
+          assert "product-images" in sql
+          changed=subprocess.check_output(['git','diff','--name-only','1697ac3b3eab71041535bfb19d4dafc95f295ed6','HEAD'],text=True).splitlines()
+          assert not any(p.startswith('supabase/migrations/') for p in changed), 'unexpected migration'
+          assert pathlib.Path('audits/02a4/STORAGE.md').is_file()
+          print('STORAGE_STATIC_CHECK=PASS; SQL NOT EXECUTED; NO DEPLOY')
+          PY
