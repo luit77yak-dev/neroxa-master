@@ -18,5 +18,10 @@
         }
       ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "audit/pr58-evidence-check-20261103": false
+    }
+  }
 }

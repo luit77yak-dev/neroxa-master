@@ -1,0 +1,57 @@
+name: PR58 evidence-only static verification
+on:
+  push:
+    branches:
+      - audit/pr58-evidence-check-20261103
+permissions:
+  contents: read
+jobs:
+  evidence:
+    name: verify-evidence-and-preserve-P0
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated audit branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify historical failures and exact source scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,json,csv,hashlib,subprocess
+          root=pathlib.Path('.')
+          base='689c9d3943959cfbd9ca47baa72ec1334e63e573'
+          changed=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          evidence=[p for p in changed if p.startswith('audits/02a3/')]
+          assert len(evidence)==15,(len(evidence),evidence)
+          assert set(changed)==set(evidence)|{'vercel.json','.github/workflows/pr58-evidence-validation.yml'},changed
+          assert all(p.endswith(('.csv','.md','.json')) for p in evidence)
+          assert sum(p.endswith('.csv') for p in evidence)==2
+          assert sum(p.endswith('.md') for p in evidence)==2
+          assert sum(p.endswith('.json') for p in evidence)==11
+          for f in evidence:
+              if f.endswith('.json'):json.loads((root/f).read_text())
+              if f.endswith('.csv'):
+                  with (root/f).open(newline='') as h:
+                      rows=list(csv.DictReader(h))
+                  assert len(rows)>0 and {'raw_status','assessment'}.issubset(rows[0]),f
+          p0=json.loads((root/'audits/02a3/evidence/P0-confirmado.json').read_text())
+          assert p0['classification']=='P0 confirmed, approval interrupted'
+          assert p0['actor']=='staff_none' and p0['method']=='PATCH'
+          assert p0['http']==200 and p0['returnedRows']==1
+          assert p0['before']!=p0['after'] and p0['newWritesStopped'] is True
+          expected='648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c'
+          assert p0['candidate']['sha256']==expected
+          assert hashlib.sha256((root/p0['candidate']['path']).read_bytes()).hexdigest()==expected
+          assert json.loads((root/'audits/02a3/evidence/run7-master-summary.json').read_text())['status']=='FAIL'
+          assert json.loads((root/'audits/02a3/evidence/run8-master-summary.json').read_text())['status']=='FAIL'
+          assert json.loads((root/'audits/02a3/evidence/run4-legacy-summary.json').read_text())['status']=='FAIL'
+          rt=json.loads((root/'audits/02a3/evidence/realtime-assessment.json').read_text())
+          assert rt['noIsolationApproval'] is True
+          config=json.loads((root/'vercel.json').read_text())
+          assert config['git']['deploymentEnabled']['audit/pr58-evidence-check-20261103'] is False
+          print('EVIDENCE_INTEGRITY=PASS; HISTORICAL_SECURITY_P0=FAIL_CONFIRMED; SQL=NOT_RUN; RELEASE=BLOCKED')
+          PY
