@@ -1,0 +1,63 @@
+{
+  "sourceRun": 38623751297,
+  "harnessSha": "d04dcf9ab23c15e41039658d74df2ddd7528ea34",
+  "candidateHash": "648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c",
+  "cases": [
+    {
+      "name": "authorized admin detail",
+      "actor": "admin_A",
+      "target": "A",
+      "operation": "RPC",
+      "expected": "ALLOW",
+      "phase": "candidate",
+      "status": "PASS",
+      "http": 200,
+      "sqlstate": null,
+      "stateUnchanged": true,
+      "observedRows": null
+    },
+    {
+      "name": "staff no grant admin detail",
+      "actor": "staff_none",
+      "target": "B",
+      "operation": "RPC",
+      "expected": "DENY",
+      "phase": "candidate",
+      "status": "PASS",
+      "http": 200,
+      "sqlstate": null,
+      "stateUnchanged": true,
+      "observedRows": null
+    },
+    {
+      "name": "anonymous legacy phone tracking",
+      "actor": "anon",
+      "target": "B",
+      "operation": "RPC",
+      "expected": "DENY",
+      "phase": "candidate",
+      "status": "FAIL",
+      "http": 200,
+      "sqlstate": null,
+      "stateUnchanged": true,
+      "observedRows": null
+    },
+    {
+      "name": "anonymous legacy phone append financial mutation",
+      "actor": "anon",
+      "target": "B",
+      "operation": "RPC",
+      "expected": "DENY",
+      "phase": "candidate",
+      "status": "FAIL",
+      "http": 423,
+      "sqlstate": "PT423",
+      "stateUnchanged": true,
+      "observedRows": null
+    }
+  ],
+  "assessment": {
+    "tracking": "FAIL P0 identified order object returned to anon with UUID+phone; no capability",
+    "append": "423 PT423, no changes. Operational denial; authorization with open shop BLOCKED. No financial mutation proved."
+  }
+}
