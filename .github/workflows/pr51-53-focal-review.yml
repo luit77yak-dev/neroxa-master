@@ -1,0 +1,81 @@
+name: PR51-53 focal review (static and synthetic only)
+on:
+  push:
+    branches:
+      - audit/pr51-53-focal-review-20261103
+permissions:
+  contents: read
+jobs:
+  focal:
+    name: node22-artifacts-and-local-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact combined PR53 candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Pin Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.x'
+      - name: Checkout exact Delivery test dependency
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 0e8d02e6fc07566027f0efacd5a8e076b6decf46
+          path: delivery-candidate
+          persist-credentials: false
+      - name: Check source provenance and local scope
+        run: |
+          set -euo pipefail
+          test "$(git -C delivery-candidate rev-parse HEAD)" = "0e8d02e6fc07566027f0efacd5a8e076b6decf46"
+          node --version
+          node --check tools/hosted-admission/readonly-preflight.mjs
+          node --check tools/hosted-admission/environment-gate.mjs
+          node --check tools/hosted-admission/preflight-queries.mjs
+          node --check tools/hosted-admission/preflight-entry.mjs
+          node --check tools/hosted-admission/session.mjs
+      - name: Local synthetic tests (no hosted connection)
+        run: node --test tests/hosted-admission/local.test.mjs tests/hosted-admission/preflight.test.mjs
+      - name: Hashes and closed release boundaries
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,hashlib,pathlib,subprocess
+          root=pathlib.Path('.')
+          def digest(data): return hashlib.sha256(data).hexdigest()
+          def read(p): return (root/p).read_bytes()
+          def load(p):return json.loads(read(p))
+          deployment=load('vercel.json')['git']['deploymentEnabled']
+          for b in ('audit/pr51-53-focal-review-20261103','fix/f02-hosted-release-20261025','fix/f02-hosted-admission-20261025','fix/f02-readonly-preflight-20261025'):
+              assert deployment.get(b) is False,b
+          release=load('audits/02a5/hosted-release/MANIFEST.json')
+          assert release['execution_authorized'] is False
+          assert len(release['units'])==33
+          assert [x['order'] for x in release['units']]==list(range(1,34))
+          for item in release['units']:
+              assert digest(read(item['path']))==item['sha256'],item['path']
+              assert digest(read(item['source_path']))==item['source_sha256'],item['source_path']
+          admission=load('audits/02a5/hosted-admission/MANIFEST.json')
+          assert 'not authorized' in admission['state'].lower()
+          for item in admission['files']:
+              assert digest(read(item['path']))==item['sha256'],item['path']
+          preflight=load('audits/02a5/hosted-preflight/MANIFEST.json')
+          assert preflight['state'].startswith('CLOSED')
+          for item in preflight['files']:
+              path=item['path']
+              if path=='vercel.json':
+                  data=subprocess.check_output(['git','show','be9ab894740b8298e540fa01d6d4f2a951e86241:vercel.json'])
+              else:data=read(path)
+              assert len(data)==item['bytes'],path
+              assert digest(data)==item['sha256'],path
+          policy=load('tools/hosted-admission/preflight-policy.json')
+          assert policy['state'].startswith('CLOSED')
+          for k in ('host','role','caSha256','ref','founderLogin'):assert policy[k] is None,k
+          assert all(v is None for v in policy['authority'].values())
+          assert (root/'audits/02a5/hosted-preflight/f02-hosted-preflight.workflow.yml').is_file()
+          assert not (root/'.github/workflows/f02-hosted-preflight.workflow.yml').exists()
+          print('STACKED_HASHES=PASS (66 SQL, PR52, PR53); PREFLIGHT=CLOSED; NO SQL OR DEPLOY')
+          PY
