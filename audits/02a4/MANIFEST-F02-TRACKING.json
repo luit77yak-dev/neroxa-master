@@ -1,0 +1,8 @@
+{
+  "baseHarness": "57e8930d9be66b51f28828fab2057b809dcc65a9",
+  "profile": "M+tracking independently of availability fix",
+  "files": {
+    "audits/02a4/private-tracking.candidate.sql": "7c1e7c5daf8588cc7eaeb8ad63825f15747c9660ab5391a8899697698e7112dd",
+    "audits/02a4/phone-rpc-quarantine.release-gate.sql": "b57a7082d603f1f2e15d9bc53487e47b8adb3188d8b8497332cbc76c06c47689"
+  }
+}
