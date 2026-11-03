@@ -1,0 +1,61 @@
+name: PR48 legacy consumers lightweight integration validation
+on:
+  push:
+    branches:
+      - audit/pr48-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-revocation-boundaries
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout isolated PR48 combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Static revocation scope and hashes — never execute SQL
+        run: |
+          set -euo pipefail
+          python3 audits/02a5/verify_manifest.py
+          node --check audits/02a5/f02-amendment/consumer-inventory.mjs
+          node --check audits/02a5/f02-amendment/revoke-disposable.mjs
+          node --check audits/02a5/f02-amendment/integrated-checkout.mjs
+          python3 -m py_compile audits/02a5/f02-amendment/generate.py audits/02a5/f02-amendment/record-results.py
+          python3 - <<'PY'
+          import json,hashlib,pathlib,subprocess,sys
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          for b in ('audit/pr48-merge-check-20261103','fix/f02-legacy-consumers-20261025','fix/f02-capability-integration-20261025'):
+              assert cfg['git']['deploymentEnabled'].get(b) is False, b
+          m=json.loads(pathlib.Path('audits/02a5/f02-amendment/REVOCATION-MANIFEST.json').read_text())
+          assert m['scope']=='THIS_RUN_LOCAL_CLONE_ONLY; external release remains BLOCKED'
+          assert len(m['units'])==2
+          for unit in m['units']:
+              assert hashlib.sha256(pathlib.Path(unit['path']).read_bytes()).hexdigest()==unit['sha256'],unit['path']
+          source=pathlib.Path('audits/02a5/f02-amendment/revoke-disposable.mjs').read_text()
+          assert "MISSION_REVOKE_SCOPE" in source and "THIS_RUN_LOCAL_CLONE_ONLY" in source
+          assert "consumerInventory()" in source
+          report=pathlib.Path('audits/02a5/F02-LEGACY-CONSUMERS-20261025.md').read_text()
+          assert 'F01/F02 abertos' in report
+          assert 'NÃO COBERTO' in report
+          changed=subprocess.check_output(['git','diff','--name-only','9d62d89803485821c01c2109918b3ea0fc7d3f3e','HEAD'],text=True).splitlines()
+          assert not any(p.startswith('supabase/migrations/') for p in changed)
+          result=subprocess.run([sys.executable,'audits/02a5/verify_manifest.py','--release-ready'],capture_output=True,text=True)
+          assert result.returncode!=0 and 'BLOCKED' in result.stdout, 'Global release gate must stay blocked'
+          print('STATIC_REVOCATION=PASS; EXTERNAL_RELEASE=BLOCKED; NO SQL EXECUTED')
+          PY
