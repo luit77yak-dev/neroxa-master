@@ -1,0 +1,47 @@
+name: PR38 merged-code lightweight validation
+on:
+  push:
+    branches:
+      - audit/pr38-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout isolated PR38 combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install pinned dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Check static candidate boundaries (no SQL execution)
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          mapping=cfg['git']['deploymentEnabled']
+          for key in ['audit/pr38-merge-check-20261103','security/mission-02a2-scoped-admin-20261014','audit/independent-recovery-v1-20261014']:
+              assert mapping.get(key) is False, f'Auto deploy enabled for {key}'
+          candidate=pathlib.Path('audits/02a2/scoped-order-access.candidate.sql')
+          assert candidate.is_file()
+          sql=candidate.read_text()
+          assert 'mission02a2_disposable' in sql and 'BEGIN;' in sql and 'COMMIT;' in sql
+          assert 'CREATE OR REPLACE FUNCTION' in sql
+          manifest=json.loads(pathlib.Path('audits/02a2/MANIFEST-02A2.json').read_text())
+          assert manifest
+          print('STATIC-CANDIDATE-BOUNDARIES=PASS (no SQL execution, no deploy)')
+          PY
