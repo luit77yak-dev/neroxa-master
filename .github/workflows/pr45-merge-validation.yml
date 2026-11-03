@@ -1,0 +1,53 @@
+name: PR45 live-session lightweight integration validation
+on:
+  push:
+    branches:
+      - audit/pr45-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-session-evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact PR45 combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Validate session candidate and manifest (no SQL executed)
+        run: |
+          set -euo pipefail
+          node --check tools/mission-02a3/native-realtime.mjs
+          node --check tools/mission-02a3/run.mjs
+          node --check tools/mission-02a4/storage.mjs
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          for branch in ('audit/pr45-merge-check-20261103','security/mission-02a4-live-session-20261014','security/mission-02a4-compat-harness-20261014'):
+              assert cfg['git']['deploymentEnabled'].get(branch) is False, branch
+          manifest=json.loads(pathlib.Path('audits/02a4/MANIFEST.json').read_text())
+          assert len(manifest['files'])==4
+          for path,sha in manifest['files'].items():
+              assert hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()==sha, path
+          sql=pathlib.Path('audits/02a4/delivery-live-session.candidate.sql').read_text()
+          assert 'mission02a2_disposable' in sql
+          assert "auth.sessions" in sql and "session_id" in sql
+          assert 'CREATE OR REPLACE FUNCTION neroxa_private.has_delivery_instance_role' in sql
+          assert "SET search_path=''" in sql
+          assert pathlib.Path('audits/02a4/LIVE-SESSION.md').is_file()
+          print('SESSION-CANDIDATE=PASS; SQL NOT EXECUTED; NO DEPLOY')
+          PY
