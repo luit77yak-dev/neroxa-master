@@ -1,0 +1,12 @@
+[
+  {
+    "sha": "b324c1499ff3feda7cb6b56fec3c2ac63bc56052",
+    "normalized_gate_sha256": "6d1d0bfe657466eb7802c9d6d6d51a4dc6812fd1e80ec3271c1821f3f3f6bb8a",
+    "legacy_body_sha256": "b1f672c34e6d23993db0af496965ecf85c72d72a0508b9d686f2fbeaddc0e334"
+  },
+  {
+    "sha": "ad41822e4622e3b14bcb650d7be84126f78b80f6",
+    "normalized_gate_sha256": "6d1d0bfe657466eb7802c9d6d6d51a4dc6812fd1e80ec3271c1821f3f3f6bb8a",
+    "legacy_body_sha256": "b1f672c34e6d23993db0af496965ecf85c72d72a0508b9d686f2fbeaddc0e334"
+  }
+]

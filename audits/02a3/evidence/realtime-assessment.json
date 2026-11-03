@@ -1,0 +1,37 @@
+{
+  "sourceRun": 38621152498,
+  "sourceJob": 116048702535,
+  "jobCancelled": true,
+  "checks": [
+    {
+      "name": "Realtime native join A",
+      "phase": "candidate",
+      "status": "PASS",
+      "responseStatus": "ok",
+      "reason": null
+    },
+    {
+      "name": "Realtime native join B",
+      "phase": "candidate",
+      "status": "PASS",
+      "responseStatus": "ok",
+      "reason": null
+    },
+    {
+      "name": "Realtime A own event",
+      "phase": "candidate",
+      "status": "FAIL",
+      "events": 0
+    },
+    {
+      "name": "Realtime B private event",
+      "phase": "candidate",
+      "status": "BLOCKED",
+      "events": 0,
+      "raw_status": "PASS",
+      "reason": "A own event positive control failed; zero B events is not isolation evidence"
+    }
+  ],
+  "grantRevocationAndLogout": "NOT RUN to completion",
+  "noIsolationApproval": true
+}
