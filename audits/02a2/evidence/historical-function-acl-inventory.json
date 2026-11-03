@@ -1,0 +1,1639 @@
+{
+  "status": "STATIC historical 2026-10-09, not installed current schema",
+  "functions": [
+    {
+      "schema": "private",
+      "name": "neroxa_has_platform_role",
+      "signature": "p_roles neroxa_platform_role[]",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres"
+      ]
+    },
+    {
+      "schema": "private",
+      "name": "neroxa_is_platform_staff",
+      "signature": "p_user_id uuid",
+      "definer": true,
+      "config": [
+        "search_path=public, private"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "activate_neroxa_contract_and_subscription",
+      "signature": "p_contract_id uuid",
+      "definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "append_public_order_items_with_payment",
+      "signature": "p_order_id uuid, p_customer_phone text, p_items jsonb, p_payment_method text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "apply_neroxa_domain_validation_result",
+      "signature": "p_domain_id uuid, p_valid boolean",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "calculate_public_order_line_price",
+      "signature": "p_instance_id uuid, p_product_id uuid, p_second_product_id uuid, p_size_id text, p_crust_id text, p_addons jsonb, p_complements jsonb",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "=X/postgres",
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "create_public_order",
+      "signature": "p_order jsonb",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "delete_neroxa_system_domain_safely",
+      "signature": "p_domain_id uuid",
+      "definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "get_admin_orders",
+      "signature": "p_instance_id uuid, p_status text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "get_neroxa_public_contract",
+      "signature": "p_token uuid",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "get_neroxa_public_proposal",
+      "signature": "p_token uuid",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "get_public_order_status",
+      "signature": "p_order_id uuid, p_customer_phone text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "get_public_storefront_catalog",
+      "signature": "p_domain text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "get_public_storefront_context",
+      "signature": "p_domain text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "get_supplier_panel_context",
+      "signature": "",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_has_org_role",
+      "signature": "target_organization_id uuid, allowed_roles neroxa_organization_role[]",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "neroxa_is_platform_member",
+      "signature": "",
+      "definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "prepare_neroxa_implementation_from_subscription",
+      "signature": "p_subscription_id uuid, p_name text, p_slug text",
+      "definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "record_neroxa_audit",
+      "signature": "p_action text, p_resource_type text, p_resource_id uuid, p_organization_id uuid, p_details jsonb",
+      "definer": false,
+      "config": [
+        "search_path=public, private"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "respond_neroxa_public_proposal",
+      "signature": "p_token uuid, p_action text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "retry_neroxa_provisioning_job",
+      "signature": "p_job_id uuid",
+      "definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "send_neroxa_contract_for_signature",
+      "signature": "p_contract_id uuid",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "sign_neroxa_contract",
+      "signature": "p_contract_id uuid, p_signer_name text, p_signer_role text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "sign_neroxa_contract_as_customer",
+      "signature": "p_token uuid, p_signer_name text, p_signer_document text, p_confirmed boolean",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "sync_neroxa_contract_terminal_lifecycle",
+      "signature": "",
+      "definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": [
+        "=X/postgres",
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "transition_neroxa_domain_status",
+      "signature": "p_domain_id uuid, p_new_status neroxa_domain_status",
+      "definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "update_admin_order_status",
+      "signature": "p_order_id uuid, p_status text, p_note text",
+      "definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "validate_neroxa_billing_record_integrity",
+      "signature": "",
+      "definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": [
+        "=X/postgres",
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "validate_neroxa_subscription_integrity",
+      "signature": "",
+      "definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": [
+        "=X/postgres",
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "name": "neroxa platform insert audit",
+      "check": "private.neroxa_is_platform_staff(( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_audit_logs",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa platform read audit",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_audit_logs",
+      "using": "private.neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa billing access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_billing_records",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa finance delete billing",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_billing_records",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa finance insert billing",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_billing_records",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa finance update billing",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_billing_records",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa staff checkout sessions",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_checkout_sessions",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete contacts",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_client_contacts",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert contacts",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_client_contacts",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update contacts",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_client_contacts",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa contacts access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_client_contacts",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa contract signatures admin read",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_contract_signatures",
+      "using": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa contracts access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_contracts",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa contracts delete",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_contracts",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa contracts insert",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_contracts",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa contracts update",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_contracts",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization manager orders update",
+      "check": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role, 'OPERATOR'::neroxa_organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_orders",
+      "using": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role, 'OPERATOR'::neroxa_organization_role])",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization member orders select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_orders",
+      "using": "neroxa_has_org_role(organization_id)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization members delete admins",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organization_members",
+      "using": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role])",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization members insert admins",
+      "check": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organization_members",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization members select own",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organization_members",
+      "using": "((user_id = auth.uid()) OR neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role]))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization members update admins",
+      "check": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organization_members",
+      "using": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role])",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete organizations",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organizations",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert organizations",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organizations",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update organizations",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organizations",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa organizations access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_organizations",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete payment events",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_payment_events",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert payment events",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_payment_events",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update payment events",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_payment_events",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa payment events access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_payment_events",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete features",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_features",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert features",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_features",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update features",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_features",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa features access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_features",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete plan products",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_products",
+      "using": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert plan products",
+      "check": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_products",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update plan products",
+      "check": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_products",
+      "using": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa plan products access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plan_products",
+      "using": "neroxa_is_platform_member()",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete plans",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plans",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert plans",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plans",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update plans",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plans",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa plans access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_plans",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete platform members",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_members",
+      "using": "private.neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins manage platform members",
+      "check": "private.neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_members",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update platform members",
+      "check": "private.neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_members",
+      "using": "private.neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa platform members access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_members",
+      "using": "((( SELECT auth.uid() AS uid) = user_id) OR private.neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "Admins can delete platform settings",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_settings",
+      "using": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "Admins can insert platform settings",
+      "check": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_settings",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "Admins can update platform settings",
+      "check": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_settings",
+      "using": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "Platform members can view platform settings",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_platform_settings",
+      "using": "neroxa_is_platform_member()",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete products",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_products",
+      "using": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert products",
+      "check": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_products",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update products",
+      "check": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_products",
+      "using": "neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role])",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa products access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_products",
+      "using": "neroxa_is_platform_member()",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa proposals access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_proposals",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa proposals delete",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_proposals",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa proposals insert",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_proposals",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa proposals update",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_proposals",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete jobs",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_provisioning_jobs",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert jobs",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_provisioning_jobs",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update jobs",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_provisioning_jobs",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa jobs access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_provisioning_jobs",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "supplier_addon_groups_manage",
+      "check": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_addon_groups.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_addon_groups",
+      "using": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_addon_groups.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]))))",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "supplier_addon_groups_select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_addon_groups",
+      "using": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_addon_groups.instance_id) AND neroxa_has_org_role(i.organization_id))))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "supplier_addons_manage",
+      "check": "(EXISTS ( SELECT 1\n   FROM (neroxa_storefront_addon_groups g\n     JOIN neroxa_system_instances i ON ((i.id = g.instance_id)))\n  WHERE ((g.id = neroxa_storefront_addons.group_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_addons",
+      "using": "(EXISTS ( SELECT 1\n   FROM (neroxa_storefront_addon_groups g\n     JOIN neroxa_system_instances i ON ((i.id = g.instance_id)))\n  WHERE ((g.id = neroxa_storefront_addons.group_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]))))",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "supplier_addons_select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_addons",
+      "using": "(EXISTS ( SELECT 1\n   FROM (neroxa_storefront_addon_groups g\n     JOIN neroxa_system_instances i ON ((i.id = g.instance_id)))\n  WHERE ((g.id = neroxa_storefront_addons.group_id) AND neroxa_has_org_role(i.organization_id))))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront categories delete",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_categories",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront categories insert",
+      "check": "(( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role) AND (EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_categories.instance_id) AND (i.status <> 'ARCHIVED'::neroxa_instance_status)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_categories",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront categories select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_categories",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront categories update",
+      "check": "(( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role) AND (EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_categories.instance_id) AND (i.status <> 'ARCHIVED'::neroxa_instance_status)))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_categories",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization manager storefront categories write",
+      "check": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_categories.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]) AND (i.status <> 'ARCHIVED'::neroxa_instance_status))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_categories",
+      "using": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_categories.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]) AND (i.status <> 'ARCHIVED'::neroxa_instance_status))))",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization member storefront categories select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_categories",
+      "using": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_categories.instance_id) AND neroxa_has_org_role(i.organization_id))))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization manager delivery zones write",
+      "check": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_delivery_zones",
+      "using": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role])",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization member delivery zones select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_delivery_zones",
+      "using": "neroxa_has_org_role(organization_id)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "supplier_product_addon_groups_manage",
+      "check": "(EXISTS ( SELECT 1\n   FROM ((neroxa_storefront_products p\n     JOIN neroxa_system_instances i ON ((i.id = p.instance_id)))\n     JOIN neroxa_storefront_addon_groups g ON ((g.id = neroxa_storefront_product_addon_groups.group_id)))\n  WHERE ((p.id = neroxa_storefront_product_addon_groups.product_id) AND (g.instance_id = p.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_product_addon_groups",
+      "using": "(EXISTS ( SELECT 1\n   FROM ((neroxa_storefront_products p\n     JOIN neroxa_system_instances i ON ((i.id = p.instance_id)))\n     JOIN neroxa_storefront_addon_groups g ON ((g.id = neroxa_storefront_product_addon_groups.group_id)))\n  WHERE ((p.id = neroxa_storefront_product_addon_groups.product_id) AND (g.instance_id = p.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]))))",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "supplier_product_addon_groups_select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_product_addon_groups",
+      "using": "(EXISTS ( SELECT 1\n   FROM ((neroxa_storefront_products p\n     JOIN neroxa_system_instances i ON ((i.id = p.instance_id)))\n     JOIN neroxa_storefront_addon_groups g ON ((g.id = neroxa_storefront_product_addon_groups.group_id)))\n  WHERE ((p.id = neroxa_storefront_product_addon_groups.product_id) AND (g.instance_id = p.instance_id) AND neroxa_has_org_role(i.organization_id))))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront products delete",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_products",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront products insert",
+      "check": "(( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role) AND (EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_products.instance_id) AND (i.status <> 'ARCHIVED'::neroxa_instance_status)))) AND ((category_id IS NULL) OR (EXISTS ( SELECT 1\n   FROM neroxa_storefront_categories c\n  WHERE ((c.id = neroxa_storefront_products.category_id) AND (c.instance_id = c.instance_id))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_products",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront products select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_products",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa storefront products update",
+      "check": "(( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role) AND (EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_products.instance_id) AND (i.status <> 'ARCHIVED'::neroxa_instance_status)))) AND ((category_id IS NULL) OR (EXISTS ( SELECT 1\n   FROM neroxa_storefront_categories c\n  WHERE ((c.id = neroxa_storefront_products.category_id) AND (c.instance_id = c.instance_id))))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_products",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization manager storefront products write",
+      "check": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_products.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]) AND (i.status <> 'ARCHIVED'::neroxa_instance_status))))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_products",
+      "using": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_products.instance_id) AND neroxa_has_org_role(i.organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role]) AND (i.status <> 'ARCHIVED'::neroxa_instance_status))))",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization member storefront products select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_products",
+      "using": "(EXISTS ( SELECT 1\n   FROM neroxa_system_instances i\n  WHERE ((i.id = neroxa_storefront_products.instance_id) AND neroxa_has_org_role(i.organization_id))))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization manager storefront settings write",
+      "check": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role])",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_settings",
+      "using": "neroxa_has_org_role(organization_id, ARRAY['OWNER'::neroxa_organization_role, 'ADMIN'::neroxa_organization_role, 'MANAGER'::neroxa_organization_role])",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "organization member storefront settings select",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_storefront_settings",
+      "using": "neroxa_has_org_role(organization_id)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete subscriptions",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_subscriptions",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert subscriptions",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_subscriptions",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update subscriptions",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_subscriptions",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'FINANCE'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa subscriptions access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_subscriptions",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa support messages manage",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_support_messages",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa support tickets manage",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_support_tickets",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete disabled non-primary domains",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_domains",
+      "using": "((is_primary = false) AND (status = 'DISABLED'::neroxa_domain_status) AND neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]))",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert domains",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_domains",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update domains",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_domains",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa domains access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_domains",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins delete instances",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_instances",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "DELETE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins insert instances",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_instances",
+      "using": null,
+      "schema": "public",
+      "command": "INSERT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa admins update instances",
+      "check": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_instances",
+      "using": "( SELECT neroxa_has_platform_role(ARRAY['SUPER_ADMIN'::neroxa_platform_role, 'ADMIN'::neroxa_platform_role, 'SUPPORT'::neroxa_platform_role]) AS neroxa_has_platform_role)",
+      "schema": "public",
+      "command": "UPDATE",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "neroxa instances access",
+      "check": null,
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_system_instances",
+      "using": "( SELECT neroxa_is_platform_member() AS neroxa_is_platform_member)",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE"
+    },
+    {
+      "name": "platform staff can manage systems",
+      "check": "private.neroxa_is_platform_staff(( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "neroxa_systems",
+      "using": "private.neroxa_is_platform_staff(( SELECT auth.uid() AS uid))",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE"
+    }
+  ],
+  "views": [
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": false,
+      "kind": "v",
+      "name": "neroxa_clients",
+      "owner": "postgres",
+      "schema": "public",
+      "options": [
+        "security_invoker=true"
+      ],
+      "force_rls": false,
+      "view_definition": " SELECT id,\n    id AS organization_id,\n    status,\n    legal_name,\n    trade_name,\n    document AS tax_id,\n    notes,\n    acquired_at,\n    contracted_at,\n    activated_at,\n    paused_at,\n    cancelled_at,\n    created_at,\n    updated_at\n   FROM neroxa_organizations o;"
+    }
+  ]
+}
