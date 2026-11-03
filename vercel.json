@@ -18,5 +18,10 @@
         }
       ]
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "audit/store-isolation-candidate-20261011": false
+    }
+  }
 }
