@@ -1,0 +1,52 @@
+name: PR40 audit evidence lightweight validation
+on:
+  push:
+    branches:
+      - audit/pr40-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout combined candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Validate test-harness syntax and evidence only
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check tools/mission-02a3/run.mjs
+          node --check tools/mission-02a3/native-realtime.mjs
+          python3 -m py_compile tools/mission-02a3/preflight.py
+          bash -n tools/mission-02a3/network.sh
+          python3 - <<'PY'
+          import json, csv, pathlib
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          for branch in ('audit/pr40-merge-check-20261103','security/mission-02a3-real-isolation-20261014','security/mission-02a2-scoped-admin-20261014'):
+              assert cfg['git']['deploymentEnabled'].get(branch) is False
+          root=pathlib.Path('audits/02a3')
+          for p in (root/'evidence').glob('*.json'):
+              json.loads(p.read_text())
+          for name in ('MATRIZ-REAL-NEGATIVOS.csv','MATRIZ-REAL-POSITIVOS.csv'):
+              with (root/name).open(newline='') as f:
+                  rows=list(csv.reader(f))
+                  assert len(rows)>1, name
+          print('EVIDENCE_STATIC_CHECK=PASS; SQL/DB NOT EXECUTED')
+          PY
