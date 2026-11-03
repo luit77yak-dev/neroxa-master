@@ -1,0 +1,80 @@
+name: PR50 F02 remote-cut preparation lightweight validation
+on:
+  push:
+    branches:
+      - audit/pr50-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-remote-cut-static
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout isolated PR50 combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Verify SQL manifests and no-remote-release boundaries (static only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check audits/02a5/f02-amendment/final-service-cut.mjs
+          node --check audits/02a5/f02-amendment/revoke-disposable.mjs
+          python3 audits/02a5/verify_manifest.py
+          python3 - <<'PY'
+          import json,hashlib,pathlib,subprocess,sys
+          root=pathlib.Path('.')
+          cfg=json.loads((root/'vercel.json').read_text())
+          for b in ('audit/pr50-merge-check-20261103','fix/f02-final-rpc-cut-20261025','fix/f01-native-isolation-20261025'):
+              assert cfg['git']['deploymentEnabled'].get(b) is False,b
+          admission=root/'audits/02a5/capability-admission'
+          adm=json.loads((admission/'MANIFEST-SHA256.json').read_text())
+          assert 'no operational authorization' in adm['scope']
+          for name,sha in adm['files'].items():
+              assert hashlib.sha256((admission/name).read_bytes()).hexdigest()==sha,name
+          compat=json.loads((admission/'COMPATIBILITY.json').read_text())
+          assert compat['decision'].startswith('NO-GO')
+          assert compat['remote_project']=='iefaoaqzltvpfabyeelj'
+          assert compat['sql_units']==33 and len(compat['missing_relations'])==13
+          order=json.loads((admission/'ORDER-AND-HASHES.json').read_text())
+          assert len(order['units'])==33
+          assert [u['order'] for u in order['units']]==list(range(1,34))
+          for unit in order['units']:
+              path=root/unit['path']
+              assert hashlib.sha256(path.read_bytes()).hexdigest()==unit['sha256'],unit['path']
+          cutroot=root/'audits/02a5/legacy-cut'
+          cut=json.loads((cutroot/'MANIFEST.json').read_text())
+          assert cut['status'].startswith('REMOTE BLOCKED')
+          assert cut['project_id']=='iefaoaqzltvpfabyeelj'
+          for name,sha in cut['files'].items():
+              assert hashlib.sha256((cutroot/name).read_bytes()).hexdigest()==sha,name
+          sql=(cutroot/'remote-cut.pending.sql').read_text()
+          assert 'NOT APPLIED' in sql
+          assert 'BEGIN;' in sql and 'COMMIT;' in sql
+          assert "capability backend not installed/admitted" in sql
+          assert 'legacy variant inventory drift' in sql
+          assert 'remote function/ACL preimage drift' in sql
+          for fn in ('get_public_order_status','append_public_order_items_with_payment'):
+              assert fn in sql
+          assert 'REVOKE ALL ON FUNCTION' in sql
+          changed=subprocess.check_output(['git','diff','--name-only','f2c9da2d98c2660656d1b6bd4b226fbcac5878cd','HEAD'],text=True).splitlines()
+          assert not any(path.startswith('supabase/migrations/') for path in changed)
+          result=subprocess.run([sys.executable,'audits/02a5/verify_manifest.py','--release-ready'],capture_output=True,text=True)
+          assert result.returncode!=0 and 'BLOCKED' in result.stdout,'Global release must stay blocked'
+          print('PR50_STATIC=PASS; 33_UNITS_HASHED; REMOTE_CUT=NOT_APPLIED; RELEASE=BLOCKED')
+          PY
