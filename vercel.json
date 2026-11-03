@@ -21,7 +21,8 @@
   ],
   "git": {
     "deploymentEnabled": {
-      "audit/pr37-evidence-slice-20261103": false
+      "audit/pr37-evidence-slice-20261103": false,
+      "audit/pr56-focal-ci-20261103": false
     }
   }
 }

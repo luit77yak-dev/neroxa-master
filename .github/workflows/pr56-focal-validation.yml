@@ -1,0 +1,48 @@
+name: PR56 focal evidence CI
+on:
+  push:
+    branches:
+      - audit/pr56-focal-ci-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: changed-files-format-lint-test-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.x'
+      - name: Install dependencies (main has no lockfile)
+        run: npm install --no-audit --no-fund
+      - name: Scope and format only changed documents
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 08e8f359982eb25b21e9fbb9c8b79f4e721f28be HEAD > /tmp/pr56-changed
+          python3 - <<'PY'
+          import json,pathlib
+          files=set(pathlib.Path('/tmp/pr56-changed').read_text().splitlines())
+          evidence={p for p in files if p.startswith('audits/')}
+          assert len(evidence)==12, sorted(evidence)
+          assert all(p.endswith(('.md','.json')) for p in evidence)
+          assert files==evidence|{'vercel.json','.github/workflows/pr56-focal-validation.yml'},sorted(files-evidence)
+          conf=json.loads(pathlib.Path('vercel.json').read_text())
+          assert conf['git']['deploymentEnabled']['audit/pr56-focal-ci-20261103'] is False
+          assert conf['git']['deploymentEnabled']['audit/pr37-evidence-slice-20261103'] is False
+          print('PR56_SCOPE=PASS; 12 docs, no application, SQL or migration')
+          PY
+          grep -E '^audits/|^vercel.json$' /tmp/pr56-changed | xargs npx prettier --check
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm test
+      - name: Build
+        run: npm run build
