@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "mission": "NEROXA F01/F02 — separate hosted homologation admission preparation",
+  "decision": "STATIC_PREPARATION_ONLY",
+  "target": {
+    "name": "neroxa-homologacao",
+    "project_ref": "nvbmzdgfretwnkdfqcap",
+    "region": "sa-east-1",
+    "database_host_observed": "db.nvbmzdgfretwnkdfqcap.supabase.co",
+    "postgres_major": "17",
+    "postgres_observed": "17.11.0.003",
+    "status_observed": "ACTIVE_HEALTHY",
+    "observed_date": "2026-11-03",
+    "business_relations_observed": 0,
+    "application_schemas_checked": [
+      "public",
+      "private",
+      "neroxa_private"
+    ],
+    "migrations_observed": 0,
+    "platform_auth_storage": "NATIVE_PRESENT",
+    "extensions_observed": {
+      "pgcrypto": {
+        "schema": "extensions",
+        "installed_version": "1.3"
+      },
+      "uuid-ossp": {
+        "schema": "extensions",
+        "installed_version": "1.1"
+      }
+    },
+    "evidence_kind": "read-only Supabase project/tables/migrations/extensions API metadata",
+    "not_asserted": [
+      "remote SQL preflight",
+      "TLS identity",
+      "current RLS",
+      "live data equivalence",
+      "hosted migration admission",
+      "quiescence"
+    ]
+  },
+  "frozen_source": {
+    "repo": "luit77yak-dev/neroxa-master",
+    "release_head": "b8a2087ad96dde4f90c04a7c10c31281d663e9f8",
+    "baseline_catalog_sha256": "e7ed111d73ec8d63b514db8c39059d6b87ae97be74d54e0d682d38bc0e4cf858",
+    "baseline_builder": "tools/ab-auth/build_schema.py",
+    "release_manifest": "audits/02a5/hosted-release/MANIFEST.json",
+    "source_target_project": "iefaoaqzltvpfabyeelj",
+    "unit_count": 33,
+    "source_retargeting_authorized": false
+  },
+  "authorization": {
+    "state": "CLOSED",
+    "founder_approval": null,
+    "approved_sha": null,
+    "approved_scope": null,
+    "reviewed_operator": null,
+    "approved_window": null,
+    "hosted_preflight": false,
+    "sql_read_only": false,
+    "schema_install": false,
+    "sql_release": false,
+    "rpc_revoke": false,
+    "hosted_server": false,
+    "production_publish": false,
+    "paid_services": false
+  },
+  "transport": {
+    "state": "NOT_ADMITTED",
+    "pinned_hostname_verified_by_tls": false,
+    "session_identity_verified": false,
+    "ca_sha256": null,
+    "credential_source": null,
+    "signing_public_key": null,
+    "signed_grant": null,
+    "environment_name": null,
+    "runtime_driver": null,
+    "source": "adapt from PR52/PR53 only after separate review; no active transport"
+  },
+  "separate_gates": {
+    "F01": {
+      "status": "BLOCKED_HOSTED",
+      "local_evidence_run": 40212763636,
+      "candidate_cases": [
+        "own_instance_read_write_allowed",
+        "foreign_instance_read_denied",
+        "foreign_instance_write_denied",
+        "private_realtime_delete_suppressed",
+        "own_polling_preserved",
+        "session_revocation"
+      ],
+      "fixtures": "synthetic A1/A2/C; no real customers",
+      "server_execution_authorized": false
+    },
+    "F02": {
+      "status": "BLOCKED_HOSTED",
+      "local_evidence_run": 40214203640,
+      "candidate_cases": [
+        "legacy_phone_read_denied",
+        "legacy_phone_append_denied",
+        "valid_tracking_capability_allowed",
+        "valid_amendment_capability_allowed",
+        "invalid_cross_instance_capability_denied",
+        "legitimate_checkout_integrity"
+      ],
+      "consumer_cut_receipt": null,
+      "server_execution_authorized": false
+    }
+  },
+  "next_milestone": "separate authorization to construct and test an isolated base compatible with the target without using customer data",
+  "production_equivalence": "NOT ESTABLISHED",
+  "commercial": "NOT AUTHORIZED"
+}

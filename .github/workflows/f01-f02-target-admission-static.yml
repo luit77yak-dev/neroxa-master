@@ -1,0 +1,22 @@
+name: F01/F02 closed homologation target contract static check
+on:
+  push:
+    branches:
+      - audit/f01-f02-homologacao-admission-20261103
+permissions:
+  contents: read
+jobs:
+  closed-policy:
+    name: check-exact-project-and-deny-hosted-execution
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout static admission contract
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify target-bound CLOSED policy; no database
+        run: |
+          set -euo pipefail
+          python3 tools/homologacao/verify_target_admission.py
