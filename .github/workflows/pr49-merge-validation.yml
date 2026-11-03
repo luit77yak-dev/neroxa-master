@@ -1,0 +1,62 @@
+name: PR49 F01 containment lightweight integration validation
+on:
+  push:
+    branches:
+      - audit/pr49-merge-check-20261103
+permissions:
+  contents: read
+jobs:
+  validate:
+    name: lint-test-build-f01-guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout isolated PR49 combined tree
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22.x"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Verify F01 candidate scope and release barriers without SQL execution
+        run: |
+          set -euo pipefail
+          python3 audits/02a5/verify_manifest.py
+          python3 -m py_compile tools/f01/generate.py
+          for f in tools/f01/*.mjs; do node --check "$f"; done
+          python3 - <<'PY'
+          import json,hashlib,pathlib,subprocess,sys
+          cfg=json.loads(pathlib.Path('vercel.json').read_text())
+          for branch in ('audit/pr49-merge-check-20261103','fix/f01-native-isolation-20261025','fix/f02-legacy-consumers-20261025'):
+              assert cfg['git']['deploymentEnabled'].get(branch) is False, branch
+          mf=json.loads(pathlib.Path('tools/f01/CONTAINMENT-MANIFEST.json').read_text())
+          assert mf['scope']=='native disposable only; no production approval'
+          candidate=pathlib.Path(mf['path'])
+          sql=candidate.read_text()
+          assert hashlib.sha256(candidate.read_bytes()).hexdigest()==mf['sha256']
+          assert "mission02a2_disposable" in sql
+          assert "puballtables" in sql and 'FOR ALL TABLES' in sql
+          for table in ('neroxa_orders','neroxa_order_items','neroxa_order_status_history'):
+              assert table in sql,table
+          assert 'ALTER PUBLICATION supabase_realtime DROP TABLE' in sql
+          assert not any(word in sql.upper() for word in ('GRANT EXECUTE','REVOKE ALL','ALTER TABLE','ALTER ROLE'))
+          report=pathlib.Path('audits/02a5/F01-NATIVE-ISOLATION-20261025.md').read_text()
+          assert 'F01 permanece ABERTA' in report
+          assert '14 PASS' in report
+          changed=subprocess.check_output(['git','diff','--name-only','d46dd6aa4bf450d202a9a5edab0d57bf3c5ba145','HEAD'],text=True).splitlines()
+          assert not any(p.startswith('supabase/migrations/') for p in changed)
+          result=subprocess.run([sys.executable,'audits/02a5/verify_manifest.py','--release-ready'],capture_output=True,text=True)
+          assert result.returncode!=0 and 'BLOCKED' in result.stdout
+          print('F01_STATIC_SCOPE=PASS; EXTERNAL_RELEASE=BLOCKED; SQL_NOT_EXECUTED')
+          PY
