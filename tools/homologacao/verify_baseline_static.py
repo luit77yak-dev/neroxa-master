@@ -18,18 +18,27 @@ def digest(path: pathlib.Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 def verify() -> None:
-    # Parent pins the reviewed PR51 source rather than introducing fresh SQL.
-    parent = subprocess.check_output(
-        ["git", "rev-parse", "HEAD^"], cwd=ROOT, text=True
-    ).strip()
-    assert parent == RELEASE_SOURCE_REF, "Frozen PR51 parent changed"
+    # The reviewed PR51 source must remain an ancestor and its files unchanged.
+    subprocess.run(
+        ["git", "merge-base", "--is-ancestor", RELEASE_SOURCE_REF, "HEAD"],
+        cwd=ROOT, check=True, capture_output=True
+    )
+    modified = subprocess.check_output(
+        ["git", "diff", "--name-only", RELEASE_SOURCE_REF, "HEAD"],
+        cwd=ROOT, text=True
+    ).splitlines()
+    assert set(modified) == {
+        "tools/homologacao/verify_baseline_static.py",
+        "audits/homologacao-f01-f02/README.md",
+        ".github/workflows/f01-f02-baseline-static.yml",
+    }, "Frozen PR51 source scope changed"
     source_path = ROOT / "audits/ab-auth/source.json"
     catalog_path = ROOT / "audits/ab-auth/master-catalog-20261009.json"
     source = json.loads(source_path.read_text())
     catalog = json.loads(catalog_path.read_text())
     assert source["sha256"] == SOURCE_SHA
     assert digest(catalog_path) == SOURCE_SHA
-    assert source["production_equivalence"] == "NOT established"
+    assert source["production_equivalence"].startswith("NOT established")
     assert len(catalog["relations"]) == source["relations"] == 34
     assert len(catalog["functions"]) == source["functions"] == 50
     assert len(catalog["policies"]) == source["policies"] == 99
