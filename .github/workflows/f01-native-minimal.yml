@@ -77,7 +77,7 @@ jobs:
           sudo setfacl -R -m u:neroxa_test:rX "$GITHUB_WORKSPACE"
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" AB_NETWORK="$AB_NETWORK" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL=audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql,audits/02a4/delivery-live-session.candidate.sql MISSION02A4_AVAILABILITY=false MISSION02A4_STORAGE=false MISSION_F01_FOCUS=f01-native-minimal MISSION_MUTATION_PROBE=false MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node tools/mission-02a3/f01-generated.private.mjs
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test GITHUB_ACTIONS=true RUNNER_ENVIRONMENT=github-hosted AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" AB_NETWORK="$AB_NETWORK" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL=audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql,audits/02a4/delivery-live-session.candidate.sql MISSION02A4_AVAILABILITY=false MISSION02A4_STORAGE=false MISSION_F01_FOCUS=f01-native-minimal MISSION_MUTATION_PROBE=false MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node tools/mission-02a3/f01-generated.private.mjs
       - name: Remove only the disposable native stack
         if: always()
         run: |
