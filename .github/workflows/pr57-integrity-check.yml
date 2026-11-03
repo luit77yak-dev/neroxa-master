@@ -1,0 +1,55 @@
+name: PR57 scoped-admin candidate immutable artifact check
+on:
+  push:
+    branches:
+      - audit/pr57-integrity-check-20261103
+permissions:
+  contents: read
+jobs:
+  static:
+    name: verify-scope-json-sql-and-script
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated source candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check source-only scope and integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,json,hashlib,ast,subprocess
+          root=pathlib.Path('.')
+          base='5fe67dd9eaa34101325d92808dc52df37684ad79'
+          modified=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          assert len(modified)==18,len(modified)
+          checks=[f for f in modified if f!='.github/workflows/pr57-integrity-check.yml']
+          assert len(checks)==17
+          assert all(f.startswith('audits/02a2/') for f in checks),checks
+          assert sum(f.endswith('.sql') for f in checks)==1
+          assert sum(f.endswith('.py') for f in checks)==1
+          assert sum(f.endswith(('.md','.json')) for f in checks)==15
+          assert not any(f.startswith(('src/','supabase/','.github/workflows/ci.yml')) or f=='vercel.json' for f in checks)
+          jsons=[f for f in checks if f.endswith('.json')]
+          for f in jsons:json.loads((root/f).read_text())
+          manifest=json.loads((root/'audits/02a2/MANIFEST-02A2.json').read_text())
+          assert manifest['databaseExecution']=='BLOCKED'
+          assert manifest['remoteExecutionAuthorized'] is False
+          assert manifest['productionApproved'] is False
+          candidate=manifest['masterProfile']['newCandidate']
+          assert candidate['path']=='audits/02a2/scoped-order-access.candidate.sql'
+          sql=(root/candidate['path']).read_bytes()
+          assert hashlib.sha256(sql).hexdigest()==candidate['sha256']
+          assert candidate['sha256']=='648fcca5bdac67ba3879c0804189b204a53fc4f3b136646407b659ca5a62f23c'
+          assert b'neroxa.mission02a2_disposable' in sql
+          assert b'REVIEW CANDIDATE ONLY' in sql
+          assert b'BEGIN;' in sql and b'COMMIT;' in sql
+          code=root/'audits/02a2/tools/verify_manifest.py'
+          ast.parse(code.read_text(),filename=str(code))
+          syntax=json.loads((root/'audits/02a2/evidence/sql-syntax.json').read_text())
+          assert 'PASS' in syntax['status'] and 'syntax only' in syntax['status']
+          print('PR57=PASS; AUDIT=17; SQL_HASH=PASS; NO SCHEMA INSTALL/DB CONNECT')
+          PY
