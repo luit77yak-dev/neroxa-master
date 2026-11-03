@@ -1,0 +1,59 @@
+name: PR60 private tracking source validation (no database)
+on:
+  push:
+    branches:
+      - audit/pr60-f02-static-validation-20261103
+permissions:
+  contents: read
+jobs:
+  evidence:
+    name: hash-source-and-preserve-release-gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout isolated F02 candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Validate four-file scope, hash and gate (NO SQL EXECUTION)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import pathlib,hashlib,json,subprocess
+          base='ae127ce925d18d8c19099dbdd9652fff493bf597'
+          changed=subprocess.check_output(['git','diff','--name-only',base,'HEAD'],text=True).splitlines()
+          exact={'audits/02a4/CONSUMIDORES-F02.md',
+                 'audits/02a4/MANIFEST-F02-TRACKING.json',
+                 'audits/02a4/private-tracking.candidate.sql',
+                 'audits/02a4/phone-rpc-quarantine.release-gate.sql',
+                 '.github/workflows/pr60-f02-static-validation.yml'}
+          assert set(changed)==exact,changed
+          m=json.loads(pathlib.Path('audits/02a4/MANIFEST-F02-TRACKING.json').read_text())
+          a=json.loads(pathlib.Path('audits/02a4/MANIFEST.json').read_text())
+          expected_a='67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264'
+          assert a['files']['audits/02a4/availability-instance-scope.candidate.sql']==expected_a
+          assert len(a['files'])==1
+          assert m['profile']=='M+tracking independently of availability fix'
+          assert set(m['files'])=={'audits/02a4/private-tracking.candidate.sql','audits/02a4/phone-rpc-quarantine.release-gate.sql'}
+          for path,h in m['files'].items():
+              assert hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()==h,path
+          assert m['files']['audits/02a4/private-tracking.candidate.sql']=='7c1e7c5daf8588cc7eaeb8ad63825f15747c9660ab5391a8899697698e7112dd'
+          assert m['files']['audits/02a4/phone-rpc-quarantine.release-gate.sql']=='b57a7082d603f1f2e15d9bc53487e47b8adb3188d8b8497332cbc76c06c47689'
+          original=subprocess.check_output(['git','show','846e04090ccc29070525887f2ee29017fd019391:audits/02a4/MANIFEST.json'])
+          assert pathlib.Path('audits/02a4/MANIFEST-F02-TRACKING.json').read_bytes()==original
+          s=pathlib.Path('audits/02a4/private-tracking.candidate.sql').read_text()
+          g=pathlib.Path('audits/02a4/phone-rpc-quarantine.release-gate.sql').read_text()
+          for marker in ('neroxa.mission02a2_disposable','CREATE TABLE private.neroxa_tracking_capabilities','REVOKE ALL','GRANT EXECUTE','TO service_role'):
+              assert marker in s,marker
+          for marker in ('neroxa.mission02a2_disposable','neroxa.legacy_phone_consumers_disabled','REVOKE ALL','has_function_privilege'):
+              assert marker in g,marker
+          assert 'NOT automatic production migration' in g
+          assert 'NOT an enabled buyer endpoint' in s
+          assert 'COMMIT;' in g and 'COMMIT;' in s
+          d=pathlib.Path('audits/02a4/CONSUMIDORES-F02.md').read_text()
+          assert 'F02 — substituição preparatória; ainda aberta' in d
+          print('PR60_STATIC=PASS 4 files; SHA256 x2 PASS; original tracking manifest intact; availability manifest preserved')
+          print('SQL_REMOTE=NOT_RUN; SECURITY_F02=OPEN; PRODUCTION=NOT_AUTHORIZED')
+          PY
