@@ -20,7 +20,7 @@ s=s.replace(needle,hook)
 # Re-run only the affected native Realtime/REST controls after the publication
 # change; retain the broad CRUD/Storage evidence from 40211924855.
 branch="if(['availability-only','storage-only'].includes(process.env.MISSION_FOCUS))"
-replacement="if(process.env.MISSION_F01_FOCUS==='realtime-containment'){const {realtimeContainment}=await import('../f01/realtime-containment.mjs');await realtimeContainment({sql,q,ids,people,services,env,url,report,api,rpc,check,digest,empty,one,fs,crypto,work,sleep,profile});}else "+branch
+replacement="if(process.env.MISSION_F01_FOCUS==='proof1-focal'){const {f01Proof1}=await import('../f01/proof1.mjs');await f01Proof1({sql,q,ids,people,services,env,url,report,api,rpc,check,digest,empty,one,fs,crypto,work,sleep,profile});}else if(process.env.MISSION_F01_FOCUS==='realtime-containment'){const {realtimeContainment}=await import('../f01/realtime-containment.mjs');await realtimeContainment({sql,q,ids,people,services,env,url,report,api,rpc,check,digest,empty,one,fs,crypto,work,sleep,profile});}else "+branch
 assert s.count(branch)==1
 s=s.replace(branch,replacement)
 

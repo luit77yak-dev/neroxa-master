@@ -1,12 +1,26 @@
 name: F01 native A1 A2 C isolation
 on:
-  push:
-    branches: [fix/f01-native-isolation-20261025]
-    paths: [.github/workflows/mission-02a3-isolation.yml, tools/f01/**]
+  workflow_dispatch:
+    inputs:
+      founder_approval:
+        description: 'Nominal authorization; NOT_APPROVED is fail-closed'
+        type: choice
+        required: true
+        options: [NOT_APPROVED, F01_ONE_DISPOSABLE_RUN]
+        default: NOT_APPROVED
+      expected_sha:
+        description: 'Exact reviewed commit SHA (40 lowercase hex characters)'
+        type: string
+        required: true
+        default: '0000000000000000000000000000000000000000'
 permissions:
   contents: read
+concurrency:
+  group: f01-prova1-${{ github.ref }}
+  cancel-in-progress: false
 jobs:
   native-isolation:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.founder_approval == 'F01_ONE_DISPOSABLE_RUN' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -14,18 +28,32 @@ jobs:
       AB_PROJECT: neroxa-02a3-${{ github.run_id }}-buyer
       AB_NETWORK: neroxa-02a5-${{ github.run_id }}-buyer
       MISSION_PROFILE: master
-      MISSION_FOCUS: f01-all
+      MISSION_FOCUS: f01-prova1
       MISSION_ACTORS: all
       MISSION02A4_SQL: audits/02a4/availability-instance-scope.candidate.sql,audits/02a4/addon-explicit-membership.candidate.sql,audits/02a4/delivery-live-session.candidate.sql
       MISSION02A4_AVAILABILITY: 'false'
-      MISSION_F01_FOCUS: realtime-containment
-      MISSION02A4_STORAGE: 'true'
-      MISSION_MUTATION_PROBE: 'true'
+      MISSION_F01_FOCUS: proof1-focal
+      MISSION02A4_STORAGE: 'false'
+      MISSION_MUTATION_PROBE: 'false'
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
           fetch-depth: 0
+      - name: Verify nominal SHA, branch and repository before any installation
+        env:
+          ADMITTED_SHA: ${{ inputs.expected_sha }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'luit77yak-dev/neroxa-master'
+          test "$GITHUB_EVENT_NAME" = 'workflow_dispatch'
+          test "$GITHUB_REF_TYPE" = 'branch'
+          test "$GITHUB_REF_NAME" = 'f01/prova1-focal-20261104'
+          [[ "$ADMITTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$ADMITTED_SHA" != '0000000000000000000000000000000000000000'
+          test "$GITHUB_SHA" = "$ADMITTED_SHA"
+          test "$(git rev-parse HEAD)" = "$ADMITTED_SHA"
+          echo 'F01_PROVA1_NOMINAL_SHA=PASS; native execution must be separately approved'
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22.23.0'
@@ -97,7 +125,9 @@ jobs:
           echo 'TEST_UID_WORKSPACE_READ=PASS'
           bash tools/mission-02a5/network.sh lock
           trap 'bash tools/mission-02a5/network.sh unlock' EXIT
-          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=false MISSION_F01_FOCUS=realtime-containment MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/f01-generated.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master MISSION_FOCUS=f01-all MISSION_ACTORS=all MISSION02A4_SQL="$MISSION02A4_SQL" MISSION02A4_AVAILABILITY=false MISSION_F01_FOCUS=realtime-containment MISSION02A4_STORAGE=true MISSION_MUTATION_PROBE=true AB_NETWORK="$AB_NETWORK" MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/f01-generated.private.mjs | tee "$RUNNER_TEMP/f01-prova1.log"
+      - name: Verify six F01 Prova 1 receipts (fail closed)
+        run: python3 tools/f01/proof1_result.py "$RUNNER_TEMP/f01-prova1.log"
       - name: Cleanup only this disposable project
         if: always()
         run: |
