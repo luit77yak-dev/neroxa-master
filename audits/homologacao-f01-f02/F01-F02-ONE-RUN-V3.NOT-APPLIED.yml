@@ -1,0 +1,224 @@
+name: NEROXA F01 F02 integrated - REVIEW ONLY
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Full approved Master SHA
+        required: true
+        type: string
+      native_approval:
+        description: Explicit authorization
+        required: true
+        default: NOT_APPROVED
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: neroxa-f01-f02-native-single
+  cancel-in-progress: false
+jobs:
+  f02-independent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SUPABASE_INTERNAL_IMAGE_REGISTRY: docker.io
+      AB_PROJECT: neroxa-02a3-${{ github.run_id }}-buyer
+      AB_NETWORK: neroxa-02a5-${{ github.run_id }}-buyer
+      MISSION_PROFILE: master
+    steps:
+      - name: Admission before checkout and services
+        id: admission
+        env:
+          EXPECTED_SHA: ${{ inputs.expected_sha }}
+          USER_APPROVAL: ${{ inputs.native_approval }}
+          REPO_APPROVAL: ${{ vars.NEROXA_F01_F02_NATIVE_APPROVED }}
+          APPROVED_SHA: ${{ vars.NEROXA_F01_F02_APPROVED_SHA }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = luit77yak-dev/neroxa-master
+          test "$GITHUB_EVENT_NAME" = workflow_dispatch
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test "${GITHUB_REF_PROTECTED:-false}" = true
+          test "$GITHUB_REF_TYPE" = branch
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$EXPECTED_SHA" = "$GITHUB_SHA"
+          test "$USER_APPROVAL" = APPROVED_SINGLE_NATIVE_RUN_F01_F02
+          test "$REPO_APPROVAL" = APPROVED_SINGLE_NATIVE_RUN_F01_F02
+          test "$APPROVED_SHA" = "$GITHUB_SHA"
+          workflow_ref="${GITHUB_WORKFLOW_REF#"$GITHUB_REPOSITORY/"}"
+          workflow_path="${workflow_ref%@*}"
+          [[ "$workflow_path" == .github/workflows/* ]]
+          workflow_file="${workflow_path##*/}"
+
+          runs_json="$(gh api --method GET "repos/$GITHUB_REPOSITORY/actions/runs" -f head_sha="$GITHUB_SHA" -f event=workflow_dispatch -f per_page=100)"
+
+          printf '%s' "$runs_json" | python3 -c 'import json,os,sys; d=json.load(sys.stdin); r=d.get("workflow_runs",[]); assert d.get("total_count")==1 and len(r)==1 and str(r[0]["id"])==os.environ["GITHUB_RUN_ID"], "Repeated or unverified dispatch"; print("ONE_SHOT=PASS")'
+
+          echo 'ADMISSION=PASS'
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: luit77yak-dev/pizza-perfect-plate
+          ref: 7ca9376f29ee205d4063e46546f5070313ab78a0
+          path: delivery-candidate
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22.23.0'
+      - name: Public standard eligibility and real capacity before pull
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/$GITHUB_REPOSITORY --jq .private)" = false
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          echo 'PUBLIC_STANDARD_RUNNER=true; billing basis docs.github.com/en/billing/concepts/product-billing/github-actions; no larger runner/cache/artifact uploads'
+          python3 tools/mission-02a3/preflight.py
+      - name: Locked app dependencies and pinned CLI; no commercial dotenv
+        run: |
+          find . -name '.env*' -not -path './.git/*' -not -path './node_modules/*' -type f -delete
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm install --prefix "$RUNNER_TEMP/cli" --no-audit --no-fund supabase@2.120.0
+          echo "$RUNNER_TEMP/cli/node_modules/.bin" >> "$GITHUB_PATH"
+          python3 audits/02a5/verify_manifest.py
+          MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_DELIVERY_SHA=7ca9376f29ee205d4063e46546f5070313ab78a0 node --input-type=module -e 'import {consumerInventory} from "./audits/02a5/f02-amendment/consumer-inventory.mjs";const i=consumerInventory();console.log("F02_SOURCE_INVENTORY="+JSON.stringify({status:i.status,sources:i.sources.map(({files,...s})=>s),rpcCalls:i.calls}));'
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          echo '43dad223c54b334098e81a78f77aef5f1b09c4cb64022210196b1f331fd7cc8f  tools/mission-02a3/f01-f02-integrated.checked.private.mjs' | sha256sum -c -
+          node --check tools/mission-02a3/f01-f02-integrated.checked.private.mjs
+      - name: Pin existing Bun and validate exact Delivery candidate
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: '1.3.4'
+      - name: Frozen Delivery dependencies and regression tests
+        working-directory: delivery-candidate
+        run: |
+          test "$(git rev-parse HEAD)" = 7ca9376f29ee205d4063e46546f5070313ab78a0
+          bun install --frozen-lockfile --ignore-scripts
+          node --experimental-strip-types --test tests/*.test.mjs
+          bunx tsc --noEmit
+      - name: Unlinked native six-service stack, loopback binds
+        run: |
+          export AB_WORKDIR="$RUNNER_TEMP/02a5-buyer-$GITHUB_RUN_ID"
+          echo "AB_WORKDIR=$AB_WORKDIR" >> "$GITHUB_ENV"
+          mkdir -m 700 "$AB_WORKDIR"
+          supabase init --workdir "$AB_WORKDIR"
+          python3 tools/ab-auth/configure.py
+          test ! -f "$AB_WORKDIR/supabase/.temp/project-ref"
+          test ! -d "$AB_WORKDIR/supabase/migrations"
+          docker network create --driver bridge --opt com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$AB_NETWORK"
+          python3 tools/ab-auth/docker_loopback.py > "$AB_WORKDIR/relay.private.log" 2>&1 &
+          echo $! > "$AB_WORKDIR/relay.pid"
+          for attempt in $(seq 1 30); do test -S "$AB_WORKDIR/docker-loopback.sock" && break; sleep 1; done
+          export DOCKER_HOST="unix://$AB_WORKDIR/docker-loopback.sock"
+          echo "DOCKER_HOST=$DOCKER_HOST" >> "$GITHUB_ENV"
+          # The upstream PostgreSQL tag was republished. Reuse the ORIGINAL image,
+          # not a newly admitted image: immutable manifest -> unchanged frozen config ID.
+          pg='supabase/postgres@sha256:f2a84af37797675f0b27e27ea1fad2ebcd913ebf7ad60be05d7df0bcbd29e4b5'
+          docker --host=unix:///var/run/docker.sock pull --platform linux/amd64 "$pg"
+          python3 tools/homologacao/verify_image_identity.py postgres
+          docker --host=unix:///var/run/docker.sock tag "$pg" supabase/postgres:17.11.0.004
+          if ! supabase start --workdir "$AB_WORKDIR" --network-id "$AB_NETWORK" --exclude studio,imgproxy,edge-runtime,logflare,vector,supavisor,postgres-meta,mailpit > "$AB_WORKDIR/start.private.log" 2>&1; then
+            python3 tools/ab-auth/start_failure.py
+            exit 1
+          fi
+          supabase status --workdir "$AB_WORKDIR" -o env > "$AB_WORKDIR/status.private.env"
+          chmod 600 "$AB_WORKDIR/status.private.env"
+          python3 tools/homologacao/verify_image_identity.py stack
+      - name: F01 F02 integrated - disposable only
+        run: |
+          set -euo pipefail
+          sudo useradd --create-home --groups docker neroxa_test
+          sudo chown -R neroxa_test:neroxa_test "$AB_WORKDIR"
+          # Dedicated UID needs traversal/read of the audited workspace, not runner secrets.
+          ancestor="$GITHUB_WORKSPACE"
+          while [ "$ancestor" != / ]; do
+            sudo setfacl -m u:neroxa_test:--x "$ancestor"
+            ancestor=$(dirname "$ancestor")
+          done
+          sudo setfacl -R -m u:neroxa_test:rX "$GITHUB_WORKSPACE"
+          sudo -u neroxa_test test -r tools/mission-02a3/f01-f02-integrated.checked.private.mjs
+          echo 'TEST_UID_WORKSPACE_READ=PASS'
+          bash tools/mission-02a5/network.sh lock
+          trap 'bash tools/mission-02a5/network.sh unlock' EXIT
+          sudo -u neroxa_test env -i PATH="$PATH" HOME=/home/neroxa_test GITHUB_ACTIONS=true RUNNER_ENVIRONMENT=github-hosted AB_WORKDIR="$AB_WORKDIR" AB_PROJECT="$AB_PROJECT" MISSION_PROFILE=master AB_NETWORK="$AB_NETWORK" MISSION_REVOKE_SCOPE=THIS_RUN_LOCAL_CLONE_ONLY GITHUB_ACTIONS_SCOPE=disposable-workflow MISSION_SOURCE_SHA="$GITHUB_SHA" MISSION_RUN_ID="$GITHUB_RUN_ID" MISSION_DELIVERY_SHA=7ca9376f29ee205d4063e46546f5070313ab78a0 DOCKER_HOST=unix:///var/run/docker.sock node --experimental-strip-types tools/mission-02a3/f01-f02-integrated.checked.private.mjs | tee "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+      - name: Read native PostgreSQL catalog after isolated revocation
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+        run: |
+          test "$RUNNER_ENVIRONMENT" = "github-hosted"
+          test "$AB_PROJECT" = "neroxa-02a3-$GITHUB_RUN_ID-buyer"
+          db="supabase_db_$AB_PROJECT"
+          docker ps --format '{{.Names}}' | grep -Fx "$db"
+          docker exec -i "$db" psql -X -q -A -t -U postgres -d postgres -v ON_ERROR_STOP=1 < audits/02a5/f02-amendment/catalog.readonly.sql > "$RUNNER_TEMP/f02-catalog.jsonl"
+          python3 - "$RUNNER_TEMP/f02-catalog.jsonl" <<'PY'
+          import json,sys,os,pathlib
+          content=[x.strip() for x in open(sys.argv[1]) if x.strip().startswith('{')]
+          assert len(content)==1,'one catalog result expected'
+          result=json.loads(content[0])
+          pathlib.Path(os.environ['RUNNER_TEMP'],'f02-pg-catalog-verified.json').write_text(json.dumps(result))
+          assert result['kind']=='F02_NATIVE_ACTUAL_ACL'
+          present=sorted({f['name'] for f in result['functions'] if f['name'] in ('get_public_order_status','append_public_order_items','append_public_order_items_with_payment')})
+          missing=sorted(set(('get_public_order_status','append_public_order_items','append_public_order_items_with_payment'))-set(present))
+          print('F02_CATALOG_LEGACY_COVERAGE='+json.dumps({'present':present,'missing':missing,'classification':'PARTIAL_IF_MISSING'}))
+          assert 'get_public_order_status' in present,'historical P0 function unexpectedly absent'
+          assert result['legacy_gate_applied'] is True
+          assert result['consumer_disablement_evidenced'] is False
+          print('F02_CATALOG_ACTUAL_ACL='+json.dumps(result,sort_keys=True))
+          print('F02_PRODUCTION_GATE=BLOCKED; DISPOSABLE_POST_GATE=OBSERVED; EXTERNAL_CONSUMERS=UNVERIFIED')
+          PY
+      - name: Emit provisional SEC-01..18 with original security failures
+        if: ${{ always() && steps.admission.outcome == 'success' }}
+        run: |
+          python3 audits/02a5/f02-amendment/record-results.py "$RUNNER_TEMP/f02-buyer-pre-gate.log"
+      - name: Mandatory integrated verdict
+        run: |
+          python3 - "$RUNNER_TEMP/f02-buyer-pre-gate.log" <<'AUDIT'
+          import json,sys,os
+          from pathlib import Path
+          lines=Path(sys.argv[1]).read_text().splitlines()
+          rows=[json.loads(x.split('MISSION02A5_FINAL=',1)[1])
+                for x in lines if x.startswith('MISSION02A5_FINAL=')]
+          assert len(rows)==1
+          r=rows[0]
+          assert r.get('status')=='PASS PARTIAL PRE-GATE'
+          assert r.get('source',{}).get('master')==os.environ['GITHUB_SHA']
+          assert r.get('source',{}).get('delivery')=='7ca9376f29ee205d4063e46546f5070313ab78a0'
+          assert r.get('f01Focal',{}).get('status')=='PASS LOCAL ONLY'
+          assert r.get('f01Focal',{}).get('checks')==20
+          assert r.get('f01Containment',{}).get('status')=='PASS CONTAINMENT ONLY'
+          assert len(r.get('f01Containment',{}).get('cases',[]))>=8
+          assert r.get('revocation',{}).get('status')=='PASS DISPOSABLE REVOCATION ONLY'
+          assert r.get('integrated',{}).get('status')=='PASS_INTEGRATED_SHARED_HANDLERS'
+          assert len(r.get('integrated',{}).get('cases',[]))==15
+          assert r.get('f01f02Local',{}).get('status')=='PASS DISPOSABLE ONLY'
+          assert r.get('f01f02Local',{}).get('externalConsumers')=='BLOCKED'
+          checks=r.get('checks',[])
+          rest=[x for x in checks if x.get('phase')=='candidate'
+                and x.get('name','').startswith('F01 post-containment ')]
+          assert len(rest)==6
+          assert all(x.get('status')=='PASS' for x in rest)
+          assert not [x for x in checks if x.get('phase')=='candidate'
+                      and x.get('status')!='PASS']
+          print('INTEGRATED=PASS_DISPOSABLE_ONLY; COMMERCIAL=NO_GO')
+          AUDIT
+      - name: Cleanup only this disposable project
+        if: ${{ always() && steps.admission.outcome == 'success' }}
+        run: |
+          bash tools/mission-02a5/network.sh unlock
+          if [ -n "${AB_WORKDIR:-}" ] && sudo test -d "$AB_WORKDIR"; then
+            sudo chown -R "$(id -u):$(id -g)" "$AB_WORKDIR"
+          fi
+          export DOCKER_HOST=unix:///var/run/docker.sock
+          if [ -n "${AB_WORKDIR:-}" ] && [ -f "$AB_WORKDIR/supabase/config.toml" ]; then
+            supabase stop --workdir "$AB_WORKDIR" --no-backup
+            if [ -f "$AB_WORKDIR/relay.pid" ]; then kill "$(cat "$AB_WORKDIR/relay.pid")" || true; fi
+          fi
+          docker --host=unix:///var/run/docker.sock network rm "$AB_NETWORK" || true
+          remaining=$(docker --host=unix:///var/run/docker.sock ps -aq --filter label=com.supabase.cli.project=$AB_PROJECT)
+          test -z "$remaining"
+          echo 'CLEANUP=PASS; no project containers; no dumps or credentials uploaded'

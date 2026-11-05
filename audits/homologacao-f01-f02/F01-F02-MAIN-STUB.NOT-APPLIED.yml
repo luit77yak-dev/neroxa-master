@@ -1,0 +1,23 @@
+name: NEROXA F01 F02 registration only
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Approved Master SHA
+        required: true
+        type: string
+      native_approval:
+        description: Explicit authorization
+        required: true
+        default: NOT_APPROVED
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  registration-only:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "NO_EXECUTION_ON_DEFAULT_BRANCH"
