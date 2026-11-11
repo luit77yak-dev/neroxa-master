@@ -1,0 +1,26 @@
+-- SECURITY REVIEW ONLY — NOT DEPLOYABLE.
+-- A/B tests must run against an isolated, Master-compatible database with real JWT claims.
+-- Existing Master uses organization-scoped membership and lacks instance membership.
+-- Do not assert per-instance RLS until an authoritative instance membership model exists.
+--
+-- In the test database, run as the authenticated user identities using the
+-- project's supported auth/JWT harness (not a privileged postgres session).
+--
+-- Expected:
+-- A-only user: A product SELECT/INSERT/UPDATE/DELETE allowed by role; B denied.
+-- A-only user: A orders/settings/zones allowed by role; B denied.
+-- B-only user: inverse.
+-- Platform admin: permitted only per documented platform role.
+-- Unrelated user: both denied.
+-- anon: private writes denied.
+--
+-- Negative mutation checks:
+-- 1. Product in A with category_id from B => reject (23514).
+-- 2. UPDATE A product SET instance_id=B => reject unless authorized and category valid.
+-- 3. UPDATE product category_id to B category => reject (23514).
+-- 4. UPDATE order instance_id/organization_id to another tenant => reject.
+-- 5. UPDATE settings/zones to B => reject.
+-- 6. All RPC SECURITY DEFINER paths rechecked for equivalent authorization.
+--
+-- NOTE: PostgreSQL permissive policies combine with OR. Audit every policy.
+-- NOTE: No real tests are executed by this file.

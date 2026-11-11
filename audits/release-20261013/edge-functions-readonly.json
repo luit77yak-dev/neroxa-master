@@ -1,0 +1,54 @@
+[
+  {
+    "slug": "mercado-pago-checkout",
+    "usesServiceRole": true,
+    "observedCalls": ["neroxa_plans", "neroxa_checkout_sessions"],
+    "sourceReviewed": true,
+    "runtimeVerified": false
+  },
+  {
+    "slug": "mercado-pago-webhook",
+    "usesServiceRole": true,
+    "observedCalls": [
+      "neroxa_payment_events",
+      "neroxa_checkout_sessions",
+      "neroxa_organizations",
+      "neroxa_subscriptions",
+      "neroxa_billing_records"
+    ],
+    "sourceReviewed": true,
+    "runtimeVerified": false
+  },
+  {
+    "slug": "neroxa-resolve-access",
+    "usesServiceRole": true,
+    "observedCalls": ["neroxa_system_domains"],
+    "sourceReviewed": true,
+    "runtimeVerified": false
+  },
+  {
+    "slug": "neroxa-verify-domain-dns",
+    "usesServiceRole": true,
+    "observedCalls": [
+      "neroxa_has_platform_role",
+      "neroxa_system_domains",
+      "apply_neroxa_domain_validation_result"
+    ],
+    "sourceReviewed": true,
+    "runtimeVerified": false
+  },
+  {
+    "slug": "validate-neroxa-domain-dns",
+    "usesServiceRole": false,
+    "observedCalls": [],
+    "sourceReviewed": true,
+    "runtimeVerified": false
+  },
+  {
+    "slug": "validate-neroxa-domain",
+    "usesServiceRole": false,
+    "observedCalls": [],
+    "sourceReviewed": true,
+    "runtimeVerified": false
+  }
+]

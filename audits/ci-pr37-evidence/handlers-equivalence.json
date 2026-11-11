@@ -1,0 +1,18 @@
+[
+  {
+    "file": "src/routes/master-planos.tsx",
+    "handlersAndAuthorizationCallsUnchanged": true
+  },
+  {
+    "file": "src/routes/master-produtos.tsx",
+    "handlersAndAuthorizationCallsUnchanged": true
+  },
+  {
+    "file": "src/routes/master-sistemas.tsx",
+    "handlersAndAuthorizationCallsUnchanged": true
+  },
+  {
+    "file": "src/routes/master-catalogo.tsx",
+    "handlersAndAuthorizationCallsUnchanged": true
+  }
+]
