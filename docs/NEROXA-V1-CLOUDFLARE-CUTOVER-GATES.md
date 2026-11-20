@@ -1,5 +1,13 @@
 # NEROXA V1 — Cloudflare-first | Master / Food integration gate
 
+## Atualização do executor hospedado — dependência recuperada (20/11/2026)
+
+- O bloqueio `MISSING_IMPORTS=["delivery-candidate/src/server/hosted-release-core.mjs"]` descrito mais abaixo **foi corrigido** na branch do Master. O arquivo original foi recuperado sem alterações do Delivery histórico, com Git blob `394edd40004f259daa01ab95496ef8fc042416da`, e fixado por verificação no CI.
+- [CI 44791409383](https://github.com/luit77yak-dev/neroxa-master/actions/runs/44791409383): imports resolvidos, **26 testes sintéticos de hosted admission passaram**, Master static guard PASS. A seção histórica anterior registra corretamente a falha encontrada naquele momento, **mas não é o estado atual do código**.
+- **Próxima dependência:** obter rota real ao host/pooler da Supabase, identidade TLS/libpq com segredo protegido e autorização de `HOSTED_PREFLIGHT` somente leitura. **Nenhuma SQL foi executada, nem a política foi aberta; COMERCIAL NO-GO.**
+
+
+
 > **STATUS ATUALIZADO — 20/11/2026:** o destino comercial foi reativado e está `ACTIVE_HEALTHY`. O LAB principal está `ACTIVE_HEALTHY`; os outros dois projetos estão `INACTIVE`. A organização permaneceu no plano Free. Os dados comerciais de teste foram eliminados em limpeza transacional autorizada: 24/24 tabelas vazias, 118 linhas removidas; catálogo e acesso administrativo preservados. [Evidência](./NEROXA-V1-COMERCIAL-TEST-DATA-RESET-20261120.md). O status comercial **CONTINUA CLOSED / NO-GO**, porque as 33 SQLs permanecem não admitidas, o Hyperdrive comercial não existe e as provas hospedadas não foram concluídas. As linhas cronológicas antigas abaixo são histórico e não prevalecem sobre esta atualização.
 
 
