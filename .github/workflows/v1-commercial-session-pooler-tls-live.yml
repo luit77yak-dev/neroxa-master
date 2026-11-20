@@ -1,0 +1,34 @@
+name: NEROXA V1 Commercial Session Pooler TLS (No Secrets)
+
+on:
+  push:
+    branches:
+      - 'integration/v1-cloudflare-master-20261120'
+    paths:
+      - '.github/workflows/v1-commercial-session-pooler-tls-live.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  session-pooler-tls:
+    name: Verify commercial session pooler DNS / TCP / TLS only
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout verified integration branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify fixed input contract without accessing network
+        run: python3 tools/hosted-admission/session-pooler-tls-probe.test.py -v
+      - name: Check supplied commercial pooler address without password or SQL
+        run: |
+          python3 tools/hosted-admission/session-pooler-tls-probe.py --host 'aws-0-us-east-1.pooler.supabase.com'
+      - name: Record boundaries
+        if: always()
+        run: |
+          echo 'This checks TLS for the founder-supplied session pooler hostname, port 5432.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No Postgres password, auth, SQL, secret access, migration, deployment, or DB change.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Even a TLS PASS is not project-bound authentication, HOSTED_PREFLIGHT, SQL_RELEASE, HOSTED_SERVER or commercial GO.' >> "$GITHUB_STEP_SUMMARY"
