@@ -27,6 +27,10 @@ jobs:
         run: node --test tools/integration/cloudflare-hosted-identity.test.mjs
       - name: Validate hosted import closure checker with synthetic positive and negative fixtures
         run: node --test tools/hosted-admission/import-closure-audit.test.mjs
+      - name: Verify original Delivery hosted core blob was recovered without modification
+        run: |
+          test "$(git hash-object delivery-candidate/src/server/hosted-release-core.mjs)" = "394edd40004f259daa01ab95496ef8fc042416da"
+          echo 'HOSTED_CORE_SOURCE_BLOB=PASS; imported exact historical source' >> "$GITHUB_STEP_SUMMARY"
       - name: Require hosted executor static import closure (no execution)
         run: node tools/hosted-admission/import-closure-audit.mjs . tools/hosted-admission/preflight-entry.mjs tools/hosted-admission/session.mjs
       - name: Execute synthetic hosted-admission unit tests (no credentials)
