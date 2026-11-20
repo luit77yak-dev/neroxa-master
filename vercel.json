@@ -40,7 +40,8 @@
       "fix/f02-final-rpc-cut-20261025": false,
       "fix/f02-hosted-release-20261025": false,
       "fix/f02-hosted-admission-20261025": false,
-      "fix/f02-readonly-preflight-20261025": false
+      "fix/f02-readonly-preflight-20261025": false,
+      "integration/v1-cloudflare-master-20261120": false
     }
   }
 }
