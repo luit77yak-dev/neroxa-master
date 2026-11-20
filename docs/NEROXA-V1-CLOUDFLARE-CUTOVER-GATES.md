@@ -24,6 +24,12 @@ Este registro é de planejamento e rastreabilidade, não é autorização de rel
 - Manter `tools/hosted-admission/preflight-policy.json` CLOSED e manifesto das 33 unidades imutável (`execution_authorized=false`, `approval=null`).
 - Próximo bloqueio operacional: obter decisão orçamentária explícita e caminho de ativação do projeto sem degradar as evidências de laboratório; após a ativação, executar somente `HOSTED_PREFLIGHT` read-only, antes de qualquer autorização independente de SQL e publicação.
 
+## Rota PostgreSQL comercial — prova sem credenciais (20/11/2026)
+
+- Sondagem externa no GitHub Actions [run 44788991692](https://github.com/luit77yak-dev/neroxa-master/actions/runs/44788991692): `DNS_A=0`, `DNS_AAAA=1`, `DNS=PASS`, **`PG_TCP=NOT_VERIFIED` e `PG_TLS_HOSTNAME_CA=NOT_VERIFIED`**. O workflow concluiu `SUCCESS` apenas por executar a sonda; **não há prova de handshake TLS ou autenticação**.
+- Divergência a resolver: `tools/hosted-admission/preflight-policy.json` cita `SUPAVISOR_SESSION`, mas `tools/hosted-admission/session.mjs` exige host direto `db.iefaoaqzltvpfabyeelj.supabase.co:5432`; não trocar por pooler sem revisar identidade, sessão persistente e CA. `SQL_RELEASE` continua bloqueada.
+- Explicação técnica e opções de rota em [NEROXA-V1-COMERCIAL-POSTGRES-NETWORK-AND-TRANSPORT-20261120.md](./NEROXA-V1-COMERCIAL-POSTGRES-NETWORK-AND-TRANSPORT-20261120.md). Nenhuma alteração em credenciais/roles/Hyperdrive ou em produção.
+
 ## Contrato de integração proposto (ainda não implementado)
 
 1. **Definir o destino comercial**: projeto/ambiente Supabase realmente aprovado, domínio do endpoint, função de cada conexão, limites e custos; proibir reaproveitar o LAB R14 como destino comercial por inferência.
