@@ -32,5 +32,5 @@ jobs:
         if: always()
         run: |
           echo 'This checks TLS for the founder-supplied session pooler hostname, port 5432.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'No Postgres password, auth, SQL, secret access, migration, deployment, or DB change. Public CA copied from user's archived file, not yet re-attested against current project Dashboard.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No Postgres password, auth, SQL, secret access, migration, deployment, or DB change. Public CA copied from an archived user Library file; origin not yet re-attested against current project Dashboard.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Even a TLS PASS is not project-bound authentication, HOSTED_PREFLIGHT, SQL_RELEASE, HOSTED_SERVER or commercial GO.' >> "$GITHUB_STEP_SUMMARY"
