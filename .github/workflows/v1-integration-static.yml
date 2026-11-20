@@ -35,5 +35,7 @@ jobs:
         run: node tools/hosted-admission/import-closure-audit.mjs . tools/hosted-admission/preflight-entry.mjs tools/hosted-admission/session.mjs
       - name: Execute synthetic hosted-admission unit tests (no credentials)
         run: node --test tests/hosted-admission/local.test.mjs tests/hosted-admission/preflight.test.mjs
+      - name: Verify no-secret commercial session-pooler TLS probe input policy
+        run: python3 -m unittest discover -s tools/hosted-admission -p 'session-pooler-tls-probe.test.py' -v
       - name: Verify master candidate remains closed
         run: node tools/integration/guard-release.mjs master .
