@@ -1,5 +1,8 @@
 # NEROXA V1 — preparação de conexão Hyperdrive comercial (não executada)
 
+> **ATUALIZAÇÃO — 20/11/2026:** a limpeza dos dados comerciais de teste foi **executada e conferida** (24 tabelas, 118 linhas removidas). Assim, o problema da configuração cancelada foi resolvido por descarte autorizado dos dados de teste; não subsiste conflito contratual real ou segregação pendente dessa linha. Ver [evidência da limpeza](./NEROXA-V1-COMERCIAL-TEST-DATA-RESET-20261120.md). **Continuam pendentes** credenciais dedicadas, grants de runtime, Hyperdrive comercial, TLS/readiness, 33 SQLs e testes; não houve criação de Hyperdrive, merge ou publicação. O histórico abaixo é pré-reset.
+
+
 Data: 2026-11-20 | Escopo: branch `integration/v1-cloudflare-master-20261120` | Estado: **PREPARED / NOT_CONFIGURED / NO-GO**.
 
 Este documento é especificação de aprovação, **não** contém credenciais, comandos de provisionamento ou autorização para ativação. Nenhum Worker, Hyperdrive, DNS, banco ou manifesto de release foi alterado por este documento.
