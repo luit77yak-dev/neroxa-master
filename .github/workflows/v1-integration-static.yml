@@ -25,5 +25,7 @@ jobs:
         run: node --test tools/integration/guard-release.test.mjs
       - name: Verify signed Cloudflare deployment identity fails closed (synthetic)
         run: node --test tools/integration/cloudflare-hosted-identity.test.mjs
+      - name: Validate hosted import closure checker with synthetic positive and negative fixtures
+        run: node --test tools/hosted-admission/import-closure-audit.test.mjs
       - name: Verify master candidate remains closed
         run: node tools/integration/guard-release.mjs master .
