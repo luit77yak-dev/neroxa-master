@@ -31,6 +31,15 @@
 - **Avaliação:** exposição de superfície legada a revisar. Privilégio não constitui, isoladamente, prova de exploração; exigir checagens efetivas de autorização e corte dos consumidores antes de publicar.
 - Remediações oficiais: https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable e https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
 
+## Análise focal de RPCs e mapeamento de instâncias (somente leitura, 20/11)
+
+- Quatro instâncias comerciais em classes distintas: `BARBER/ACTIVE` com organização `LEAD` e nenhum domínio; `DELIVERY/ACTIVE` com organização `IMPLEMENTATION` e dois domínios; `FOOD/ACTIVE` com organização `ACTIVE` e um domínio; `FOOD/PROVISIONING` com organização `PAUSED` e nenhum domínio. Cada uma possui uma configuração associada. **Não liberar todas por inferência.**
+- Dos três domínios registrados, **dois estão `VERIFIED`** (um Delivery e um Food) e **um `VERIFYING`** (Delivery). Não há prova de que a verificação externa DNS e a rota da release comercial estejam prontas.
+- Leitura do `pg_get_functiondef` confirmou: `get_public_order_status(p_order_id, p_customer_phone)` retorna JSON incluindo nome, telefone e endereço do comprador após identificação por ID+telefone; legado deve ser fechado e substituído por capability antes da publicação.
+- `get_admin_orders` e `update_admin_order_status` chamam `neroxa_is_platform_member()`; a função exige `auth.jwt()->>'aal' = 'aal2'` e vínculo ativo em `neroxa_platform_members`. Isso é um controle explícito interno; **não declarar essas funções exploráveis somente por `EXECUTE` concedido**. Ainda restam avaliação de escopo por instância e negativos reais de ACL/SEC-18 antes de GO.
+- `create_public_order` aceita payload público e resolve instância pelo `organization_id`; a definição observada **não aplica quota durável ou confirmação por capability** neste ponto. Bloqueio de novos pedidos e corte de consumidores legados continuam necessários.
+- Nenhuma linha individual de cliente, pedido, telefone ou identificador de organização foi extraída para o repositório.
+
 ## Cloudflare / Hyperdrive
 
 - Hyperdrive `neroxa-v1-i04-lab` (ID `e7570caf4da24a53838d3cb9a234d9ac`) tem origem `db.gomexvhvecvvfbdzhjct.supabase.co:5432/postgres` — **aponta para o LAB**, não para o Supabase comercial.
