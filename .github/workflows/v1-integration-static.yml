@@ -37,5 +37,7 @@ jobs:
         run: node --test tests/hosted-admission/local.test.mjs tests/hosted-admission/preflight.test.mjs
       - name: Verify no-secret commercial session-pooler TLS probe input policy
         run: python3 tools/hosted-admission/session-pooler-tls-probe.test.py -v
+      - name: Syntax-check Work Linux F02 credential-free readiness script
+        run: bash -n tools/hosted-admission/work-linux-f02-readiness.sh
       - name: Verify master candidate remains closed
         run: node tools/integration/guard-release.mjs master .
