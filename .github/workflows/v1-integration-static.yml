@@ -27,21 +27,9 @@ jobs:
         run: node --test tools/integration/cloudflare-hosted-identity.test.mjs
       - name: Validate hosted import closure checker with synthetic positive and negative fixtures
         run: node --test tools/hosted-admission/import-closure-audit.test.mjs
-      - name: Inventory hosted executor imports without running the executor
-        shell: bash
-        run: |
-          set +e
-          node tools/hosted-admission/import-closure-audit.mjs . tools/hosted-admission/preflight-entry.mjs tools/hosted-admission/session.mjs > /tmp/neroxa-hosted-imports.log
-          rc=$?
-          set -e
-          cat /tmp/neroxa-hosted-imports.log
-          if [ "$rc" -eq 78 ]; then
-            echo 'HOSTED_EXECUTOR=BLOCKED_IMPORT_CLOSURE; operational release is not admitted' >> "$GITHUB_STEP_SUMMARY"
-          elif [ "$rc" -eq 0 ]; then
-            echo 'HOSTED_EXECUTOR_IMPORT_CLOSURE=CLOSED_IMPORTS_PRESENT_ONLY; admission still NOT GRANTED' >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Import audit execution failed: $rc"
-            exit "$rc"
-          fi
+      - name: Require hosted executor static import closure (no execution)
+        run: node tools/hosted-admission/import-closure-audit.mjs . tools/hosted-admission/preflight-entry.mjs tools/hosted-admission/session.mjs
+      - name: Execute synthetic hosted-admission unit tests (no credentials)
+        run: node --test tests/hosted-admission/local.test.mjs tests/hosted-admission/preflight.test.mjs
       - name: Verify master candidate remains closed
         run: node tools/integration/guard-release.mjs master .
