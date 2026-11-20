@@ -15,6 +15,7 @@
 - `public`: 33 tabelas, todas com RLS habilitada; ausência do esquema `neroxa_v1` na enumeração `pg_namespace`/tabelas consultada.
 - Histórico Supabase: 58 migrações listadas, última `20261009133857 add_storefront_visual_overrides`. Isto **não demonstra aplicação** das 33 unidades SQL da release atual.
 - Contagens agregadas, sem leitura/registro de linhas individuais: 5 organizações; 4 instâncias de sistema; 3 domínios; 5 configurações storefront; 8 assinaturas; 8 contratos; 0 pedidos; 0 itens de pedido. A discrepância entre cinco configurações e quatro instâncias requer reconciliação antes de corte, mas **não comprova por si só órfão**.
+- Reconciliação agregada sem identificadores: **1 configuração storefront pertence a uma organização sem instância de sistema correspondente**; **0 configurações sem organização**, **0 instâncias sem configuração na organização** e **0 configurações vinculadas a organização com `active=false`**. Não classificar nem excluir esta configuração automaticamente; requer decisão administrativa e cópia recuperável antes de qualquer corte.
 - Não tratar o banco como destino vazio; preservar preimagem e dependências.
 
 ## Achados do Security Advisor Supabase
