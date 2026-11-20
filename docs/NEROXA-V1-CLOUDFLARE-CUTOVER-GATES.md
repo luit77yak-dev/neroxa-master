@@ -1,5 +1,14 @@
 # NEROXA V1 — Cloudflare-first | Master / Food integration gate
 
+## Identidade de preflight comercial criada — sem senha (20/11/2026)
+
+- **BOOTSTRAP ROLE PASS:** migração Supabase `20261120185812_neroxa_v1_f02_passwordless_preflight_login_20261120` aplicada no comercial `iefaoaqzltvpfabyeelj`. A role `neroxa_f02_preflight` tem LOGIN com `password IS NULL`, NOINHERIT, NOSUPERUSER, NOBYPASSRLS, NOCREATEDB/NOCREATEROLE/NOREPLICATION, no máximo 2 conexões e expiração em 15/12/2026.
+- Uma consulta **pós-migração** comprovou 0 memberships, 0 privilégios de leitura/escrita de tabelas de negócio, 0 funções SECURITY DEFINER executáveis (de 19), 0 CREATE de banco/schema. O contrato legado de cálculo de preço teve **somente o GRANT a PUBLIC removido**, preservando EXECUTE explícito a anon/authenticated/service_role.
+- O banco segue `ACTIVE_HEALTHY`, 59 migrações históricas (uma nova de configuração técnica, **não** uma das 33 SQLs V1), 0 pedidos e 18 planos-base. Veja [prova da role](./NEROXA-V1-F02-COMERCIAL-ROLE-PREFLIGHT-20261120.md).
+- **Não confundir criação de LOGIN com sessão autorizada:** não existe senha provisionada, nem aprovação assinada/ambiente protegido verificado. `HOSTED_PREFLIGHT=CLOSED`, `AUTHENTICATED_PSQL=NOT_RUN`, `SQL_RELEASE=NOT_AUTHORIZED`, `COMMERCIAL=NO-GO`. Não reutilizar senha admin ou LAB; segredo novo somente em configuração privada autorizada.
+- O transporte `aws-0-us-east-1.pooler.supabase.com:5432` já teve DNS/TCP/STARTTLS/TLSv1.3 com CA e hostname PASS; não comprova autenticação de banco/tenant, e Hyperdrive comercial continua separado.
+
+
 ## Atualização do executor hospedado — dependência recuperada (20/11/2026)
 
 - O bloqueio `MISSING_IMPORTS=["delivery-candidate/src/server/hosted-release-core.mjs"]` descrito mais abaixo **foi corrigido** na branch do Master. O arquivo original foi recuperado sem alterações do Delivery histórico, com Git blob `394edd40004f259daa01ab95496ef8fc042416da`, e fixado por verificação no CI.
