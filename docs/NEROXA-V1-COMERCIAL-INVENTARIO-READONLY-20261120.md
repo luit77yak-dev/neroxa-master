@@ -1,5 +1,8 @@
 # NEROXA V1 — inventário comercial somente-leitura | 2026-11-20
 
+> **ATUALIZAÇÃO SUPERSEDENTE — 20/11/2026:** os registros de clientes/lojas/contratos/propostas/assinaturas aqui contados são exclusivamente o **inventário histórico anterior** à limpeza autorizada. Foram removidas 118 linhas de teste em 24 tabelas comerciais, verificadas 24/24 vazias; 419 linhas de catálogos, perfis administrativos, configuração e auditoria permanecem. O comercial segue `ACTIVE_HEALTHY`. Conferir [evidência da limpeza](./NEROXA-V1-COMERCIAL-TEST-DATA-RESET-20261120.md). A seção histórica abaixo **não descreve dados atuais**. Os alertas de RPC/segurança e a não admissão das 33 SQLs permanecem.
+
+
 **Natureza:** inspeção de metadados e contagens via conectores Supabase/Cloudflare, sem credenciais expostas, sem migrações, sem DDL/DML, sem deployment ou merge. **Não equivale ao `HOSTED_PREFLIGHT` nativo em sessão TLS/libpq.**
 
 ## Classificação dos dados de teste — esclarecimento do proprietário (2026-11-20)
