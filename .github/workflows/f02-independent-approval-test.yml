@@ -1,0 +1,42 @@
+name: F02 independent approval test
+
+on:
+  push:
+    branches:
+      - integration/v1-cloudflare-master-20261120
+    paths:
+      - .github/workflows/f02-independent-approval-test.yml
+
+permissions:
+  contents: read
+
+jobs:
+  independent-approval:
+    name: Independent approval preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: f02-hosted-preflight
+    steps:
+      - name: Require dev-luizt5 as the initiating identity
+        env:
+          EXPECTED_ACTOR: dev-luizt5
+        run: |
+          if [ "$GITHUB_ACTOR" != "$EXPECTED_ACTOR" ]; then
+            echo "::error::This test must be initiated by dev-luizt5."
+            exit 1
+          fi
+          echo "Initiating identity confirmed: $GITHUB_ACTOR"
+
+      - name: Confirm the integration branch
+        env:
+          EXPECTED_REF: refs/heads/integration/v1-cloudflare-master-20261120
+        run: |
+          if [ "$GITHUB_REF" != "$EXPECTED_REF" ]; then
+            echo "::error::Unexpected ref: $GITHUB_REF"
+            exit 1
+          fi
+          echo "Integration branch confirmed: $GITHUB_REF"
+
+      - name: Complete harmless approval check
+        run: echo "F02 independent approval preflight completed."
