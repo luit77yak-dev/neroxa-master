@@ -1,5 +1,8 @@
 # NEROXA V1 — Cloudflare-first | Master / Food integration gate
 
+> **STATUS ATUALIZADO — 20/11/2026:** o destino comercial foi reativado e está `ACTIVE_HEALTHY`. O LAB principal está `ACTIVE_HEALTHY`; os outros dois projetos estão `INACTIVE`. A organização permaneceu no plano Free. Os dados comerciais de teste foram eliminados em limpeza transacional autorizada: 24/24 tabelas vazias, 118 linhas removidas; catálogo e acesso administrativo preservados. [Evidência](./NEROXA-V1-COMERCIAL-TEST-DATA-RESET-20261120.md). O status comercial **CONTINUA CLOSED / NO-GO**, porque as 33 SQLs permanecem não admitidas, o Hyperdrive comercial não existe e as provas hospedadas não foram concluídas. As linhas cronológicas antigas abaixo são histórico e não prevalecem sobre esta atualização.
+
+
 Estado: **CLOSED — NOT ADMITTED — NO COMMERCIAL GO**. Revisão em 2026-11-20.
 Este registro é de planejamento e rastreabilidade, não é autorização de release.
 
