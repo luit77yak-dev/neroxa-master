@@ -12,6 +12,15 @@ Este registro é de planejamento e rastreabilidade, não é autorização de rel
 - Na candidata Food PR #45, `src/server/hosted-release-core.mjs` vincula `HOSTED_SERVER` a `VERCEL_DEPLOYMENT_ID`; isso **não é** uma admissão para Cloudflare Workers. Não trocar o identificador sem modelar nova prova de identidade.
 - `audits/02a5/hosted-admission/README.md` registra TLS/libpq hospedados, cancelamento, quiescência e readiness positiva como NÃO executados. As provas privadas LAB não são equivalentes à instalação comercial dessas 33 unidades.
 
+## Decisão de destino comercial — 2026-11-20 (registrada, não é execução)
+
+- **Destino comercial explicitamente confirmado pelo solicitante:** projeto Supabase `iefaoaqzltvpfabyeelj` (`neroxa-solutions-hub`), organização `syexxzbppxwwzcrrczdb`.
+- Conferência somente-leitura via integração Supabase: destino `INACTIVE`, região `us-east-1`, PostgreSQL 17; LAB R14 `gomexvhvecvvfbdzhjct` `ACTIVE_HEALTHY`, região `sa-east-1`. O outro laboratório `nvbmzdgfretwnkdfqcap` também se encontra ativo.
+- Organização no plano `free`, com **dois projetos ativos**. O limite documentado de dois projetos Free ativos é impeditivo para a retomada do terceiro sem liberar uma vaga ou alterar o plano. Fonte: https://supabase.com/docs/guides/platform/billing-on-supabase
+- Decisão de destino **não autoriza** pagamento, upgrade, pausa de laboratório, restauração do projeto, substituição de dados, SQL remoto, concessão de credenciais, execução `SQL_RELEASE`, ativação `HOSTED_SERVER`, alteração de DNS, merge nem GO comercial.
+- Manter `tools/hosted-admission/preflight-policy.json` CLOSED e manifesto das 33 unidades imutável (`execution_authorized=false`, `approval=null`).
+- Próximo bloqueio operacional: obter decisão orçamentária explícita e caminho de ativação do projeto sem degradar as evidências de laboratório; após a ativação, executar somente `HOSTED_PREFLIGHT` read-only, antes de qualquer autorização independente de SQL e publicação.
+
 ## Contrato de integração proposto (ainda não implementado)
 
 1. **Definir o destino comercial**: projeto/ambiente Supabase realmente aprovado, domínio do endpoint, função de cada conexão, limites e custos; proibir reaproveitar o LAB R14 como destino comercial por inferência.
