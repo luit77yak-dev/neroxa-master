@@ -30,6 +30,14 @@ Este registro é de planejamento e rastreabilidade, não é autorização de rel
 - Divergência a resolver: `tools/hosted-admission/preflight-policy.json` cita `SUPAVISOR_SESSION`, mas `tools/hosted-admission/session.mjs` exige host direto `db.iefaoaqzltvpfabyeelj.supabase.co:5432`; não trocar por pooler sem revisar identidade, sessão persistente e CA. `SQL_RELEASE` continua bloqueada.
 - Explicação técnica e opções de rota em [NEROXA-V1-COMERCIAL-POSTGRES-NETWORK-AND-TRANSPORT-20261120.md](./NEROXA-V1-COMERCIAL-POSTGRES-NETWORK-AND-TRANSPORT-20261120.md). Nenhuma alteração em credenciais/roles/Hyperdrive ou em produção.
 
+## Empacotamento do executor — bloqueio verificado em CI (20/11/2026)
+
+- O executor hospedado do Master **não tem fechamento autônomo de imports** na branch de integração: `tools/hosted-admission/session.mjs` e `readonly-preflight.mjs` importam `delivery-candidate/src/server/hosted-release-core.mjs`, ausente do checkout versionado. [GitHub Actions run 44790362557](https://github.com/luit77yak-dev/neroxa-master/actions/runs/44790362557) confirma `HOSTED_EXECUTOR_IMPORT_CLOSURE=BLOCKED` e informa exatamente esse caminho ausente.
+- Os testes sintéticos do auditor de importação passaram **4/4**, mas a auditoria do executor real está **BLOCKED**. `SUCCESS` nesse workflow significa que o bloqueio foi detectado e os gates continuaram fechados, **não que o executor possa ser executado**.
+- O arquivo original de autenticação/assinaturas precisa ser localizado no Work Linux/release preservada, verificado e versionado de forma reproduzível antes de conectar credenciais ou SQL. Não reconstruir `verifyGrant` a partir de suposições.
+- A verificação de rede sem segredo também está `PG_TCP/TLS=NOT_VERIFIED`, como registrado na seção de transporte. Os bloqueios são **independentes**: resolver host/pooler não torna a release instalável com imports ausentes.
+- Plano de recuperação completo: [NEROXA-V1-HOSTED-EXECUTOR-IMPORT-AND-TRANSPORT-20261120.md](./NEROXA-V1-HOSTED-EXECUTOR-IMPORT-AND-TRANSPORT-20261120.md).
+
 ## Contrato de integração proposto (ainda não implementado)
 
 1. **Definir o destino comercial**: projeto/ambiente Supabase realmente aprovado, domínio do endpoint, função de cada conexão, limites e custos; proibir reaproveitar o LAB R14 como destino comercial por inferência.
