@@ -1,5 +1,14 @@
 # NEROXA V1 — executor hospedado: fechamento de dependências e conexão | 2026-11-20
 
+## Atualização superveniente — dependência original recuperada (20/11/2026)
+
+- **IMPORT CLOSURE: PASS (somente imports).** Foi recuperado de `luit77yak-dev/pizza-perfect-plate`, branch histórica `fix/f02-hosted-admission-20261025`, o módulo original `src/server/hosted-release-core.mjs`, e incluído sem alteração em `delivery-candidate/src/server/hosted-release-core.mjs` na branch de integração Master. **Git blob origem = destino: `394edd40004f259daa01ab95496ef8fc042416da`**. Commit de inclusão no Master: `b48c4f457b5c9cc37f672db496f4592351f722e6`.
+- [CI run 44791409383](https://github.com/luit77yak-dev/neroxa-master/actions/runs/44791409383): `HOSTED_EXECUTOR_IMPORT_CLOSURE=CLOSED_IMPORTS_PRESENT_ONLY`, 5 módulos lidos, imports ausentes `[]`, externos `[]`, **26/26 testes sintéticos do executor hospedado PASS**, testes de identidade Cloudflare 28/28 PASS, Master gate 73 controles PASS.
+- O CI também verifica identidade imutável do módulo com `git hash-object`; alterar os bytes exige revisão explícita de proveniência. O plano antigo de *localizar o original* está concluído nesta branch.
+- **Não confundir com admissão de produção:** `HOSTED_PREFLIGHT=NOT_RUN`, `PG_TCP/TLS=NOT_VERIFIED`, `SQL_RELEASE=NOT_AUTHORIZED`, `HOSTED_SERVER=NOT_ADMITTED`, Hyperdrive comercial inexistente. A política nominal continua `CLOSED` com host, role, CA e authority sem aprovação; o contrato de 33 unidades permanece `execution_authorized=false` e `approval=null`. Nenhuma senha, SQL, Worker ou LAB foi alterado por esta recuperação.
+
+
+
 **Estado:** `HOSTED_EXECUTOR_IMPORT_CLOSURE=BLOCKED`, `HOSTED_PREFLIGHT=NOT_RUN`, `SQL_RELEASE=NOT_AUTHORIZED`, `COMMERCIAL=NO-GO`.
 
 ## Prova executada na branch de integração
