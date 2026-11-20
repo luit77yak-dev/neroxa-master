@@ -6,6 +6,7 @@ on:
       - 'integration/v1-cloudflare-master-20261120'
     paths:
       - '.github/workflows/v1-commercial-session-pooler-tls-live.yml'
+      - 'tools/hosted-admission/session-pooler-tls-probe.py'
   workflow_dispatch:
 
 permissions:
