@@ -69,11 +69,15 @@ def run(host):
     print("PUBLIC_IPV4_COUNT=" + str(sum(1 for a in global_targets if a[0] == socket.AF_INET)))
     print("PUBLIC_IPV6_COUNT=" + str(sum(1 for a in global_targets if a[0] == socket.AF_INET6)))
     negotiated = False
+    connected = False
+    certificate_issue = None
+    handshake_issue = False
     for family, kind, proto, sockaddr in global_targets[:4]:
         try:
             with socket.socket(family, kind, proto) as plain:
                 plain.settimeout(5.0)
                 plain.connect(sockaddr)
+                connected = True
                 plain.sendall(SSL_REQUEST)
                 if plain.recv(1) != b"S":
                     continue
@@ -88,9 +92,34 @@ def run(host):
                     print("PG_TLS_PROTOCOL=" + protocol)
                     print("AUTHENTICATED_LIBPQ_PREFLIGHT=NOT_RUN")
                     return 0
-        except (OSError, ssl.SSLError, ValueError):
+        except ssl.SSLCertVerificationError as exc:
+            # Certificate metadata only. No passwords, certificates, bodies or SQL.
+            certificate_issue = (exc.verify_code, exc.verify_message)
+        except ssl.SSLError:
+            handshake_issue = True
+        except (OSError, ValueError):
             continue
-    print("PG_TCP_STARTTLS=" + ("PASS" if negotiated else "NOT_VERIFIED"))
+    print("PG_TCP=" + ("PASS" if connected else "NOT_VERIFIED"))
+    print("PG_STARTTLS=" + ("PASS" if negotiated else "NOT_VERIFIED"))
+    if certificate_issue is not None:
+        print("PG_TLS_VERIFY_ERROR_CODE=" + str(certificate_issue[0]))
+        # Closed vocabulary prevents arbitrary peer text from reaching public CI logs.
+        reason = str(certificate_issue[1]).lower()
+        if "unable to get local issuer" in reason:
+            kind = "CA_CHAIN_NOT_TRUSTED"
+        elif "self-signed" in reason:
+            kind = "SELF_SIGNED_CERTIFICATE"
+        elif "hostname" in reason or "ip address mismatch" in reason:
+            kind = "HOSTNAME_MISMATCH"
+        elif "expired" in reason:
+            kind = "CERTIFICATE_EXPIRED"
+        else:
+            kind = "CERTIFICATE_VERIFICATION_FAILED"
+        print("PG_TLS_VERIFY_FAILURE_CLASS=" + kind)
+    elif handshake_issue:
+        print("PG_TLS_VERIFY_FAILURE_CLASS=TLS_HANDSHAKE_ERROR")
+    else:
+        print("PG_TLS_VERIFY_FAILURE_CLASS=UNKNOWN")
     print("PG_TLS_CA_HOSTNAME=NOT_VERIFIED")
     return 78
 
