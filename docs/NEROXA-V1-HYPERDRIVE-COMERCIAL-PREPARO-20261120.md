@@ -4,6 +4,10 @@ Data: 2026-11-20 | Escopo: branch `integration/v1-cloudflare-master-20261120` | 
 
 Este documento é especificação de aprovação, **não** contém credenciais, comandos de provisionamento ou autorização para ativação. Nenhum Worker, Hyperdrive, DNS, banco ou manifesto de release foi alterado por este documento.
 
+## Esclarecimento do proprietário sobre o legado (2026-11-20)
+
+Todos os registros históricos discutidos (organizações, contratos, propostas, assinaturas e configurações) foram classificados pelo proprietário como **dados de teste, não operações comerciais reais**. Por isso, a organização `CANCELLED` com contrato `ACTIVE` deixa de exigir uma resolução contratual de cliente real. Permanece **pendente o saneamento técnico** com backup recuperável, proteção contra acesso público, análise de FKs e autorização separada antes de quaisquer alterações. A declaração não equivale à identificação independente de cada registro e não autoriza exclusão.
+
 ## Identidade e separação de ambientes
 
 | Item | Referência | Estado observado |
@@ -41,7 +45,7 @@ O executor de **33 SQLs** requer sessão hospedada nativa com verificação TLS/
 
 1. 33 tabelas `public` com RLS; 58 migrações históricas; nenhuma prova de aplicação das 33 unidades da nova release.
 2. Superfície legada: `SECURITY DEFINER` com `EXECUTE` em funções de checkout, tracking e admin para `anon`/`authenticated`. Não declarar GO sem revisão/corte e negativos reais.
-3. Uma organização `CANCELLED` mantém `active=true` e configuração de storefront sem instância; vinculada a assinatura `TRIAL`, contrato e proposta. FK da configuração usa `ON DELETE CASCADE`. **Não excluir, reatribuir ou ativar**; exige escrow externo verificável, decisão nominal e rollback testado. Informação agregada, sem UUIDs/dados pessoais no GitHub.
+3. Uma organização `CANCELLED` mantém `active=true` e configuração de storefront sem instância; vinculada a assinatura `TRIAL`, contrato e proposta. FK da configuração usa `ON DELETE CASCADE`. **Não excluir, reatribuir ou ativar**; exige cópia recuperável, análise de dependências e rollback testado antes de higienização de dados de teste. Informação agregada, sem UUIDs/dados pessoais no GitHub.
 4. Nenhuma role PostgreSQL `neroxa%` encontrada na leitura. Não há role dedicada aprovada para Hyperdrive comercial.
 5. O único Hyperdrive existente aponta ao LAB. Ainda não há configuração comercial.
 
