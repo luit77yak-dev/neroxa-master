@@ -34,6 +34,14 @@ O teste inicial com as CAs padrão do sistema apresentou X.509 error code 19 (ce
 - CA válida até 26 de abril de 2031; **a origem atual do certificado deve ser reconfirmada no painel do projeto** antes da admissão.
 - A sonda verificou o TLS com Python SSL (CA e hostname), mas isso **não é execução libpq sslmode=verify-full** nem prova que o pooler compartilhado autenticou a instância comercial pretendida.
 
+## Certificado reenviado pelo proprietário e conferido (20/11/2026)
+
+- Arquivo recebido nesta etapa: `prod-ca-2021.crt`, **1367 bytes**, PEM com apenas um certificado público (`BEGIN CERTIFICATE` / `END CERTIFICATE`); não foi encontrada chave privada nesse arquivo.
+- O conteúdo binário foi verificado localmente por `sha256sum` e `openssl x509`: **`CA_UPLOADED_BYTES_MATCH=PASS`** contra o PEM candidato guardado e testado no GitHub. SHA-256 **`700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7`**.
+- X.509: `CN=Supabase Root 2021 CA`, certificado CA autoassinado, `Certificate Sign` e `CRL Sign`; válido **2021-04-28 a 2031-04-26**. Fingerprint SHA-256 **`807025ad50d4ed219d2c9c7d299c004f824eb00cf7f65afef607d07b72e6cafa`**.
+- **Origem:** entregue pelo proprietário após instrução de download no painel comercial; identidade criptográfica corresponde exatamente à CA arquivada e utilizada no TLS PASS. Esta correspondência **não demonstra, sozinha, que o painel atual publicou a CA**, pois não houve leitura autenticada independente da seção SSL do Dashboard. Registrar `CA_OWNER_PROVIDED=YES`, `CA_BYTES_MATCH=PASS`, `TLS_HOSTNAME_CA_WITH_UPLOADED_CERT=PASS` (resultado da sondagem anterior), `DASHBOARD_SOURCE_INDEPENDENTLY_ATTESTED=NOT_RUN`.
+- **Invariante:** não modificar `preflight-policy.json`, grant de autoridade nem manifesto SQL automaticamente por recebimento de certificado. `HOSTED_PREFLIGHT=CLOSED`, `AUTHENTICATED_LIBPQ=NOT_RUN`, `SQL_RELEASE=NOT_AUTHORIZED` e `COMMERCIAL=NO-GO`.
+
 ## Próximos bloqueios
 
 1. Conferir o certificado de raiz no Supabase Dashboard > projeto comercial > Database Settings / SSL Configuration. Comparar os fingerprints/hashes; não coletar senha.
