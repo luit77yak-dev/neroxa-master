@@ -25,6 +25,21 @@ jobs:
           persist-credentials: false
       - name: Verify fixed input contract without accessing network
         run: python3 tools/hosted-admission/session-pooler-tls-probe.test.py -v
+      - name: Check GitHub runner native PostgreSQL client (no database login)
+        shell: bash
+        run: |
+          if command -v psql >/dev/null 2>&1; then
+            echo "RUNNER_PSQL=PASS"
+            psql --version | sed 's/^/RUNNER_PSQL_VERSION=/'
+          else
+            echo "RUNNER_PSQL=BLOCKED_NOT_AVAILABLE"
+          fi
+          if command -v openssl >/dev/null 2>&1; then
+            echo "RUNNER_OPENSSL=PASS"
+          else
+            echo "RUNNER_OPENSSL=BLOCKED_NOT_AVAILABLE"
+          fi
+          echo "AUTHENTICATED_LIBPQ_PREFLIGHT=NOT_RUN"
       - name: Check supplied commercial pooler address without password or SQL
         run: |
           python3 tools/hosted-admission/session-pooler-tls-probe.py --host 'aws-0-us-east-1.pooler.supabase.com' --ca-file 'tools/hosted-admission/ca/supabase-root-2021.library-candidate.crt' --ca-sha256 '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7'
