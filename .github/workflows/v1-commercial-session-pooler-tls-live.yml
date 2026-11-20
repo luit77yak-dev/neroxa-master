@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/v1-commercial-session-pooler-tls-live.yml'
       - 'tools/hosted-admission/session-pooler-tls-probe.py'
+      - 'tools/hosted-admission/ca/supabase-root-2021.library-candidate.crt'
   workflow_dispatch:
 
 permissions:
@@ -26,10 +27,10 @@ jobs:
         run: python3 tools/hosted-admission/session-pooler-tls-probe.test.py -v
       - name: Check supplied commercial pooler address without password or SQL
         run: |
-          python3 tools/hosted-admission/session-pooler-tls-probe.py --host 'aws-0-us-east-1.pooler.supabase.com'
+          python3 tools/hosted-admission/session-pooler-tls-probe.py --host 'aws-0-us-east-1.pooler.supabase.com' --ca-file 'tools/hosted-admission/ca/supabase-root-2021.library-candidate.crt' --ca-sha256 '700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7'
       - name: Record boundaries
         if: always()
         run: |
           echo 'This checks TLS for the founder-supplied session pooler hostname, port 5432.' >> "$GITHUB_STEP_SUMMARY"
-          echo 'No Postgres password, auth, SQL, secret access, migration, deployment, or DB change.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No Postgres password, auth, SQL, secret access, migration, deployment, or DB change. Public CA copied from user's archived file, not yet re-attested against current project Dashboard.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Even a TLS PASS is not project-bound authentication, HOSTED_PREFLIGHT, SQL_RELEASE, HOSTED_SERVER or commercial GO.' >> "$GITHUB_STEP_SUMMARY"
