@@ -2,6 +2,13 @@
 
 **Natureza:** inspeção de metadados e contagens via conectores Supabase/Cloudflare, sem credenciais expostas, sem migrações, sem DDL/DML, sem deployment ou merge. **Não equivale ao `HOSTED_PREFLIGHT` nativo em sessão TLS/libpq.**
 
+## Classificação dos dados de teste — esclarecimento do proprietário (2026-11-20)
+
+- O proprietário confirmou que os cadastros, contratos, propostas e assinaturas mencionados nesta homologação **são testes do sistema, não relações comerciais reais**. Essa é uma declaração do proprietário, **não uma validação independente de cada linha**.
+- O aparente conflito `CANCELLED` / contrato `ACTIVE` / proposta `ACCEPTED` / assinatura `TRIAL` **não deve mais ser tratado como disputa contratual real**. Reclassificar como **higienização técnica de dados de teste antes do GO**, mantendo as dependências e a segurança de isolamento.
+- Esta classificação **não autoriza exclusão, alteração ou migração automática**. Antes de qualquer saneamento, inventariar impacto, garantir cópia recuperável e rollback, isolar acesso público e obter autorização explícita para o plano de escrita.
+- As análises anteriores permanecem como evidência de estados observados, mas suas menções a `HOLD administrativo/contratual` ficam **superadas por esta classificação**. Os gates de runtime/SQL/segurança permanecem fechados.
+
 ## Destino e estados conferidos
 
 - **Destino comercial confirmado pelo solicitante:** Supabase `iefaoaqzltvpfabyeelj` (`neroxa-solutions-hub`), `us-east-1`, PostgreSQL 17. Estado `ACTIVE_HEALTHY` após retomada.
@@ -17,10 +24,10 @@
 - Contagens agregadas, sem leitura/registro de linhas individuais: 5 organizações; 4 instâncias de sistema; 3 domínios; 5 configurações storefront; 8 assinaturas; 8 contratos; 0 pedidos; 0 itens de pedido. A discrepância entre cinco configurações e quatro instâncias requer reconciliação antes de corte, mas **não comprova por si só órfão**.
 - Reconciliação agregada sem identificadores: **1 configuração storefront pertence a uma organização sem instância de sistema correspondente**; **0 configurações sem organização**, **0 instâncias sem configuração na organização** e **0 configurações vinculadas a organização com `active=false`**. Não classificar nem excluir esta configuração automaticamente; requer decisão administrativa e cópia recuperável antes de qualquer corte.
 - Investigação adicional em `2026-11-20`, ainda **somente leitura**, confirmou o cenário da única configuração sem instância: organização com `status='CANCELLED'` mas `active=true`; 1 assinatura `TRIAL`, 1 contrato e 1 proposta. Sem pedidos, domínios, membros, contatos, tickets, zonas de entrega ou sessões de checkout associados nas tabelas diretamente verificadas. Não se divulgou nome, UUID, dados de clientes ou contatos.
-- **Conflito contratual confirmado por contagem/status, sem identidade pessoal:** o único contrato vinculado à organização cancelada tem estado `ACTIVE`, e a única proposta vinculada tem estado `ACCEPTED`. A assinatura relacionada está em `TRIAL`. Essa combinação exige **HOLD administrativo/contratual** antes de qualquer segregação ou modificação, mesmo que não existam pedidos.
+- **Conflito contratual confirmado por contagem/status, sem identidade pessoal:** o único contrato vinculado à organização cancelada tem estado `ACTIVE`, e a única proposta vinculada tem estado `ACCEPTED`. A assinatura relacionada está em `TRIAL`. Essa combinação foi reclassificada pelo proprietário como **dados de teste**, sem litígio contratual real. O bloqueio remanescente é o **saneamento técnico seguro** antes de ativar clientes reais.
 - **Aviso de integridade:** a FK `neroxa_storefront_settings.organization_id -> neroxa_organizations.id` possui `ON DELETE CASCADE`; portanto, eliminar a organização poderia apagar essa configuração. Contratos e propostas usam FKs `ON DELETE RESTRICT`, acrescentando dependências históricas. Proibir exclusão/reassociação automática.
 - Não existe role PostgreSQL com prefixo `neroxa%` no comercial, conforme `pg_roles` em leitura. Isto não exclui funções existentes com outros nomes; não há credencial de runtime específica aprovada.
-- **Desfecho de reconciliação:** configuração **identificada tecnicamente, segregação ainda NÃO executada**. Requer decisão nominal, custódia externa, prova de restituição, janela e autorização separada de escrita.
+- **Desfecho de reconciliação:** configuração **identificada tecnicamente, segregação ainda NÃO executada**. Requer inventário de impacto, custódia recuperável, prova de restituição, janela e autorização separada de escrita para higienização de dados de teste.
 - Não tratar o banco como destino vazio; preservar preimagem e dependências.
 
 ## Achados do Security Advisor Supabase
