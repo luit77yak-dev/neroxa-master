@@ -1,0 +1,149 @@
+name: F02 dependency root cause diagnostic
+
+on:
+  push:
+    branches:
+      - diagnostic/f02-dependency-root-cause-20261121
+    paths:
+      - .github/workflows/f02-dependency-root-cause-20261121.yml
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout exact base plus diagnostic
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.x'
+
+      - name: Install publicly and capture dependency graph
+        shell: bash
+        run: |
+          set +e
+          set -uo pipefail
+          diag="$RUNNER_TEMP/f02-dependency-diagnostic"
+          mkdir -p "$diag"
+          cp package.json "$diag/package.json"
+          manifest_before=$(sha256sum "$diag/package.json" | cut -d' ' -f1)
+          echo "DIAGNOSTIC_BASE=68dc52361e21f59835c7f7a3f831861bc85d679c"
+          echo "DIAGNOSTIC_HEAD=$GITHUB_SHA"
+          echo "RUNNER_NODE=$(node --version)"
+          echo "RUNNER_NPM_INITIAL=$(npm --version)"
+          changed=$(git diff-tree --no-commit-id --name-only -r HEAD^ HEAD)
+          echo "CHANGED_PATHS=$changed"
+          test "$(git rev-parse HEAD^)" = 68dc52361e21f59835c7f7a3f831861bc85d679c
+          test "$changed" = .github/workflows/f02-dependency-root-cause-20261121.yml
+          echo "BASE_AND_SCOPE_CHECK=$?"
+
+          mkdir -p "$RUNNER_TEMP/f02-npm-pin"
+          printf '{"private":true}\n' > "$RUNNER_TEMP/f02-npm-pin/package.json"
+          npm install --prefix "$RUNNER_TEMP/f02-npm-pin" --ignore-scripts --no-audit --no-fund --registry=https://registry.npmjs.org npm@10.9.4
+          pin_rc=$?
+          NPM_CLI="$RUNNER_TEMP/f02-npm-pin/node_modules/npm/bin/npm-cli.js"
+          if test "$pin_rc" = 0 && test -f "$NPM_CLI"; then
+            npm_version=$(node "$NPM_CLI" --version)
+          else
+            npm_version=NOT_INSTALLED
+          fi
+          echo "RUNNER_NPM=$npm_version"
+          if test "$npm_version" != 10.9.4; then exit 1; fi
+
+          echo "PACKAGE_OVERRIDES=$(node -e 'const p=require("./package.json");console.log(JSON.stringify(p.overrides||{}))')"
+          echo "NPM_CONFIG_FILE=.npmrc: absent from base commit"
+          echo "LOCKFILES=package-lock.json, npm-shrinkwrap.json, bun.lock, bun.lockb, yarn.lock, pnpm-lock.yaml absent from base commit"
+
+          node "$NPM_CLI" install --prefix "$diag" --ignore-scripts --no-audit --no-fund --include=dev --include=optional --registry=https://registry.npmjs.org > "$diag/install.log" 2>&1
+          install_rc=$?
+          cat "$diag/install.log"
+          echo "NPM_INSTALL_STATUS=$install_rc"
+          manifest_after=$(sha256sum "$diag/package.json" | cut -d' ' -f1)
+          echo "MANIFEST_SHA256_BEFORE=$manifest_before"
+          echo "MANIFEST_SHA256_AFTER=$manifest_after"
+          echo "MANIFEST_UNCHANGED=$([[ "$manifest_before" = "$manifest_after" ]] && echo YES || echo NO)"
+          if test "$install_rc" != 0 || ! test -f "$diag/package-lock.json"; then
+            echo "DIAGNOSTIC=BLOCKED_INSTALL_DID_NOT_PRODUCE_LOCK"
+            exit 1
+          fi
+          lock_sha=$(sha256sum "$diag/package-lock.json" | cut -d' ' -f1)
+          echo "TEMP_LOCK_SHA256=$lock_sha"
+
+          for spec in 'ajv@6.15.0' 'ajv@8.20.0' 'json-schema-traverse@0.4.1' 'json-schema-traverse@1.0.0' 'fast-uri@3.1.9' 'require-from-string@2.0.2'; do
+            name=$(printf '%s' "$spec" | tr '/@' '__')
+            echo "::group::npm explain $spec"
+            node "$NPM_CLI" explain "$spec" > "$diag/explain-$name.log" 2>&1
+            explain_rc=$?
+            cat "$diag/explain-$name.log"
+            echo "NPM_EXPLAIN_STATUS[$spec]=$explain_rc"
+            echo "::endgroup::"
+          done
+
+          echo "::group::npm ls selected transitives"
+          node "$NPM_CLI" ls --all ajv json-schema-traverse fast-uri require-from-string > "$diag/npm-ls.log" 2>&1
+          ls_rc=$?
+          cat "$diag/npm-ls.log"
+          echo "NPM_LS_STATUS=$ls_rc"
+          echo "::endgroup::"
+
+          node --input-type=commonjs - "$diag/package-lock.json" <<'NODE'
+          const lock = require(process.argv[2]);
+          const targets = new Set([
+            "ajv",
+            "json-schema-traverse",
+            "fast-uri",
+            "require-from-string",
+          ]);
+          const norm = (p) => p === "" ? "<root>" : p;
+          for (const [path, item] of Object.entries(lock.packages || {})) {
+            const name = path.split("node_modules/").pop();
+            if (targets.has(name)) {
+              console.log("LOCK_PACKAGE", JSON.stringify({
+                path: norm(path),
+                name,
+                version: item.version,
+                resolvedHost: item.resolved ? new URL(item.resolved).host : null,
+                dependencies: item.dependencies || {},
+              }));
+            }
+          }
+          for (const [path, item] of Object.entries(lock.packages || {})) {
+            for (const field of ["dependencies", "optionalDependencies", "peerDependencies"]) {
+              for (const [name, range] of Object.entries(item[field] || {})) {
+                if (targets.has(name)) {
+                  console.log("LOCK_PARENT_EDGE", JSON.stringify({
+                    parent: norm(path),
+                    field,
+                    dependency: name,
+                    requested: range,
+                  }));
+                }
+              }
+            }
+          }
+          NODE
+          echo "LOCKFILE_SHA256_FINAL=$(sha256sum "$diag/package-lock.json" | cut -d' ' -f1)"
+          {
+            echo "# F02 dependency root-cause diagnostic"
+            echo
+            echo "- Base SHA: 68dc52361e21f59835c7f7a3f831861bc85d679c"
+            echo "- Diagnostic commit: $GITHUB_SHA"
+            echo "- Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo "- Node/npm: $(node --version) / $npm_version"
+            echo "- Package overrides: $(node -e 'const p=require("./package.json");console.log(JSON.stringify(p.overrides||{}))')"
+            echo "- Public npm install status: $install_rc; scripts disabled."
+            echo "- Manifest SHA before / after: $manifest_before / $manifest_after"
+            echo "- Temporary lock SHA-256: $lock_sha"
+            echo "- npm ls status: $ls_rc"
+            echo "- Explain output and lockfile path/edge records are preserved in this job log."
+            echo
+            echo "No npm ci, comparison, scripts, secrets, private registry, or project workflows were run."
+          } >> "$GITHUB_STEP_SUMMARY"
