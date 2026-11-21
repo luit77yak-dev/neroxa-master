@@ -74,7 +74,7 @@ try{
   await owner.query("INSERT INTO neroxa_storefront_availability(instance_id,enabled,timezone) VALUES($1,true,'UTC')",[id]);
   await owner.query("INSERT INTO neroxa_storefront_weekly_hours(instance_id,weekday,opens_at,closes_at) SELECT $1,d,'00:00','23:59' FROM generate_series(0,6) d",[id]);
  }
- for(const [id,inst,name]of [[PA,A,'A product'],[PB,B,'B product']])await owner.query("INSERT INTO neroxa_storefront_products(id,instance_id,name,slug,price) VALUES($1,$2,$3,$1::text,10)",[id,inst,name]);
+ for(const [id,inst,name]of [[PA,A,'A product'],[PB,B,'B product']])await owner.query("INSERT INTO neroxa_storefront_products(id,instance_id,name,slug,price) VALUES($1,$2,$3,$4,10)",[id,inst,name,id]);
  runtime=await connect('service_role');
  await test('technical runtime identity has no superuser or BYPASSRLS',async()=>{
   const x=(await runtime.query('SELECT current_user,session_user,rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0];assert.equal(x.current_user,'service_role');assert.equal(x.rolsuper,false);assert.equal(x.rolbypassrls,false);return x;
