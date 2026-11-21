@@ -1,0 +1,73 @@
+name: NEROXA GO03T PostgreSQL 17 multissession focal
+
+on:
+  push:
+    branches:
+      - test/go03t-postgres17-multisession-20261121
+    paths:
+      - ".github/workflows/go03t-postgresql-multisession.yml"
+      - "audits/go03t-runner/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go03t-multisession-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  go03t-focal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: node:24-bookworm
+    services:
+      postgres:
+        image: postgres:17.12
+        env:
+          POSTGRES_USER: go03t_owner
+          POSTGRES_DB: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd "pg_isready -U go03t_owner -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    steps:
+      - name: Checkout exact temporary branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Validate original GO03T sources and contract hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd audits/go03t-runner
+          sha256sum -c SOURCE-SHA256SUMS.txt
+
+      - name: Prepare runner-only PostgreSQL connection adapter
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd audits/go03t-runner
+          npm install --no-save --ignore-scripts --no-audit --no-fund pg@8.23.1
+          mkdir -p evidence
+          node runner-adapt.mjs
+          node --check tests/verify-contracts.mjs
+
+      - name: Run multissession SQL 34/35 on disposable PostgreSQL 17
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd audits/go03t-runner
+          node tests/verify-contracts.mjs
+
+      - name: Record focal evidence even on failure
+        if: always()
+        shell: bash
+        run: |
+          cd audits/go03t-runner
+          test -f evidence/test-results.json && cat evidence/test-results.json || echo 'test-results.json missing'
+          echo "F02=CLOSED PUBLIC_CHECKOUT=OFF REMOTE_WRITES=NONE COMMERCIAL=NO-GO"
