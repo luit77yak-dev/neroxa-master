@@ -80,7 +80,7 @@ jobs:
           for spec in 'ajv@6.15.0' 'ajv@8.20.0' 'json-schema-traverse@0.4.1' 'json-schema-traverse@1.0.0' 'fast-uri@3.1.9' 'require-from-string@2.0.2'; do
             name=$(printf '%s' "$spec" | tr '/@' '__')
             echo "::group::npm explain $spec"
-            node "$NPM_CLI" explain "$spec" > "$diag/explain-$name.log" 2>&1
+            (cd "$diag" && node "$NPM_CLI" explain "$spec") > "$diag/explain-$name.log" 2>&1
             explain_rc=$?
             cat "$diag/explain-$name.log"
             echo "NPM_EXPLAIN_STATUS[$spec]=$explain_rc"
@@ -88,7 +88,7 @@ jobs:
           done
 
           echo "::group::npm ls selected transitives"
-          node "$NPM_CLI" ls --all ajv json-schema-traverse fast-uri require-from-string > "$diag/npm-ls.log" 2>&1
+          (cd "$diag" && node "$NPM_CLI" ls --all ajv json-schema-traverse fast-uri require-from-string) > "$diag/npm-ls.log" 2>&1
           ls_rc=$?
           cat "$diag/npm-ls.log"
           echo "NPM_LS_STATUS=$ls_rc"
