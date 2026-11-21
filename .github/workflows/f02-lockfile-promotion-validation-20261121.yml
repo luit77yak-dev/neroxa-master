@@ -1,0 +1,155 @@
+name: F02 lockfile promotion validation
+
+on:
+  push:
+    branches:
+      - proof/f02-lockfile-promotion-validation-20261121
+    paths:
+      - .github/workflows/f02-lockfile-promotion-validation-20261121.yml
+
+permissions:
+  contents: read
+
+env:
+  npm_config_registry: https://registry.npmjs.org/
+
+jobs:
+  clean-validation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Checkout main baseline
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 68dc52361e21f59835c7f7a3f831861bc85d679c
+          path: baseline
+          persist-credentials: false
+
+      - name: Checkout lockfile candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: a72d14edd17880f020dfd3d7a626724d0f725ea5
+          path: candidate
+          persist-credentials: false
+
+      - name: Set up Node 22.23.5
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.5
+
+      - name: Pin npm 10.9.4 and verify checkout refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --global npm@10.9.4 --ignore-scripts --no-audit --no-fund
+          test "$(node --version)" = "v22.23.5"
+          test "$(npm --version)" = "10.9.4"
+          test "$(git -C baseline rev-parse HEAD)" = "68dc52361e21f59835c7f7a3f831861bc85d679c"
+          test "$(git -C candidate rev-parse HEAD)" = "a72d14edd17880f020dfd3d7a626724d0f725ea5"
+          test -f candidate/package-lock.json
+          echo "NODE_VERSION=$(node --version)" >> "$GITHUB_STEP_SUMMARY"
+          echo "NPM_VERSION=$(npm --version)" >> "$GITHUB_STEP_SUMMARY"
+          echo "BASELINE_SHA=$(git -C baseline rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "CANDIDATE_SOURCE_SHA=$(git -C candidate rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
+          echo "LOCK_SHA256_BEFORE=$(sha256sum candidate/package-lock.json | cut -d' ' -f1)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install main baseline without scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd baseline
+          npm install --ignore-scripts --no-audit --no-fund
+
+      - name: Validate candidate with clean npm ci
+        shell: bash
+        run: |
+          set -euo pipefail
+          before="$(sha256sum candidate/package-lock.json | cut -d' ' -f1)"
+          cd candidate
+          npm ci --ignore-scripts --no-audit --no-fund
+          after="$(sha256sum package-lock.json | cut -d' ' -f1)"
+          test "$before" = "$after"
+          echo "CLEAN_NPM_CI=PASS" >> "$GITHUB_STEP_SUMMARY"
+          echo "LOCK_SHA256_AFTER_CI=$after" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Inspect candidate npm tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd candidate
+          npm ls --depth=0
+          npm ls ajv --all
+          npm explain ajv
+
+      - name: Compare lint and Prettier on main and candidate
+        shell: bash
+        run: |
+          set -u
+          for variant in baseline candidate; do
+            (
+              cd "$GITHUB_WORKSPACE/$variant"
+              npm run lint -- --format json > "$RUNNER_TEMP/lint-$variant.json"
+            )
+            lint_status=$?
+            variant_upper="$(printf '%s' "$variant" | tr '[:lower:]' '[:upper:]')"
+            echo "LINT_$variant_upper_EXIT_CODE=$lint_status" >> "$GITHUB_STEP_SUMMARY"
+            node - "$RUNNER_TEMP/lint-$variant.json" "$RUNNER_TEMP/lint-$variant.normalized.json" <<'NODE'
+          const fs = require("fs");
+          const [input, output] = process.argv.slice(2);
+          const reports = JSON.parse(fs.readFileSync(input, "utf8"));
+          const normalized = reports.map(({filePath, errorCount, warningCount, messages}) => ({
+            filePath: filePath.replace(/^.*\/(src\/)/, "src/"),
+            errorCount,
+            warningCount,
+            messages: messages.map(({ruleId, line, column, severity, message}) => ({ruleId, line, column, severity, message}))
+          }));
+          fs.writeFileSync(output, JSON.stringify(normalized, null, 2));
+          NODE
+            (
+              cd "$GITHUB_WORKSPACE/$variant"
+              npx --no-install prettier --check . > "$RUNNER_TEMP/prettier-$variant.log" 2>&1
+            )
+            prettier_status=$?
+            echo "PRETTIER_$variant_upper_EXIT_CODE=$prettier_status" >> "$GITHUB_STEP_SUMMARY"
+            sed -n '/Code style issues found/p' "$RUNNER_TEMP/prettier-$variant.log" || true
+            sed -E 's/^\[warn\] //' "$RUNNER_TEMP/prettier-$variant.log" | grep -E '^[^ ]+\.(tsx|ts|jsx|js|json|css|md|yml|yaml)$' | sort -u > "$RUNNER_TEMP/prettier-$variant.files" || true
+          done
+          if diff -u "$RUNNER_TEMP/lint-baseline.normalized.json" "$RUNNER_TEMP/lint-candidate.normalized.json"; then
+            echo "LINT_REGRESSION_ANALYSIS=IDENTICAL_FINDINGS" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "LINT_REGRESSION_ANALYSIS=DIFFERENT_FINDINGS_REVIEW_REQUIRED" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if diff -u "$RUNNER_TEMP/prettier-baseline.files" "$RUNNER_TEMP/prettier-candidate.files"; then
+            echo "FORMAT_BASELINE=IDENTICAL_UNFORMATTED_FILE_SET" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "FORMAT_BASELINE=FILE_SET_DIFFERS_REVIEW_REQUIRED" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "BASELINE_FORMAT_UNFORMATTED_COUNT=$(wc -l < "$RUNNER_TEMP/prettier-baseline.files")" >> "$GITHUB_STEP_SUMMARY"
+          echo "CANDIDATE_FORMAT_UNFORMATTED_COUNT=$(wc -l < "$RUNNER_TEMP/prettier-candidate.files")" >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/lint-baseline.normalized.json"
+          cat "$RUNNER_TEMP/lint-candidate.normalized.json"
+          cat "$RUNNER_TEMP/prettier-baseline.log"
+          cat "$RUNNER_TEMP/prettier-candidate.log"
+
+      - name: Run tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd candidate
+          npm test
+
+      - name: Build candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd candidate
+          npm run build
+
+      - name: Verify candidate lockfile and tracked source integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(sha256sum candidate/package-lock.json | cut -d' ' -f1)" = "4b517826f8da85aa18f3dcd9621d20e28ef31c1b43d96bfcbed252fcc32693cc"
+          test -z "$(git -C candidate status --porcelain -- package.json package-lock.json)"
+          test -z "$(git -C baseline status --porcelain -- package.json)"
+          echo "LOCKFILE_AND_MANIFEST_INTEGRITY=PASS" >> "$GITHUB_STEP_SUMMARY"
