@@ -72,7 +72,7 @@ try{
   await owner.query("INSERT INTO neroxa_system_instances(id,organization_id,name,system_type,slug,status) VALUES($1,$2,$3,'DELIVERY',$3,'ACTIVE')",[id,org,slug]);
   await owner.query("INSERT INTO neroxa_system_domains(system_instance_id,domain,status) VALUES($1,$2,'VERIFIED')",[id,slug+'.go03t.invalid']);
   await owner.query("INSERT INTO neroxa_storefront_availability(instance_id,enabled,timezone) VALUES($1,true,'UTC')",[id]);
-  await owner.query("INSERT INTO neroxa_storefront_weekly_hours(instance_id,weekday,opens_at,closes_at) SELECT $1,d,'00:00','23:59:59' FROM generate_series(0,6) d",[id]);
+  await owner.query("INSERT INTO neroxa_storefront_weekly_hours(instance_id,weekday,opens_at,closes_at) SELECT $1,d,'00:00','23:59' FROM generate_series(0,6) d",[id]);
  }
  for(const [id,inst,name]of [[PA,A,'A product'],[PB,B,'B product']])await owner.query("INSERT INTO neroxa_storefront_products(id,instance_id,name,slug,price) VALUES($1,$2,$3,$1::text,10)",[id,inst,name]);
  runtime=await connect('service_role');
