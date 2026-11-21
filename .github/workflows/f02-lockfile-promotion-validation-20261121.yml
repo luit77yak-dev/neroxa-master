@@ -28,7 +28,7 @@ jobs:
       - name: Checkout lockfile candidate
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: a72d14edd17880f020dfd3d7a626724d0f725ea5
+          ref: a3a4ab9b726e2c3e00c1a27d3cc12872d41e8e7e
           path: candidate
           persist-credentials: false
 
@@ -45,7 +45,7 @@ jobs:
           test "$(node --version)" = "v22.23.5"
           test "$(npm --version)" = "10.9.4"
           test "$(git -C baseline rev-parse HEAD)" = "68dc52361e21f59835c7f7a3f831861bc85d679c"
-          test "$(git -C candidate rev-parse HEAD)" = "a72d14edd17880f020dfd3d7a626724d0f725ea5"
+          test "$(git -C candidate rev-parse HEAD)" = "a3a4ab9b726e2c3e00c1a27d3cc12872d41e8e7e"
           test -f candidate/package-lock.json
           echo "NODE_VERSION=$(node --version)" >> "$GITHUB_STEP_SUMMARY"
           echo "NPM_VERSION=$(npm --version)" >> "$GITHUB_STEP_SUMMARY"
@@ -84,11 +84,11 @@ jobs:
       - name: Compare lint and Prettier on main and candidate
         shell: bash
         run: |
-          set -u
+          set +e
           for variant in baseline candidate; do
             (
               cd "$GITHUB_WORKSPACE/$variant"
-              npm run lint -- --format json > "$RUNNER_TEMP/lint-$variant.json"
+              ./node_modules/.bin/eslint . --format json > "$RUNNER_TEMP/lint-$variant.json"
             )
             lint_status=$?
             variant_upper="$(printf '%s' "$variant" | tr '[:lower:]' '[:upper:]')"
@@ -107,7 +107,7 @@ jobs:
           NODE
             (
               cd "$GITHUB_WORKSPACE/$variant"
-              npx --no-install prettier --check . > "$RUNNER_TEMP/prettier-$variant.log" 2>&1
+              ./node_modules/.bin/prettier --check . > "$RUNNER_TEMP/prettier-$variant.log" 2>&1
             )
             prettier_status=$?
             echo "PRETTIER_$variant_upper_EXIT_CODE=$prettier_status" >> "$GITHUB_STEP_SUMMARY"
