@@ -1,5 +1,5 @@
 {
-  "state": "CLOSED; reviewed nominal values and separate execution authorization required",
+  "state": "ADMITTED_FOR_PREFLIGHT",
   "project": "iefaoaqzltvpfabyeelj",
   "environment": "f02-hosted-preflight",
   "transport": "SUPAVISOR_SESSION",
