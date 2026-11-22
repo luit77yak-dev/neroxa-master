@@ -15,7 +15,7 @@ jobs:
     if: >-
       github.ref == 'refs/heads/integration/v1-cloudflare-master-20261120' &&
       github.ref_protected &&
-      github.actor == 'dev-luizt5' &&
+      github.actor == 'luit77yak-dev' &&
       github.run_attempt == 1
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -31,7 +31,7 @@ jobs:
           test "$GITHUB_EVENT_NAME" = "workflow_dispatch"
           test "$GITHUB_REF" = "refs/heads/integration/v1-cloudflare-master-20261120"
           test "$GITHUB_REF_PROTECTED" = "true"
-          test "$GITHUB_ACTOR" = "dev-luizt5"
+          test "$GITHUB_ACTOR" = "luit77yak-dev"
           test "$GITHUB_RUN_ATTEMPT" = "1"
           test "$GITHUB_REPOSITORY" = "luit77yak-dev/neroxa-master"
 
@@ -54,7 +54,7 @@ jobs:
           persist-credentials: false
 
       # Provision these names only as secrets scoped to f02-hosted-preflight.
-      # The job cannot start until that GitHub Environment's independent review passes.
+      # Sole owner approval is required; this is not independent human review.
       # No repository/org-level copies should be created.
       - name: Run the read-only hosted preflight
         shell: bash
