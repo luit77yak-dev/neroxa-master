@@ -4,14 +4,14 @@
   "environment": "f02-hosted-preflight",
   "transport": "SUPAVISOR_SESSION",
   "port": 5432,
-  "host": null,
-  "role": null,
-  "caSha256": null,
-  "ref": null,
-  "founderLogin": null,
+  "host": "aws-0-us-east-1.pooler.supabase.com",
+  "role": "neroxa_f02_preflight",
+  "caSha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7",
+  "ref": "refs/heads/integration/v1-cloudflare-master-20261120",
+  "founderLogin": "luit77yak-dev",
   "authority": {
-    "publicKeyPem": null,
-    "keySha256": null,
-    "maxValidityMs": null
+    "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA6K5haGRG+5Opyf+KYPwgjJjuSnDPAzgDjCjL6e3sXrY=\n-----END PUBLIC KEY-----\n",
+    "keySha256": "faebf57cea0c8dfeab0cf4485e8ff76f7e665298ed12ef62870f1827f66931b1",
+    "maxValidityMs": 900000
   }
 }
