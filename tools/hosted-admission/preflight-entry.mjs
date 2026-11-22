@@ -1,3 +1,4 @@
+import {safeDiagnostic} from './safe-diagnostic.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -10,4 +11,4 @@ export async function main() {
  // Raw responses/credentials are never dumped into the public Actions log.
  console.log('F02_PREFLIGHT_RESULT='+JSON.stringify({scope:result.scope,identity:result.identity,tls:result.tls,timeout:result.timeout,cancellation:result.cancellation,catalogReadiness:result.catalogReadiness,receiptSha256:result.receiptSha256,runId:result.runId,custody:result.custody}));
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(()=>{console.error('F02_PREFLIGHT=BLOCKED; no retry; retained private evidence; server state not presumed');process.exitCode=78;});
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(error=>{console.error('F02_PREFLIGHT_DIAGNOSTIC='+JSON.stringify(safeDiagnostic(error)));console.error('F02_PREFLIGHT=BLOCKED; no retry; retained private evidence; server state not presumed');process.exitCode=78;});

@@ -1,3 +1,4 @@
+import {tagDiagnostic,sqlstateOnly} from './safe-diagnostic.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
 import {CapturedSession} from './session.mjs';
@@ -66,7 +67,8 @@ export async function runReadOnlyPreflight({policy,context,approval,caBytes,evid
  const env={PATH:process.env.PATH,PGHOST:policy.host,PGPORT:'5432',PGDATABASE:'postgres',PGUSER:login,PGSSLMODE:'verify-full',PGSSLROOTCERT:caPath,PGPASSFILE:passPath,PGCONNECT_TIMEOUT:'5',PGAPPNAME:'neroxa-f02-preflight-'+context.runId};
  const spec=freeze({command:'psql',args:['-X','--no-password','-q','-A','-t','-v','ON_ERROR_STOP=0','-v','VERBOSITY=verbose'],env});
  let a,b,uncertain=false,sequence=0,previousReceipt=null,totalCaptured=0;
- const call=async(port,sql,expected)=>{guard();if(port.blocked)blocked('Captured session BLOCKED');const r=await port.query(sql);guard();if(port.blocked||r.receipt?.complete!==true)blocked('Incomplete response');const bytes=Buffer.from(r.bytes),out=fs.readFileSync(r.receipt.stdout),err=fs.readFileSync(r.receipt.stderr);
+ let diagnosticStage='TRANSPORT_CREATE',diagnosticSqlstate='NOT_OBSERVED';
+ const call=async(port,sql,expected)=>{guard();if(port.blocked)blocked('Captured session BLOCKED');let r;try{r=await port.query(sql);}catch(error){const receipt=port.receipts?.at(-1);if(receipt?.stderr){try{const st=fs.statSync(receipt.stderr);if(st.size<=65536)diagnosticSqlstate=sqlstateOnly(fs.readFileSync(receipt.stderr));}catch{}}throw error;}guard();if(port.blocked||r.receipt?.complete!==true)blocked('Incomplete response');const bytes=Buffer.from(r.bytes),out=fs.readFileSync(r.receipt.stdout),err=fs.readFileSync(r.receipt.stderr);diagnosticSqlstate=sqlstateOnly(err);
   if(out.length!==r.receipt.stdoutBytes||sha256(out)!==r.receipt.stdoutSha256||err.length!==r.receipt.stderrBytes||sha256(err)!==r.receipt.stderrSha256||!out.subarray(0,bytes.length).equals(bytes)||!/^NEROXA_FRAME_[a-f0-9]{48}\n$/.test(out.subarray(bytes.length).toString()))blocked('Raw capture/interpretation integrity');
   totalCaptured+=out.length+err.length;if(totalCaptured>65536||++sequence>32)blocked('Aggregate preflight capture budget');
   const ledger=Buffer.from(JSON.stringify({...r.receipt,sequence,previousReceipt,requestSha256:sha256(Buffer.from(sql))}));
@@ -75,39 +77,39 @@ export async function runReadOnlyPreflight({policy,context,approval,caBytes,evid
   return {...parseStages(bytes,expected),stderr:Buffer.from(err)};};
  try {
   guard();a=makeTransport(spec,path.join(work,'A'));guard();b=makeTransport(freeze(structuredClone(spec)),path.join(work,'B'));guard();
-  const priorA=validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,undefined,now());
-  const priorB=validateIdentity(jsonRow(await call(b,READ_IDENTITY,['00000','00000','00000'])),policy.role,undefined,now());
+  diagnosticStage='IDENTITY_A';diagnosticSqlstate='NOT_OBSERVED';const priorA=validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,undefined,now());
+  diagnosticStage='IDENTITY_B';diagnosticSqlstate='NOT_OBSERVED';const priorB=validateIdentity(jsonRow(await call(b,READ_IDENTITY,['00000','00000','00000'])),policy.role,undefined,now());
   if(priorA.pid===priorB.pid)blocked('Two simultaneous distinct sessions required');
-  const catalog=jsonRow(await call(a,READ_CATALOG,['00000','00000','00000']));
-  const timeout=await call(a,TIMEOUT,['00000','00000','57014','00000']);
+  diagnosticStage='CATALOG';diagnosticSqlstate='NOT_OBSERVED';const catalog=jsonRow(await call(a,READ_CATALOG,['00000','00000','00000']));
+  diagnosticStage='TIMEOUT';diagnosticSqlstate='NOT_OBSERVED';const timeout=await call(a,TIMEOUT,['00000','00000','57014','00000']);
   if(timeout.rows.length||! /ERROR:\s+57014:\s+canceling statement due to statement timeout/.test(timeout.stderr.toString()))blocked('Timeout cause not authenticated by captured error');
-  validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorA,now());
-  const afterTimeout=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
+  diagnosticStage='IDENTITY_AFTER_TIMEOUT';diagnosticSqlstate='NOT_OBSERVED';validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorA,now());
+  diagnosticStage='OBSERVE_TIMEOUT';diagnosticSqlstate='NOT_OBSERVED';const afterTimeout=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
   if(afterTimeout.wait_active!==false||afterTimeout.state!=='idle'||afterTimeout.transaction_open!==false)blocked('Timeout termination not independently observed');
   // Starts one harmless wait. Attach the rejection immediately so failure cannot be lost.
-  const pending=call(a,WAIT,['00000','00000','57014','00000']).then(value=>({value}),error=>({error}));
+  diagnosticStage='WAIT';diagnosticSqlstate='NOT_OBSERVED';const pending=call(a,WAIT,['00000','00000','57014','00000']).then(value=>({value}),error=>({error}));
   let active=false;
   for(let i=0;i<10;i++) {
-   guard();const x=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
+   diagnosticStage='OBSERVE_WAIT';diagnosticSqlstate='NOT_OBSERVED';guard();const x=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
    if(x.wait_active===true){active=true;break;}await wait(50);guard();
   }
   if(!active)blocked('Authorized wait not observed; no signal sent');
-  const cancel=await call(b,observeTarget(priorA,policy.role,true),['00000','00000','00000']);
+  diagnosticStage='CANCEL';diagnosticSqlstate='NOT_OBSERVED';const cancel=await call(b,observeTarget(priorA,policy.role,true),['00000','00000','00000']);
   if(JSON.stringify(cancel.rows)!=='["t"]')blocked('Cancellation target/request not confirmed');
-  const end=await pending;if(end.error)throw end.error;if(end.value.rows.length||! /ERROR:\s+57014:\s+canceling statement due to user request/.test(end.value.stderr.toString()))blocked('Cancellation cause not authenticated by captured error');
-  validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorA,now());
-  validateIdentity(jsonRow(await call(b,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorB,now());
-  const afterCancel=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
+  diagnosticStage='WAIT_COMPLETION';diagnosticSqlstate='NOT_OBSERVED';const end=await pending;if(end.error)throw end.error;if(end.value.rows.length||! /ERROR:\s+57014:\s+canceling statement due to user request/.test(end.value.stderr.toString()))blocked('Cancellation cause not authenticated by captured error');
+  diagnosticStage='FINAL_IDENTITY_A';diagnosticSqlstate='NOT_OBSERVED';validateIdentity(jsonRow(await call(a,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorA,now());
+  diagnosticStage='FINAL_IDENTITY_B';diagnosticSqlstate='NOT_OBSERVED';validateIdentity(jsonRow(await call(b,READ_IDENTITY,['00000','00000','00000'])),policy.role,priorB,now());
+  diagnosticStage='OBSERVE_CANCEL';diagnosticSqlstate='NOT_OBSERVED';const afterCancel=jsonRow(await call(b,observeTarget(priorA,policy.role),['00000','00000','00000']));
   if(afterCancel.wait_active!==false||afterCancel.state!=='idle'||afterCancel.transaction_open!==false)blocked('Cancellation completion not independently observed');
-  guard();
+  diagnosticStage='FINAL_GUARD';diagnosticSqlstate='NOT_OBSERVED';guard();
   return freeze({scope:'HOSTED_PREFLIGHT ONLY; not migration',identity:'PASS',tls:'PASS; configured libpq verify-full and observed TLS, contingent on real transport',timeout:'PASS',cancellation:'PASS',catalog,catalogReadiness:catalog?.some(x=>!x.present)?'BLOCKED':'REQUIRES_SEPARATE_REVIEW',receiptSha256:initial.receiptSha256,runId:context.runId,rawCaptureRoot:work,receiptChain:previousReceipt,custody:'LOCAL ONLY; external recovery not established'});
- } catch(e) {uncertain=true;throw new AdmissionBlocked('Preflight BLOCKED; retained evidence; no retry or server cleanup');}
+ } catch(e) {uncertain=true;throw tagDiagnostic(new AdmissionBlocked('Preflight BLOCKED; retained evidence; no retry or server cleanup'),e,diagnosticStage,diagnosticSqlstate);}
  finally {
   // Only close our clients and remove the local credential. Never server teardown,
   // role revocation, artifact upload or evidence deletion; none imply server cancellation.
   let closeFailed=false;for(const p of [a,b])try{p?.close();}catch{closeFailed=true;}
   try{fs.unlinkSync(passPath);}catch{closeFailed=true;}
   fs.writeFileSync(path.join(work,'FINAL.json'),JSON.stringify({state:uncertain?'BLOCKED; server state may require observation':'CLIENTS_CLOSED; no server cleanup',remoteCleanup:false,serverTerminationConfirmed:false,localCloseFailed:closeFailed}),{flag:'wx',mode:0o600});
-  if(closeFailed)blocked('Local closure/credential removal uncertain; HOLD');
+  if(closeFailed)throw tagDiagnostic(new AdmissionBlocked('Local closure/credential removal uncertain; HOLD'),new AdmissionBlocked('Local closure/credential removal uncertain; HOLD'),'CLEANUP','NOT_OBSERVED');
  }
 }
