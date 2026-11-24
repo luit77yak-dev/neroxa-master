@@ -16,12 +16,12 @@ Este procedimento NÃO conecta ao Supabase comercial ou LAB, não executa migra�
 
 1. O responsável deve inspecionar o código deste PR, aprovar explicitamente a transferência, e garantir que GitHub Actions hospedado por terceiros é permitido para essa cópia de recuperação.
 2. Só integrar o workflow após revisão na branch protegida `main`. `workflow_dispatch` exige que o workflow esteja na branch padrão. **Não executar com segredos na branch `proof/*` ou qualquer branch sem proteção.**
-3. No GitHub, criar **Environment `neroxa-restore-gate01`**; limitar a deployment branch à `main`; exigir **required reviewers** independentes (uma conta distinta de quem solicita a execução); desabilitar bypass administrativo se possível. Confirmar a política antes de adicionar segredos.
-4. Criar **somente Environment secrets** (`RG01_KV_READ_TOKEN`, `RG01_DECRYPT_KEY`) e **Environment variables** (`RG01_ACCOUNT_ID`, `RG01_NAMESPACE_ID`, `RG01_REVIEW_GATE=ARMED_AFTER_INDEPENDENT_REVIEW`). Não criar cópias de segredos no nível do repositório ou da organização.
+3. No GitHub, criar **Environment `neroxa-restore-gate01`**; limitar a deployment branch à `main`; exigir **required reviewers** com conta diferente da que inicia a execução e **Prevent self-review** ativo; o operador controla ambas as contas e reconhece que essa verificação NÃO constitui revisão humana independente. Desabilitar bypass administrativo. Confirmar a política antes de adicionar segredos.
+4. Criar **somente Environment secrets** (`RG01_KV_READ_TOKEN`, `RG01_DECRYPT_KEY`) e **Environment variables** (`RG01_ACCOUNT_ID`, `RG01_NAMESPACE_ID`, `RG01_REVIEW_GATE=ARMED_AFTER_OPERATOR_APPROVAL`). Não criar cópias de segredos no nível do repositório ou da organização.
 5. `RG01_KV_READ_TOKEN` deve ter só a permissão **Workers KV Storage Read** na conta Cloudflare pretendida, com expiração curta. Separar totalmente do token de upload **Workers KV Storage Edit** usado manualmente no Termux. Revogar ambos após uso. Não usar token global nem token de produção.
 6. Preencher `RG01_DECRYPT_KEY` **diretamente no GitHub Environment secrets**, consultando o arquivo de chave privado no próprio dispositivo; nunca enviar a chave por chat, workflow input, comando do shell com `echo`, parâmetro de URL ou commit.
 7. Só fazer upload após configurar e revisar o destino. O upload usa TTL de 24h e a cópia permanece cifrada até o runner autorizado. Informar a `manifest_key` devolvida pelo upload e o `cipher_sha256` do `local.json` como inputs não secretos.
-8. Iniciar **uma única execução manual** de `workflow_dispatch` na `main`, com `confirmation=RESTORE_ISOLATED_ONLY`. Um revisor independente deverá liberar o ambiente.
+8. Iniciar **uma única execução manual** de `workflow_dispatch` na `main`, com `confirmation=RESTORE_ISOLATED_ONLY`. A conta autorizada distinta da que iniciou deverá liberar o ambiente. Como ambas são controladas pelo mesmo operador, isso é apenas uma barreira operacional; não é revisão independente.
 
 ## Prova e limites
 
