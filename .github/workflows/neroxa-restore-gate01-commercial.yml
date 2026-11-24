@@ -115,8 +115,20 @@ jobs:
           echo 'VAULT_0_3_1_CREATE=PASS'
 
           docker cp "$TMP/database.dump" "$CONTAINER:/tmp/database.dump"
+          # Vault 0.3.1 pre-creates schema vault. The dump can also carry
+          # CREATE SCHEMA vault: omit ONLY that redundant TOC entry.
+          # TOC contains private schema names: keep it off public logs/artifacts.
+          docker exec "$CONTAINER" pg_restore -l /tmp/database.dump > "$TMP/restore.full.list"
+          VAULT_TOC_COUNT="$(grep -Ec '^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault ' "$TMP/restore.full.list" || true)"
+          test "$VAULT_TOC_COUNT" = "1" || { echo 'VAULT_TOC_SCHEMA=BLOCKED'; exit 1; }
+          sed -E '/^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault /d' \
+            "$TMP/restore.full.list" > "$TMP/restore.filtered.list"
+          docker cp "$TMP/restore.filtered.list" "$CONTAINER:/tmp/restore.filtered.list"
+          echo 'VAULT_0_3_1_COMPATIBILITY_TOC=PASS'
+
           if timeout 360s docker exec "$CONTAINER" pg_restore \
             --exit-on-error --single-transaction --no-owner --no-acl \
+            --use-list=/tmp/restore.filtered.list \
             -h /var/run/postgresql -U supabase_admin \
             -d neroxa_restore_probe /tmp/database.dump \
             >"$TMP/restore.stdout" 2>"$TMP/restore.stderr"; then
