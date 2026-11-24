@@ -91,5 +91,19 @@ jobs:
             *) echo "VAULT_0_3_1=UNAVAILABLE"; exit 1 ;;
           esac
 
+          # This creates only an empty probe database inside the throwaway container.
+          sql 'CREATE DATABASE neroxa_restore_probe;' >/dev/null
+          docker exec "$CONTAINER" psql \
+            -X -A -t -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe \
+            -c "CREATE EXTENSION supabase_vault WITH VERSION '0.3.1';" >/dev/null
+          ACTUAL_VAULT="$(docker exec "$CONTAINER" psql \
+            -X -A -t -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe \
+            -c "SELECT extversion FROM pg_extension WHERE extname='supabase_vault';")"
+          test "$ACTUAL_VAULT" = "0.3.1"
+          echo "VAULT_0_3_1_CREATE=PASS"
+          echo "PROBE_DATABASE=DISPOSABLE"
+
           echo "RESTORE_GATE01_PREFLIGHT=PASS"
           echo "COMMERCIAL_RESTORE=NOT_RUN; SQL_RELEASE=NOT_RUN; COMMERCIAL_GO=NO_GO"
