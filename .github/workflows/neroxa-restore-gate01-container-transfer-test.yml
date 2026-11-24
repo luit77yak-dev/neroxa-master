@@ -95,3 +95,26 @@ jobs:
           test "$VAULT" = 0.3.1
           echo 'SYNTHETIC_PG_CONTENT_RESTORE=PASS; SYNTHETIC_VAULT_0_3_1=PASS'
           echo 'SYNTHETIC_DATA_ONLY=YES; COMMERCIAL_DATA_USED=NO'
+
+  application-validation:
+    name: RG01 scoped format, tests and build
+    if: github.repository == 'luit77yak-dev/neroxa-master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+      - name: Install locked dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Check formatting only in RG01 PR files
+        run: npx prettier --check .github/workflows/neroxa-restore-gate01-commercial.yml .github/workflows/neroxa-restore-gate01-container-transfer-test.yml
+      - name: Run unit tests
+        run: npm test
+      - name: Build application
+        run: npm run build
