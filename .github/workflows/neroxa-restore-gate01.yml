@@ -1,0 +1,140 @@
+name: NEROXA RESTORE-GATE-01 - PG17 Vault preflight (no commercial data)
+
+on:
+  push:
+    branches:
+      - proof/restore-gate01-20261124
+    paths:
+      - .github/workflows/neroxa-restore-gate01.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neroxa-restore-gate01-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pg17-vault-preflight:
+    if: github.repository == 'luit77yak-dev/neroxa-master' && github.ref == 'refs/heads/proof/restore-gate01-20261124'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact commit (no persisted credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Test encrypted transfer contract with synthetic bytes only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/restore-gate01/test_protocol.py
+
+      - name: Enforce isolated public-runner scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "luit77yak-dev/neroxa-master"
+          test "$GITHUB_REF" = "refs/heads/proof/restore-gate01-20261124"
+          test "$RUNNER_ENVIRONMENT" = "github-hosted"
+          test "$(docker info -f '{{.OSType}}')" = "linux"
+          echo "SCOPE=NO_COMMERCIAL_DATA; NO_SUPABASE_CONNECTION; NO_UPLOAD"
+          echo "RUNNER=STANDARD_GITHUB_HOSTED"
+      - name: Boot ephemeral PostgreSQL 17 and inspect Vault versions
+        shell: bash
+        env:
+          PG_IMAGE: supabase/postgres:17.12.0.002
+        run: |
+          set -euo pipefail
+          CONTAINER="neroxa-restore-gate01-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+
+          echo "IMAGE_PULL=START"
+          timeout 240s docker pull "$PG_IMAGE" >/dev/null
+          echo "IMAGE_PULL=PASS"
+
+          # Random password is for this throwaway, empty container only.
+          TEMP_PASSWORD="$(openssl rand -hex 32)"
+          docker run --rm --detach \
+            --name "$CONTAINER" \
+            --network none \
+            --tmpfs /var/lib/postgresql/data:rw,nosuid,nodev,size=1536m \
+            --security-opt no-new-privileges \
+            -e POSTGRES_PASSWORD="$TEMP_PASSWORD" \
+            "$PG_IMAGE" >/dev/null
+          unset TEMP_PASSWORD
+
+          READY=0
+          for i in $(seq 1 90); do
+            if docker exec "$CONTAINER" pg_isready -q -h /var/run/postgresql -U supabase_admin -d postgres; then
+              READY=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$READY" -ne 1 ]; then
+            echo "PG17_BOOT=FAIL"
+            exit 1
+          fi
+          echo "PG17_BOOT=PASS"
+
+          sql() {
+            docker exec "$CONTAINER" psql \
+              -X -A -t -v ON_ERROR_STOP=1 \
+              -h /var/run/postgresql -U supabase_admin -d postgres \
+              -c "$1"
+          }
+
+          VERSION="$(sql 'SHOW server_version;')"
+          echo "PG_VERSION=$VERSION"
+          case "$VERSION" in
+            17.*) echo "PG17_VERSION=PASS" ;;
+            *) echo "PG17_VERSION=FAIL"; exit 1 ;;
+          esac
+
+          VAULT_VERSIONS="$(sql "SELECT COALESCE(string_agg(version, ',' ORDER BY version), 'NONE') FROM pg_available_extension_versions WHERE name = 'supabase_vault';")"
+          echo "SUPABASE_VAULT_AVAILABLE_VERSIONS=$VAULT_VERSIONS"
+          case ",$VAULT_VERSIONS," in
+            *,0.3.1,*) echo "VAULT_0_3_1=AVAILABLE" ;;
+            *) echo "VAULT_0_3_1=UNAVAILABLE"; exit 1 ;;
+          esac
+
+          # This creates only an empty probe database inside the throwaway container.
+          sql 'CREATE DATABASE neroxa_restore_probe;' >/dev/null
+          docker exec "$CONTAINER" psql \
+            -X -A -t -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe \
+            -c "CREATE EXTENSION supabase_vault WITH VERSION '0.3.1';" >/dev/null
+          ACTUAL_VAULT="$(docker exec "$CONTAINER" psql \
+            -X -A -t -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe \
+            -c "SELECT extversion FROM pg_extension WHERE extname='supabase_vault';")"
+          test "$ACTUAL_VAULT" = "0.3.1"
+          echo "VAULT_0_3_1_CREATE=PASS"
+
+          # Real custom-format restore with ONLY generated fictional data.
+          docker exec "$CONTAINER" psql             -X -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe             -c 'CREATE TABLE public.rg01_fictional (id integer PRIMARY KEY); INSERT INTO public.rg01_fictional VALUES (17);'             >/dev/null
+          docker exec "$CONTAINER" pg_dump             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe             -Fc --no-owner --no-acl -f /tmp/rg01-fake.dump
+          sql 'CREATE DATABASE neroxa_restore_roundtrip;' >/dev/null
+          # Pin Vault 0.3.1; skip ONLY its already-created schema TOC entry.
+          docker exec "$CONTAINER" psql             -X -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c "CREATE EXTENSION supabase_vault WITH VERSION '0.3.1';" >/dev/null
+          docker exec "$CONTAINER" pg_restore -l /tmp/rg01-fake.dump > "$RUNNER_TEMP/rg01-fake.list"
+          VAULT_TOC_COUNT="$(grep -Ec '^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault ' "$RUNNER_TEMP/rg01-fake.list" || true)"
+          test "$VAULT_TOC_COUNT" = "1" || { echo "VAULT_TOC_SCHEMA=BLOCKED"; exit 1; }
+          sed -E '/^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault /d'             "$RUNNER_TEMP/rg01-fake.list" > "$RUNNER_TEMP/rg01-fake.filtered.list"
+          docker cp "$RUNNER_TEMP/rg01-fake.filtered.list" "$CONTAINER:/tmp/rg01-fake.filtered.list"
+          docker exec "$CONTAINER" pg_restore             --exit-on-error --single-transaction --no-owner --no-acl             -h /var/run/postgresql -U supabase_admin             --use-list=/tmp/rg01-fake.filtered.list \
+            -d neroxa_restore_roundtrip /tmp/rg01-fake.dump             2>&1 || { echo "SYNTHETIC_CUSTOM_RESTORE=FAIL"; exit 1; }
+          FAKE_COUNT="$(docker exec "$CONTAINER" psql             -X -A -t -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c 'SELECT count(*) FROM public.rg01_fictional WHERE id=17;')"
+          test "$FAKE_COUNT" = "1"
+          RESTORED_VAULT="$(docker exec "$CONTAINER" psql             -X -A -t -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c "SELECT extversion FROM pg_extension WHERE extname='supabase_vault';")"
+          echo "SYNTHETIC_RESTORED_VAULT_VERSION=$RESTORED_VAULT"
+          test "$RESTORED_VAULT" = "0.3.1" || { echo "SYNTHETIC_VAULT_VERSION_MISMATCH=BLOCKED"; exit 1; }
+          echo "SYNTHETIC_CUSTOM_RESTORE=PASS; COMMERCIAL_DATA_USED=NO"
+          echo "PROBE_DATABASE=DISPOSABLE"
+
+          echo "RESTORE_GATE01_PREFLIGHT=PASS"
+          echo "COMMERCIAL_RESTORE=NOT_RUN; SQL_RELEASE=NOT_RUN; COMMERCIAL_GO=NO_GO"
