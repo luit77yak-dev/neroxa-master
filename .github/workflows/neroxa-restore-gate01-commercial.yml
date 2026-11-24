@@ -1,0 +1,143 @@
+name: NEROXA RESTORE-GATE-01 — approved isolated content recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type RESTORE_ISOLATED_ONLY (one ephemeral attempt)
+        required: true
+        type: string
+      manifest_key:
+        description: Cloudflare KV manifest key (not confidential)
+        required: true
+        type: string
+      expected_cipher_sha256:
+        description: Ciphertext SHA-256 from Termux local.json (not confidential)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neroxa-commercial-restore-gate01
+  cancel-in-progress: false
+
+jobs:
+  restore-content-only:
+    if: >-
+      github.repository == 'luit77yak-dev/neroxa-master' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.ref_protected &&
+      github.run_attempt == 1 &&
+      (github.actor == 'luit77yak-dev' || github.actor == 'dev-luizt5') &&
+      inputs.confirmation == 'RESTORE_ISOLATED_ONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: neroxa-restore-gate01
+    env:
+      RG01_ACCOUNT_ID: ${{ vars.RG01_ACCOUNT_ID }}
+      RG01_NAMESPACE_ID: ${{ vars.RG01_NAMESPACE_ID }}
+      RG01_REVIEW_GATE: ${{ vars.RG01_REVIEW_GATE }}
+      RG01_KV_READ_TOKEN: ${{ secrets.RG01_KV_READ_TOKEN }}
+      RG01_DECRYPT_KEY: ${{ secrets.RG01_DECRYPT_KEY }}
+      RG01_MANIFEST_KEY: ${{ inputs.manifest_key }}
+      RG01_EXPECTED_CIPHER_SHA256: ${{ inputs.expected_cipher_sha256 }}
+      PG_IMAGE: supabase/postgres:17.12.0.002
+    steps:
+      - name: Checkout exact protected revision, without persisted token
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Recover content into isolated PostgreSQL 17
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$RG01_REVIEW_GATE" = 'ARMED_AFTER_INDEPENDENT_REVIEW'
+          test "$RUNNER_ENVIRONMENT" = 'github-hosted'
+          test "$GITHUB_REF_PROTECTED" = 'true'
+          test "$GITHUB_RUN_ATTEMPT" = '1'
+          command -v docker >/dev/null
+          command -v python3 >/dev/null
+          command -v gpg >/dev/null
+          echo 'ISOLATED_RUNNER=PASS; PRODUCTION_DATABASE_ACCESS=NONE'
+
+          TMP="$(mktemp -d "$RUNNER_TEMP/neroxa-restore-gate01.XXXXXXXX")"
+          CONTAINER="neroxa-rg01-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          cleanup() {
+            docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+            rm -rf -- "$TMP"
+          }
+          trap cleanup EXIT
+
+          python3 tools/restore-gate01/restore_from_kv.py \
+            --manifest-key "$RG01_MANIFEST_KEY" \
+            --expected-sha256 "$RG01_EXPECTED_CIPHER_SHA256" \
+            --output "$TMP/database.dump"
+
+          timeout 240s docker pull "$PG_IMAGE" >/dev/null
+          echo 'PG17_IMAGE=PASS'
+          PASSWORD="$(openssl rand -hex 32)"
+          docker run --rm --detach \
+            --name "$CONTAINER" \
+            --network none \
+            --security-opt no-new-privileges \
+            --tmpfs /var/lib/postgresql/data:rw,nosuid,nodev,size=1536m \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            -e POSTGRES_PASSWORD="$PASSWORD" \
+            "$PG_IMAGE" >/dev/null
+          unset PASSWORD
+          READY=0
+          for i in $(seq 1 90); do
+            if docker exec "$CONTAINER" pg_isready -q -h /var/run/postgresql -U supabase_admin -d postgres; then
+              READY=1
+              break
+            fi
+            sleep 2
+          done
+          test "$READY" = 1 || { echo 'PG17_BOOT=FAIL'; exit 1; }
+          echo 'PG17_BOOT=PASS'
+
+          VERSION="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d postgres -c 'SHOW server_version;')"
+          case "$VERSION" in 17.*) echo 'PG17_VERSION=PASS';; *) echo 'PG17_VERSION=FAIL'; exit 1;; esac
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d postgres \
+            -c 'CREATE DATABASE neroxa_restore_probe;' >/dev/null 2>&1
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe \
+            -c "CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';" >/dev/null 2>&1
+          echo 'VAULT_0_3_1_CREATE=PASS'
+
+          docker cp "$TMP/database.dump" "$CONTAINER:/tmp/database.dump"
+          if timeout 360s docker exec "$CONTAINER" pg_restore \
+            --exit-on-error --single-transaction --no-owner --no-acl \
+            -h /var/run/postgresql -U supabase_admin \
+            -d neroxa_restore_probe /tmp/database.dump \
+            >"$TMP/restore.stdout" 2>"$TMP/restore.stderr"; then
+            echo 'ISOLATED_CONTENT_RESTORE=PASS'
+          else
+            echo 'ISOLATED_CONTENT_RESTORE=FAIL_REDACTED'
+            echo 'RESTORE_DIAGNOSTICS=PRIVATE_NOT_UPLOADED'
+            exit 1
+          fi
+
+          VAULT="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe \
+            -c "SELECT extversion FROM pg_extension WHERE extname='supabase_vault';")"
+          test "$VAULT" = '0.3.1'
+          echo 'VAULT_VERSION_AFTER_RESTORE=PASS'
+          TABLES="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe \
+            -c "SELECT count(*) FROM pg_class WHERE relkind='r' AND relnamespace NOT IN ('pg_catalog'::regnamespace, 'information_schema'::regnamespace);")"
+          [[ "$TABLES" =~ ^[0-9]+$ ]]
+          test "$TABLES" -gt 0
+          echo "RESTORED_USER_TABLE_COUNT=$TABLES"
+          echo 'NO_REMOTE_WRITES=PASS; CONTAINER_NETWORK=NONE'
+          echo 'GLOBAL_ROLES=NOT_RUN; OWNER_ACL=NOT_VERIFIED'
+          echo 'COMMERCIAL_RESTORE_COMPLETE=NO; COMMERCIAL_GO=NO_GO'
