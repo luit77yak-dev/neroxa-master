@@ -114,7 +114,23 @@ jobs:
             -c "CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';" >/dev/null 2>&1
           echo 'VAULT_0_3_1_CREATE=PASS'
 
-          docker cp "$TMP/database.dump" "$CONTAINER:/tmp/database.dump"
+          # Stream bytes into isolated tmpfs and verify them before pg_restore.
+          # No backup bytes are printed or uploaded as artifacts.
+          test -s "$TMP/database.dump" || { echo "CONTAINER_DUMP_SOURCE=BLOCKED"; exit 1; }
+          docker exec -i "$CONTAINER" sh -c 'umask 077; cat > /tmp/database.dump' < "$TMP/database.dump"
+          EXPECTED_BYTES="$(wc -c < "$TMP/database.dump" | tr -d '[:space:]')"
+          ACTUAL_BYTES="$(docker exec "$CONTAINER" sh -c 'test -f /tmp/database.dump && wc -c < /tmp/database.dump' | tr -d '[:space:]')" || {
+            echo "CONTAINER_DUMP_TRANSFER=BLOCKED_NOT_FOUND"; exit 1;
+          }
+          test "$EXPECTED_BYTES" = "$ACTUAL_BYTES" || {
+            echo "CONTAINER_DUMP_TRANSFER=BLOCKED_SIZE_MISMATCH"; exit 1;
+          }
+          HOST_SHA="$(sha256sum "$TMP/database.dump" | cut -d' ' -f1)"
+          CONTAINER_SHA="$(docker exec "$CONTAINER" sha256sum /tmp/database.dump | cut -d' ' -f1)"
+          test "$HOST_SHA" = "$CONTAINER_SHA" || {
+            echo "CONTAINER_DUMP_TRANSFER=BLOCKED_HASH_MISMATCH"; exit 1;
+          }
+          echo "CONTAINER_DUMP_TRANSFER=PASS; CONTAINER_DUMP_SHA256=PASS"
           # Vault 0.3.1 pre-creates schema vault. The dump can also carry
           # CREATE SCHEMA vault: omit ONLY that redundant TOC entry.
           # TOC contains private schema names: keep it off public logs/artifacts.
