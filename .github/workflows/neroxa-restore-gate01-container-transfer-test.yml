@@ -1,0 +1,73 @@
+name: NEROXA RG01 container transfer synthetic proof
+
+on:
+  push:
+    branches:
+      - fix/rg01-container-dump-transfer-20261124
+    paths:
+      - .github/workflows/neroxa-restore-gate01-container-transfer-test.yml
+      - .github/workflows/neroxa-restore-gate01-commercial.yml
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-container-transfer:
+    if: github.repository == 'luit77yak-dev/neroxa-master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Roundtrip fictional PG17 dump with tmpfs and Vault 0.3.1
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          IMAGE=supabase/postgres:17.12.0.002
+          CONTAINER="rg01-fictional-$GITHUB_RUN_ID"
+          TMP="$(mktemp -d "$RUNNER_TEMP/rg01-fictional.XXXXXXXX")"
+          cleanup() {
+            docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+            rm -rf -- "$TMP"
+          }
+          trap cleanup EXIT
+          timeout 240s docker pull "$IMAGE" >/dev/null
+          PASSWORD="$(openssl rand -hex 32)"
+          docker run --rm --detach --name "$CONTAINER" --network none \
+            --security-opt no-new-privileges \
+            --tmpfs /var/lib/postgresql/data:rw,nosuid,nodev,size=1536m \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            -e POSTGRES_PASSWORD="$PASSWORD" "$IMAGE" >/dev/null
+          unset PASSWORD
+          READY=0
+          for i in $(seq 1 90); do
+            if docker exec "$CONTAINER" pg_isready -q -h /var/run/postgresql -U supabase_admin -d postgres; then
+              READY=1
+              break
+            fi
+            sleep 2
+          done
+          test "$READY" = 1 || { echo 'SYNTHETIC_PG_BOOT=FAIL'; exit 1; }
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d postgres \
+            -c 'CREATE DATABASE rg01_synthetic;' >/dev/null
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d rg01_synthetic \
+            -c "CREATE EXTENSION supabase_vault WITH VERSION '0.3.1'; CREATE TABLE public.fictional (id integer PRIMARY KEY); INSERT INTO public.fictional VALUES (17);" >/dev/null
+          docker exec "$CONTAINER" pg_dump -Fc --no-owner --no-acl \
+            -h /var/run/postgresql -U supabase_admin -d rg01_synthetic \
+            -f /tmp/fictional-source.dump
+          docker cp "$CONTAINER:/tmp/fictional-source.dump" "$TMP/database.dump"
+          test -s "$TMP/database.dump"
+          docker exec "$CONTAINER" rm -f /tmp/fictional-source.dump
+          docker exec -i "$CONTAINER" sh -c 'umask 077; cat > /tmp/database.dump' < "$TMP/database.dump"
+          EXPECTED_BYTES="$(wc -c < "$TMP/database.dump" | tr -d '[:space:]')"
+          ACTUAL_BYTES="$(docker exec "$CONTAINER" sh -c 'test -f /tmp/database.dump && wc -c < /tmp/database.dump' | tr -d '[:space:]')"
+          test "$EXPECTED_BYTES" = "$ACTUAL_BYTES"
+          HOST_SHA="$(sha256sum "$TMP/database.dump" | cut -d' ' -f1)"
+          CONTAINER_SHA="$(docker exec "$CONTAINER" sha256sum /tmp/database.dump | cut -d' ' -f1)"
+          test "$HOST_SHA" = "$CONTAINER_SHA"
+          echo 'SYNTHETIC_DUMP_STREAM=PASS; SYNTHETIC_DUMP_HASH=PASS'
+          docker exec "$CONTAINER" pg_restore -l /tmp/database.dump > "$TMP/full.list"
+          test -s "$TMP/full.list"
+          echo 'SYNTHETIC_PG_RESTORE_TOC=PASS'
+          echo 'SYNTHETIC_DATA_ONLY=YES; COMMERCIAL_DATA_USED=NO'
