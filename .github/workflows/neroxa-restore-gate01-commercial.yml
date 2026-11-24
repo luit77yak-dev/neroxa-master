@@ -139,7 +139,16 @@ jobs:
           test "$VAULT_TOC_COUNT" = "1" || { echo 'VAULT_TOC_SCHEMA=BLOCKED'; exit 1; }
           sed -E '/^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault /d' \
             "$TMP/restore.full.list" > "$TMP/restore.filtered.list"
-          docker cp "$TMP/restore.filtered.list" "$CONTAINER:/tmp/restore.filtered.list"
+          # Transfer the filtered TOC through stdin as well: /tmp is a container tmpfs.
+          # Compare digests without logging private schema names or list contents.
+          test -s "$TMP/restore.filtered.list" || { echo 'FILTERED_TOC_SOURCE=BLOCKED'; exit 1; }
+          docker exec -i "$CONTAINER" sh -c 'umask 077; cat > /tmp/restore.filtered.list' < "$TMP/restore.filtered.list"
+          FILTERED_TOC_HOST_SHA="$(sha256sum "$TMP/restore.filtered.list" | cut -d' ' -f1)"
+          FILTERED_TOC_CONTAINER_SHA="$(docker exec "$CONTAINER" sha256sum /tmp/restore.filtered.list | cut -d' ' -f1)"
+          test "$FILTERED_TOC_HOST_SHA" = "$FILTERED_TOC_CONTAINER_SHA" || {
+            echo 'FILTERED_TOC_TRANSFER=BLOCKED_HASH_MISMATCH'; exit 1;
+          }
+          echo 'FILTERED_TOC_TRANSFER=PASS'
           echo 'VAULT_0_3_1_COMPATIBILITY_TOC=PASS'
 
           if timeout 360s docker exec "$CONTAINER" pg_restore \
