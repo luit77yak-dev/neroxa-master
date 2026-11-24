@@ -119,8 +119,15 @@ jobs:
           docker exec "$CONTAINER" psql             -X -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe             -c 'CREATE TABLE public.rg01_fictional (id integer PRIMARY KEY); INSERT INTO public.rg01_fictional VALUES (17);'             >/dev/null
           docker exec "$CONTAINER" pg_dump             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe             -Fc --no-owner --no-acl -f /tmp/rg01-fake.dump
           sql 'CREATE DATABASE neroxa_restore_roundtrip;' >/dev/null
-          # Restore creates the vault schema itself. Do not pre-create it.
-          docker exec "$CONTAINER" pg_restore             --exit-on-error --single-transaction --no-owner --no-acl             -h /var/run/postgresql -U supabase_admin             -d neroxa_restore_roundtrip /tmp/rg01-fake.dump             2>&1 || { echo "SYNTHETIC_CUSTOM_RESTORE=FAIL"; exit 1; }
+          # Pin Vault 0.3.1; skip ONLY its already-created schema TOC entry.
+          docker exec "$CONTAINER" psql             -X -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c "CREATE EXTENSION supabase_vault WITH VERSION '0.3.1';" >/dev/null
+          docker exec "$CONTAINER" pg_restore -l /tmp/rg01-fake.dump > "$RUNNER_TEMP/rg01-fake.list"
+          VAULT_TOC_COUNT="$(grep -Ec '^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault ' "$RUNNER_TEMP/rg01-fake.list" || true)"
+          test "$VAULT_TOC_COUNT" = "1" || { echo "VAULT_TOC_SCHEMA=BLOCKED"; exit 1; }
+          sed -E '/^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault /d'             "$RUNNER_TEMP/rg01-fake.list" > "$RUNNER_TEMP/rg01-fake.filtered.list"
+          docker cp "$RUNNER_TEMP/rg01-fake.filtered.list" "$CONTAINER:/tmp/rg01-fake.filtered.list"
+          docker exec "$CONTAINER" pg_restore             --exit-on-error --single-transaction --no-owner --no-acl             -h /var/run/postgresql -U supabase_admin             --use-list=/tmp/rg01-fake.filtered.list \
+            -d neroxa_restore_roundtrip /tmp/rg01-fake.dump             2>&1 || { echo "SYNTHETIC_CUSTOM_RESTORE=FAIL"; exit 1; }
           FAKE_COUNT="$(docker exec "$CONTAINER" psql             -X -A -t -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c 'SELECT count(*) FROM public.rg01_fictional WHERE id=17;')"
           test "$FAKE_COUNT" = "1"
           RESTORED_VAULT="$(docker exec "$CONTAINER" psql             -X -A -t -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c "SELECT extversion FROM pg_extension WHERE extname='supabase_vault';")"
