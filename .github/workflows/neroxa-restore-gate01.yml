@@ -120,7 +120,7 @@ jobs:
           docker exec "$CONTAINER" pg_dump             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_probe             -Fc --no-owner --no-acl -f /tmp/rg01-fake.dump
           sql 'CREATE DATABASE neroxa_restore_roundtrip;' >/dev/null
           docker exec "$CONTAINER" psql             -X -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c "CREATE EXTENSION supabase_vault WITH VERSION '0.3.1';" >/dev/null
-          docker exec "$CONTAINER" pg_restore             --exit-on-error --single-transaction --no-owner --no-acl             -h /var/run/postgresql -U supabase_admin             -d neroxa_restore_roundtrip /tmp/rg01-fake.dump             >/dev/null 2>&1 || { echo "SYNTHETIC_CUSTOM_RESTORE=FAIL"; exit 1; }
+          docker exec "$CONTAINER" pg_restore             --exit-on-error --single-transaction --no-owner --no-acl             -h /var/run/postgresql -U supabase_admin             -d neroxa_restore_roundtrip /tmp/rg01-fake.dump             2>&1 || { echo "SYNTHETIC_CUSTOM_RESTORE=FAIL"; exit 1; }
           FAKE_COUNT="$(docker exec "$CONTAINER" psql             -X -A -t -v ON_ERROR_STOP=1             -h /var/run/postgresql -U supabase_admin -d neroxa_restore_roundtrip             -c 'SELECT count(*) FROM public.rg01_fictional WHERE id=17;')"
           test "$FAKE_COUNT" = "1"
           echo "SYNTHETIC_CUSTOM_RESTORE=PASS; COMMERCIAL_DATA_USED=NO"
