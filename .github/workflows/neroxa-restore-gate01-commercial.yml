@@ -58,7 +58,7 @@ jobs:
         run: |
           set -euo pipefail
           umask 077
-          test "$RG01_REVIEW_GATE" = 'ARMED_AFTER_INDEPENDENT_REVIEW'
+          test "$RG01_REVIEW_GATE" = 'ARMED_AFTER_OPERATOR_APPROVAL'
           test "$RUNNER_ENVIRONMENT" = 'github-hosted'
           test "$GITHUB_REF_PROTECTED" = 'true'
           test "$GITHUB_RUN_ATTEMPT" = '1'
