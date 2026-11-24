@@ -71,4 +71,27 @@ jobs:
           docker exec "$CONTAINER" pg_restore -l /tmp/database.dump > "$TMP/full.list"
           test -s "$TMP/full.list"
           echo 'SYNTHETIC_PG_RESTORE_TOC=PASS'
+          # Mirror the commercial Vault pinning and filtered-TOC restore with fictitious data.
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d postgres \
+            -c 'CREATE DATABASE rg01_synthetic_roundtrip;' >/dev/null
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d rg01_synthetic_roundtrip \
+            -c "CREATE EXTENSION supabase_vault WITH VERSION '0.3.1';" >/dev/null
+          TOC_COUNT="$(grep -Ec '^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault ' "$TMP/full.list" || true)"
+          test "$TOC_COUNT" = 1 || { echo "SYNTHETIC_VAULT_TOC=FAIL"; exit 1; }
+          sed -E '/^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault /d' "$TMP/full.list" > "$TMP/filtered.list"
+          docker exec -i "$CONTAINER" sh -c 'umask 077; cat > /tmp/filtered.list' < "$TMP/filtered.list"
+          docker exec "$CONTAINER" pg_restore --exit-on-error --single-transaction --no-owner --no-acl \
+            --use-list=/tmp/filtered.list -h /var/run/postgresql -U supabase_admin \
+            -d rg01_synthetic_roundtrip /tmp/database.dump >/dev/null
+          CHECK="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d rg01_synthetic_roundtrip \
+            -c 'SELECT count(*) FROM public.fictional WHERE id=17;')"
+          test "$CHECK" = 1
+          VAULT="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d rg01_synthetic_roundtrip \
+            -c "SELECT extversion FROM pg_extension WHERE extname='supabase_vault';")"
+          test "$VAULT" = 0.3.1
+          echo 'SYNTHETIC_PG_CONTENT_RESTORE=PASS; SYNTHETIC_VAULT_0_3_1=PASS'
           echo 'SYNTHETIC_DATA_ONLY=YES; COMMERCIAL_DATA_USED=NO'
