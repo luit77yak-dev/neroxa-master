@@ -56,7 +56,8 @@ jobs:
           docker exec "$CONTAINER" pg_dump -Fc --no-owner --no-acl \
             -h /var/run/postgresql -U supabase_admin -d rg01_synthetic \
             -f /tmp/fictional-source.dump
-          docker cp "$CONTAINER:/tmp/fictional-source.dump" "$TMP/database.dump"
+          # docker cp does not reliably see the container tmpfs mount. Stream out through exec.
+          docker exec "$CONTAINER" cat /tmp/fictional-source.dump > "$TMP/database.dump"
           test -s "$TMP/database.dump"
           docker exec "$CONTAINER" rm -f /tmp/fictional-source.dump
           docker exec -i "$CONTAINER" sh -c 'umask 077; cat > /tmp/database.dump' < "$TMP/database.dump"
