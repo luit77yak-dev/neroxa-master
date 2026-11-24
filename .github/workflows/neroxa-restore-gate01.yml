@@ -21,6 +21,17 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
+      - name: Checkout exact commit (no persisted credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Test encrypted transfer contract with synthetic bytes only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/restore-gate01/test_protocol.py
+
       - name: Enforce isolated public-runner scope
         shell: bash
         run: |
