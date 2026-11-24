@@ -1,0 +1,95 @@
+name: NEROXA RESTORE-GATE-01 - PG17 Vault preflight (no commercial data)
+
+on:
+  push:
+    branches:
+      - proof/restore-gate01-20261124
+    paths:
+      - .github/workflows/neroxa-restore-gate01.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neroxa-restore-gate01-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  pg17-vault-preflight:
+    if: github.repository == 'luit77yak-dev/neroxa-master' && github.ref == 'refs/heads/proof/restore-gate01-20261124'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Enforce isolated public-runner scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "luit77yak-dev/neroxa-master"
+          test "$GITHUB_REF" = "refs/heads/proof/restore-gate01-20261124"
+          test "$RUNNER_ENVIRONMENT" = "github-hosted"
+          test "$(docker info -f '{{.OSType}}')" = "linux"
+          echo "SCOPE=NO_COMMERCIAL_DATA; NO_SUPABASE_CONNECTION; NO_UPLOAD"
+          echo "RUNNER=STANDARD_GITHUB_HOSTED"
+      - name: Boot ephemeral PostgreSQL 17 and inspect Vault versions
+        shell: bash
+        env:
+          PG_IMAGE: supabase/postgres:17.12.0.002
+        run: |
+          set -euo pipefail
+          CONTAINER="neroxa-restore-gate01-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+
+          echo "IMAGE_PULL=START"
+          timeout 240s docker pull "$PG_IMAGE" >/dev/null
+          echo "IMAGE_PULL=PASS"
+
+          # Random password is for this throwaway, empty container only.
+          TEMP_PASSWORD="$(openssl rand -hex 32)"
+          docker run --rm --detach \
+            --name "$CONTAINER" \
+            --network none \
+            --tmpfs /var/lib/postgresql/data:rw,nosuid,nodev,size=1536m \
+            --security-opt no-new-privileges \
+            -e POSTGRES_PASSWORD="$TEMP_PASSWORD" \
+            "$PG_IMAGE" >/dev/null
+          unset TEMP_PASSWORD
+
+          READY=0
+          for i in $(seq 1 90); do
+            if docker exec "$CONTAINER" pg_isready -q -h /var/run/postgresql -U supabase_admin -d postgres; then
+              READY=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "$READY" -ne 1 ]; then
+            echo "PG17_BOOT=FAIL"
+            exit 1
+          fi
+          echo "PG17_BOOT=PASS"
+
+          sql() {
+            docker exec "$CONTAINER" psql \
+              -X -A -t -v ON_ERROR_STOP=1 \
+              -h /var/run/postgresql -U supabase_admin -d postgres \
+              -c "$1"
+          }
+
+          VERSION="$(sql 'SHOW server_version;')"
+          echo "PG_VERSION=$VERSION"
+          case "$VERSION" in
+            17.*) echo "PG17_VERSION=PASS" ;;
+            *) echo "PG17_VERSION=FAIL"; exit 1 ;;
+          esac
+
+          VAULT_VERSIONS="$(sql "SELECT COALESCE(string_agg(version, ',' ORDER BY version), 'NONE') FROM pg_available_extension_versions WHERE name = 'supabase_vault';")"
+          echo "SUPABASE_VAULT_AVAILABLE_VERSIONS=$VAULT_VERSIONS"
+          case ",$VAULT_VERSIONS," in
+            *,0.3.1,*) echo "VAULT_0_3_1=AVAILABLE" ;;
+            *) echo "VAULT_0_3_1=UNAVAILABLE"; exit 1 ;;
+          esac
+
+          echo "RESTORE_GATE01_PREFLIGHT=PASS"
+          echo "COMMERCIAL_RESTORE=NOT_RUN; SQL_RELEASE=NOT_RUN; COMMERCIAL_GO=NO_GO"
