@@ -18,6 +18,7 @@ import re
 
 from rg02_compare_runtime import IDENT, role_name, statements
 from rg02_membership_parser import parse_membership
+from rg02_global_grant_scope import global_grant_scope
 
 CREATE = re.compile(r'^\s*CREATE\s+(?:ROLE|USER)\s+(' + IDENT + r')\s*$', re.I | re.S)
 SOURCE_LIMIT = 4096
@@ -61,7 +62,13 @@ def source_edges(source_roles):
         if re.match(r'^\s*REVOKE\b', stmt, re.I):
             revoke_seen = True
             counts['SOURCE_REVOKE_HOLD'] += 1
-        if not re.match(r'^\s*GRANT\b', stmt, re.I):
+        scope = global_grant_scope(stmt)
+        if scope.startswith('parameter_acl_'):
+            counts['SOURCE_PARAMETER_PRIVILEGE_GRANTS_HELD'] += 1
+            if scope == 'parameter_acl_unparsed_hold':
+                counts['SOURCE_PARAMETER_SYNTAX_UNVERIFIED_HOLD'] += 1
+            continue
+        if scope == 'not_grant':
             continue
         counts['SOURCE_GRANTS'] += 1
         parsed = parse_membership(stmt)
