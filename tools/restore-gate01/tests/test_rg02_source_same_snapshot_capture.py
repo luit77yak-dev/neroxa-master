@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from rg02_source_same_snapshot_capture import (
-    Blocked, CONFIRMATION, ROLE, PROJECT, SESSION_HOST, DIRECT_HOST,
+    Blocked, CONFIRMATION, ROLE, PROJECT, SESSION_HOST, APPROVED_CA_SHA256,
     check_context, check_conn_config, check_identity, check_snapshot,
     public_subprocess_env, make_db_env, encrypt_pipeline, verify_decrypt,
     decrypt_and_validate_source,
@@ -73,16 +73,14 @@ class ProtectedSourceCaptureTests(unittest.TestCase):
                     check_context(e)
 
     def test_only_pinned_host_and_reader_credential_accepted(self):
-        for host, user in (
-            (SESSION_HOST, ROLE + "." + PROJECT),
-            (DIRECT_HOST, ROLE),
-        ):
-            self.assertIsNone(check_conn_config(host, user, "5432"))
+        self.assertEqual(len(APPROVED_CA_SHA256), 64)
+        self.assertIsNone(check_conn_config(
+            SESSION_HOST, ROLE + "." + PROJECT, "5432"))
         for host, user, port in (
             ("example.net", ROLE, "5432"),
             (SESSION_HOST, "postgres." + PROJECT, "5432"),
-            (DIRECT_HOST, "postgres", "5432"),
-            (DIRECT_HOST, ROLE, "6543"),
+            ("db." + PROJECT + ".supabase.co", ROLE, "5432"),
+            (SESSION_HOST, ROLE + "." + PROJECT, "6543"),
         ):
             with self.assertRaises(Blocked):
                 check_conn_config(host, user, port)
@@ -131,7 +129,7 @@ class ProtectedSourceCaptureTests(unittest.TestCase):
                         "GITHUB_TOKEN", "PGSERVICE"):
                 self.assertNotIn(key, sanitized)
             with tempfile.TemporaryDirectory() as d:
-                x = make_db_env(DIRECT_HOST, ROLE, "private_password",
+                x = make_db_env(SESSION_HOST, ROLE + "." + PROJECT, "private_password",
                                 Path(d) / "ca.pem")
                 self.assertEqual(x["PGSSLMODE"], "verify-full")
                 self.assertEqual(x["PGPASSWORD"], "private_password")
