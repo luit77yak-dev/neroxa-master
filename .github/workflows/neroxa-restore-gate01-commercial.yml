@@ -314,8 +314,10 @@ jobs:
             echo 'RG02_SOURCE_SQL=BLOCKED_EMPTY_CONTAINER_OUTPUT'
             exit 1
           fi
-          if ! docker cp "$CONTAINER:/tmp/source-schema.sql" "$TMP/source-schema.sql" >"$TMP/source-copy.stdout" 2>"$TMP/source-copy.stderr"; then
-            echo 'RG02_SOURCE_SQL=BLOCKED_PRIVATE_COPY'
+          # Stream the already exported private SQL through docker exec, without docker cp.
+          # Docker stdout is redirected to a mode-0600 runner-private file; never log SQL.
+          if ! docker exec "$CONTAINER" cat /tmp/source-schema.sql >"$TMP/source-schema.sql" 2>"$TMP/source-copy.stderr"; then
+            echo 'RG02_SOURCE_SQL=BLOCKED_PRIVATE_STREAM'
             exit 1
           fi
           if ! test -s "$TMP/source-schema.sql" || ! test "$(stat -c %s "$TMP/source-schema.sql")" -le 100663296; then
