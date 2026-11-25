@@ -14,6 +14,7 @@ from rg02_source_same_snapshot_capture import (
     Blocked, CONFIRMATION, ROLE, PROJECT, SESSION_HOST, DIRECT_HOST,
     check_context, check_conn_config, check_identity, check_snapshot,
     public_subprocess_env, make_db_env, encrypt_pipeline, verify_decrypt,
+    decrypt_and_validate_source,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -152,6 +153,38 @@ class ProtectedSourceCaptureTests(unittest.TestCase):
             self.assertNotIn(payload, artifact.read_bytes())
             self.assertEqual(artifact.stat().st_mode & 0o777, 0o600)
             verify_decrypt(secret, artifact, rec, 1024)
+
+    def test_encrypted_source_schema_and_tuple_dedup(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            secret = root / "key"
+            secret.write_text("this-is-only-a-synthetic-unrecoverable-test-key-" * 2)
+            secret.chmod(0o600)
+            globals_doc = json.dumps({
+                "format_version": 1,
+                "scope": "SOURCE_GLOBAL_CATALOG_IN_SAME_SNAPSHOT",
+                "roles": [{"name": ROLE}],
+                "memberships": [], "parameter_acls": [],
+            }) + "\n"
+            globals_file, tuples_file = root / "global.gpg", root / "tuples.gpg"
+
+            def encrypt_synthetic(source, target):
+                return encrypt_pipeline(
+                    [sys.executable, "-c", "import sys;print(sys.argv[1],end='')",
+                     source], public_subprocess_env(), secret, target, 8192,
+                    count_rows=target == tuples_file)
+
+            encrypt_synthetic(globals_doc, globals_file)
+            line = json.dumps(["fake", "TABLE", "mock_schema.table",
+                               "SELECT", True]) + "\n"
+            encrypt_synthetic(line, tuples_file)
+            shape = decrypt_and_validate_source(secret, globals_file, tuples_file, 1)
+            self.assertEqual(shape["rows"], 1)
+            self.assertEqual(shape["roles"], 1)
+            tuples_file.unlink()
+            encrypt_synthetic(line * 2, tuples_file)
+            with self.assertRaisesRegex(Blocked, "RG02_TUPLE_DUPLICATE"):
+                decrypt_and_validate_source(secret, globals_file, tuples_file, 2)
 
     def test_stream_size_limit_fails_closed(self):
         with tempfile.TemporaryDirectory() as temp:
