@@ -11,6 +11,22 @@ permissions:
   contents: read
 
 jobs:
+  rg02-local-pg17-sql-smoke:
+    # The only network transfer is fetching the exact already-approved PG17
+    # container image; the disposable DB itself uses --network none.
+    if: github.repository == 'luit77yak-dev/neroxa-master'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout RG02 source without persisted credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Verify native privileges SQL on disposable network-isolated PG17
+        shell: bash
+        run: bash tools/restore-gate01/tests/rg02_pg17_local_sql_smoke.sh
   rg02-synthetic:
     runs-on: ubuntu-latest
     timeout-minutes: 5
