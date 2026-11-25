@@ -227,6 +227,9 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      - name: RG02 ACL diagnostic synthetic tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_acl_diagnostic.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
