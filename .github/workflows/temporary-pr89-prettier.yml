@@ -1,0 +1,73 @@
+name: TEMP PR89 — one-shot Prettier on isolated feature branch only
+
+on:
+  push:
+    branches:
+      - fix/neroxa-master-typed-catalog-editors-20261125
+
+permissions:
+  contents: read
+
+jobs:
+  format-once:
+    if: >-
+      github.repository == 'luit77yak-dev/neroxa-master' &&
+      github.actor == 'luit77yak-dev' &&
+      github.ref == 'refs/heads/fix/neroxa-master-typed-catalog-editors-20261125' &&
+      github.event.head_commit.message == 'TRIGGER_SAFE_PRETTIER_PR89_ONCE' &&
+      github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout only this existing feature branch without credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Use Node 22 already used by CI
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22.x'
+      - name: Install locked packages without lifecycle scripts
+        shell: bash
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Format tracked source files only and verify scope
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx prettier --write . > /dev/null
+          changed=0
+          while IFS= read -r -d '' f; do
+            case "$f" in
+              *.ts|*.tsx|*.json|*.md|*.css|*.yml|*.yaml) ;;
+              *) echo 'PRETTIER_SCOPE=BLOCKED_NON_SOURCE_FILE'; exit 1 ;;
+            esac
+            case "$f" in
+              .env*|*/.env*|*.pem|*.key|*.gpg|*.sql)
+                echo 'PRETTIER_SCOPE=BLOCKED_PRIVATE_FILE'; exit 1 ;;
+            esac
+            changed=$((changed + 1))
+          done < <(git diff --name-only --diff-filter=M -z)
+          if (( changed < 60 || changed > 100 )); then
+            echo 'PRETTIER_SCOPE=BLOCKED_UNEXPECTED_COUNT'
+            exit 1
+          fi
+          git diff --check
+          echo "PRETTIER_SCOPE=PASS; TRACKED_FILES=$changed; PRODUCTION_WRITES=NONE"
+      - name: Push exactly one reviewed formatting commit to this feature branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/fix/neroxa-master-typed-catalog-editors-20261125'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -u
+          git diff --cached --quiet && { echo 'PRETTIER_NOTHING_TO_COMMIT=BLOCKED'; exit 1; }
+          git commit -m 'style(master): apply Prettier to tracked source (PR 89)' > /dev/null
+          gh auth setup-git
+          git push origin HEAD:refs/heads/fix/neroxa-master-typed-catalog-editors-20261125 > /dev/null
+          echo 'PRETTIER_FEATURE_BRANCH=COMMITTED; COMMERCIAL_GO=NO_GO'
