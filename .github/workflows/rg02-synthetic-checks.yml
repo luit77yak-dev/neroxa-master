@@ -59,3 +59,5 @@ jobs:
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_local_effective_rights.py' -v
       - name: Verify private tuple witness preflight rejects false provenance and swapped grants
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_tuple_witness_preflight.py' -v
+      - name: Verify NEW source-snapshot orchestration and GPG never leak credentials
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_source_same_snapshot_capture.py' -v
