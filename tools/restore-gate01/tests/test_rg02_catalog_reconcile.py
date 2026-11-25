@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 import unittest
-sys.path.insert(0,str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from rg02_catalog_reconcile import identity_key,revoke_request,inspect_revocations,parse_membership,inspect_membership_options,diagnose
 
 
