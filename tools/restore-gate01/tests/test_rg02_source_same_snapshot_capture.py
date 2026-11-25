@@ -222,6 +222,7 @@ class ProtectedSourceCaptureTests(unittest.TestCase):
         self.assertIn("RG02_SOURCE_GATE", workflow)
         self.assertIn("RG02_ESCROW_RECOVERY", workflow)
         self.assertIn("retention-days: 7", workflow)
+        self.assertIn('export RG02_PRIVATE_OUTPUT_ROOT="$PRIVATE"', workflow)
         self.assertIn("/*.gpg", workflow)
         self.assertNotIn("continue-on-error", workflow)
         self.assertIn("COMMERCIAL_GO=NO_GO", workflow)
