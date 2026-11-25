@@ -75,9 +75,12 @@ def prepare(text, existing):
     if not metadata_targets.issubset(created):
         raise ValueError('ROLE_METADATA_TARGET_UNDECLARED')
     missing = created - set(existing)
-    if any(role_category(name) == 'managed' for name in missing):
-        # Missing Supabase-managed roles must not be invented.
-        raise ValueError('MANAGED_ROLE_BASELINE_MISSING')
+    # Missing core operators indicate an incompatible PG17 bootstrap.
+    if missing & {'postgres', 'supabase_admin'}:
+        raise ValueError('RESERVED_BOOTSTRAP_ROLE_MISSING')
+    # Other managed roles from the hash-verified globals may be represented by
+    # disposable NOLOGIN shells ONLY. This does not import flags, memberships,
+    # bypass rights, passwords or effective privileges from the source.
     lines = [
         'CREATE ROLE ' + quoted(name) +
         ' WITH NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT;'
@@ -87,6 +90,7 @@ def prepare(text, existing):
         'declared': len(created),
         'already_present': len(created & set(existing)),
         'missing': len(missing),
+        'managed_identity_shells': sum(role_category(n) == 'managed' for n in missing),
         'source_elevated_roles_hold': len(elevated),
         'elevated_identity_shells': len(elevated & missing),
         'memberships_hold': memberships,
@@ -122,7 +126,7 @@ if __name__ == '__main__':
         reason = str(exc) if isinstance(exc, ValueError) and str(exc) in {
             'SOURCE_PASSWORD_MATERIAL', 'TARGET_CATALOG_FORMAT',
             'DUPLICATE_SOURCE_ROLE', 'UNSAFE_ROLE_NAME',
-            'ROLE_SOURCE_UNCLASSIFIED', 'MANAGED_ROLE_BASELINE_MISSING',
+            'ROLE_SOURCE_UNCLASSIFIED', 'RESERVED_BOOTSTRAP_ROLE_MISSING',
             'ROLE_METADATA_TARGET_UNDECLARED'
         } else 'PRIVATE_INPUT_INVALID'
         print('RG02_ROLE_PLACEHOLDERS=BLOCKED:' + reason, file=sys.stderr)

@@ -66,9 +66,32 @@ class RG02MetadataClassification(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "ROLE_METADATA_TARGET_UNDECLARED"):
             prepare("CREATE ROLE test_role; ALTER ROLE other_role SET search_path TO public;", [])
 
-    def test_managed_roles_never_invented(self):
-        with self.assertRaisesRegex(ValueError, "MANAGED_ROLE_BASELINE_MISSING"):
+    def test_managed_role_shell_is_strictly_unprivileged(self):
+        src = ("CREATE ROLE supabase_storage_admin; "
+               "ALTER ROLE supabase_storage_admin WITH SUPERUSER LOGIN BYPASSRLS;")
+        sql, report = prepare(src, [])
+        self.assertEqual(report["managed_identity_shells"], 1)
+        self.assertEqual(report["elevated_identity_shells"], 1)
+        self.assertEqual(report["source_elevated_roles_hold"], 1)
+        self.assertEqual(report["privileges_applied"], 0)
+        self.assertEqual(report["memberships_applied"], 0)
+        self.assertEqual(sql.count("CREATE ROLE"), 1)
+        self.assertIn('WITH NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT;', sql)
+        self.assertNotIn("ALTER ROLE", sql)
+        self.assertNotIn(" WITH SUPERUSER ", sql)
+        self.assertNotIn(" WITH LOGIN ", sql)
+
+    def test_already_existing_managed_role_is_never_modified(self):
+        sql, report = prepare("CREATE ROLE anon;", ["anon", "postgres", "supabase_admin"])
+        self.assertEqual(sql, "")
+        self.assertEqual(report["managed_identity_shells"], 0)
+        self.assertEqual(report["missing"], 0)
+
+    def test_core_operator_baseline_missing_must_stop(self):
+        with self.assertRaisesRegex(ValueError, "RESERVED_BOOTSTRAP_ROLE_MISSING"):
             prepare("CREATE ROLE supabase_admin;", [])
+        with self.assertRaisesRegex(ValueError, "RESERVED_BOOTSTRAP_ROLE_MISSING"):
+            prepare("CREATE ROLE postgres;", [])
 
     def test_password_material_rejected(self):
         with self.assertRaisesRegex(ValueError, "SOURCE_PASSWORD_MATERIAL"):
