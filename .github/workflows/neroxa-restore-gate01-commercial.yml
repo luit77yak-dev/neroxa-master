@@ -23,6 +23,14 @@ on:
         description: SHA-256 of encrypted roles ciphertext, not plaintext
         required: false
         type: string
+      roles_source_sha256:
+        description: Audited SHA-256 of passwordless roles SQL from the same snapshot
+        required: false
+        type: string
+      dump_source_sha256:
+        description: Audited SHA-256 of the original custom dump from the same snapshot
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -210,6 +218,8 @@ jobs:
       RG01_EXPECTED_CIPHER_SHA256: ${{ inputs.expected_cipher_sha256 }}
       RG02_ROLES_MANIFEST_KEY: ${{ inputs.roles_manifest_key }}
       RG02_ROLES_EXPECTED_CIPHER_SHA256: ${{ inputs.roles_expected_cipher_sha256 }}
+      RG02_ROLES_SOURCE_SHA256: ${{ inputs.roles_source_sha256 }}
+      RG02_DUMP_SOURCE_SHA256: ${{ inputs.dump_source_sha256 }}
       PG_IMAGE: supabase/postgres:17.12.0.002
     steps:
       - name: Checkout protected commit without retained token
@@ -228,6 +238,8 @@ jobs:
           [[ "$RG02_ROLES_MANIFEST_KEY" =~ ^rg01-[a-f0-9]{16}-manifest$ ]] || { echo 'RG02_GLOBALS_TRANSFER=BLOCKED'; exit 1; }
           [[ "$RG02_ROLES_EXPECTED_CIPHER_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo 'RG02_GLOBALS_DIGEST=BLOCKED'; exit 1; }
           test "$RG02_ROLES_MANIFEST_KEY" != "$RG01_MANIFEST_KEY"
+          [[ "$RG02_ROLES_SOURCE_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo 'RG02_ROLES_SOURCE_HASH=BLOCKED'; exit 1; }
+          [[ "$RG02_DUMP_SOURCE_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo 'RG02_DUMP_SOURCE_HASH=BLOCKED'; exit 1; }
           echo 'RG02_RUNNER_PROTECTED=PASS; PRODUCTION_DATABASE_ACCESS=NONE'
           TMP="$(mktemp -d "$RUNNER_TEMP/neroxa-rg02.XXXXXXXX")"
           CONTAINER="neroxa-rg02-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
@@ -235,6 +247,9 @@ jobs:
           trap cleanup EXIT
           python3 tools/restore-gate01/restore_from_kv.py --manifest-key "$RG01_MANIFEST_KEY" --expected-sha256 "$RG01_EXPECTED_CIPHER_SHA256" --output "$TMP/database.dump"
           python3 tools/restore-gate01/restore_from_kv.py --manifest-key "$RG02_ROLES_MANIFEST_KEY" --expected-sha256 "$RG02_ROLES_EXPECTED_CIPHER_SHA256" --output "$TMP/roles-no-passwords.private.sql" --format roles-sql
+          test "$(sha256sum "$TMP/database.dump" | cut -d' ' -f1)" = "$RG02_DUMP_SOURCE_SHA256" || { echo 'RG02_SAME_PREIMAGE_DUMP=BLOCKED'; exit 1; }
+          test "$(sha256sum "$TMP/roles-no-passwords.private.sql" | cut -d' ' -f1)" = "$RG02_ROLES_SOURCE_SHA256" || { echo 'RG02_SAME_PREIMAGE_ROLES=BLOCKED'; exit 1; }
+          echo 'RG02_AUDITED_SOURCE_SHA256=PASS'
           # Classification runs BEFORE any metadata replay. The private role SQL is never executed.
           python3 - "$TMP/roles-no-passwords.private.sql" <<'PY'
           import re,sys
