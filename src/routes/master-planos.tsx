@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode, type Dispatch, type SetStateAction } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Edit3, Loader2, Package, Plus, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -273,19 +273,35 @@ function MasterPlansPage() {
   </div></MasterShell>;
 }
 
-function PlanEditor({ form, setForm, systems, products, compatibleProducts, selectedProducts, setSelectedProducts, selectedFeatures, setSelectedFeatures, saving, reset, save, role }: any) {
+type PlanEditorProps = {
+  form: Form;
+  setForm: Dispatch<SetStateAction<Form>>;
+  systems: NeroxaSystem[];
+  products: NeroxaProduct[];
+  compatibleProducts: NeroxaProduct[];
+  selectedProducts: string[];
+  setSelectedProducts: Dispatch<SetStateAction<string[]>>;
+  selectedFeatures: string[];
+  setSelectedFeatures: Dispatch<SetStateAction<string[]>>;
+  saving: boolean;
+  reset: () => void;
+  save: () => Promise<void>;
+  role: import("@/features/master/clients/services").NeroxaPlatformRole | null;
+};
+
+function PlanEditor({ form, setForm, systems, products, compatibleProducts, selectedProducts, setSelectedProducts, selectedFeatures, setSelectedFeatures, saving, reset, save, role }: PlanEditorProps) {
   return <div className="rounded-xl border border-border bg-muted/30 p-4"><div className="mb-4 flex items-center justify-between"><div><p className="text-xs font-medium text-muted-foreground">Editando plano</p><p className="font-semibold">Atualizar catálogo</p></div><Button variant="ghost" size="sm" onClick={reset}>Cancelar</Button></div>
     <div className="space-y-3">
-      <Field label="Nome"><input value={form.name} onChange={(e:any)=>setForm({...form,name:e.target.value})}/></Field><Field label="Slug"><input value={form.slug} onChange={(e:any)=>setForm({...form,slug:e.target.value})}/></Field>
-      <Field label="Sistema-base / segmento"><select value={form.systemId} onChange={(e:any)=>{const next=e.target.value;setForm({...form,systemId:next});const allowed=new Set(products.filter((p:NeroxaProduct)=>!next||!p.system_id||p.system_id===next).map((p:NeroxaProduct)=>p.id));setSelectedProducts((current:string[])=>current.filter(id=>allowed.has(id)));}}><option value="">Sem sistema fixo (plano global)</option>{systems.filter((s:NeroxaSystem)=>s.active).map((s:NeroxaSystem)=><option key={s.id} value={s.id}>{s.name} · {s.system_type}</option>)}</select></Field>
-      <Field label="Descrição"><textarea value={form.description} onChange={(e:any)=>setForm({...form,description:e.target.value})} rows={3}/></Field>
-      <Field label="Modelo comercial"><select value={form.commercialModel} onChange={(e:any)=>{const commercialModel=e.target.value as Form["commercialModel"];setForm({...form,commercialModel,billingPeriod:commercialModel==="PERMANENT"?"ONE_TIME":form.billingPeriod});}}><option value="SUBSCRIPTION">Assinatura recorrente</option><option value="PERMANENT">Compra permanente</option></select></Field>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Field label={form.commercialModel==="PERMANENT"?"Valor de aquisição":"Recorrência"}><input type="number" min="0" step="0.01" value={form.priceMonthly} onChange={(e:any)=>setForm({...form,priceMonthly:e.target.value})}/></Field><Field label="Implantação"><input type="number" min="0" step="0.01" value={form.setupPrice} onChange={(e:any)=>setForm({...form,setupPrice:e.target.value})}/></Field></div>
-      {form.commercialModel==="PERMANENT"&&<Field label="Manutenção recorrente (opcional)"><input type="number" min="0" step="0.01" value={form.maintenancePrice} onChange={(e:any)=>setForm({...form,maintenancePrice:e.target.value})}/></Field>}
-      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Produtos incluídos</p><div className="max-h-40 space-y-2 overflow-auto rounded-lg border border-border p-3">{compatibleProducts.map((product:NeroxaProduct)=><label key={product.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selectedProducts.includes(product.id)} onChange={(e:any)=>setSelectedProducts((current:string[])=>e.target.checked?[...current,product.id]:current.filter(id=>id!==product.id))}/><span className="truncate">{product.name}</span></label>)}</div></div>
-      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Recursos do plano</p><div className="max-h-44 space-y-2 overflow-auto rounded-lg border border-border p-3">{FEATURE_OPTIONS.map(([key,label])=><label key={key} className="flex items-start gap-2 text-sm"><input type="checkbox" checked={selectedFeatures.includes(key)} onChange={(e:any)=>setSelectedFeatures((current:string[])=>e.target.checked?[...current,key]:current.filter(item=>item!==key))}/><span>{label}</span></label>)}</div></div>
-      <Field label="Periodicidade"><select value={form.billingPeriod} disabled={form.commercialModel==="PERMANENT"} onChange={(e:any)=>setForm({...form,billingPeriod:e.target.value as Form["billingPeriod"]})}><option value="MONTHLY">Mensal</option><option value="YEARLY">Anual</option><option value="ONE_TIME">Avulso</option></select></Field>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e:any)=>setForm({...form,active:e.target.checked})}/> Disponível para contratação</label>
+      <Field label="Nome"><input value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})}/></Field><Field label="Slug"><input value={form.slug} onChange={(e)=>setForm({...form,slug:e.target.value})}/></Field>
+      <Field label="Sistema-base / segmento"><select value={form.systemId} onChange={(e)=>{const next=e.target.value;setForm({...form,systemId:next});const allowed=new Set(products.filter((p:NeroxaProduct)=>!next||!p.system_id||p.system_id===next).map((p:NeroxaProduct)=>p.id));setSelectedProducts((current:string[])=>current.filter(id=>allowed.has(id)));}}><option value="">Sem sistema fixo (plano global)</option>{systems.filter((s:NeroxaSystem)=>s.active).map((s:NeroxaSystem)=><option key={s.id} value={s.id}>{s.name} · {s.system_type}</option>)}</select></Field>
+      <Field label="Descrição"><textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} rows={3}/></Field>
+      <Field label="Modelo comercial"><select value={form.commercialModel} onChange={(e)=>{const commercialModel=e.target.value as Form["commercialModel"];setForm({...form,commercialModel,billingPeriod:commercialModel==="PERMANENT"?"ONE_TIME":form.billingPeriod});}}><option value="SUBSCRIPTION">Assinatura recorrente</option><option value="PERMANENT">Compra permanente</option></select></Field>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><Field label={form.commercialModel==="PERMANENT"?"Valor de aquisição":"Recorrência"}><input type="number" min="0" step="0.01" value={form.priceMonthly} onChange={(e)=>setForm({...form,priceMonthly:e.target.value})}/></Field><Field label="Implantação"><input type="number" min="0" step="0.01" value={form.setupPrice} onChange={(e)=>setForm({...form,setupPrice:e.target.value})}/></Field></div>
+      {form.commercialModel==="PERMANENT"&&<Field label="Manutenção recorrente (opcional)"><input type="number" min="0" step="0.01" value={form.maintenancePrice} onChange={(e)=>setForm({...form,maintenancePrice:e.target.value})}/></Field>}
+      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Produtos incluídos</p><div className="max-h-40 space-y-2 overflow-auto rounded-lg border border-border p-3">{compatibleProducts.map((product:NeroxaProduct)=><label key={product.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selectedProducts.includes(product.id)} onChange={(e)=>setSelectedProducts((current:string[])=>e.target.checked?[...current,product.id]:current.filter(id=>id!==product.id))}/><span className="truncate">{product.name}</span></label>)}</div></div>
+      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Recursos do plano</p><div className="max-h-44 space-y-2 overflow-auto rounded-lg border border-border p-3">{FEATURE_OPTIONS.map(([key,label])=><label key={key} className="flex items-start gap-2 text-sm"><input type="checkbox" checked={selectedFeatures.includes(key)} onChange={(e)=>setSelectedFeatures((current:string[])=>e.target.checked?[...current,key]:current.filter(item=>item!==key))}/><span>{label}</span></label>)}</div></div>
+      <Field label="Periodicidade"><select value={form.billingPeriod} disabled={form.commercialModel==="PERMANENT"} onChange={(e)=>setForm({...form,billingPeriod:e.target.value as Form["billingPeriod"]})}><option value="MONTHLY">Mensal</option><option value="YEARLY">Anual</option><option value="ONE_TIME">Avulso</option></select></Field>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e)=>setForm({...form,active:e.target.checked})}/> Disponível para contratação</label>
       {canPerform(role,"managePlans")&&<Button className="w-full" onClick={()=>void save()} disabled={saving}>{saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?"Salvando...":"Salvar alterações"}</Button>}
     </div></div>;
 }
