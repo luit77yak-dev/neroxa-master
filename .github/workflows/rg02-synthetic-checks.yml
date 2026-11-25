@@ -57,3 +57,5 @@ jobs:
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_proof_matrix.py' -v
       - name: Verify isolated-only native PG17 privilege witness, no secrets
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_local_effective_rights.py' -v
+      - name: Verify private tuple witness preflight rejects false provenance and swapped grants
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_tuple_witness_preflight.py' -v
