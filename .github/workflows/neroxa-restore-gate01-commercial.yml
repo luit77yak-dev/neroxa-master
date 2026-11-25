@@ -245,6 +245,9 @@ jobs:
       - name: RG02 PG17 membership parser tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_membership_parser.py' -v
+      - name: RG02 PG17 role paths tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_role_paths.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
@@ -388,6 +391,12 @@ jobs:
             --target-roles "$TMP/target-roles.json" \
             --catalog-json "$TMP/rg02-catalog.private.json" \
             --out "$TMP/rg02-grantor-global.private.json" || { echo 'RG02_GRANTOR_GLOBAL=BLOCKED_REDACTED'; exit 1; }
+          # Role reachability is modeled from audited (never executed) globals.
+          # Diagnostic-only MEMBER/INHERIT/SET paths; not source effective rights.
+          python3 tools/restore-gate01/rg02_role_paths.py \
+            --source-roles "$TMP/roles-no-passwords.private.sql" \
+            --target-roles "$TMP/target-roles.json" \
+            --out "$TMP/rg02-role-paths.private.json" || { echo 'RG02_ROLE_PATHS=BLOCKED_REDACTED'; exit 1; }
           # Read-only, redacted triage of SQL representation differences before strict gate.
           # Counts are diagnostics ONLY; they cannot turn a comparison into PASS.
           python3 tools/restore-gate01/rg02_acl_diagnostic.py \
