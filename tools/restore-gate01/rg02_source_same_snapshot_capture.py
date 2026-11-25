@@ -100,11 +100,17 @@ def check_identity(raw):
         raise Blocked("RG02_READONLY_IDENTITY_NOT_PROVEN") from None
 
 
+def public_subprocess_env():
+    # Every external binary, including GPG, must not inherit captured DB
+    # credentials, passphrase, API tokens, or other application secrets.
+    return {k: v for k, v in os.environ.items()
+            if not k.startswith(("PG", "RG02_", "SUPABASE_", "CLOUDFLARE_"))
+            and k not in ("GITHUB_TOKEN", "GH_TOKEN", "ACTIONS_RUNTIME_TOKEN")}
+
+
 def make_db_env(host, username, secret, ca_path):
-    # Inherit only non-Postgres/non-RG02 variables. No access tokens propagate.
-    env = {k: v for k, v in os.environ.items()
-           if not k.startswith("PG") and not k.startswith("RG02_")
-           and not k.startswith("SUPABASE_") and not k.startswith("CLOUDFLARE_")}
+    # Only psql/pg_dump inherit the dedicated DB password; never GPG.
+    env = public_subprocess_env()
     env.update({
         "PGHOST": host, "PGPORT": "5432", "PGDATABASE": "postgres",
         "PGUSER": username, "PGPASSWORD": secret,
@@ -198,7 +204,7 @@ def encrypt_pipeline(command, env, passfile, destination, max_bytes,
         "--cipher-algo", "AES256", "--s2k-digest-algo", "SHA256",
         "--symmetric", "--output", str(destination),
     ], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
-       stderr=subprocess.DEVNULL)
+       stderr=subprocess.DEVNULL, env=public_subprocess_env())
     h = hashlib.sha256()
     n = 0
     rows = 0
@@ -249,7 +255,8 @@ def verify_decrypt(passfile, ciphertext, expected, limit):
         "timeout", "720s", "gpg", "--batch", "--no-tty",
         "--pinentry-mode", "loopback", "--passphrase-file", str(passfile),
         "--decrypt", str(ciphertext),
-    ], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    ], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+       env=public_subprocess_env())
     h = hashlib.sha256()
     n = 0
     try:
@@ -274,7 +281,7 @@ def encrypt_json(body, passfile, dest):
         "--pinentry-mode", "loopback", "--passphrase-file", str(passfile),
         "--cipher-algo", "AES256", "--symmetric", "--output", str(dest)
     ], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
-       stderr=subprocess.DEVNULL)
+       stderr=subprocess.DEVNULL, env=public_subprocess_env())
     plain = json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
     proc.communicate(input=plain, timeout=25)
     if proc.returncode != 0 or not dest.is_file():
