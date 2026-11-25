@@ -37,7 +37,7 @@ def fetch(account, namespace, token, key, maximum):
         raise Blocked('KV_OBJECT=TOO_LARGE')
     return data
 
-def recover(manifest_key, expected, output):
+def recover(manifest_key, expected, output, expected_format='pg-custom'):
     account = os.getenv('RG01_ACCOUNT_ID', '')
     namespace = os.getenv('RG01_NAMESPACE_ID', '')
     token = os.getenv('RG01_KV_READ_TOKEN', '')
@@ -102,11 +102,25 @@ def recover(manifest_key, expected, output):
         if proc.returncode or not output.is_file():
             raise Blocked('DECRYPT=FAIL')
         os.chmod(output, 0o600)
-        with output.open('rb') as src:
-            if src.read(5) != b'PGDMP':
-                raise Blocked('PG_CUSTOM_HEADER=FAIL')
+        if expected_format == 'pg-custom':
+            with output.open('rb') as src:
+                if src.read(5) != b'PGDMP':
+                    raise Blocked('PG_CUSTOM_HEADER=FAIL')
+        elif expected_format == 'roles-sql':
+            if output.stat().st_size > 1048576:
+                raise Blocked('ROLES_SIZE=INVALID')
+            try:
+                roles = output.read_text(encoding='utf-8')
+            except UnicodeDecodeError:
+                raise Blocked('ROLES_FORMAT=INVALID') from None
+            if ('\x00' in roles or
+                not re.search(r'(?im)^\s*(?:CREATE|ALTER)\s+(?:ROLE|USER)\b', roles) or
+                re.search(r'(?i)\bPASSWORD\b|SCRAM-SHA-256\$|\bmd5[a-f0-9]{32}\b', roles)):
+                raise Blocked('ROLES_SOURCE=BLOCKED')
+        else:
+            raise Blocked('EXPECTED_FORMAT=INVALID')
         print('DECRYPT_VERIFY=PASS')
-        print('PG_CUSTOM_HEADER=PASS')
+        print('PG_CUSTOM_HEADER=PASS' if expected_format == 'pg-custom' else 'ROLES_NO_PASSWORD_MATERIAL=PASS')
     finally:
         cipher.unlink(missing_ok=True)
         shutil.rmtree(gpg_home, ignore_errors=True)
@@ -117,9 +131,10 @@ def main():
     p.add_argument('--manifest-key', required=True)
     p.add_argument('--expected-sha256', required=True)
     p.add_argument('--output', required=True, type=Path)
+    p.add_argument('--format', choices=['pg-custom', 'roles-sql'], default='pg-custom')
     a = p.parse_args()
     try:
-        recover(a.manifest_key, a.expected_sha256, a.output)
+        recover(a.manifest_key, a.expected_sha256, a.output, a.format)
     except (Blocked, OSError, subprocess.TimeoutExpired) as e:
         print('RESTORE_GATE01_FETCH=BLOCKED:' +
               (str(e) if isinstance(e, Blocked) else 'IO_OR_TIMEOUT'), file=sys.stderr)

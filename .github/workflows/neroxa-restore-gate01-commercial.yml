@@ -15,6 +15,22 @@ on:
         description: Ciphertext SHA-256 from Termux local.json (not confidential)
         required: true
         type: string
+      roles_manifest_key:
+        description: Encrypted passwordless roles manifest key for RG02 only
+        required: false
+        type: string
+      roles_expected_cipher_sha256:
+        description: SHA-256 of encrypted roles ciphertext, not plaintext
+        required: false
+        type: string
+      roles_source_sha256:
+        description: Audited SHA-256 of passwordless roles SQL from the same snapshot
+        required: false
+        type: string
+      dump_source_sha256:
+        description: Audited SHA-256 of the original custom dump from the same snapshot
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -178,3 +194,114 @@ jobs:
           echo 'NO_REMOTE_WRITES=PASS; CONTAINER_NETWORK=NONE'
           echo 'GLOBAL_ROLES=NOT_RUN; OWNER_ACL=NOT_VERIFIED'
           echo 'COMMERCIAL_RESTORE_COMPLETE=NO; COMMERCIAL_GO=NO_GO'
+
+  rg02-schema-metadata-only:
+    if: >-
+      github.repository == 'luit77yak-dev/neroxa-master' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.ref_protected &&
+      github.run_attempt == 1 &&
+      (github.actor == 'luit77yak-dev' || github.actor == 'dev-luizt5') &&
+      inputs.confirmation == 'RG02_METADATA_ONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: neroxa-restore-gate01
+    env:
+      RG01_ACCOUNT_ID: ${{ vars.RG01_ACCOUNT_ID }}
+      RG01_NAMESPACE_ID: ${{ vars.RG01_NAMESPACE_ID }}
+      RG01_REVIEW_GATE: ${{ vars.RG01_REVIEW_GATE }}
+      RG01_KV_READ_TOKEN: ${{ secrets.RG01_KV_READ_TOKEN }}
+      RG01_DECRYPT_KEY: ${{ secrets.RG01_DECRYPT_KEY }}
+      RG01_MANIFEST_KEY: ${{ inputs.manifest_key }}
+      RG01_EXPECTED_CIPHER_SHA256: ${{ inputs.expected_cipher_sha256 }}
+      RG02_ROLES_MANIFEST_KEY: ${{ inputs.roles_manifest_key }}
+      RG02_ROLES_EXPECTED_CIPHER_SHA256: ${{ inputs.roles_expected_cipher_sha256 }}
+      RG02_ROLES_SOURCE_SHA256: ${{ inputs.roles_source_sha256 }}
+      RG02_DUMP_SOURCE_SHA256: ${{ inputs.dump_source_sha256 }}
+      PG_IMAGE: supabase/postgres:17.12.0.002
+    steps:
+      - name: Checkout protected commit without retained token
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Restore ONLY schema and metadata to isolated PG17
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$RG01_REVIEW_GATE" = 'ARMED_AFTER_OPERATOR_APPROVAL'
+          test "$GITHUB_REF_PROTECTED" = 'true'
+          test "$GITHUB_RUN_ATTEMPT" = '1'
+          [[ "$RG02_ROLES_MANIFEST_KEY" =~ ^rg01-[a-f0-9]{16}-manifest$ ]] || { echo 'RG02_GLOBALS_TRANSFER=BLOCKED'; exit 1; }
+          [[ "$RG02_ROLES_EXPECTED_CIPHER_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo 'RG02_GLOBALS_DIGEST=BLOCKED'; exit 1; }
+          test "$RG02_ROLES_MANIFEST_KEY" != "$RG01_MANIFEST_KEY"
+          [[ "$RG02_ROLES_SOURCE_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo 'RG02_ROLES_SOURCE_HASH=BLOCKED'; exit 1; }
+          [[ "$RG02_DUMP_SOURCE_SHA256" =~ ^[a-f0-9]{64}$ ]] || { echo 'RG02_DUMP_SOURCE_HASH=BLOCKED'; exit 1; }
+          echo 'RG02_RUNNER_PROTECTED=PASS; PRODUCTION_DATABASE_ACCESS=NONE'
+          TMP="$(mktemp -d "$RUNNER_TEMP/neroxa-rg02.XXXXXXXX")"
+          CONTAINER="neroxa-rg02-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          cleanup() { docker rm -f "$CONTAINER" >/dev/null 2>&1 || true; rm -rf -- "$TMP"; }
+          trap cleanup EXIT
+          python3 tools/restore-gate01/restore_from_kv.py --manifest-key "$RG01_MANIFEST_KEY" --expected-sha256 "$RG01_EXPECTED_CIPHER_SHA256" --output "$TMP/database.dump"
+          python3 tools/restore-gate01/restore_from_kv.py --manifest-key "$RG02_ROLES_MANIFEST_KEY" --expected-sha256 "$RG02_ROLES_EXPECTED_CIPHER_SHA256" --output "$TMP/roles-no-passwords.private.sql" --format roles-sql
+          test "$(sha256sum "$TMP/database.dump" | cut -d' ' -f1)" = "$RG02_DUMP_SOURCE_SHA256" || { echo 'RG02_SAME_PREIMAGE_DUMP=BLOCKED'; exit 1; }
+          test "$(sha256sum "$TMP/roles-no-passwords.private.sql" | cut -d' ' -f1)" = "$RG02_ROLES_SOURCE_SHA256" || { echo 'RG02_SAME_PREIMAGE_ROLES=BLOCKED'; exit 1; }
+          echo 'RG02_AUDITED_SOURCE_SHA256=PASS'
+          # Classification runs BEFORE any metadata replay. The private role SQL is never executed.
+          python3 - "$TMP/roles-no-passwords.private.sql" <<'PY'
+          import re,sys
+          from pathlib import Path
+          src=Path(sys.argv[1]).read_text(encoding='utf-8')
+          roles=re.findall(r'(?im)^\s*CREATE\s+(?:ROLE|USER)\s+((?:"(?:[^"]|"")*"|[A-Za-z_][A-Za-z0-9_$]*))\s*;',src)
+          priv=re.findall(r'(?im)^\s*ALTER\s+(?:ROLE|USER)\s+[^;]*\b(?:SUPERUSER|BYPASSRLS|CREATEROLE|CREATEDB|REPLICATION)\b[^;]*;',src)
+          memberships=re.findall(r'(?im)^\s*GRANT\s+[^;]+\s+TO\s+[^;]+;',src)
+          if not roles: raise SystemExit('ROLE_CLASSIFICATION=BLOCKED_NO_DECLARATIONS')
+          print(f'ROLE_CLASSIFICATION=REVIEW_ONLY; DECLARED={len(roles)}; PRIVILEGED_HOLDS={len(priv)}; MEMBERSHIP_HOLDS={len(memberships)}; ROLE_SQL_EXECUTED=NO')
+          PY
+          timeout 240s docker pull "$PG_IMAGE" >/dev/null
+          PASSWORD="$(openssl rand -hex 32)"
+          docker run --rm --detach --name "$CONTAINER" --network none --security-opt no-new-privileges --tmpfs /var/lib/postgresql/data:rw,nosuid,nodev,size=1536m --tmpfs /tmp:rw,nosuid,nodev,size=128m -e POSTGRES_PASSWORD="$PASSWORD" "$PG_IMAGE" >/dev/null
+          unset PASSWORD
+          READY=0
+          for i in $(seq 1 90); do
+            if docker exec "$CONTAINER" pg_isready -q -h /var/run/postgresql -U supabase_admin -d postgres; then READY=1; break; fi
+            sleep 2
+          done
+          test "$READY" = 1 || { echo 'PG17_BOOT=BLOCKED'; exit 1; }
+          VERSION="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d postgres -c 'SHOW server_version;')"
+          case "$VERSION" in 17.*) echo 'PG17_VERSION=PASS';; *) echo 'PG17_VERSION=BLOCKED'; exit 1;; esac
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d postgres -c 'CREATE DATABASE neroxa_rg02_probe;' >"$TMP/database-create.stdout" 2>"$TMP/database-create.stderr" || { echo 'RG02_DATABASE=BLOCKED'; exit 1; }
+          docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe -c "CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';" >"$TMP/vault.stdout" 2>"$TMP/vault.stderr" || { echo 'RG02_VAULT=BLOCKED'; exit 1; }
+          echo 'VAULT_0_3_1=PASS'
+          docker exec -i "$CONTAINER" sh -c 'umask 077; cat > /tmp/database.dump' < "$TMP/database.dump"
+          test "$(sha256sum "$TMP/database.dump" | cut -d' ' -f1)" = "$(docker exec "$CONTAINER" sha256sum /tmp/database.dump | cut -d' ' -f1)" || { echo 'DUMP_TRANSFER=BLOCKED'; exit 1; }
+          docker exec "$CONTAINER" pg_restore --list /tmp/database.dump > "$TMP/restore.full.list"
+          VAULT_TOC_COUNT="$(grep -Ec '^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault ' "$TMP/restore.full.list" || true)"
+          test "$VAULT_TOC_COUNT" = 1 || { echo 'VAULT_TOC_SCHEMA=BLOCKED'; exit 1; }
+          sed -E '/^[[:digit:]]+; [[:digit:]]+ [[:digit:]]+ SCHEMA - vault /d' "$TMP/restore.full.list" > "$TMP/restore.filtered.list"
+          docker exec -i "$CONTAINER" sh -c 'umask 077; cat > /tmp/restore.filtered.list' < "$TMP/restore.filtered.list"
+          test "$(sha256sum "$TMP/restore.filtered.list" | cut -d' ' -f1)" = "$(docker exec "$CONTAINER" sha256sum /tmp/restore.filtered.list | cut -d' ' -f1)" || { echo 'TOC_TRANSFER=BLOCKED'; exit 1; }
+          # Do NOT use --no-owner/--no-acl. Do NOT restore DATA. Never execute roles.sql.
+          if timeout 360s docker exec "$CONTAINER" pg_restore --schema-only --exit-on-error --single-transaction --use-list=/tmp/restore.filtered.list -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe /tmp/database.dump >"$TMP/schema.stdout" 2>"$TMP/schema.stderr"; then
+            echo 'ISOLATED_SCHEMA_WITH_OWNER_ACL=PASS'
+          else
+            echo 'ISOLATED_SCHEMA_WITH_OWNER_ACL=BLOCKED_REDACTED'
+            echo 'SCHEMA_DIAGNOSTICS=PRIVATE_NOT_UPLOADED'
+            exit 1
+          fi
+          # Both catalogs remain in runner-private files and are removed on EXIT.
+          docker exec "$CONTAINER" pg_restore --schema-only --use-list=/tmp/restore.filtered.list /tmp/database.dump >"$TMP/source-schema.sql" 2>"$TMP/source-parse.stderr" || { echo 'RG02_SOURCE_SQL=BLOCKED'; exit 1; }
+          docker exec "$CONTAINER" pg_dump -s -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe >"$TMP/target-schema.sql" 2>"$TMP/target-schema.stderr" || { echo 'RG02_TARGET_SQL=BLOCKED'; exit 1; }
+          # Exact role flags and memberships are read from pg_catalog. Never read authentication passwords.
+          docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe -c "SELECT jsonb_build_object('roles',(SELECT coalesce(jsonb_agg(jsonb_build_object('name',rolname,'superuser',rolsuper,'bypassrls',rolbypassrls,'createrole',rolcreaterole,'createdb',rolcreatedb,'replication',rolreplication,'login',rolcanlogin,'inherit',rolinherit)),'[]'::jsonb) FROM pg_roles WHERE rolname !~ '^pg_'),'memberships',(SELECT coalesce(jsonb_agg(jsonb_build_object('granted',r.rolname,'member',m.rolname,'admin_option',a.admin_option)),'[]'::jsonb) FROM pg_auth_members a JOIN pg_roles r ON r.oid=a.roleid JOIN pg_roles m ON m.oid=a.member))::text;" >"$TMP/target-roles.json" 2>"$TMP/target-roles.stderr" || { echo 'RG02_ROLE_CATALOG=BLOCKED'; exit 1; }
+          python3 tools/restore-gate01/rg02_compare_runtime.py \
+            --source-sql "$TMP/source-schema.sql" \
+            --target-sql "$TMP/target-schema.sql" \
+            --source-roles "$TMP/roles-no-passwords.private.sql" \
+            --target-roles "$TMP/target-roles.json" \
+            --out "$TMP/rg02-comparison.private.json" || { echo 'RG02_METADATA_COMPARISON=HOLD_REDACTED'; exit 1; }
+          echo 'SCHEMA_ONLY=YES; TABLE_DATA_RESTORED=NO; ROLE_SQL_EXECUTED=NO; NO_REMOTE_WRITES=PASS; CONTAINER_NETWORK=NONE'
+          echo 'SQL_RELEASE=NOT_RUN; COMMERCIAL_GO=NO_GO'
