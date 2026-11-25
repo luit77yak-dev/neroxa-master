@@ -233,6 +233,9 @@ jobs:
       - name: RG02 structural ACL synthetic tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_catalog_reconcile.py' -v
+      - name: RG02 ordered ACL synthetic tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_acl_ordered.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
@@ -355,6 +358,12 @@ jobs:
             --catalog-json "$TMP/rg02-catalog.private.json" \
             --target-roles "$TMP/target-roles.json" \
             --out "$TMP/rg02-catalog-report.private.json" || { echo 'RG02_CATALOG_PROBE=BLOCKED_REDACTED'; exit 1; }
+          # SQL-only event-order triage; consults existing private catalog snapshot.
+          # This is a HOLD-only diagnostic and never replaces the strict comparison.
+          python3 tools/restore-gate01/rg02_acl_ordered.py \
+            --source-sql "$TMP/source-schema.sql" \
+            --catalog-json "$TMP/rg02-catalog.private.json" \
+            --out "$TMP/rg02-ordered-acl.private.json" || { echo 'RG02_ORDERED_ACL=BLOCKED_REDACTED'; exit 1; }
           # Read-only, redacted triage of SQL representation differences before strict gate.
           # Counts are diagnostics ONLY; they cannot turn a comparison into PASS.
           python3 tools/restore-gate01/rg02_acl_diagnostic.py \
