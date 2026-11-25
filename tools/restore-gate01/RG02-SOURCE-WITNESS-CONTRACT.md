@@ -4,6 +4,80 @@
 
 Este documento estabelece um requisito para uma futura auditoria aprovada. **Não autoriza acesso, leitura, alteração, migração, GRANT, restauração de globals, captura de credenciais, nova cópia de dados nem GO.** Não o executar como script.
 
+## Atualização de autorização — 25/11/2026
+
+O responsável autorizou **preparar** uma nova captura comercial sincronizada,
+**exclusivamente de leitura** e **somente pelo canal privado protegido**.
+Esta autorização **não inclui** concessão de privilégios, criação de roles,
+migrações, alteração do banco comercial, publicação pública nem liberação GO.
+A captura efetiva exige aprovação humana do GitHub Environment, assinatura/segredos
+privados de origem e recuperação externa da chave cifrante previamente confirmada.
+
+A implementação candidata está em:
+- `.github/workflows/rg02-source-synchronized-preimage.yml`
+- `rg02_source_same_snapshot_capture.py`
+- `rg02_source_globals_same_snapshot.sql`
+- `rg02_source_tuple_same_snapshot.sql`
+
+**Novo snapshot ≠ snapshot antigo.** Um exportador em
+`REPEATABLE READ READ ONLY` mantém aberta a transação de
+`pg_export_snapshot()`, enquanto um `pg_dump -Fc --snapshot` de banco
+inteiro e **dois SELECTs independentes** (catálogos globais + matriz de
+direitos) importam exatamente esse snapshot via `SET TRANSACTION SNAPSHOT`.
+A consulta global consulta `pg_roles`, `pg_auth_members` e
+`pg_parameter_acl` no snapshot — **não** presume que `pg_dumpall
+--globals-only` compartilhe automaticamente o mesmo snapshot.
+
+A role exigida `neroxa_rg02_snapshot_reader` deve **já existir**
+e ter privilégio de leitura suficiente para o dump completo. Não
+promover `neroxa_f02_preflight`, `postgres` ou `service_role`
+para contornar a restrição. O script rejeita atributos de escrita,
+superusuário e CREATE; `BYPASSRLS` de leitura é registrado
+explicitamente caso tenha sido pré-autorizado. Sem leitura integral
+do dump, a execução falha, **nunca** muda para `--enable-row-security`
+ou para `--no-acl`.
+
+O runner transmite stdout de `pg_dump` e das duas consultas
+**diretamente para GPG AES256**, sem dump/SQL privados em disco.
+Decripta e reconfere cada digest *dentro do runner*, sem publicar os
+bytes em logs, e armazena exclusivamente `*.gpg` em artefato privado
+GitHub de retenção 7 dias. `manifest.json.gpg` liga hashes, novo
+`capture_id`, commit e run. Credenciais/chave **não** entram no artefato.
+O upload **não** comprova custódia independente: é obrigatório
+baixar e verificar a recuperação em canal privado antes de classificar
+a evidência como durável.
+
+### Configuração protegida necessária antes de executar
+
+Criar/verificar **GitHub Environment** `neroxa-rg02-source-capture`
+com revisão humana obrigatória, sem autoaprovação, branch `main`
+protegida como única permitida, sem bypass. Um Environment inexistente
+pode ser criado sem proteção pelo GitHub; por isso o workflow exige
+vars/segredos explicitamente provisionados **somente nesse Environment**.
+
+Vars:
+- `RG02_SOURCE_GATE=OPERATOR_APPROVED_PRIVATE_CAPTURE`
+- `RG02_ESCROW_RECOVERY=EXTERNALLY_RECOVERABLE_KEY_CONFIRMED`
+- `RG02_SOURCE_HOST`: host oficial do Session Pooler ou direto
+- `RG02_SOURCE_PG_USER`: a role dedicada, com project ref quando exigido pelo pooler
+
+Secrets **somente de Environment**, nunca repositório/chat:
+- `RG02_SOURCE_PG_PASSWORD`
+- `RG02_SOURCE_CA_PEM`
+- `RG02_CAPTURE_PASSPHRASE`: aleatória, 32+ caracteres, com
+  cópia recuperável fora do GitHub aprovada previamente.
+
+A execução requer `workflow_dispatch` na `main` com
+`confirmation=RG02_NEW_PREIMAGE_READONLY`. Se algum controle,
+certificado, privilégio, snapshot, espaço, tamanho, timeout,
+criptografia, reread ou upload falhar, registrar `BLOCKED` e
+**não repetir automaticamente**. Primeiro ensaiar código em PG17
+sintético `--network none`. A PR de preparação é revisão de código,
+não é execução comercial. `GLOBAL_ROLES=NOT_VERIFIED`,
+`OWNER_ACL=NOT_VERIFIED`, `COMMERCIAL_GO=NO_GO` até auditorias e
+gates posteriores.
+
+
 ## 1. Evidência já produzida
 
 Execução protegida [RG02 #45620361672](https://github.com/luit77yak-dev/neroxa-master/actions/runs/45620361672), no commit `fd19f6b4fca363336519668f4cc9f11baa53182f`:
