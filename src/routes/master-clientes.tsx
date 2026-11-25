@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MasterShell } from "@/features/master/shell/MasterShell";
-import { createNeroxaSystemInstance, listNeroxaSystems, type NeroxaSystem } from "@/features/master/systems/services";
+import {
+  createNeroxaSystemInstance,
+  listNeroxaSystems,
+  type NeroxaSystem,
+} from "@/features/master/systems/services";
 import { loadSubscriptionOverview } from "@/features/master/subscriptions/services";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { Client360Shell } from "@/features/master/clients/components/Client360/Client360Shell";
@@ -67,7 +71,15 @@ function MasterClientsPage() {
   const [contacts, setContacts] = useState<NeroxaClientContact[]>([]);
   const [showContactCreate, setShowContactCreate] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
-  const [contactDraft, setContactDraft] = useState({ name: "", roleTitle: "", email: "", phone: "", whatsapp: "", isPrimary: false, notes: "" });
+  const [contactDraft, setContactDraft] = useState({
+    name: "",
+    roleTitle: "",
+    email: "",
+    phone: "",
+    whatsapp: "",
+    isPrimary: false,
+    notes: "",
+  });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<ClientStatus | "ALL">("ALL");
   const [loading, setLoading] = useState(true);
@@ -85,8 +97,16 @@ function MasterClientsPage() {
   const [showInstanceCreate, setShowInstanceCreate] = useState(false);
   const [systems, setSystems] = useState<NeroxaSystem[]>([]);
   const [plans, setPlans] = useState<Array<{ id: string; name: string; active: boolean }>>([]);
-  const [clientSubscriptions, setClientSubscriptions] = useState<Array<{ id: string; plan_id: string; status: string }>>([]);
-  const [instanceDraft, setInstanceDraft] = useState({ systemId: "", planId: "", subscriptionId: "", name: "", slug: "" });
+  const [clientSubscriptions, setClientSubscriptions] = useState<
+    Array<{ id: string; plan_id: string; status: string }>
+  >([]);
+  const [instanceDraft, setInstanceDraft] = useState({
+    systemId: "",
+    planId: "",
+    subscriptionId: "",
+    name: "",
+    slug: "",
+  });
   const [savingInstance, setSavingInstance] = useState(false);
 
   const selected = clients.find((client) => client.id === selectedId) ?? null;
@@ -128,8 +148,20 @@ function MasterClientsPage() {
   }, []);
 
   useEffect(() => {
-    void listNeroxaSystems().then(setSystems).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar os sistemas."));
-    void loadSubscriptionOverview().then((overview) => setPlans(overview.plans.map((plan) => ({ id: plan.id, name: plan.name, active: plan.active })))).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar os planos."));
+    void listNeroxaSystems()
+      .then(setSystems)
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar os sistemas."),
+      );
+    void loadSubscriptionOverview()
+      .then((overview) =>
+        setPlans(
+          overview.plans.map((plan) => ({ id: plan.id, name: plan.name, active: plan.active })),
+        ),
+      )
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar os planos."),
+      );
     if (!selected?.organization_id) {
       setContacts([]);
       setInstances([]);
@@ -138,20 +170,49 @@ function MasterClientsPage() {
       return;
     }
 
-    void loadSubscriptionOverview().then((overview) => setClientSubscriptions(overview.subscriptions.filter((subscription) => subscription.client_id === selected.organization_id).map((subscription) => ({ id: subscription.id, plan_id: subscription.plan_id, status: subscription.status })))).catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar as assinaturas."));
+    void loadSubscriptionOverview()
+      .then((overview) =>
+        setClientSubscriptions(
+          overview.subscriptions
+            .filter((subscription) => subscription.client_id === selected.organization_id)
+            .map((subscription) => ({
+              id: subscription.id,
+              plan_id: subscription.plan_id,
+              status: subscription.status,
+            })),
+        ),
+      )
+      .catch((cause) =>
+        setError(
+          cause instanceof Error ? cause.message : "Não foi possível carregar as assinaturas.",
+        ),
+      );
 
     void listNeroxaClientContacts(selected.id)
       .then(setContacts)
-      .catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar o contato."));
+      .catch((cause) =>
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar o contato."),
+      );
 
     void listNeroxaClientInstances(selected.organization_id)
       .then((rows) => {
         setInstances(rows);
-        setDomainInstanceId((current) => current && rows.some((row) => row.id === current) ? current : rows[0]?.id ?? "");
-        return Promise.all(rows.map(async (instance) => [instance.id, await listNeroxaInstanceDomains(instance.id)] as const));
+        setDomainInstanceId((current) =>
+          current && rows.some((row) => row.id === current) ? current : (rows[0]?.id ?? ""),
+        );
+        return Promise.all(
+          rows.map(
+            async (instance) =>
+              [instance.id, await listNeroxaInstanceDomains(instance.id)] as const,
+          ),
+        );
       })
       .then((entries) => setDomains(Object.fromEntries(entries)))
-      .catch((cause) => setError(cause instanceof Error ? cause.message : "Não foi possível carregar as instâncias."));
+      .catch((cause) =>
+        setError(
+          cause instanceof Error ? cause.message : "Não foi possível carregar as instâncias.",
+        ),
+      );
   }, [selectedId]);
 
   useEffect(() => {
@@ -163,7 +224,11 @@ function MasterClientsPage() {
       params.delete("clientId");
       params.delete("section");
     }
-    window.history.replaceState({}, "", params.toString() ? `/master-clientes?${params.toString()}` : "/master-clientes");
+    window.history.replaceState(
+      {},
+      "",
+      params.toString() ? `/master-clientes?${params.toString()}` : "/master-clientes",
+    );
   }, [selectedId]);
 
   useEffect(() => {
@@ -189,12 +254,15 @@ function MasterClientsPage() {
     });
   }, [clients, search, statusFilter]);
 
-  const counts = useMemo(() => ({
-    total: clients.length,
-    active: clients.filter((client) => client.status === "ACTIVE").length,
-    onboarding: clients.filter((client) => client.status === "IMPLEMENTATION").length,
-    attention: clients.filter((client) => client.status === "DELINQUENT").length,
-  }), [clients]);
+  const counts = useMemo(
+    () => ({
+      total: clients.length,
+      active: clients.filter((client) => client.status === "ACTIVE").length,
+      onboarding: clients.filter((client) => client.status === "IMPLEMENTATION").length,
+      attention: clients.filter((client) => client.status === "DELINQUENT").length,
+    }),
+    [clients],
+  );
 
   const notify = (message: string) => {
     setError(null);
@@ -247,7 +315,12 @@ function MasterClientsPage() {
       return;
     }
     const system = systems.find((row) => row.id === instanceDraft.systemId);
-    if (!system || !instanceDraft.planId || !instanceDraft.name.trim() || !instanceDraft.slug.trim()) {
+    if (
+      !system ||
+      !instanceDraft.planId ||
+      !instanceDraft.name.trim() ||
+      !instanceDraft.slug.trim()
+    ) {
       setError("Informe sistema, plano, nome e slug da instância.");
       return;
     }
@@ -322,7 +395,15 @@ function MasterClientsPage() {
       });
       const refreshed = await listNeroxaClientContacts(selected.id);
       setContacts(refreshed);
-      setContactDraft({ name: "", roleTitle: "", email: "", phone: "", whatsapp: "", isPrimary: false, notes: "" });
+      setContactDraft({
+        name: "",
+        roleTitle: "",
+        email: "",
+        phone: "",
+        whatsapp: "",
+        isPrimary: false,
+        notes: "",
+      });
       setShowContactCreate(false);
       notify("Contato cadastrado com sucesso.");
     } catch (cause) {
@@ -346,7 +427,7 @@ function MasterClientsPage() {
     }
   };
 
- if(authorized===false)return <MasterLogin />;
+  if (authorized === false) return <MasterLogin />;
 
   if (authorized === null || loading) {
     return (
@@ -358,350 +439,683 @@ function MasterClientsPage() {
 
   return (
     <MasterShell>
-    <main className="min-h-screen bg-muted/50 text-foreground">
-
-      <div className="mx-auto max-w-[1500px] px-3 pt-4 sm:px-6">
-        <div className="master-page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-medium tracking-wide text-muted-foreground">Neroxa Master</p>
-            <h1 className="mt-1 text-xl font-semibold sm:text-2xl">Clientes</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Gerencie clientes, organizações, contatos e implantações.</p>
+      <main className="min-h-screen bg-muted/50 text-foreground">
+        <div className="mx-auto max-w-[1500px] px-3 pt-4 sm:px-6">
+          <div className="master-page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground">
+                Neroxa Master
+              </p>
+              <h1 className="mt-1 text-xl font-semibold sm:text-2xl">Clientes</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Gerencie clientes, organizações, contatos e implantações.
+              </p>
+            </div>
+            <Button
+              className="min-h-11 w-full shrink-0 sm:w-auto"
+              onClick={() => {
+                setDraft(emptyDraft);
+                setShowCreate(true);
+              }}
+            >
+              <Plus className="h-4 w-4" /> Novo cliente
+            </Button>
           </div>
-          <Button className="min-h-11 w-full shrink-0 sm:w-auto" onClick={() => { setDraft(emptyDraft); setShowCreate(true); }}>
-            <Plus className="h-4 w-4" /> Novo cliente
-          </Button>
         </div>
-      </div>
 
-      <div className="mx-auto grid min-w-0 max-w-[1500px] gap-4 overflow-x-hidden px-3 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <section className="min-w-0 space-y-4">
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {[
-              ["Clientes", counts.total, "Total cadastrado"],
-              ["Ativos", counts.active, "Operação ativa"],
-              ["Implantação", counts.onboarding, "Em onboarding"],
-              ["Atenção", counts.attention, "Inadimplentes"],
-            ].map(([label, value, hint]) => (
-              <Card key={label} className="border-border bg-card p-4 shadow-soft">
-                <p className="text-xs font-medium tracking-wide text-muted-foreground">{label}</p>
-                <p className="mt-1 text-2xl font-semibold">{value}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-              </Card>
-            ))}
-          </div>
-
-          <Card className="overflow-hidden border-border bg-card shadow-soft">
-            <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center">
-              <div className="relative min-w-0 flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar por empresa, nome comercial ou CNPJ"
-                  className="h-10 w-full rounded-lg border border-border bg-muted/50 pl-9 pr-3 text-sm outline-none transition focus:border-slate-400 focus:bg-card"
-                />
-              </div>
-              <select
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as ClientStatus | "ALL")}
-                className="h-10 rounded-lg border border-border bg-card px-3 text-sm"
-              >
-                <option value="ALL">Todos os status</option>
-                {Object.entries(STATUS_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
+        <div className="mx-auto grid min-w-0 max-w-[1500px] gap-4 overflow-x-hidden px-3 py-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <section className="min-w-0 space-y-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              {[
+                ["Clientes", counts.total, "Total cadastrado"],
+                ["Ativos", counts.active, "Operação ativa"],
+                ["Implantação", counts.onboarding, "Em onboarding"],
+                ["Atenção", counts.attention, "Inadimplentes"],
+              ].map(([label, value, hint]) => (
+                <Card key={label} className="border-border bg-card p-4 shadow-soft">
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground">{label}</p>
+                  <p className="mt-1 text-2xl font-semibold">{value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
+                </Card>
+              ))}
             </div>
 
-            {error && (
-              <div className="flex items-start gap-2 border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-                <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
-              </div>
-            )}
-            {notice && (
-              <div className="flex items-center gap-2 border-b border-emerald-100 bg-success/10 px-4 py-3 text-sm text-success">
-                <Check className="h-4 w-4" /> {notice}
-              </div>
-            )}
-
-            <div className="divide-y divide-border">
-              {filteredClients.map((client) => (
-                <button
-                  key={client.id}
-                  type="button"
-                  onClick={() => handleSelectClient(client.id)}
-                  className={`flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-muted/50 ${selectedId === client.id ? "bg-muted/50" : ""}`}
+            <Card className="overflow-hidden border-border bg-card shadow-soft">
+              <div className="flex flex-col gap-3 border-b border-border p-4 md:flex-row md:items-center">
+                <div className="relative min-w-0 flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/70" />
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Buscar por empresa, nome comercial ou CNPJ"
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 pl-9 pr-3 text-sm outline-none transition focus:border-slate-400 focus:bg-card"
+                  />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={(event) => setStatusFilter(event.target.value as ClientStatus | "ALL")}
+                  className="h-10 rounded-lg border border-border bg-card px-3 text-sm"
                 >
-                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{client.trade_name || client.legal_name || "Cliente sem nome"}</p>
-                    <p className="truncate text-xs text-muted-foreground">{client.legal_name || "Sem razão social"}{client.organization_id ? " · Organização vinculada" : " · Lead sem organização"}</p>
-                  </div>
-                  <span className={`hidden rounded-full border px-2.5 py-1 text-[11px] font-medium sm:inline-flex ${STATUS_TONE[client.status]}`}>
-                    {STATUS_LABELS[client.status]}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground/70 transition ${selectedId === client.id ? "rotate-[-90deg]" : ""}`} />
-                </button>
-              ))}
-              {!filteredClients.length && (
-                <div className="px-6 py-14 text-center">
-                  <Users className="mx-auto h-8 w-8 text-slate-300" />
-                  <p className="mt-3 text-sm font-medium text-foreground/80">Nenhum cliente encontrado</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Ajuste os filtros ou cadastre o primeiro cliente.</p>
+                  <option value="ALL">Todos os status</option>
+                  {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {error && (
+                <div className="flex items-start gap-2 border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" /> {error}
                 </div>
               )}
-            </div>
-          </Card>
-        </section>
+              {notice && (
+                <div className="flex items-center gap-2 border-b border-emerald-100 bg-success/10 px-4 py-3 text-sm text-success">
+                  <Check className="h-4 w-4" /> {notice}
+                </div>
+              )}
 
-        {selected ? <Client360Shell
-          key={selected.id}
-          clientId={selected.id}
-          organizationId={selected.organization_id}
-          clientName={selected.trade_name || selected.legal_name || "Cliente sem nome"}
-          status={STATUS_LABELS[selected.status]}
-          initialSection={routeContext.clientId === selected.id ? routeContext.section : "client"}
-          onSectionChange={(section) => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("clientId", selected.id);
-            if (section) params.set("section", section);
-            else params.delete("section");
-            window.history.replaceState({}, "", `/master-clientes?${params.toString()}`);
-          }}
-        >
-          <aside className="lg:sticky lg:top-[73px] lg:max-h-[calc(100vh-89px)] lg:overflow-y-auto">
-                    {selected ? (
-                      <Card className="border-border bg-card shadow-soft">
-                        <div className="border-b border-border p-5">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-slate-950 text-white">
-                                <Building2 className="h-5 w-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-lg font-semibold">{selected.trade_name || selected.legal_name}</p>
-                                <p className="text-xs text-muted-foreground">{selected.organization_id ? "Organização vinculada" : "Ainda sem organização"}</p>
-                              </div>
-                            </div>
+              <div className="divide-y divide-border">
+                {filteredClients.map((client) => (
+                  <button
+                    key={client.id}
+                    type="button"
+                    onClick={() => handleSelectClient(client.id)}
+                    className={`flex w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-muted/50 ${selectedId === client.id ? "bg-muted/50" : ""}`}
+                  >
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted text-muted-foreground">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold">
+                        {client.trade_name || client.legal_name || "Cliente sem nome"}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {client.legal_name || "Sem razão social"}
+                        {client.organization_id
+                          ? " · Organização vinculada"
+                          : " · Lead sem organização"}
+                      </p>
+                    </div>
+                    <span
+                      className={`hidden rounded-full border px-2.5 py-1 text-[11px] font-medium sm:inline-flex ${STATUS_TONE[client.status]}`}
+                    >
+                      {STATUS_LABELS[client.status]}
+                    </span>
+                    <ChevronDown
+                      className={`h-4 w-4 text-muted-foreground/70 transition ${selectedId === client.id ? "rotate-[-90deg]" : ""}`}
+                    />
+                  </button>
+                ))}
+                {!filteredClients.length && (
+                  <div className="px-6 py-14 text-center">
+                    <Users className="mx-auto h-8 w-8 text-slate-300" />
+                    <p className="mt-3 text-sm font-medium text-foreground/80">
+                      Nenhum cliente encontrado
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Ajuste os filtros ou cadastre o primeiro cliente.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </section>
 
+          {selected ? (
+            <Client360Shell
+              key={selected.id}
+              clientId={selected.id}
+              organizationId={selected.organization_id}
+              clientName={selected.trade_name || selected.legal_name || "Cliente sem nome"}
+              status={STATUS_LABELS[selected.status]}
+              initialSection={
+                routeContext.clientId === selected.id ? routeContext.section : "client"
+              }
+              onSectionChange={(section) => {
+                const params = new URLSearchParams(window.location.search);
+                params.set("clientId", selected.id);
+                if (section) params.set("section", section);
+                else params.delete("section");
+                window.history.replaceState({}, "", `/master-clientes?${params.toString()}`);
+              }}
+            >
+              <aside className="lg:sticky lg:top-[73px] lg:max-h-[calc(100vh-89px)] lg:overflow-y-auto">
+                {selected ? (
+                  <Card className="border-border bg-card shadow-soft">
+                    <div className="border-b border-border p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-slate-950 text-white">
+                            <Building2 className="h-5 w-5" />
                           </div>
-                          <div className="mt-4">
-                            <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_TONE[selected.status]}`}>
-                              {STATUS_LABELS[selected.status]}
-                            </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-lg font-semibold">
+                              {selected.trade_name || selected.legal_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {selected.organization_id
+                                ? "Organização vinculada"
+                                : "Ainda sem organização"}
+                            </p>
                           </div>
                         </div>
-          
-                        <div className="space-y-5 p-5">
-                          <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-semibold">Dados comerciais</h2>
-                            <Button variant="ghost" size="sm" onClick={() => setEditing((value) => !value)}>
-                              <Pencil className="h-3.5 w-3.5" /> {editing ? "Cancelar" : "Editar"}
+                      </div>
+                      <div className="mt-4">
+                        <span
+                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${STATUS_TONE[selected.status]}`}
+                        >
+                          {STATUS_LABELS[selected.status]}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-5 p-5">
+                      <div className="flex items-center justify-between">
+                        <h2 className="text-sm font-semibold">Dados comerciais</h2>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditing((value) => !value)}
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> {editing ? "Cancelar" : "Editar"}
+                        </Button>
+                      </div>
+
+                      {editing ? (
+                        <ClientForm
+                          draft={draft}
+                          setDraft={setDraft}
+                          onSubmit={handleUpdate}
+                          saving={saving}
+                          compact
+                        />
+                      ) : (
+                        <div className="space-y-3 text-sm">
+                          <Detail label="Razão social" value={selected.legal_name} />
+                          <Detail label="Nome comercial" value={selected.trade_name} />
+                          <Detail label="CNPJ / CPF" value={selected.tax_id} />
+                          <Detail label="Observações" value={selected.notes} />
+                        </div>
+                      )}
+
+                      <div>
+                        <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground">
+                          Próximos estados
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {ALLOWED_TRANSITIONS[selected.status].map((status) => (
+                            <Button
+                              key={status}
+                              variant="outline"
+                              size="sm"
+                              disabled={saving}
+                              onClick={() => void handleTransition(status)}
+                            >
+                              {STATUS_LABELS[status]}
                             </Button>
-                          </div>
-          
-                          {editing ? (
-                            <ClientForm draft={draft} setDraft={setDraft} onSubmit={handleUpdate} saving={saving} compact />
-                          ) : (
-                            <div className="space-y-3 text-sm">
-                              <Detail label="Razão social" value={selected.legal_name} />
-                              <Detail label="Nome comercial" value={selected.trade_name} />
-                              <Detail label="CNPJ / CPF" value={selected.tax_id} />
-                              <Detail label="Observações" value={selected.notes} />
-                            </div>
+                          ))}
+                          {!ALLOWED_TRANSITIONS[selected.status].length && (
+                            <p className="text-xs text-muted-foreground">
+                              Este estado não possui novas transições.
+                            </p>
                           )}
-          
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-border bg-card p-4">
+                        <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="mb-2 text-xs font-medium tracking-wide text-muted-foreground">Próximos estados</p>
-                            <div className="flex flex-wrap gap-2">
-                              {ALLOWED_TRANSITIONS[selected.status].map((status) => (
-                                <Button key={status} variant="outline" size="sm" disabled={saving} onClick={() => void handleTransition(status)}>
-                                  {STATUS_LABELS[status]}
-                                </Button>
-                              ))}
-                              {!ALLOWED_TRANSITIONS[selected.status].length && (
-                                <p className="text-xs text-muted-foreground">Este estado não possui novas transições.</p>
-                              )}
-                            </div>
+                            <p className="text-sm font-semibold">Instâncias e domínios</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              Cadastre o endereço que será usado pelo sistema do cliente.
+                            </p>
                           </div>
-          
-                          <div className="rounded-xl border border-border bg-card p-4">
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-semibold">Instâncias e domínios</p>
-                                <p className="mt-1 text-xs text-muted-foreground">Cadastre o endereço que será usado pelo sistema do cliente.</p>
-                              </div>
-                            </div>
-          
-                            {selected.organization_id && <Button className="mt-4 w-full" variant="outline" onClick={() => setShowInstanceCreate(true)}><Plus className="h-4 w-4" /> Adicionar sistema</Button>}
-          
-                            {!selected.organization_id ? (
-                              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                                Este cliente ainda não está vinculado a uma organização. Vincule a organização antes de cadastrar um domínio.
-                              </div>
-                            ) : instances.length === 0 ? (
-                              <div className="mt-4 rounded-lg border border-dashed border-input bg-muted/50 p-4 text-xs text-muted-foreground">
-                                Nenhuma instância foi provisionada para este cliente ainda.
-                              </div>
-                            ) : (
-                              <>
-                                <div className="mt-4 space-y-3">
-                                  {instances.map((instance) => (
-                                    <div key={instance.id} className="rounded-lg border border-border p-3">
-                                      <div className="flex items-center justify-between gap-3">
-                                        <div className="min-w-0">
-                                          <p className="truncate text-sm font-medium">{instance.name}</p>
-                                          <p className="truncate text-xs text-muted-foreground">{instance.slug} · {instance.status}</p>
-                                        </div>
-                                        <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2 py-1 text-[10px] font-medium text-muted-foreground">
-                                          {instance.system_type}
-                                        </span>
-                                      </div>
-                                      <div className="mt-3 space-y-2">
-                                        {(domains[instance.id] ?? []).map((domain) => (
-                                          <div key={domain.id} className="flex items-center justify-between gap-3 rounded-md bg-muted/50 px-3 py-2">
-                                            <div className="min-w-0">
-                                              <p className="truncate text-xs font-medium text-foreground">{domain.domain}</p>
-                                              <p className="text-[10px] text-muted-foreground">{domain.is_primary ? "Principal · " : ""}{domain.status}</p>
-                                            </div>
-                                          </div>
-                                        ))}
-                                        {!domains[instance.id]?.length && (
-                                          <p className="text-[11px] text-muted-foreground">Nenhum domínio cadastrado.</p>
-                                        )}
-                                      </div>
+                        </div>
+
+                        {selected.organization_id && (
+                          <Button
+                            className="mt-4 w-full"
+                            variant="outline"
+                            onClick={() => setShowInstanceCreate(true)}
+                          >
+                            <Plus className="h-4 w-4" /> Adicionar sistema
+                          </Button>
+                        )}
+
+                        {!selected.organization_id ? (
+                          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                            Este cliente ainda não está vinculado a uma organização. Vincule a
+                            organização antes de cadastrar um domínio.
+                          </div>
+                        ) : instances.length === 0 ? (
+                          <div className="mt-4 rounded-lg border border-dashed border-input bg-muted/50 p-4 text-xs text-muted-foreground">
+                            Nenhuma instância foi provisionada para este cliente ainda.
+                          </div>
+                        ) : (
+                          <>
+                            <div className="mt-4 space-y-3">
+                              {instances.map((instance) => (
+                                <div
+                                  key={instance.id}
+                                  className="rounded-lg border border-border p-3"
+                                >
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-medium">
+                                        {instance.name}
+                                      </p>
+                                      <p className="truncate text-xs text-muted-foreground">
+                                        {instance.slug} · {instance.status}
+                                      </p>
                                     </div>
-                                  ))}
-                                </div>
-          
-                                <div className="mt-4 border-t border-border/60 pt-4">
-                                  <p className="text-xs font-semibold text-foreground/80">Adicionar domínio</p>
-                                  <div className="mt-2 space-y-2">
-                                    <select
-                                      value={domainInstanceId}
-                                      onChange={(event) => setDomainInstanceId(event.target.value)}
-                                      className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-card"
-                                    >
-                                      {instances.map((instance) => (
-                                        <option key={instance.id} value={instance.id}>{instance.name}</option>
-                                      ))}
-                                    </select>
-                                    <input
-                                      value={domainDraft}
-                                      onChange={(event) => setDomainDraft(event.target.value)}
-                                      onKeyDown={(event) => { if (event.key === "Enter") void handleAddDomain(); }}
-                                      placeholder="Ex.: cliente.neroxa.ia.br"
-                                      className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-card"
-                                    />
-                                    <Button className="w-full" onClick={() => void handleAddDomain()} disabled={savingDomain}>
-                                      {savingDomain ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                                      {savingDomain ? "Cadastrando..." : "Cadastrar domínio"}
-                                    </Button>
+                                    <span className="shrink-0 rounded-full border border-border bg-muted/50 px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                                      {instance.system_type}
+                                    </span>
+                                  </div>
+                                  <div className="mt-3 space-y-2">
+                                    {(domains[instance.id] ?? []).map((domain) => (
+                                      <div
+                                        key={domain.id}
+                                        className="flex items-center justify-between gap-3 rounded-md bg-muted/50 px-3 py-2"
+                                      >
+                                        <div className="min-w-0">
+                                          <p className="truncate text-xs font-medium text-foreground">
+                                            {domain.domain}
+                                          </p>
+                                          <p className="text-[10px] text-muted-foreground">
+                                            {domain.is_primary ? "Principal · " : ""}
+                                            {domain.status}
+                                          </p>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {!domains[instance.id]?.length && (
+                                      <p className="text-[11px] text-muted-foreground">
+                                        Nenhum domínio cadastrado.
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
-                              </>
-                            )}
-                          </div>
-          
-                          <div className="rounded-xl border border-border bg-muted/50 p-4">
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <div className="flex items-center gap-2">
-                                <UserRound className="h-4 w-4 text-muted-foreground" />
-                                <p className="text-sm font-semibold">Contatos</p>
+                              ))}
+                            </div>
+
+                            <div className="mt-4 border-t border-border/60 pt-4">
+                              <p className="text-xs font-semibold text-foreground/80">
+                                Adicionar domínio
+                              </p>
+                              <div className="mt-2 space-y-2">
+                                <select
+                                  value={domainInstanceId}
+                                  onChange={(event) => setDomainInstanceId(event.target.value)}
+                                  className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-card"
+                                >
+                                  {instances.map((instance) => (
+                                    <option key={instance.id} value={instance.id}>
+                                      {instance.name}
+                                    </option>
+                                  ))}
+                                </select>
+                                <input
+                                  value={domainDraft}
+                                  onChange={(event) => setDomainDraft(event.target.value)}
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter") void handleAddDomain();
+                                  }}
+                                  placeholder="Ex.: cliente.neroxa.ia.br"
+                                  className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm outline-none focus:border-slate-400 focus:bg-card"
+                                />
+                                <Button
+                                  className="w-full"
+                                  onClick={() => void handleAddDomain()}
+                                  disabled={savingDomain}
+                                >
+                                  {savingDomain ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                  ) : (
+                                    <Plus className="h-4 w-4" />
+                                  )}
+                                  {savingDomain ? "Cadastrando..." : "Cadastrar domínio"}
+                                </Button>
                               </div>
-                              <Button size="sm" variant="outline" onClick={() => setShowContactCreate((value) => !value)}>
-                                <Plus className="h-4 w-4" /> {showContactCreate ? "Fechar" : "Adicionar contato"}
+                            </div>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="rounded-xl border border-border bg-muted/50 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <UserRound className="h-4 w-4 text-muted-foreground" />
+                            <p className="text-sm font-semibold">Contatos</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowContactCreate((value) => !value)}
+                          >
+                            <Plus className="h-4 w-4" />{" "}
+                            {showContactCreate ? "Fechar" : "Adicionar contato"}
+                          </Button>
+                        </div>
+                        {showContactCreate && (
+                          <div className="mt-4 grid gap-3 border-t border-border/60 pt-4 sm:grid-cols-2">
+                            <Field label="Nome *">
+                              <input
+                                value={contactDraft.name}
+                                onChange={(e) =>
+                                  setContactDraft({ ...contactDraft, name: e.target.value })
+                                }
+                                placeholder="Nome do contato"
+                              />
+                            </Field>
+                            <Field label="Cargo">
+                              <input
+                                value={contactDraft.roleTitle}
+                                onChange={(e) =>
+                                  setContactDraft({ ...contactDraft, roleTitle: e.target.value })
+                                }
+                                placeholder="Ex.: Proprietário"
+                              />
+                            </Field>
+                            <Field label="E-mail">
+                              <input
+                                type="email"
+                                value={contactDraft.email}
+                                onChange={(e) =>
+                                  setContactDraft({ ...contactDraft, email: e.target.value })
+                                }
+                                placeholder="contato@empresa.com"
+                              />
+                            </Field>
+                            <Field label="Telefone">
+                              <input
+                                value={contactDraft.phone}
+                                onChange={(e) =>
+                                  setContactDraft({ ...contactDraft, phone: e.target.value })
+                                }
+                                placeholder="Telefone"
+                              />
+                            </Field>
+                            <Field label="WhatsApp">
+                              <input
+                                value={contactDraft.whatsapp}
+                                onChange={(e) =>
+                                  setContactDraft({ ...contactDraft, whatsapp: e.target.value })
+                                }
+                                placeholder="WhatsApp"
+                              />
+                            </Field>
+                            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                              <input
+                                type="checkbox"
+                                checked={contactDraft.isPrimary}
+                                onChange={(e) =>
+                                  setContactDraft({ ...contactDraft, isPrimary: e.target.checked })
+                                }
+                              />{" "}
+                              Contato principal
+                            </label>
+                            <Field label="Observações">
+                              <textarea
+                                value={contactDraft.notes}
+                                onChange={(e) =>
+                                  setContactDraft({ ...contactDraft, notes: e.target.value })
+                                }
+                                rows={2}
+                                placeholder="Observações"
+                              />
+                            </Field>
+                            <div className="flex items-end">
+                              <Button
+                                className="w-full"
+                                onClick={() => void handleCreateContact()}
+                                disabled={savingContact}
+                              >
+                                {savingContact ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Check className="h-4 w-4" />
+                                )}
+                                {savingContact ? "Salvando..." : "Salvar contato"}
                               </Button>
                             </div>
-                            {showContactCreate && (
-                              <div className="mt-4 grid gap-3 border-t border-border/60 pt-4 sm:grid-cols-2">
-                                <Field label="Nome *"><input value={contactDraft.name} onChange={(e) => setContactDraft({ ...contactDraft, name: e.target.value })} placeholder="Nome do contato" /></Field>
-                                <Field label="Cargo"><input value={contactDraft.roleTitle} onChange={(e) => setContactDraft({ ...contactDraft, roleTitle: e.target.value })} placeholder="Ex.: Proprietário" /></Field>
-                                <Field label="E-mail"><input type="email" value={contactDraft.email} onChange={(e) => setContactDraft({ ...contactDraft, email: e.target.value })} placeholder="contato@empresa.com" /></Field>
-                                <Field label="Telefone"><input value={contactDraft.phone} onChange={(e) => setContactDraft({ ...contactDraft, phone: e.target.value })} placeholder="Telefone" /></Field>
-                                <Field label="WhatsApp"><input value={contactDraft.whatsapp} onChange={(e) => setContactDraft({ ...contactDraft, whatsapp: e.target.value })} placeholder="WhatsApp" /></Field>
-                                <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={contactDraft.isPrimary} onChange={(e) => setContactDraft({ ...contactDraft, isPrimary: e.target.checked })} /> Contato principal</label>
-                                <Field label="Observações"><textarea value={contactDraft.notes} onChange={(e) => setContactDraft({ ...contactDraft, notes: e.target.value })} rows={2} placeholder="Observações" /></Field>
-                                <div className="flex items-end"><Button className="w-full" onClick={() => void handleCreateContact()} disabled={savingContact}>{savingContact ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}{savingContact ? "Salvando..." : "Salvar contato"}</Button></div>
-                              </div>
-                            )}
-                            <div className="mt-4 space-y-2">
-                              {contacts.length ? contacts.map((contact) => (
-                                <div key={contact.id} className="rounded-lg border border-border bg-card p-3">
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                      <p className="text-sm font-medium">{contact.name}</p>
-                                      {contact.role_title && <p className="text-xs text-muted-foreground">{contact.role_title}</p>}
-                                    </div>
-                                    {contact.is_primary && <span className="rounded-full border border-border bg-muted px-2 py-1 text-[10px] font-medium">Principal</span>}
-                                  </div>
-                                  {contact.email && <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
-                                  {contact.whatsapp && <p className="mt-1 text-xs text-muted-foreground">WhatsApp: {contact.whatsapp}</p>}
-                                  {contact.phone && <p className="mt-1 text-xs text-muted-foreground">Telefone: {contact.phone}</p>}
-                                </div>
-                              )) : <p className="mt-3 text-xs text-muted-foreground">Nenhum contato cadastrado ainda.</p>}
-                            </div>
                           </div>
+                        )}
+                        <div className="mt-4 space-y-2">
+                          {contacts.length ? (
+                            contacts.map((contact) => (
+                              <div
+                                key={contact.id}
+                                className="rounded-lg border border-border bg-card p-3"
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-medium">{contact.name}</p>
+                                    {contact.role_title && (
+                                      <p className="text-xs text-muted-foreground">
+                                        {contact.role_title}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {contact.is_primary && (
+                                    <span className="rounded-full border border-border bg-muted px-2 py-1 text-[10px] font-medium">
+                                      Principal
+                                    </span>
+                                  )}
+                                </div>
+                                {contact.email && (
+                                  <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                                    <Mail className="h-3.5 w-3.5" />
+                                    {contact.email}
+                                  </p>
+                                )}
+                                {contact.whatsapp && (
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    WhatsApp: {contact.whatsapp}
+                                  </p>
+                                )}
+                                {contact.phone && (
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    Telefone: {contact.phone}
+                                  </p>
+                                )}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="mt-3 text-xs text-muted-foreground">
+                              Nenhum contato cadastrado ainda.
+                            </p>
+                          )}
                         </div>
-                      </Card>
-                    ) : (
-                      <Card className="border-dashed border-input bg-card p-8 text-center">
-                        <Building2 className="mx-auto h-8 w-8 text-slate-300" />
-                        <p className="mt-3 text-sm font-medium">Selecione um cliente</p>
-                      </Card>
-                    )}
-                  
-          </aside>
-        </Client360Shell> : (
-          <Card className="border-dashed border-input bg-card p-8 text-center lg:col-start-2">
-            <Building2 className="mx-auto h-8 w-8 text-muted-foreground/50" />
-            <p className="mt-3 text-sm font-medium">Nenhum cliente selecionado</p>
-            <p className="mt-1 text-xs text-muted-foreground">Cadastre o primeiro cliente para começar o fluxo comercial.</p>
-            <Button className="mt-4 w-full sm:w-auto" onClick={() => { setDraft(emptyDraft); setShowCreate(true); }}>
-              <Plus className="h-4 w-4" /> Cadastrar cliente
-            </Button>
-          </Card>
-        )}
-      </div>
-
-      {showInstanceCreate && selected && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
-          <Card className="max-h-[90vh] w-full max-w-lg overflow-auto border-border bg-card shadow-2xl">
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4 sm:p-5">
-              <div><p className="text-xs font-medium tracking-wide text-muted-foreground">Neroxa Master</p><h2 className="mt-1 text-lg font-semibold">Adicionar sistema ao cliente</h2></div>
-              <Button variant="ghost" size="icon" onClick={() => setShowInstanceCreate(false)}><X className="h-4 w-4" /></Button>
-            </div>
-            <div className="space-y-4 p-5">
-              <Field label="Sistema"><select value={instanceDraft.systemId} onChange={(event) => { const system = systems.find((row) => row.id === event.target.value); setInstanceDraft((current) => ({ ...current, systemId: event.target.value, name: system ? `${selected.trade_name || selected.legal_name} · ${system.name}` : current.name, slug: system ? `${(selected.trade_name || selected.legal_name || "cliente").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-${system.slug}` : current.slug })); }} className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm"><option value="">Selecione o sistema</option>{systems.filter((system) => system.active).map((system) => <option key={system.id} value={system.id}>{system.name} · {system.version}</option>)}</select></Field>
-              <Field label="Plano"><select value={instanceDraft.planId} onChange={(event) => setInstanceDraft((current) => ({ ...current, planId: event.target.value, subscriptionId: "" }))} className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm"><option value="">Selecione o plano</option>{plans.filter((plan) => plan.active).map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</select></Field>
-              <Field label="Assinatura (opcional)"><select value={instanceDraft.subscriptionId} onChange={(event) => setInstanceDraft((current) => ({ ...current, subscriptionId: event.target.value }))} className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm"><option value="">Vincular depois</option>{clientSubscriptions.filter((subscription) => subscription.plan_id === instanceDraft.planId).map((subscription) => <option key={subscription.id} value={subscription.id}>{subscription.status} · {subscription.id.slice(0, 8)}</option>)}</select><p className="mt-1 text-[11px] text-muted-foreground">Não cria nem altera a assinatura.</p></Field>
-              <Field label="Nome da instância"><input value={instanceDraft.name} onChange={(event) => setInstanceDraft((current) => ({ ...current, name: event.target.value }))} placeholder="Ex.: Pizzaria Aurora · Pizza Perfect Plate" /></Field>
-              <Field label="Slug"><input value={instanceDraft.slug} onChange={(event) => setInstanceDraft((current) => ({ ...current, slug: event.target.value }))} placeholder="pizzaria-aurora-pizza-perfect-plate" /></Field>
-              <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800">A instância será criada como <strong>PROVISIONING</strong>. Nenhum projeto Vercel ou domínio será criado automaticamente.</div>
-              <Button className="w-full" onClick={() => void handleCreateInstance()} disabled={savingInstance}>{savingInstance ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}{savingInstance ? "Criando..." : "Criar instância"}</Button>
-            </div>
-          </Card>
+                      </div>
+                    </div>
+                  </Card>
+                ) : (
+                  <Card className="border-dashed border-input bg-card p-8 text-center">
+                    <Building2 className="mx-auto h-8 w-8 text-slate-300" />
+                    <p className="mt-3 text-sm font-medium">Selecione um cliente</p>
+                  </Card>
+                )}
+              </aside>
+            </Client360Shell>
+          ) : (
+            <Card className="border-dashed border-input bg-card p-8 text-center lg:col-start-2">
+              <Building2 className="mx-auto h-8 w-8 text-muted-foreground/50" />
+              <p className="mt-3 text-sm font-medium">Nenhum cliente selecionado</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Cadastre o primeiro cliente para começar o fluxo comercial.
+              </p>
+              <Button
+                className="mt-4 w-full sm:w-auto"
+                onClick={() => {
+                  setDraft(emptyDraft);
+                  setShowCreate(true);
+                }}
+              >
+                <Plus className="h-4 w-4" /> Cadastrar cliente
+              </Button>
+            </Card>
+          )}
         </div>
-      )}
 
-      {showCreate && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
-          <Card className="max-h-[90vh] w-full max-w-lg overflow-auto border-border bg-card shadow-2xl">
-            <div className="flex items-center justify-between border-b border-border p-5">
-              <div>
-                <p className="text-xs font-medium tracking-wide text-muted-foreground">Neroxa Master</p>
-                <h2 className="mt-1 text-lg font-semibold">Novo cliente</h2>
+        {showInstanceCreate && selected && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
+            <Card className="max-h-[90vh] w-full max-w-lg overflow-auto border-border bg-card shadow-2xl">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border p-4 sm:p-5">
+                <div>
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground">
+                    Neroxa Master
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold">Adicionar sistema ao cliente</h2>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setShowInstanceCreate(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)}><X className="h-4 w-4" /></Button>
-            </div>
-            <div className="p-5">
-              <ClientForm draft={draft} setDraft={setDraft} onSubmit={handleCreate} saving={saving} />
-            </div>
-          </Card>
-        </div>
-      )}
+              <div className="space-y-4 p-5">
+                <Field label="Sistema">
+                  <select
+                    value={instanceDraft.systemId}
+                    onChange={(event) => {
+                      const system = systems.find((row) => row.id === event.target.value);
+                      setInstanceDraft((current) => ({
+                        ...current,
+                        systemId: event.target.value,
+                        name: system
+                          ? `${selected.trade_name || selected.legal_name} · ${system.name}`
+                          : current.name,
+                        slug: system
+                          ? `${(selected.trade_name || selected.legal_name || "cliente")
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, "-")
+                              .replace(/^-|-$/g, "")}-${system.slug}`
+                          : current.slug,
+                      }));
+                    }}
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm"
+                  >
+                    <option value="">Selecione o sistema</option>
+                    {systems
+                      .filter((system) => system.active)
+                      .map((system) => (
+                        <option key={system.id} value={system.id}>
+                          {system.name} · {system.version}
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+                <Field label="Plano">
+                  <select
+                    value={instanceDraft.planId}
+                    onChange={(event) =>
+                      setInstanceDraft((current) => ({
+                        ...current,
+                        planId: event.target.value,
+                        subscriptionId: "",
+                      }))
+                    }
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm"
+                  >
+                    <option value="">Selecione o plano</option>
+                    {plans
+                      .filter((plan) => plan.active)
+                      .map((plan) => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </option>
+                      ))}
+                  </select>
+                </Field>
+                <Field label="Assinatura (opcional)">
+                  <select
+                    value={instanceDraft.subscriptionId}
+                    onChange={(event) =>
+                      setInstanceDraft((current) => ({
+                        ...current,
+                        subscriptionId: event.target.value,
+                      }))
+                    }
+                    className="h-10 w-full rounded-lg border border-border bg-muted/50 px-3 text-sm"
+                  >
+                    <option value="">Vincular depois</option>
+                    {clientSubscriptions
+                      .filter((subscription) => subscription.plan_id === instanceDraft.planId)
+                      .map((subscription) => (
+                        <option key={subscription.id} value={subscription.id}>
+                          {subscription.status} · {subscription.id.slice(0, 8)}
+                        </option>
+                      ))}
+                  </select>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Não cria nem altera a assinatura.
+                  </p>
+                </Field>
+                <Field label="Nome da instância">
+                  <input
+                    value={instanceDraft.name}
+                    onChange={(event) =>
+                      setInstanceDraft((current) => ({ ...current, name: event.target.value }))
+                    }
+                    placeholder="Ex.: Pizzaria Aurora · Pizza Perfect Plate"
+                  />
+                </Field>
+                <Field label="Slug">
+                  <input
+                    value={instanceDraft.slug}
+                    onChange={(event) =>
+                      setInstanceDraft((current) => ({ ...current, slug: event.target.value }))
+                    }
+                    placeholder="pizzaria-aurora-pizza-perfect-plate"
+                  />
+                </Field>
+                <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800">
+                  A instância será criada como <strong>PROVISIONING</strong>. Nenhum projeto Vercel
+                  ou domínio será criado automaticamente.
+                </div>
+                <Button
+                  className="w-full"
+                  onClick={() => void handleCreateInstance()}
+                  disabled={savingInstance}
+                >
+                  {savingInstance ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  {savingInstance ? "Criando..." : "Criar instância"}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {showCreate && (
+          <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-4 backdrop-blur-sm">
+            <Card className="max-h-[90vh] w-full max-w-lg overflow-auto border-border bg-card shadow-2xl">
+              <div className="flex items-center justify-between border-b border-border p-5">
+                <div>
+                  <p className="text-xs font-medium tracking-wide text-muted-foreground">
+                    Neroxa Master
+                  </p>
+                  <h2 className="mt-1 text-lg font-semibold">Novo cliente</h2>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setShowCreate(false)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="p-5">
+                <ClientForm
+                  draft={draft}
+                  setDraft={setDraft}
+                  onSubmit={handleCreate}
+                  saving={saving}
+                />
+              </div>
+            </Card>
+          </div>
+        )}
       </main>
     </MasterShell>
   );
@@ -732,16 +1146,33 @@ function ClientForm({
   return (
     <div className={compact ? "space-y-3" : "space-y-4"}>
       <Field label="Nome comercial">
-        <input value={draft.tradeName} onChange={(event) => setDraft({ ...draft, tradeName: event.target.value })} placeholder="Ex.: Pizzaria Aurora" />
+        <input
+          value={draft.tradeName}
+          onChange={(event) => setDraft({ ...draft, tradeName: event.target.value })}
+          placeholder="Ex.: Pizzaria Aurora"
+        />
       </Field>
       <Field label="Razão social">
-        <input value={draft.legalName} onChange={(event) => setDraft({ ...draft, legalName: event.target.value })} placeholder="Ex.: Aurora Alimentação LTDA" />
+        <input
+          value={draft.legalName}
+          onChange={(event) => setDraft({ ...draft, legalName: event.target.value })}
+          placeholder="Ex.: Aurora Alimentação LTDA"
+        />
       </Field>
       <Field label="CNPJ / CPF">
-        <input value={draft.taxId} onChange={(event) => setDraft({ ...draft, taxId: event.target.value })} placeholder="Documento" />
+        <input
+          value={draft.taxId}
+          onChange={(event) => setDraft({ ...draft, taxId: event.target.value })}
+          placeholder="Documento"
+        />
       </Field>
       <Field label="Observações">
-        <textarea value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} rows={compact ? 3 : 4} placeholder="Contexto comercial, necessidades ou próximos passos" />
+        <textarea
+          value={draft.notes}
+          onChange={(event) => setDraft({ ...draft, notes: event.target.value })}
+          rows={compact ? 3 : 4}
+          placeholder="Contexto comercial, necessidades ou próximos passos"
+        />
       </Field>
       <Button className="w-full" onClick={onSubmit} disabled={saving}>
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}

@@ -18,14 +18,14 @@ Referências iniciais atuais em evidence/references-start.json: Delivery38 b324c
 
 Novas PRs:
 
-| PR draft | Branch/base | Candidato ensaiado |
-|---|---|---|
-| Master41 | security/mission-02a4-availability-20261014; base Master40 | 172abae4bc5dc41348202915e61e4f1fd8918ab2 |
-| Master42 | security/mission-02a4-private-tracking-20261014; base Master40 | a642cd20a5fa6d371164a50bf2d3d3e587dedd7c; revisão de digest846e04090ccc29070525887f2ee29017fd019391 |
-| Delivery41 | security/mission-02a4-legacy-replay-20261014; base Delivery40 | a99a7d743f9dbed8ece5d8b0880c4b9c543960c3 |
-| Master43 | security/mission-02a4-compat-harness-20261014; base Master41 | 4f95a332cda60c4d24e0329b8df93ffec811c9fd (lotes);55dfd757410cf179e1e51744c6f15f224f26f810 (RT/logout marcado) |
-| Master45 | security/mission-02a4-live-session-20261014; base Master43 | a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0 |
-| Master44 | security/mission-02a4-storage-20261014; base Master41 | bbfbfc35d3dfd566fcaa9bb50cce29e6f7ed941a |
+| PR draft   | Branch/base                                                    | Candidato ensaiado                                                                                            |
+| ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Master41   | security/mission-02a4-availability-20261014; base Master40     | 172abae4bc5dc41348202915e61e4f1fd8918ab2                                                                      |
+| Master42   | security/mission-02a4-private-tracking-20261014; base Master40 | a642cd20a5fa6d371164a50bf2d3d3e587dedd7c; revisão de digest846e04090ccc29070525887f2ee29017fd019391           |
+| Delivery41 | security/mission-02a4-legacy-replay-20261014; base Delivery40  | a99a7d743f9dbed8ece5d8b0880c4b9c543960c3                                                                      |
+| Master43   | security/mission-02a4-compat-harness-20261014; base Master41   | 4f95a332cda60c4d24e0329b8df93ffec811c9fd (lotes);55dfd757410cf179e1e51744c6f15f224f26f810 (RT/logout marcado) |
+| Master45   | security/mission-02a4-live-session-20261014; base Master43     | a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0                                                                      |
+| Master44   | security/mission-02a4-storage-20261014; base Master41          | bbfbfc35d3dfd566fcaa9bb50cce29e6f7ed941a                                                                      |
 
 Auto-deploy desabilitado em cada branch antes de publicá-la. O CLI GitHub perdeu autenticação durante a missão (401); a conexão GitHub disponível continuou autorizada e foi usada para commits aditivos por API, sem reescrita/force-push. Nenhum segredo foi inspecionado para contornar falha.
 
@@ -39,14 +39,14 @@ Baseline e ensaios: tabela final gerada abaixo a partir dos logs. A primeira ten
 
 ## 4. Antes/depois de F01
 
-| Prova | Antes, SQL anterior inalterado | Depois, candidato disponibilidade |
-|---|---|---|
-| staff_A/sem grant SELECT disponibilidade/semana B | FAIL/P0, uma linha | PASS, zero linhas, digests intactos |
-| staff_none PATCH B enabled=false | FAIL/P0, HTTP200/uma linha, digest alterado | PASS, HTTP200/zero linhas, digest intacto |
-| admin_A e staff_A A | controles restritos anteriores | PASS SELECT/UPDATE e INSERT/DELETE filhos |
-| famílias privadas | disponibilidade/semana expostas |324 PASS adicionais: quatro famílias, A/B/C e sete atores |
-| membership revogada com mesmo JWT | pendência por família | PASS negativas das quatro famílias |
-| CRM comercial legítimo staff_none | autorização global distinta | PASS preservado; não dá acesso privado Delivery |
+| Prova                                             | Antes, SQL anterior inalterado              | Depois, candidato disponibilidade                         |
+| ------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------- |
+| staff_A/sem grant SELECT disponibilidade/semana B | FAIL/P0, uma linha                          | PASS, zero linhas, digests intactos                       |
+| staff_none PATCH B enabled=false                  | FAIL/P0, HTTP200/uma linha, digest alterado | PASS, HTTP200/zero linhas, digest intacto                 |
+| admin_A e staff_A A                               | controles restritos anteriores              | PASS SELECT/UPDATE e INSERT/DELETE filhos                 |
+| famílias privadas                                 | disponibilidade/semana expostas             | 324 PASS adicionais: quatro famílias, A/B/C e sete atores |
+| membership revogada com mesmo JWT                 | pendência por família                       | PASS negativas das quatro famílias                        |
+| CRM comercial legítimo staff_none                 | autorização global distinta                 | PASS preservado; não dá acesso privado Delivery           |
 
 Hash do SQL F01:67011e4dc707703f183e737852021a8b6e3ae26364056e86fe996f2998696264. Política RESTRICTIVE FOR ALL exige helper delivery explícito com OWNER/ADMIN/MANAGER, USING e WITH CHECK. As permissivas organizacionais/globais não conseguem OR fora do cap. Trigger existente impede trocar instance_id. RPC público de catálogo projeta horários deliberadamente; não autoriza consulta privada de tabelas. Não mudamos is_neroxa_staff.
 
@@ -104,11 +104,11 @@ SQL addon hash:a066a7c92c783f9171a2ea7fc78248d835e06c3eb855148094bce4ed029aff49.
 
 Run38647381181, SHA4f95a33:
 
-| Job/perfil | Resultado bruto | Resultado candidato e limite |
-|---|---|---|
-|116137496082 M admins |219PASS/4FAIL |212PASS/1FAIL; único FAIL candidato: own.txt Storage403, perfil sem SQL Storage |
-|116137496353 M staff/common/anon |268PASS/4FAIL |261PASS/1FAIL; mesmo own.txt Storage403 |
-|116137496339 complementos/RT |24PASS/4FAIL |17PASS complementos; join RT FAIL InitializingProjectConnection |
+| Job/perfil                       | Resultado bruto | Resultado candidato e limite                                                    |
+| -------------------------------- | --------------- | ------------------------------------------------------------------------------- |
+| 116137496082 M admins            | 219PASS/4FAIL   | 212PASS/1FAIL; único FAIL candidato: own.txt Storage403, perfil sem SQL Storage |
+| 116137496353 M staff/common/anon | 268PASS/4FAIL   | 261PASS/1FAIL; mesmo own.txt Storage403                                         |
+| 116137496339 complementos/RT     | 24PASS/4FAIL    | 17PASS complementos; join RT FAIL InitializingProjectConnection                 |
 
 Os três FAIL de baseline Master repetem problemas anteriores ao scoped02A2 e não são regressões introduzidas. Não somar os lotes: repetem RPCs/controles auxiliares; os loops principais particionam atores preservando os mesmos asserts. Foram executados novamente os casos de categoria/instância adulterada, núcleo pedidos/itens/histórico, SELECT herdado, revogação REST, CRM global e PATCH B; nenhum P0 novo nesses casos. O conjunto não inclui o gate F02, portanto não elimina o caminho legado por telefone desse perfil. Storage tem perfil próprio validado separadamente, não corrigido por um deny-all.
 
@@ -127,17 +127,17 @@ Complementos17PASS: leitura própria de admin/staff e negativas B/C, INSERT/UPDA
 
 ## 13. Falhas e riscos
 
-| Severidade | Achado | Estado |
-|---|---|---|
-|P0 | disponibilidade/semana B e PATCH sem grant | reproduzido no anterior; negado no clone F01 corrigido |
-|P0 | tracking por UUID+telefone | reproduzido; negado no clone com gate F02; endpoint comprador ainda não integrado |
-|P0 | drivers/loyalty residuais após quarentena inicial | reproduzidos no7388038; negados no clonea99a7d7 |
-|P1 | logout com JWT antigo na versão55dfd75 | corrigido no clone45 com controles reais; outros canais/papéis ainda não exaustivos |
-|P1 | HTTP comprador seguro, recuperação de token e append capability positivo/idempotência/preço/status | NOT RUN; F02 aberta |
-|P1 | migração de imagens públicas, outros caminhos/roles/views/RPCs não exaustivos e legado sem instância nativa | bloqueiam piloto |
-|P1 | restore T1 e rollback seguro pós-commit, dados comerciais preenchidos | NOT RUN; não substituir por atomicidade |
-|P2 | cancelamentos/indisponibilidade de logs, limites operacionais do harness e lock transitivo CLI | discriminados; lotes/reprodução versionados |
-|P3 | ajustes comerciais/UX fora da missão | não iniciados; nenhum bloqueio crítico rebaixado |
+| Severidade | Achado                                                                                                      | Estado                                                                              |
+| ---------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| P0         | disponibilidade/semana B e PATCH sem grant                                                                  | reproduzido no anterior; negado no clone F01 corrigido                              |
+| P0         | tracking por UUID+telefone                                                                                  | reproduzido; negado no clone com gate F02; endpoint comprador ainda não integrado   |
+| P0         | drivers/loyalty residuais após quarentena inicial                                                           | reproduzidos no7388038; negados no clonea99a7d7                                     |
+| P1         | logout com JWT antigo na versão55dfd75                                                                      | corrigido no clone45 com controles reais; outros canais/papéis ainda não exaustivos |
+| P1         | HTTP comprador seguro, recuperação de token e append capability positivo/idempotência/preço/status          | NOT RUN; F02 aberta                                                                 |
+| P1         | migração de imagens públicas, outros caminhos/roles/views/RPCs não exaustivos e legado sem instância nativa | bloqueiam piloto                                                                    |
+| P1         | restore T1 e rollback seguro pós-commit, dados comerciais preenchidos                                       | NOT RUN; não substituir por atomicidade                                             |
+| P2         | cancelamentos/indisponibilidade de logs, limites operacionais do harness e lock transitivo CLI              | discriminados; lotes/reprodução versionados                                         |
+| P3         | ajustes comerciais/UX fora da missão                                                                        | não iniciados; nenhum bloqueio crítico rebaixado                                    |
 
 ## 14. Próximo ciclo mínimo proposto
 
@@ -165,13 +165,13 @@ Manifesto formal separa M core (disponibilidade+addons+sessão) e M Storage (mes
 
 Run[38650424558](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38650424558), SHAa189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0; SQL sessão SHA256bac08110f829ebb518b491843319ddc80cbbb749ed4e9a28c9c5ac275170120e.
 
-|Job|Escopo|Resultado bruto|Candidato|
-|---|---|---|---|
-|116147551800|quatro famílias de horários|331PASS/3FAIL baseline|324PASS|
-|116147551927|complementos/sessão/Realtime|34PASS/3FAIL baseline|27PASS, inclui17 complementos|
-|116147551762|Storage PNG privado com sessão ativa|52PASS/3FAIL baseline|45PASS|
-|116147551885|núcleo admins|219PASS/4FAIL|212PASS/1FAIL own.txt sem candidato Storage nesse perfil|
-|116147551564|núcleo staff/common/anon|268PASS/4FAIL|261PASS/1FAIL own.txt sem candidato Storage nesse perfil|
+| Job          | Escopo                               | Resultado bruto        | Candidato                                                |
+| ------------ | ------------------------------------ | ---------------------- | -------------------------------------------------------- |
+| 116147551800 | quatro famílias de horários          | 331PASS/3FAIL baseline | 324PASS                                                  |
+| 116147551927 | complementos/sessão/Realtime         | 34PASS/3FAIL baseline  | 27PASS, inclui17 complementos                            |
+| 116147551762 | Storage PNG privado com sessão ativa | 52PASS/3FAIL baseline  | 45PASS                                                   |
+| 116147551885 | núcleo admins                        | 219PASS/4FAIL          | 212PASS/1FAIL own.txt sem candidato Storage nesse perfil |
+| 116147551564 | núcleo staff/common/anon             | 268PASS/4FAIL          | 261PASS/1FAIL own.txt sem candidato Storage nesse perfil |
 
 Não somar lotes/runs: controles auxiliares se repetem. Não esconder os FAIL de baseline nem o own.txt403 nos perfis sem Storage. No perfil com Storage o contrato PNG próprio tem prova positiva real, incluindo staff autorizado. Todos os ambientes foram limpos (CLEANUP=PASS).
 
@@ -181,17 +181,17 @@ A regressão preservou os mesmos casos privados de A/B/C. Não cobre cada canal,
 
 ## 17. Matriz consolidada e funcionalidades indisponíveis
 
-|Família/identidade|Resultado efetivamente demonstrado|Limite|
-|---|---|---|
-|Horários4, adminsA/B/C próprios|ALLOW; staff_A somenteA; staff_none/common/anon A/B/C DENY|324casos; demais papéis não exaustivos|
-|Núcleo pedidos/itens/histórico/catálogo/settings/zonas|casos de escopo A/B/C, adulteração, RPCs, categoria cruzada, role herdado e revogação PASS|CRUD financeiro direto permanece RPC-only; nem todo endpoint/view foi ensaiado|
-|Complementos|17PASS próprios/foreign/cross-parent/revogação|links produto-grupo e demais papéis pendentes|
-|Tracking capability|18PASS contrato servidor; telefone DENY e append telefone DENY com loja aberta|HTTP comprador/Origin/cotas/emissão/perda de token NOT RUN|
-|Storage|45PASS próprio PNG e negativas B/C, MIME/limite/URL pública|demais paths, public assets e cenários/papéis remanescentes NOT RUN|
-|Realtime45|positivoA, negativoB, grant, logout, REST antigo e reconexão PASS|C/outros papéis/canais/expiração não exaustivos|
-|LegadoL|replay/checkout/financeiro e254negativas pós-quarentena PASS|operações suspensas; schema sem loja nativa, funções/URLs restantes não certificadas|
-|Atomicidade|dados/policies/ACLs; Master45 acrescenta prosrc/ACL funções|não é restoreT1 nem rollback pós-commit|
-|Node sintaxe|PASS comandos registrados|sem prova RLS estática; build/TS/lint/browser NOT RUN nesta rodada sem alteraçõesTS|
+| Família/identidade                                     | Resultado efetivamente demonstrado                                                         | Limite                                                                               |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Horários4, adminsA/B/C próprios                        | ALLOW; staff_A somenteA; staff_none/common/anon A/B/C DENY                                 | 324casos; demais papéis não exaustivos                                               |
+| Núcleo pedidos/itens/histórico/catálogo/settings/zonas | casos de escopo A/B/C, adulteração, RPCs, categoria cruzada, role herdado e revogação PASS | CRUD financeiro direto permanece RPC-only; nem todo endpoint/view foi ensaiado       |
+| Complementos                                           | 17PASS próprios/foreign/cross-parent/revogação                                             | links produto-grupo e demais papéis pendentes                                        |
+| Tracking capability                                    | 18PASS contrato servidor; telefone DENY e append telefone DENY com loja aberta             | HTTP comprador/Origin/cotas/emissão/perda de token NOT RUN                           |
+| Storage                                                | 45PASS próprio PNG e negativas B/C, MIME/limite/URL pública                                | demais paths, public assets e cenários/papéis remanescentes NOT RUN                  |
+| Realtime45                                             | positivoA, negativoB, grant, logout, REST antigo e reconexão PASS                          | C/outros papéis/canais/expiração não exaustivos                                      |
+| LegadoL                                                | replay/checkout/financeiro e254negativas pós-quarentena PASS                               | operações suspensas; schema sem loja nativa, funções/URLs restantes não certificadas |
+| Atomicidade                                            | dados/policies/ACLs; Master45 acrescenta prosrc/ACL funções                                | não é restoreT1 nem rollback pós-commit                                              |
+| Node sintaxe                                           | PASS comandos registrados                                                                  | sem prova RLS estática; build/TS/lint/browser NOT RUN nesta rodada sem alteraçõesTS  |
 
 Indisponíveis para piloto: painel legado; operações legadas quarentenadas; comprador sem token/recuperação verificada; append por capability ainda sem ensaio integrado; entrega pública segura das imagens novas; candidato único integrado/homologado; recuperaçãoT1 preenchida. A existência de PRs draft não libera nenhuma dessas funções.
 
@@ -227,19 +227,19 @@ As conexões WebSocket com JWT antigo podem ser aceitas criptograficamente; a pr
 
 ### URLs e SHAs das execuções
 
-|Run|SHA|Tentativa|Estado CI|
-|---|---|---|---|
-|[38627968576](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38627968576)|284f05a0d6b39e737888365f184c9e0b504ea6a1|1|completed/failure|
-|[38628192443](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38628192443)|172abae4bc5dc41348202915e61e4f1fd8918ab2|2|completed/cancelled|
-|[38628979793](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38628979793)|a642cd20a5fa6d371164a50bf2d3d3e587dedd7c|1|completed/success|
-|[38629775680](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38629775680)|846e04090ccc29070525887f2ee29017fd019391|1|completed/success|
-|[38629490815](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38629490815)|59f5787eebad27800349a46d7783bfc21ccd46b1|2|completed/failure|
-|[38647381181](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38647381181)|4f95a332cda60c4d24e0329b8df93ffec811c9fd|1|completed/failure|
-|[38630418859](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38630418859)|bbfbfc35d3dfd566fcaa9bb50cce29e6f7ed941a|1|completed/success|
-|[38647994280](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38647994280)|8e9ea1bf328a40868e470ea6a87d090cdcaba5a7|1|completed/failure|
-|[38648588792](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38648588792)|c3e3d1137203b9f6b65467745220559be1a15ffc|1|completed/failure|
-|[38649335058](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38649335058)|77c318f4f467d2c3b7621ceeba411a6fa66d3108|1|completed/failure|
-|[38649645182](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38649645182)|55dfd757410cf179e1e51744c6f15f224f26f810|1|completed/failure|
-|[38650424558](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38650424558)|a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0|1|completed/failure|
+| Run                                                                                    | SHA                                      | Tentativa | Estado CI           |
+| -------------------------------------------------------------------------------------- | ---------------------------------------- | --------- | ------------------- |
+| [38627968576](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38627968576) | 284f05a0d6b39e737888365f184c9e0b504ea6a1 | 1         | completed/failure   |
+| [38628192443](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38628192443) | 172abae4bc5dc41348202915e61e4f1fd8918ab2 | 2         | completed/cancelled |
+| [38628979793](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38628979793) | a642cd20a5fa6d371164a50bf2d3d3e587dedd7c | 1         | completed/success   |
+| [38629775680](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38629775680) | 846e04090ccc29070525887f2ee29017fd019391 | 1         | completed/success   |
+| [38629490815](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38629490815) | 59f5787eebad27800349a46d7783bfc21ccd46b1 | 2         | completed/failure   |
+| [38647381181](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38647381181) | 4f95a332cda60c4d24e0329b8df93ffec811c9fd | 1         | completed/failure   |
+| [38630418859](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38630418859) | bbfbfc35d3dfd566fcaa9bb50cce29e6f7ed941a | 1         | completed/success   |
+| [38647994280](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38647994280) | 8e9ea1bf328a40868e470ea6a87d090cdcaba5a7 | 1         | completed/failure   |
+| [38648588792](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38648588792) | c3e3d1137203b9f6b65467745220559be1a15ffc | 1         | completed/failure   |
+| [38649335058](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38649335058) | 77c318f4f467d2c3b7621ceeba411a6fa66d3108 | 1         | completed/failure   |
+| [38649645182](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38649645182) | 55dfd757410cf179e1e51744c6f15f224f26f810 | 1         | completed/failure   |
+| [38650424558](https://github.com/luit77yak-dev/neroxa-master/actions/runs/38650424558) | a189d67f1ea49dd4e2ac14679c9bbf9cbb16e1a0 | 1         | completed/failure   |
 
 CI success/failure/cancelled não substitui o veredito por fase/caso. Os testes de baseline inseguros e falhas funcionais discriminadas permanecem nos resultados brutos.

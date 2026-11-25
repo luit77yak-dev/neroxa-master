@@ -42,21 +42,48 @@ export async function listProvisioningJobs() {
 export async function listImplementationInstances() {
   const { data, error } = await supabase
     .from("neroxa_system_instances" as never)
-    .select("id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at")
+    .select(
+      "id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at",
+    )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as ImplementationInstance[];
 }
 
 export async function createImplementationInstance(input: {
-  organizationId: string; name: string; slug: string; systemType: string;
-  planId?: string | null; systemId?: string | null; subscriptionId?: string | null;
+  organizationId: string;
+  name: string;
+  slug: string;
+  systemType: string;
+  planId?: string | null;
+  systemId?: string | null;
+  subscriptionId?: string | null;
 }) {
-  const name=input.name.trim(); const slug=input.slug.trim().toLowerCase(); const systemType=input.systemType.trim().toUpperCase();
-  if(!input.organizationId||!name||!slug||!systemType) throw new Error("Informe cliente, nome, slug e tipo de sistema.");
-  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("O slug deve usar apenas letras minúsculas, números e hífens.");
-  const {data,error}=await supabase.from("neroxa_system_instances" as never).insert({organization_id:input.organizationId,name,slug,system_type:systemType,plan_id:input.planId||null,system_id:input.systemId||null,subscription_id:input.subscriptionId||null,status:"PROVISIONING"} as never).select("id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at").single();
-  if(error) throw new Error(error.message); return data as unknown as ImplementationInstance;
+  const name = input.name.trim();
+  const slug = input.slug.trim().toLowerCase();
+  const systemType = input.systemType.trim().toUpperCase();
+  if (!input.organizationId || !name || !slug || !systemType)
+    throw new Error("Informe cliente, nome, slug e tipo de sistema.");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))
+    throw new Error("O slug deve usar apenas letras minúsculas, números e hífens.");
+  const { data, error } = await supabase
+    .from("neroxa_system_instances" as never)
+    .insert({
+      organization_id: input.organizationId,
+      name,
+      slug,
+      system_type: systemType,
+      plan_id: input.planId || null,
+      system_id: input.systemId || null,
+      subscription_id: input.subscriptionId || null,
+      status: "PROVISIONING",
+    } as never)
+    .select(
+      "id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at",
+    )
+    .single();
+  if (error) throw new Error(error.message);
+  return data as unknown as ImplementationInstance;
 }
 
 export async function updateImplementationInstance(input: {
@@ -77,7 +104,9 @@ export async function updateImplementationInstance(input: {
     .from("neroxa_system_instances" as never)
     .update({ name, slug, system_type: systemType, updated_at: new Date().toISOString() } as never)
     .eq("id", input.id)
-    .select("id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at")
+    .select(
+      "id,organization_id,system_id,plan_id,subscription_id,name,slug,system_type,status,created_at,updated_at",
+    )
     .single();
 
   if (error) throw new Error(error.message);
@@ -93,10 +122,24 @@ export async function deleteImplementationInstance(id: string) {
 }
 
 export async function createProvisioningJob(input: {
-  organizationId: string; systemInstanceId?: string | null; action: string; payload?: Record<string, unknown>;
+  organizationId: string;
+  systemInstanceId?: string | null;
+  action: string;
+  payload?: Record<string, unknown>;
 }) {
-  const {data,error}=await supabase.from("neroxa_provisioning_jobs" as never).insert({organization_id:input.organizationId,system_instance_id:input.systemInstanceId||null,action:input.action,payload:input.payload??{},status:"PENDING"} as never).select("*").single();
-  if(error) throw new Error(error.message); return data as unknown as ProvisioningJob;
+  const { data, error } = await supabase
+    .from("neroxa_provisioning_jobs" as never)
+    .insert({
+      organization_id: input.organizationId,
+      system_instance_id: input.systemInstanceId || null,
+      action: input.action,
+      payload: input.payload ?? {},
+      status: "PENDING",
+    } as never)
+    .select("*")
+    .single();
+  if (error) throw new Error(error.message);
+  return data as unknown as ProvisioningJob;
 }
 
 export async function updateProvisioningJob(input: {
@@ -112,7 +155,10 @@ export async function updateProvisioningJob(input: {
   if (error) throw new Error(error.message);
 }
 
-export async function updateImplementationInstanceStatus(input: { id: string; status: InstanceStatus }) {
+export async function updateImplementationInstanceStatus(input: {
+  id: string;
+  status: InstanceStatus;
+}) {
   const { error } = await supabase.rpc("transition_neroxa_instance_status", {
     p_instance_id: input.id,
     p_status: input.status,
@@ -132,7 +178,11 @@ export async function cancelProvisioningJob(jobId: string) {
   return updateProvisioningJob({ id: jobId, status: "CANCELLED" });
 }
 
-export async function prepareImplementationFromSubscription(input: { subscriptionId: string; name: string; slug: string }) {
+export async function prepareImplementationFromSubscription(input: {
+  subscriptionId: string;
+  name: string;
+  slug: string;
+}) {
   const { data, error } = await supabase.rpc("prepare_neroxa_implementation_from_subscription", {
     p_subscription_id: input.subscriptionId,
     p_name: input.name.trim(),

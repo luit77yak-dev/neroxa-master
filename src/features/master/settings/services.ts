@@ -71,14 +71,12 @@ export async function updatePlatformSettings(settings: PlatformSettings) {
   if (userError) throw new Error(userError.message);
   if (!userData.user) throw new Error("Sessão expirada. Entre novamente.");
 
-  const { error } = await supabase
-    .from("neroxa_platform_settings" as never)
-    .upsert({
-      key: "platform",
-      value: settings,
-      updated_by_user_id: userData.user.id,
-      updated_at: new Date().toISOString(),
-    } as never);
+  const { error } = await supabase.from("neroxa_platform_settings" as never).upsert({
+    key: "platform",
+    value: settings,
+    updated_by_user_id: userData.user.id,
+    updated_at: new Date().toISOString(),
+  } as never);
 
   if (error) throw new Error(error.message);
 
@@ -95,14 +93,12 @@ export async function updateSecuritySettings(settings: SecuritySettings) {
   if (userError) throw new Error(userError.message);
   if (!userData.user) throw new Error("Sessão expirada. Entre novamente.");
 
-  const { error } = await supabase
-    .from("neroxa_platform_settings" as never)
-    .upsert({
-      key: "security",
-      value: settings,
-      updated_by_user_id: userData.user.id,
-      updated_at: new Date().toISOString(),
-    } as never);
+  const { error } = await supabase.from("neroxa_platform_settings" as never).upsert({
+    key: "security",
+    value: settings,
+    updated_by_user_id: userData.user.id,
+    updated_at: new Date().toISOString(),
+  } as never);
 
   if (error) throw new Error(error.message);
 
@@ -113,7 +109,6 @@ export async function updateSecuritySettings(settings: SecuritySettings) {
     details: { keys: Object.keys(settings) },
   });
 }
-
 
 export async function updateNeroxaLegalProfile(profile: NeroxaLegalProfile) {
   const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -130,14 +125,12 @@ export async function updateNeroxaLegalProfile(profile: NeroxaLegalProfile) {
     signer_role: profile.signer_role.trim(),
   };
 
-  const { error } = await supabase
-    .from("neroxa_platform_settings" as never)
-    .upsert({
-      key: "legal_profile",
-      value: normalized,
-      updated_by_user_id: userData.user.id,
-      updated_at: new Date().toISOString(),
-    } as never);
+  const { error } = await supabase.from("neroxa_platform_settings" as never).upsert({
+    key: "legal_profile",
+    value: normalized,
+    updated_by_user_id: userData.user.id,
+    updated_at: new Date().toISOString(),
+  } as never);
 
   if (error) throw new Error(error.message);
 
@@ -145,6 +138,9 @@ export async function updateNeroxaLegalProfile(profile: NeroxaLegalProfile) {
     action: "NEROXA_LEGAL_PROFILE_UPDATED",
     resourceType: "platform_settings",
     resourceId: "legal_profile",
-    details: { entityType: normalized.entity_type, fields: ["trade_name", "legal_name", "tax_id", "signer_name", "signer_role"] },
+    details: {
+      entityType: normalized.entity_type,
+      fields: ["trade_name", "legal_name", "tax_id", "signer_name", "signer_role"],
+    },
   });
 }

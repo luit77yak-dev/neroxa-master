@@ -58,7 +58,9 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
       .order("updated_at", { ascending: false }),
     supabase
       .from("neroxa_billing_records" as never)
-      .select("id,subscription_id,organization_id,reference_month,amount,due_date,status,paid_at,payment_method,gateway_status,gateway_payment_id,created_at")
+      .select(
+        "id,subscription_id,organization_id,reference_month,amount,due_date,status,paid_at,payment_method,gateway_status,gateway_payment_id,created_at",
+      )
       .order("due_date", { ascending: false }),
   ]);
 
@@ -74,7 +76,9 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     description: p.description ?? null,
     active: Boolean(p.active),
     system_id: p.system_id ?? null,
-    billing_interval: (p.billing_period === "ONE_TIME" ? "ONE_TIME" : p.billing_period) as BillingInterval,
+    billing_interval: (p.billing_period === "ONE_TIME"
+      ? "ONE_TIME"
+      : p.billing_period) as BillingInterval,
     base_price: Number(p.price_monthly ?? 0),
     setup_price: Number(p.setup_price ?? 0),
     commercial_model: p.commercial_model === "PERMANENT" ? "PERMANENT" : "SUBSCRIPTION",
@@ -95,50 +99,51 @@ export async function loadSubscriptionOverview(): Promise<SubscriptionOverview> 
     EXPIRED: "EXPIRED",
   };
 
-  const subscriptions = ((subscriptionsResult.data ?? []) as unknown as SubscriptionRow[]).map((s) => {
-    const plan = planMap.get(String(s.plan_id));
-    return {
-      id: String(s.id),
-      client_id: String(s.organization_id),
-      contract_id: s.contract_id ?? null,
-      contract_version_id: null,
-      plan_id: String(s.plan_id),
-      status: statusMap[s.status] ?? "PENDING",
-      billing_interval: plan?.billing_interval ?? "MONTHLY",
-      contracted_recurring_value: Number(s.price ?? 0),
-      contracted_setup_value: Number(plan?.setup_price ?? 0),
-      started_at: s.started_at ?? null,
-      next_billing_date: s.current_period_end ?? null,
-      updated_at: s.updated_at,
-      gateway_provider: s.gateway_provider ?? plan?.gateway_provider ?? null,
-      gateway_subscription_id: s.gateway_subscription_id ?? null,
-      gateway_status: s.gateway_status ?? null,
-      checkout_url: s.checkout_url ?? null,
-      gateway_synced_at: s.gateway_synced_at ?? null,
-    };
-  });
+  const subscriptions = ((subscriptionsResult.data ?? []) as unknown as SubscriptionRow[]).map(
+    (s) => {
+      const plan = planMap.get(String(s.plan_id));
+      return {
+        id: String(s.id),
+        client_id: String(s.organization_id),
+        contract_id: s.contract_id ?? null,
+        contract_version_id: null,
+        plan_id: String(s.plan_id),
+        status: statusMap[s.status] ?? "PENDING",
+        billing_interval: plan?.billing_interval ?? "MONTHLY",
+        contracted_recurring_value: Number(s.price ?? 0),
+        contracted_setup_value: Number(plan?.setup_price ?? 0),
+        started_at: s.started_at ?? null,
+        next_billing_date: s.current_period_end ?? null,
+        updated_at: s.updated_at,
+        gateway_provider: s.gateway_provider ?? plan?.gateway_provider ?? null,
+        gateway_subscription_id: s.gateway_subscription_id ?? null,
+        gateway_status: s.gateway_status ?? null,
+        checkout_url: s.checkout_url ?? null,
+        gateway_synced_at: s.gateway_synced_at ?? null,
+      };
+    },
+  );
 
   return {
     plans,
     subscriptions,
     clients: (clientsResult.data ?? []) as unknown as SubscriptionOverview["clients"],
     billing: (billingResult.data ?? []).map((row) => ({
-      id: String((row as { id:string }).id),
-      subscription_id: String((row as { subscription_id:string }).subscription_id),
-      organization_id: String((row as { organization_id:string }).organization_id),
-      reference_month: String((row as { reference_month:string }).reference_month),
-      amount: Number((row as { amount:number }).amount ?? 0),
-      due_date: String((row as { due_date:string }).due_date),
-      status: String((row as { status:string }).status),
-      paid_at: (row as { paid_at:string|null }).paid_at ?? null,
-      payment_method: (row as { payment_method:string|null }).payment_method ?? null,
-      gateway_status: (row as { gateway_status:string|null }).gateway_status ?? null,
-      gateway_payment_id: (row as { gateway_payment_id:string|null }).gateway_payment_id ?? null,
-      created_at: String((row as { created_at:string }).created_at),
+      id: String((row as { id: string }).id),
+      subscription_id: String((row as { subscription_id: string }).subscription_id),
+      organization_id: String((row as { organization_id: string }).organization_id),
+      reference_month: String((row as { reference_month: string }).reference_month),
+      amount: Number((row as { amount: number }).amount ?? 0),
+      due_date: String((row as { due_date: string }).due_date),
+      status: String((row as { status: string }).status),
+      paid_at: (row as { paid_at: string | null }).paid_at ?? null,
+      payment_method: (row as { payment_method: string | null }).payment_method ?? null,
+      gateway_status: (row as { gateway_status: string | null }).gateway_status ?? null,
+      gateway_payment_id: (row as { gateway_payment_id: string | null }).gateway_payment_id ?? null,
+      created_at: String((row as { created_at: string }).created_at),
     })),
   };
 }
-
 
 export type SubscriptionContractOption = {
   id: string;
@@ -152,10 +157,14 @@ export type SubscriptionContractOption = {
   status: string;
 };
 
-export async function listActivatableSubscriptionContracts(): Promise<SubscriptionContractOption[]> {
+export async function listActivatableSubscriptionContracts(): Promise<
+  SubscriptionContractOption[]
+> {
   const { data, error } = await supabase
     .from("neroxa_contracts" as never)
-    .select("id,client_id,title,contract_number,plan_id,commercial_model,billing_period,recurring_value,status")
+    .select(
+      "id,client_id,title,contract_number,plan_id,commercial_model,billing_period,recurring_value,status",
+    )
     .eq("status", "DRAFT")
     .eq("commercial_model", "SUBSCRIPTION")
     .order("updated_at", { ascending: false });
@@ -174,13 +183,18 @@ export async function createSubscription(input: { contractId: string }) {
 
   if (error) throw new Error(error.message);
   if (!subscriptionId) {
-    throw new Error("O contrato foi ativado sem gerar uma assinatura recorrente. Verifique o modelo comercial.");
+    throw new Error(
+      "O contrato foi ativado sem gerar uma assinatura recorrente. Verifique o modelo comercial.",
+    );
   }
 
   return subscriptionId;
 }
 
-export async function updateSubscriptionStatus(subscriptionId: string, status: "ACTIVE" | "PAUSED" | "CANCELLED") {
+export async function updateSubscriptionStatus(
+  subscriptionId: string,
+  status: "ACTIVE" | "PAUSED" | "CANCELLED",
+) {
   const { data: subscription, error: subscriptionError } = await supabase
     .from("neroxa_subscriptions" as never)
     .select("id,plan_id,status")
@@ -198,7 +212,9 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
   }
 
   if (currentStatus === "TRIAL" && status !== "ACTIVE" && status !== "CANCELLED") {
-    throw new Error("Uma assinatura pendente só pode ser ativada após o primeiro pagamento ou cancelada.");
+    throw new Error(
+      "Uma assinatura pendente só pode ser ativada após o primeiro pagamento ou cancelada.",
+    );
   }
 
   if (currentStatus === "ACTIVE" && status !== "PAUSED" && status !== "CANCELLED") {
@@ -210,7 +226,9 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
   }
 
   if (currentStatus === "PAST_DUE" && status !== "CANCELLED" && status !== "ACTIVE") {
-    throw new Error("Uma assinatura inadimplente só pode ser regularizada após pagamento ou cancelada.");
+    throw new Error(
+      "Uma assinatura inadimplente só pode ser regularizada após pagamento ou cancelada.",
+    );
   }
 
   if (currentStatus === "TRIAL" && status === "ACTIVE") {
@@ -223,7 +241,11 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
       .maybeSingle();
 
     if (billingError) throw new Error(billingError.message);
-    if (!firstBilling || (firstBilling as { status: string }).status !== "PAID" || !(firstBilling as { paid_at: string | null }).paid_at) {
+    if (
+      !firstBilling ||
+      (firstBilling as { status: string }).status !== "PAID" ||
+      !(firstBilling as { paid_at: string | null }).paid_at
+    ) {
       throw new Error("A primeira cobrança precisa estar paga antes de ativar a assinatura.");
     }
   }
@@ -238,7 +260,11 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
       .maybeSingle();
 
     if (billingError) throw new Error(billingError.message);
-    if (!billing || (billing as { status: string }).status !== "PAID" || !(billing as { paid_at: string | null }).paid_at) {
+    if (
+      !billing ||
+      (billing as { status: string }).status !== "PAID" ||
+      !(billing as { paid_at: string | null }).paid_at
+    ) {
       throw new Error("A cobrança em atraso precisa estar paga antes de regularizar a assinatura.");
     }
   }
@@ -255,11 +281,15 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
   const planRow = plan as { id: string; name: string; active: boolean; commercial_model: string };
 
   if (!planRow.active && status !== "CANCELLED") {
-    throw new Error("Não é possível ativar ou reativar uma assinatura vinculada a um plano inativo. Reative o plano antes.");
+    throw new Error(
+      "Não é possível ativar ou reativar uma assinatura vinculada a um plano inativo. Reative o plano antes.",
+    );
   }
 
   if (planRow.commercial_model === "PERMANENT" && status !== "CANCELLED") {
-    throw new Error("Planos de compra permanente não devem operar como assinatura recorrente. Use o fluxo de compra permanente.");
+    throw new Error(
+      "Planos de compra permanente não devem operar como assinatura recorrente. Use o fluxo de compra permanente.",
+    );
   }
 
   if (currentStatus === status) {
@@ -289,7 +319,6 @@ export async function updateSubscriptionStatus(subscriptionId: string, status: "
 
   return true;
 }
-
 
 type BillingRecordRow = {
   id: string;
@@ -325,11 +354,19 @@ export function shouldMarkBillingOverdue(status: string, dueDate: string, today:
   return status === "PENDING" && dueDate <= today;
 }
 
-export function shouldMarkSubscriptionPastDue(subscriptionStatus: string, billingDueDate: string, today: string) {
+export function shouldMarkSubscriptionPastDue(
+  subscriptionStatus: string,
+  billingDueDate: string,
+  today: string,
+) {
   return subscriptionStatus === "ACTIVE" && billingDueDate <= today;
 }
 
-export function canCreateRenewalBilling(subscriptionStatus: string, periodEnd: string | null, today: string) {
+export function canCreateRenewalBilling(
+  subscriptionStatus: string,
+  periodEnd: string | null,
+  today: string,
+) {
   return subscriptionStatus === "ACTIVE" && !!periodEnd && periodEnd <= today;
 }
 
@@ -422,7 +459,8 @@ export async function confirmBillingPayment(billingId: string) {
     });
   } else if (subscriptionRow.status === "PAST_DUE") {
     const currentEnd = subscriptionRow.current_period_end;
-    if (!currentEnd) throw new Error("A assinatura inadimplente não possui fim de período para regularização.");
+    if (!currentEnd)
+      throw new Error("A assinatura inadimplente não possui fim de período para regularização.");
 
     const nextEnd = calculateNextPeriodEnd(currentEnd, planRow.billing_period);
     const { error } = await supabase
@@ -528,7 +566,10 @@ export async function createRenewalBilling(subscriptionId: string) {
   return (data as { id: string }).id;
 }
 
-export async function processSubscriptionBilling(subscriptionId: string, today = new Date().toISOString().slice(0, 10)) {
+export async function processSubscriptionBilling(
+  subscriptionId: string,
+  today = new Date().toISOString().slice(0, 10),
+) {
   const { data: subscription, error: subscriptionError } = await supabase
     .from("neroxa_subscriptions" as never)
     .select("id,organization_id,plan_id,status,current_period_end")
@@ -562,7 +603,12 @@ export async function processSubscriptionBilling(subscriptionId: string, today =
   if (billingError) throw new Error(billingError.message);
 
   if (dueBilling) {
-    const billingRow = dueBilling as { id: string; status: string; due_date: string; paid_at: string | null };
+    const billingRow = dueBilling as {
+      id: string;
+      status: string;
+      due_date: string;
+      paid_at: string | null;
+    };
     if (billingRow.status === "PENDING" && billingRow.due_date <= today) {
       const { error: overdueError } = await supabase
         .from("neroxa_billing_records" as never)
@@ -621,8 +667,18 @@ export async function processSubscriptionBilling(subscriptionId: string, today =
   return { status: row.status, changed: false };
 }
 
-
-export async function createPlan(input: { name: string; slug: string; description?: string; systemId?: string | null; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; commercialModel: "SUBSCRIPTION" | "PERMANENT"; maintenancePrice?: number | null; active?: boolean }) {
+export async function createPlan(input: {
+  name: string;
+  slug: string;
+  description?: string;
+  systemId?: string | null;
+  priceMonthly: number;
+  setupPrice: number;
+  billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME";
+  commercialModel: "SUBSCRIPTION" | "PERMANENT";
+  maintenancePrice?: number | null;
+  active?: boolean;
+}) {
   const { data, error } = await supabase
     .from("neroxa_plans" as never)
     .insert({
@@ -645,12 +701,29 @@ export async function createPlan(input: { name: string; slug: string; descriptio
     action: "PLAN_CREATED",
     resourceType: "PLAN",
     resourceId: planId,
-    details: { name: input.name, slug: input.slug, commercialModel: input.commercialModel, active: input.active ?? true },
+    details: {
+      name: input.name,
+      slug: input.slug,
+      commercialModel: input.commercialModel,
+      active: input.active ?? true,
+    },
   });
   return data;
 }
 
-export async function updatePlan(input: { id: string; name: string; slug: string; description?: string; systemId?: string | null; priceMonthly: number; setupPrice: number; billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME"; commercialModel: "SUBSCRIPTION" | "PERMANENT"; maintenancePrice?: number | null; active: boolean }) {
+export async function updatePlan(input: {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  systemId?: string | null;
+  priceMonthly: number;
+  setupPrice: number;
+  billingPeriod: "MONTHLY" | "YEARLY" | "ONE_TIME";
+  commercialModel: "SUBSCRIPTION" | "PERMANENT";
+  maintenancePrice?: number | null;
+  active: boolean;
+}) {
   const { data, error } = await supabase
     .from("neroxa_plans" as never)
     .update({
@@ -674,11 +747,15 @@ export async function updatePlan(input: { id: string; name: string; slug: string
     action: "PLAN_UPDATED",
     resourceType: "PLAN",
     resourceId: input.id,
-    details: { name: input.name, slug: input.slug, commercialModel: input.commercialModel, active: input.active },
+    details: {
+      name: input.name,
+      slug: input.slug,
+      commercialModel: input.commercialModel,
+      active: input.active,
+    },
   });
   return true;
 }
-
 
 export async function deletePlan(planId: string) {
   const { error } = await supabase
@@ -688,7 +765,9 @@ export async function deletePlan(planId: string) {
 
   if (error) {
     if (error.code === "23503") {
-      throw new Error("Este plano já está sendo usado por assinaturas, instâncias ou outros registros e não pode ser excluído. Desative-o para impedir novas contratações.");
+      throw new Error(
+        "Este plano já está sendo usado por assinaturas, instâncias ou outros registros e não pode ser excluído. Desative-o para impedir novas contratações.",
+      );
     }
     throw new Error(error.message);
   }
@@ -702,7 +781,6 @@ export async function deletePlan(planId: string) {
 
   return true;
 }
-
 
 export type NeroxaPlanFeature = {
   id: string;
@@ -723,16 +801,24 @@ export async function listPlanFeatures(planId: string): Promise<NeroxaPlanFeatur
   return (data ?? []) as unknown as NeroxaPlanFeature[];
 }
 
-export async function setPlanFeature(input: { planId: string; featureKey: string; enabled?: boolean }) {
+export async function setPlanFeature(input: {
+  planId: string;
+  featureKey: string;
+  enabled?: boolean;
+}) {
   await removePlanFeature(input.planId, input.featureKey);
-  const { error } = await supabase
-    .from("neroxa_plan_features" as never)
-    .insert({ plan_id: input.planId, feature_key: input.featureKey, enabled: input.enabled ?? true } as never);
+  const { error } = await supabase.from("neroxa_plan_features" as never).insert({
+    plan_id: input.planId,
+    feature_key: input.featureKey,
+    enabled: input.enabled ?? true,
+  } as never);
   if (error) throw new Error(error.message);
 }
 
 export async function removePlanFeature(planId: string, featureKey: string) {
-  const { error } = await supabase.from("neroxa_plan_features" as never).delete()
+  const { error } = await supabase
+    .from("neroxa_plan_features" as never)
+    .delete()
     .eq("plan_id", planId)
     .eq("feature_key", featureKey);
   if (error) throw new Error(error.message);

@@ -43,16 +43,32 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return json({ ok: false, reason: "method_not_allowed", message: "Método não permitido." }, 405, origin);
+    return json(
+      { ok: false, reason: "method_not_allowed", message: "Método não permitido." },
+      405,
+      origin,
+    );
   }
 
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
-    return json({ ok: false, reason: "server_configuration", message: "Serviço de validação não configurado." }, 500, origin);
+    return json(
+      {
+        ok: false,
+        reason: "server_configuration",
+        message: "Serviço de validação não configurado.",
+      },
+      500,
+      origin,
+    );
   }
 
   const authorization = req.headers.get("authorization");
   if (!authorization?.toLowerCase().startsWith("bearer ")) {
-    return json({ ok: false, reason: "unauthorized", message: "Autenticação obrigatória." }, 401, origin);
+    return json(
+      { ok: false, reason: "unauthorized", message: "Autenticação obrigatória." },
+      401,
+      origin,
+    );
   }
 
   const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -61,7 +77,11 @@ Deno.serve(async (req) => {
 
   const { data: userData, error: userError } = await userClient.auth.getUser();
   if (userError || !userData.user) {
-    return json({ ok: false, reason: "unauthorized", message: "Sessão inválida ou expirada." }, 401, origin);
+    return json(
+      { ok: false, reason: "unauthorized", message: "Sessão inválida ou expirada." },
+      401,
+      origin,
+    );
   }
 
   const { data: hasRole, error: roleError } = await userClient.rpc("neroxa_has_platform_role", {
@@ -69,7 +89,11 @@ Deno.serve(async (req) => {
   });
 
   if (roleError || !hasRole) {
-    return json({ ok: false, reason: "forbidden", message: "Sem permissão para validar domínios." }, 403, origin);
+    return json(
+      { ok: false, reason: "forbidden", message: "Sem permissão para validar domínios." },
+      403,
+      origin,
+    );
   }
 
   try {
@@ -78,11 +102,26 @@ Deno.serve(async (req) => {
     const normalized = normalizeDomain(body?.domain);
 
     if (!domainId) {
-      return json({ ok: false, reason: "invalid_domain_id", message: "Identificador do domínio é obrigatório." }, 400, origin);
+      return json(
+        {
+          ok: false,
+          reason: "invalid_domain_id",
+          message: "Identificador do domínio é obrigatório.",
+        },
+        400,
+        origin,
+      );
     }
 
-    if (!normalized || !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(normalized)) {
-      return json({ ok: false, reason: "invalid_domain", message: "Domínio inválido." }, 400, origin);
+    if (
+      !normalized ||
+      !/^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(normalized)
+    ) {
+      return json(
+        { ok: false, reason: "invalid_domain", message: "Domínio inválido." },
+        400,
+        origin,
+      );
     }
 
     const serviceClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -97,15 +136,35 @@ Deno.serve(async (req) => {
 
     if (domainError) throw new Error(domainError.message);
     if (!domainRow) {
-      return json({ ok: false, reason: "domain_not_found", message: "Domínio não encontrado." }, 404, origin);
+      return json(
+        { ok: false, reason: "domain_not_found", message: "Domínio não encontrado." },
+        404,
+        origin,
+      );
     }
 
     if (String(domainRow.domain).trim().toLowerCase().replace(/\.$/, "") !== normalized) {
-      return json({ ok: false, reason: "domain_mismatch", message: "O domínio informado não corresponde ao cadastro." }, 400, origin);
+      return json(
+        {
+          ok: false,
+          reason: "domain_mismatch",
+          message: "O domínio informado não corresponde ao cadastro.",
+        },
+        400,
+        origin,
+      );
     }
 
     if (domainRow.status !== "VERIFYING") {
-      return json({ ok: false, reason: "invalid_status", message: "O domínio precisa estar em validação antes da consulta DNS." }, 409, origin);
+      return json(
+        {
+          ok: false,
+          reason: "invalid_status",
+          message: "O domínio precisa estar em validação antes da consulta DNS.",
+        },
+        409,
+        origin,
+      );
     }
 
     const query = async (type: "A" | "CNAME" | "NS") => {
@@ -145,7 +204,9 @@ Deno.serve(async (req) => {
 
     const valid =
       aRecords.includes("76.76.21.21") ||
-      cnameRecords.some((value) => value === "cname.vercel-dns.com" || value.endsWith(".vercel-dns.com")) ||
+      cnameRecords.some(
+        (value) => value === "cname.vercel-dns.com" || value.endsWith(".vercel-dns.com"),
+      ) ||
       nsRecords.some((value) => value.endsWith(".vercel-dns.com"));
 
     const { data: newStatus, error: resultError } = await serviceClient.rpc(
@@ -155,27 +216,35 @@ Deno.serve(async (req) => {
 
     if (resultError) throw new Error(resultError.message);
 
-    return json({
-      ok: valid,
-      domain: normalized,
-      domainId,
-      status: newStatus,
-      validationStatus: valid ? "VERCEL_DNS_VALID" : "INVALID_CONFIGURATION",
-      records: { a: aRecords, cname: cnameRecords, nameservers: nsRecords },
-      recommended: {
-        apexA: "76.76.21.21",
-        cname: "cname.vercel-dns.com",
-        nameservers: ["ns1.vercel-dns.com", "ns2.vercel-dns.com"],
+    return json(
+      {
+        ok: valid,
+        domain: normalized,
+        domainId,
+        status: newStatus,
+        validationStatus: valid ? "VERCEL_DNS_VALID" : "INVALID_CONFIGURATION",
+        records: { a: aRecords, cname: cnameRecords, nameservers: nsRecords },
+        recommended: {
+          apexA: "76.76.21.21",
+          cname: "cname.vercel-dns.com",
+          nameservers: ["ns1.vercel-dns.com", "ns2.vercel-dns.com"],
+        },
+        message: valid
+          ? "O DNS do domínio aponta para a infraestrutura da Vercel."
+          : "O DNS do domínio não aponta para a infraestrutura esperada da Vercel.",
       },
-      message: valid
-        ? "O DNS do domínio aponta para a infraestrutura da Vercel."
-        : "O DNS do domínio não aponta para a infraestrutura esperada da Vercel.",
-    }, 200, origin);
+      200,
+      origin,
+    );
   } catch (error) {
-    return json({
-      ok: false,
-      reason: "dns_check_failed",
-      message: error instanceof Error ? error.message : "Falha ao consultar DNS.",
-    }, 502, origin);
+    return json(
+      {
+        ok: false,
+        reason: "dns_check_failed",
+        message: error instanceof Error ? error.message : "Falha ao consultar DNS.",
+      },
+      502,
+      origin,
+    );
   }
 });

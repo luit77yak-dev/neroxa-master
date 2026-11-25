@@ -3,8 +3,8 @@ name: RG02 — isolated Python synthetic checks
 on:
   pull_request:
     paths:
-      - 'tools/restore-gate01/**'
-      - '.github/workflows/rg02-synthetic-checks.yml'
+      - "tools/restore-gate01/**"
+      - ".github/workflows/rg02-synthetic-checks.yml"
   workflow_dispatch:
 
 permissions:

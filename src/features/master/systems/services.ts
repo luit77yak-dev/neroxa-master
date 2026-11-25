@@ -165,7 +165,9 @@ export async function createNeroxaSystemInstance(input: {
       system_type: input.systemType,
       status: "PROVISIONING",
     } as never)
-    .select("id, organization_id, system_id, plan_id, subscription_id, name, slug, status, system_type")
+    .select(
+      "id, organization_id, system_id, plan_id, subscription_id, name, slug, status, system_type",
+    )
     .single();
 
   if (error) throw new Error(error.message);

@@ -10,7 +10,14 @@ import {
   type NeroxaSystemDomain,
 } from "@/features/master/clients/services";
 import { canPerform } from "@/features/master/permissions";
-import { createDomain, deleteDomain, updateDomain, validateDomainDns, transitionDomainStatus, type DomainStatus } from "@/features/master/domains/services";
+import {
+  createDomain,
+  deleteDomain,
+  updateDomain,
+  validateDomainDns,
+  transitionDomainStatus,
+  type DomainStatus,
+} from "@/features/master/domains/services";
 import { Button } from "@/components/ui/button";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 
@@ -45,7 +52,9 @@ function MasterDominios() {
   const contextClientId = params?.get("clientId") ?? null;
   const contextOrganizationId = params?.get("organizationId") ?? null;
   const [domains, setDomains] = useState<DomainRow[]>([]);
-  const [instances, setInstances] = useState<Array<{ id: string; name: string; slug: string; status: DomainRow["instanceStatus"] }>>([]);
+  const [instances, setInstances] = useState<
+    Array<{ id: string; name: string; slug: string; status: DomainRow["instanceStatus"] }>
+  >([]);
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState<DomainRow | null>(null);
   const [domainDraft, setDomainDraft] = useState("");
@@ -54,7 +63,16 @@ function MasterDominios() {
   const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState<string | null>(null);
-  const [dnsResult, setDnsResult] = useState<Record<string, { ok: boolean; message: string; records: { a: string[]; cname: string[]; nameservers: string[] } }>>({});
+  const [dnsResult, setDnsResult] = useState<
+    Record<
+      string,
+      {
+        ok: boolean;
+        message: string;
+        records: { a: string[]; cname: string[]; nameservers: string[] };
+      }
+    >
+  >({});
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<DomainStatus | "ALL">("ALL");
 
@@ -69,7 +87,12 @@ function MasterDominios() {
 
       const clients = await listNeroxaClients();
       const rows: DomainRow[] = [];
-      const allInstances: Array<{ id: string; name: string; slug: string; status: DomainRow["instanceStatus"] }> = [];
+      const allInstances: Array<{
+        id: string;
+        name: string;
+        slug: string;
+        status: DomainRow["instanceStatus"];
+      }> = [];
       const scopedClients = contextOrganizationId
         ? clients.filter((client) => client.organization_id === contextOrganizationId)
         : contextClientId
@@ -78,7 +101,14 @@ function MasterDominios() {
 
       for (const client of scopedClients) {
         const clientInstances = await listNeroxaClientInstances(client.organization_id);
-        allInstances.push(...clientInstances.map((instance) => ({ id: instance.id, name: instance.name, slug: instance.slug, status: instance.status })));
+        allInstances.push(
+          ...clientInstances.map((instance) => ({
+            id: instance.id,
+            name: instance.name,
+            slug: instance.slug,
+            status: instance.status,
+          })),
+        );
         for (const instance of clientInstances) {
           const instanceDomains = await listNeroxaInstanceDomains(instance.id);
           rows.push(
@@ -95,7 +125,9 @@ function MasterDominios() {
       setDomains(rows);
       setInstances(allInstances);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Não foi possível carregar os domínios.");
+      setError(
+        loadError instanceof Error ? loadError.message : "Não foi possível carregar os domínios.",
+      );
     } finally {
       setLoading(false);
     }
@@ -130,27 +162,36 @@ function MasterDominios() {
         await updateDomain({ domainId: editing.id, domain: domainDraft, isPrimary: primaryDraft });
       } else {
         if (!instanceDraft) throw new Error("Selecione a instância do domínio.");
-        await createDomain({ instanceId: instanceDraft, domain: domainDraft, isPrimary: primaryDraft });
+        await createDomain({
+          instanceId: instanceDraft,
+          domain: domainDraft,
+          isPrimary: primaryDraft,
+        });
       }
       setShowCreate(false);
       setEditing(null);
       await load();
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Não foi possível salvar o domínio.");
+      setError(
+        saveError instanceof Error ? saveError.message : "Não foi possível salvar o domínio.",
+      );
     } finally {
       setWorking(null);
     }
   }
 
   async function removeDomain(domain: DomainRow) {
-    if (!window.confirm(`Excluir o domínio ${domain.domain}? Esta ação não pode ser desfeita.`)) return;
+    if (!window.confirm(`Excluir o domínio ${domain.domain}? Esta ação não pode ser desfeita.`))
+      return;
     setWorking(domain.id);
     setError(null);
     try {
       await deleteDomain(domain.id);
       await load();
     } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : "Não foi possível excluir o domínio.");
+      setError(
+        deleteError instanceof Error ? deleteError.message : "Não foi possível excluir o domínio.",
+      );
     } finally {
       setWorking(null);
     }
@@ -168,7 +209,11 @@ function MasterDominios() {
         ...current,
         [domain.id]: {
           ok: result.ok,
-          message: result.message ?? (result.ok ? "DNS configurado para a Vercel." : "O DNS ainda não aponta para a configuração esperada da Vercel."),
+          message:
+            result.message ??
+            (result.ok
+              ? "DNS configurado para a Vercel."
+              : "O DNS ainda não aponta para a configuração esperada da Vercel."),
           records: result.records ?? { a: [], cname: [], nameservers: [] },
         },
       }));
@@ -178,12 +223,16 @@ function MasterDominios() {
           ...(result.records?.a ?? []).map((value) => `A: ${value}`),
           ...(result.records?.cname ?? []).map((value) => `CNAME: ${value}`),
         ].join(", ");
-        setError(result.message ?? `Validação DNS falhou.${detected ? ` Detectado: ${detected}.` : ""}`);
+        setError(
+          result.message ?? `Validação DNS falhou.${detected ? ` Detectado: ${detected}.` : ""}`,
+        );
       }
 
       await load();
     } catch (changeError) {
-      setError(changeError instanceof Error ? changeError.message : "Não foi possível validar o DNS.");
+      setError(
+        changeError instanceof Error ? changeError.message : "Não foi possível validar o DNS.",
+      );
       try {
         const current = domains.find((item) => item.id === domain.id);
         if (current?.status === "VERIFYING") {
@@ -205,14 +254,20 @@ function MasterDominios() {
       await transitionDomainStatus(domain.id, nextStatus);
       await load();
     } catch (changeError) {
-      setError(changeError instanceof Error ? changeError.message : "Não foi possível atualizar o status do domínio.");
+      setError(
+        changeError instanceof Error
+          ? changeError.message
+          : "Não foi possível atualizar o status do domínio.",
+      );
     } finally {
       setWorking(null);
     }
   }
 
   const canManage = canPerform(role, "manageSystems");
-  const visibleDomains = domains.filter((domain) => statusFilter === "ALL" || domain.status === statusFilter);
+  const visibleDomains = domains.filter(
+    (domain) => statusFilter === "ALL" || domain.status === statusFilter,
+  );
 
   return (
     <MasterShell>
@@ -220,16 +275,27 @@ function MasterDominios() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-medium tracking-wide text-muted-foreground/70">Sistema</p>
-            <h1 className="font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">Domínios</h1>
+            <h1 className="font-display text-[28px] leading-tight font-semibold tracking-tight sm:text-[32px] text-foreground">
+              Domínios
+            </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Acompanhe e valide os domínios vinculados às instâncias dos clientes.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 sm:justify-end">{canManage && <Button onClick={openCreate} disabled={loading || instances.every((instance) => instance.status === "ARCHIVED")}>Adicionar domínio</Button>}
-          <Button variant="outline" onClick={() => void load()} disabled={loading}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Atualizar
-          </Button></div>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            {canManage && (
+              <Button
+                onClick={openCreate}
+                disabled={loading || instances.every((instance) => instance.status === "ARCHIVED")}
+              >
+                Adicionar domínio
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => void load()} disabled={loading}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Atualizar
+            </Button>
+          </div>
         </div>
 
         {error && (
@@ -251,7 +317,9 @@ function MasterDominios() {
           ) : visibleDomains.length === 0 ? (
             <div className="p-10 text-center">
               <Globe2 className="mx-auto h-8 w-8 text-slate-300" />
-              <p className="mt-3 text-sm font-medium text-foreground/80">Nenhum domínio cadastrado</p>
+              <p className="mt-3 text-sm font-medium text-foreground/80">
+                Nenhum domínio cadastrado
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Ajuste o filtro ou cadastre um domínio na instância para iniciar a validação.
               </p>
@@ -260,12 +328,20 @@ function MasterDominios() {
             <div className="divide-y divide-border">
               {visibleDomains.map((domain) => {
                 const disabled = working === domain.id || domain.instanceStatus === "ARCHIVED";
-                const canStart = canManage && !disabled && ["PENDING", "FAILED", "DISABLED"].includes(domain.status);
-                const canDisable = canManage && !disabled && domain.status === "VERIFIED" && !domain.is_primary;
-                const canDelete = canManage && !disabled && domain.status === "DISABLED" && !domain.is_primary;
+                const canStart =
+                  canManage &&
+                  !disabled &&
+                  ["PENDING", "FAILED", "DISABLED"].includes(domain.status);
+                const canDisable =
+                  canManage && !disabled && domain.status === "VERIFIED" && !domain.is_primary;
+                const canDelete =
+                  canManage && !disabled && domain.status === "DISABLED" && !domain.is_primary;
 
                 return (
-                  <div key={domain.id} className="flex min-w-0 flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between">
+                  <div
+                    key={domain.id}
+                    className="flex min-w-0 flex-col gap-3 px-4 py-4 sm:px-5 lg:flex-row lg:items-center lg:justify-between"
+                  >
                     <div className="min-w-0">
                       <p className="truncate font-medium text-foreground">{domain.domain}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
@@ -280,31 +356,65 @@ function MasterDominios() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass[domain.status]}`}>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs font-medium ${statusClass[domain.status]}`}
+                      >
                         {statusLabel[domain.status]}
                       </span>
 
                       {canStart && (
-                        <Button size="sm" variant="outline" disabled={disabled} onClick={() => void validateDns(domain)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={disabled}
+                          onClick={() => void validateDns(domain)}
+                        >
                           <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
                           {domain.status === "FAILED" ? "Validar novamente" : "Validar DNS"}
                         </Button>
                       )}
 
-                      {canManage && !disabled && <Button size="sm" variant="ghost" disabled={disabled} onClick={() => openEdit(domain)}>Editar</Button>}
+                      {canManage && !disabled && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={disabled}
+                          onClick={() => openEdit(domain)}
+                        >
+                          Editar
+                        </Button>
+                      )}
 
-                      {canDelete && <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void removeDomain(domain)}>Excluir</Button>}
+                      {canDelete && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={disabled}
+                          onClick={() => void removeDomain(domain)}
+                        >
+                          Excluir
+                        </Button>
+                      )}
 
                       {canDisable && (
-                        <Button size="sm" variant="ghost" disabled={disabled} onClick={() => void changeStatus(domain, "DISABLED")}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          disabled={disabled}
+                          onClick={() => void changeStatus(domain, "DISABLED")}
+                        >
                           Desativar
                         </Button>
                       )}
 
                       {dnsResult[domain.id] && (
-                        <div className={`w-full rounded-lg border p-3 text-xs lg:w-auto lg:max-w-md ${dnsResult[domain.id].ok ? "border-emerald-200 bg-success/10 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}>
+                        <div
+                          className={`w-full rounded-lg border p-3 text-xs lg:w-auto lg:max-w-md ${dnsResult[domain.id].ok ? "border-emerald-200 bg-success/10 text-emerald-800" : "border-red-200 bg-red-50 text-red-700"}`}
+                        >
                           <p className="font-medium">{dnsResult[domain.id].message}</p>
-                          <p className="mt-1">A: {dnsResult[domain.id].records.a.join(", ") || "—"}</p>
+                          <p className="mt-1">
+                            A: {dnsResult[domain.id].records.a.join(", ") || "—"}
+                          </p>
                           <p>CNAME: {dnsResult[domain.id].records.cname.join(", ") || "—"}</p>
                         </div>
                       )}
@@ -316,40 +426,78 @@ function MasterDominios() {
           )}
         </div>
 
-
         {(showCreate || editing) && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
             <div className="w-full max-w-lg rounded-xl bg-card p-6 shadow-xl">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">{editing ? "Editar domínio" : "Adicionar domínio"}</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">Use apenas o hostname, sem protocolo ou caminho.</p>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {editing ? "Editar domínio" : "Adicionar domínio"}
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Use apenas o hostname, sem protocolo ou caminho.
+                  </p>
                 </div>
-                <Button variant="ghost" onClick={() => { setShowCreate(false); setEditing(null); }}>Fechar</Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowCreate(false);
+                    setEditing(null);
+                  }}
+                >
+                  Fechar
+                </Button>
               </div>
               <div className="mt-5 space-y-4">
                 {!editing && (
                   <label className="block text-sm font-medium text-foreground/80">
                     Instância
-                    <select value={instanceDraft} onChange={(event) => setInstanceDraft(event.target.value)} className="mt-1 h-10 w-full rounded-md border border-border bg-card px-3 text-sm">
+                    <select
+                      value={instanceDraft}
+                      onChange={(event) => setInstanceDraft(event.target.value)}
+                      className="mt-1 h-10 w-full rounded-md border border-border bg-card px-3 text-sm"
+                    >
                       <option value="">Selecione...</option>
-                      {instances.filter((instance) => instance.status !== "ARCHIVED").map((instance) => (
-                        <option key={instance.id} value={instance.id}>{instance.name} · {instance.slug}</option>
-                      ))}
+                      {instances
+                        .filter((instance) => instance.status !== "ARCHIVED")
+                        .map((instance) => (
+                          <option key={instance.id} value={instance.id}>
+                            {instance.name} · {instance.slug}
+                          </option>
+                        ))}
                     </select>
                   </label>
                 )}
                 <label className="block text-sm font-medium text-foreground/80">
                   Domínio
-                  <input value={domainDraft} onChange={(event) => setDomainDraft(event.target.value)} placeholder="cliente.com.br" className="mt-1 h-10 w-full rounded-md border border-border px-3 text-sm" />
+                  <input
+                    value={domainDraft}
+                    onChange={(event) => setDomainDraft(event.target.value)}
+                    placeholder="cliente.com.br"
+                    className="mt-1 h-10 w-full rounded-md border border-border px-3 text-sm"
+                  />
                 </label>
                 <label className="flex items-center gap-2 text-sm text-foreground/80">
-                  <input type="checkbox" checked={primaryDraft} onChange={(event) => setPrimaryDraft(event.target.checked)} />
+                  <input
+                    type="checkbox"
+                    checked={primaryDraft}
+                    onChange={(event) => setPrimaryDraft(event.target.checked)}
+                  />
                   Definir como domínio principal
                 </label>
                 <div className="flex flex-wrap justify-end gap-2">
-                  <Button variant="outline" onClick={() => { setShowCreate(false); setEditing(null); }}>Cancelar</Button>
-                  <Button onClick={() => void saveDomain()} disabled={working === "domain-form"}>{working === "domain-form" ? "Salvando..." : "Salvar domínio"}</Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreate(false);
+                      setEditing(null);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button onClick={() => void saveDomain()} disabled={working === "domain-form"}>
+                    {working === "domain-form" ? "Salvando..." : "Salvar domínio"}
+                  </Button>
                 </div>
               </div>
             </div>

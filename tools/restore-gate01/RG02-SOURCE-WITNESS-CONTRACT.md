@@ -8,22 +8,22 @@ Este documento estabelece um requisito para uma futura auditoria aprovada. **Nã
 
 Execução protegida [RG02 #45620361672](https://github.com/luit77yak-dev/neroxa-master/actions/runs/45620361672), no commit `fd19f6b4fca363336519668f4cc9f11baa53182f`:
 
-| Evidência | Observado | Limite |
-| --- | --- | --- |
-| Descriptografia, hashes, PG17, Vault 0.3.1 e restauração do esquema **com owner/ACL** | PASS | Não reproduz direitos globais |
-| Medidor nativo isolado `rg02_local_effective_rights.sql` | 13.824 consultas; 4.936 TRUE; 16 roles | Somente **destino isolado**, não origem |
-| Matriz `rg02_proof_matrix.py` | `HOLD_CROSSCHECKED_NOT_EFFECTIVE_EQUIVALENCE` | Coerência de contagens, não equivalência |
-| Memberships da origem decodificadas | 22/22; 18 observadas diretamente | 4 vínculos ausentes por política de não replay |
-| INHERIT declarado | 14/14 caminhos localmente observados | Não prova SET, ownership, RLS nem privilégio efetivo |
-| Flags de roles elevadas deliberadamente não importadas | 9 | Não importar para forçar PASS |
-| GRANT global sobre parâmetro | 1, não importado | 0 entradas locais `pg_parameter_acl` nesta restauração |
-| Divergência LOGIN | 1 | Não reconciliada |
-| Diferenças textuais GRANT/REVOKE | 51, consistentes com GRANT posterior no ACL direto | Não provam equivalência de direitos efetivos |
-| Políticas, RLS, owners e default ACL textuais | 0 statements ausentes nos tipos reportados | Contagem textual não prova equivalência operacional |
+| Evidência                                                                             | Observado                                          | Limite                                                 |
+| ------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------ |
+| Descriptografia, hashes, PG17, Vault 0.3.1 e restauração do esquema **com owner/ACL** | PASS                                               | Não reproduz direitos globais                          |
+| Medidor nativo isolado `rg02_local_effective_rights.sql`                              | 13.824 consultas; 4.936 TRUE; 16 roles             | Somente **destino isolado**, não origem                |
+| Matriz `rg02_proof_matrix.py`                                                         | `HOLD_CROSSCHECKED_NOT_EFFECTIVE_EQUIVALENCE`      | Coerência de contagens, não equivalência               |
+| Memberships da origem decodificadas                                                   | 22/22; 18 observadas diretamente                   | 4 vínculos ausentes por política de não replay         |
+| INHERIT declarado                                                                     | 14/14 caminhos localmente observados               | Não prova SET, ownership, RLS nem privilégio efetivo   |
+| Flags de roles elevadas deliberadamente não importadas                                | 9                                                  | Não importar para forçar PASS                          |
+| GRANT global sobre parâmetro                                                          | 1, não importado                                   | 0 entradas locais `pg_parameter_acl` nesta restauração |
+| Divergência LOGIN                                                                     | 1                                                  | Não reconciliada                                       |
+| Diferenças textuais GRANT/REVOKE                                                      | 51, consistentes com GRANT posterior no ACL direto | Não provam equivalência de direitos efetivos           |
+| Políticas, RLS, owners e default ACL textuais                                         | 0 statements ausentes nos tipos reportados         | Contagem textual não prova equivalência operacional    |
 
 A execução encerrou com `RG02_METADATA_COMPARISON=HOLD_REDACTED`, **como previsto**. Não repetir esse job apenas para obter os mesmos números.
 
-## 2. Ponto que falta: *testemunho nativo da origem*
+## 2. Ponto que falta: _testemunho nativo da origem_
 
 O dump custom `pg_dump` representa uma visão consistente **de um banco**, mas não contém um inventário pré-calculado de todos os resultados de `has_*_privilege` / `pg_has_role` por role e objeto. O arquivo `pg_dumpall --globals-only` contém SQL de objetos globais, memberships e privilégios sobre parâmetros, mas também **não é um testemunho nativo dos direitos efetivos**. Além disso, duas capturas realizadas separadamente não devem ser tratadas como a mesma transação de leitura só porque os hashes coincidem.
 
@@ -36,7 +36,7 @@ Referências: [pg_dump 17](https://www.postgresql.org/docs/17/app-pgdump.html), 
 1. **Autorização separada do responsável** para leitura restrita da origem comercial. O RG02 anterior não concede autorização para consultar o banco vivo ou criar um novo backup. Usar identidades de mínimo privilégio e canais privados; nunca colar tokens, senhas ou texto de catálogo no chat, no Git, em logs ou artefatos públicos.
 2. Verificar a procedência do banco comercial e o PostgreSQL real; não confundir Supabase LAB, comercial, pooler ou uma restauração. Se o canal read-only não for confiável, registrar `BLOCKED`.
 3. Uma nova captura exige **nova preimagem** — não reatribuir a captura de 25/11 à versão anterior. Designar um identificador novo, registrar cadeia de hashes do novo dump e dos novos recibos, sem registrar valores sigilosos.
-4. Para objetos *do mesmo banco*, uma sessão exportadora inicia `BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY`, obtém `pg_export_snapshot()` e **permanece aberta** enquanto `pg_dump --snapshot=<id>` e a consulta de testemunho importam a mesma visão MVCC. Confirmar suporte da sessão/backend e que todas as conexões permanecem no mesmo cluster, sem perder o snapshot no pooler. **Não** executar automaticamente este protocolo nem inserir identificadores de snapshot no chat.
+4. Para objetos _do mesmo banco_, uma sessão exportadora inicia `BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY`, obtém `pg_export_snapshot()` e **permanece aberta** enquanto `pg_dump --snapshot=<id>` e a consulta de testemunho importam a mesma visão MVCC. Confirmar suporte da sessão/backend e que todas as conexões permanecem no mesmo cluster, sem perder o snapshot no pooler. **Não** executar automaticamente este protocolo nem inserir identificadores de snapshot no chat.
 5. **Global roles/pg_auth_members/pg_parameter_acl**: capturar o catálogo global e as opções reais na mesma coordenação de snapshot, com consulta separada e controlada, em vez de presumir que `pg_dumpall --globals-only` aceita ou compartilha automaticamente `--snapshot`. Verificar a integridade de cada representação e de seu contexto de transação antes de alegar mesma preimagem.
 6. A coleta deve ser **somente SELECT**, com limite de tamanho, lista explícita de catálogos, tempo de execução e rolês auditadas. Não executar SQL da origem, `SET ROLE`, GRANT/REVOKE, mudanças de atributos, `SQL_RELEASE`, migrações nem leituras de dados de linhas.
 7. Preservar os testemunhos completos **privadamente**, cifrados e com retenção definida. Nunca colocar listas de grantees/objetos/ACLs, hashes reversíveis sem chave ou SQL privado em stdout, arquivos do repositório, uploads públicos ou summaries do CI.
