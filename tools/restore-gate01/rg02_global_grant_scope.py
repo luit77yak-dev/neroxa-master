@@ -20,7 +20,7 @@ PARAM_HEAD = re.compile(
     r'^\s*GRANT\s+' + PARAM_PRIV + r'\s+ON\s+PARAMETER\s+',
     re.I | re.S,
 )
-TO_ROLE = re.compile(r'\s+TO\s+(?:"(?:[^"]|"")*"|[A-Za-z_][A-Za-z_0-9_$]*|PUBLIC)\b?', re.I)
+TO_ROLE = re.compile(r'\s+TO\s+(?:"(?:[^"]|"")*"|[A-Za-z_][A-Za-z_0-9_$]*)(?=\s|$)', re.I)
 
 
 def global_grant_scope(stmt):
