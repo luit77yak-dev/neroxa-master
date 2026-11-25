@@ -10,10 +10,9 @@ IDENT = r'(?:"(?:[^"]|"")*"|[A-Za-z_][A-Za-z_0-9_$]*)'
 
 # Session defaults and role comments are metadata holds, NEVER executed/imported.
 ROLE_SET = re.compile(r'^\s*ALTER\s+(?:ROLE|USER)\s+(' + IDENT +
-                      r')\s+SET\s+[A-Za-z_][A-Za-z_0-9.]*\s+' +
-                      r'(?:(?:TO|=)\s+.+|FROM\s+CURRENT)\s*$', re.I | re.S)
-ROLE_COMMENT = re.compile(r"^\s*COMMENT\s+ON\s+(?:ROLE|USER)\s+(" + IDENT +
-                          r")\s+IS\s+(?:NULL|'(?:[^']|'')*')\s*$", re.I | re.S)
+                      r')\s+(?:IN\s+DATABASE\s+' + IDENT + r'\s+)?SET\s+\S[\s\S]*$', re.I | re.S)
+ROLE_COMMENT = re.compile(r'^\s*COMMENT\s+ON\s+(?:ROLE|USER)\s+(' + IDENT +
+                          r')\s+IS\s+\S[\s\S]*$', re.I | re.S)
 
 def role_metadata_kind(statement):
     for kind, pattern in (('role_setting_hold', ROLE_SET), ('role_comment_hold', ROLE_COMMENT)):
