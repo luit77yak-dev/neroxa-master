@@ -12,9 +12,18 @@ from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from rg02_proof_matrix import produce, main
+from rg02_local_effective_rights import KINDS, expected_checks
 
 
 def fixture():
+    local_population={'roles':16,'schemas':3,'tables':8,'functions':4,
+                      'sequences':2,'parameters':1}
+    local_rights={}
+    for name in KINDS:
+        checked=expected_checks(name,local_population)
+        allowed=1 if checked else 0
+        local_rights[name]={'checked':checked,'granted':allowed,
+                            'denied':checked-allowed,'unknown':0}
     gate={'GLOBAL_ROLES':'NOT_VERIFIED','OWNER_ACL':'NOT_VERIFIED','COMMERCIAL_GO':'NO_GO'}
     def report(status, **fields):
         return {'status':status,**gate,**fields}
@@ -41,6 +50,7 @@ def fixture():
         'paths':report('HOLD_MEMBERSHIP_PATH_EVIDENCE',
             counts={'SOURCE_GRANTS':22,'SOURCE_PARAMETER_PRIVILEGE_GRANTS_HELD':1,
                     'SOURCE_MEMBERSHIP_DIRECT_MISSING_HOLD':4,
+                    'LOCAL_ROLE_IDENTITIES':16,
                     'SOURCE_SET_OPTION_UNSPECIFIED_HOLD':21,
                     'MEMBER_DECLARED_PATHS':25,'MEMBER_PATHS_OBSERVED_LOCAL':21,
                     'MEMBER_PATHS_MISSING_LOCAL_HOLD':4,
@@ -57,6 +67,8 @@ def fixture():
                     'MISSING_EDGE_BOTH_IDENTITIES_CATALOG_CONFIRMED_HOLD':4}),
         'acl':report('HOLD_DIAGNOSTIC_ONLY',
             acl_raw_missing=51,acl_raw_extra=0),
+        'effective':report('HOLD_LOCAL_EFFECTIVE_RIGHTS_ONLY',
+            populations=local_population,rights=local_rights),
     }
 
 
@@ -74,6 +86,38 @@ class ProofMatrixTests(unittest.TestCase):
         self.assertEqual(x['observed_local_metadata']['explicit_inherit_paths_seen'],14)
         self.assertEqual(x['observed_local_metadata']['direct_acl_consistent_after_later_grant_seen'],51)
         self.assertEqual(x['unproven_or_unresolved']['source_effective_object_privileges'],'NOT_PROVEN')
+
+    def test_native_local_rights_are_measured_but_not_source_parity(self):
+        proof=produce(fixture())
+        observed=proof['observed_local_metadata']
+        self.assertGreater(observed['local_native_privilege_probes_checked'],0)
+        self.assertGreater(observed['local_native_privilege_probes_granted'],0)
+        self.assertEqual(proof['unproven_or_unresolved']['source_effective_role_set_privileges'],'NOT_PROVEN')
+        self.assertEqual(proof['OWNER_ACL'],'NOT_VERIFIED')
+
+    def test_native_local_role_count_must_match_snapshot(self):
+        reports=fixture()
+        reports['effective']['populations']['roles']=17
+        with self.assertRaisesRegex(ValueError,'EFFECTIVE_WITNESS_CHECKS_NOT_BALANCED'):
+            produce(reports)
+
+    def test_witness_invariant_no_go_is_required(self):
+        reports=fixture()
+        reports['effective']['COMMERCIAL_GO']='GO'
+        with self.assertRaisesRegex(ValueError,'EVIDENCE_GATE_INVARIANT_INVALID'):
+            produce(reports)
+
+    def test_witness_observation_mismatch_fails_closed(self):
+        reports=fixture()
+        reports['effective']['rights']['role_set']['granted']=2000
+        with self.assertRaisesRegex(ValueError,'EFFECTIVE_WITNESS_COUNT_INVALID|EFFECTIVE_WITNESS_CHECKS_NOT_BALANCED'):
+            produce(reports)
+
+    def test_effective_rights_missing_is_required(self):
+        reports=fixture()
+        del reports['effective']
+        with self.assertRaisesRegex(ValueError,'EVIDENCE_REQUIRED_REPORTS_MISSING'):
+            produce(reports)
 
     def test_policy_non_replay_separated(self):
         x=produce(fixture())['non_replayed_isolation_policy']
