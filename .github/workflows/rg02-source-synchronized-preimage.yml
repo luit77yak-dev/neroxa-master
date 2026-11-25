@@ -80,7 +80,7 @@ jobs:
           umask 077
           PRIVATE="$RUNNER_TEMP/neroxa-rg02-capture-private-$GITHUB_RUN_ID"
           mkdir -m 0700 "$PRIVATE"
-          echo "RG02_PRIVATE_OUTPUT_ROOT=$PRIVATE" >> "$GITHUB_ENV"
+          export RG02_PRIVATE_OUTPUT_ROOT="$PRIVATE"
           python3 tools/restore-gate01/rg02_source_same_snapshot_capture.py
 
       - name: Stage ONLY encrypted ciphertext in protected private artifact
