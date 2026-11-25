@@ -20,7 +20,7 @@ import sys
 PROJECT = "iefaoaqzltvpfabyeelj"
 ROLE = "neroxa_rg02_snapshot_reader"
 SESSION_HOST = "aws-0-us-east-1.pooler.supabase.com"
-DIRECT_HOST = f"db.{PROJECT}.supabase.co"
+APPROVED_CA_SHA256 = "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
 SNAPSHOT = re.compile(r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{8}-[0-9]+\Z")
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 CONFIRMATION = "RG02_NEW_PREIMAGE_READONLY"
@@ -59,9 +59,9 @@ def check_context(env):
 
 
 def check_conn_config(host, user, port):
-    if host not in (SESSION_HOST, DIRECT_HOST) or port != "5432":
+    if host != SESSION_HOST or port != "5432":
         raise Blocked("RG02_PINNED_SOURCE_DESTINATION_INVALID")
-    expected = ROLE if host == DIRECT_HOST else f"{ROLE}.{PROJECT}"
+    expected = f"{ROLE}.{PROJECT}"
     if user != expected:
         raise Blocked("RG02_DEDICATED_READONLY_ROLE_REQUIRED")
 
@@ -382,6 +382,10 @@ def run():
             or len(password) < 12 or len(ca) > 65536
             or "BEGIN CERTIFICATE" not in ca):
         raise Blocked("RG02_SECRET_INPUT_INVALID")
+    # Independently audited F02 Supavisor CA pin. Do not accept a substituted
+    # trust root or a direct host without a new, separately approved revision.
+    if hashlib.sha256(ca.encode("utf-8")).hexdigest() != APPROVED_CA_SHA256:
+        raise Blocked("RG02_PINNED_CA_MISMATCH")
     root = Path(required("RG02_PRIVATE_OUTPUT_ROOT")).resolve()
     if not root.is_dir() or root.is_symlink() or root.stat().st_mode & 0o077:
         raise Blocked("RG02_PRIVATE_ROOT_INVALID")
