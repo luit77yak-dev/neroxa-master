@@ -278,6 +278,79 @@ def verify_decrypt(passfile, ciphertext, expected, limit):
         proc.stdout.close()
 
 
+def decrypt_and_validate_source(passfile, globals_file, tuples_file,
+                                expected_rows):
+    # Secondary structural validation, still with zero plaintext files.
+    # Raw identities may exist in runner memory only; they never reach stdout.
+    def read_private(path, budget):
+        proc = subprocess.Popen([
+            "timeout", "90s", "gpg", "--batch", "--no-tty",
+            "--pinentry-mode", "loopback",
+            "--passphrase-file", str(passfile), "--decrypt", str(path),
+        ], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+           env=public_subprocess_env())
+        data = bytearray()
+        try:
+            for chunk in iter(lambda: proc.stdout.read(256 * 1024), b""):
+                data.extend(chunk)
+                if len(data) > budget:
+                    raise Blocked("RG02_PRIVATE_WITNESS_TOO_LARGE")
+            if proc.wait(timeout=10) != 0:
+                raise Blocked("RG02_PRIVATE_WITNESS_DECRYPT_INVALID")
+            return bytes(data)
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+            proc.wait()
+            proc.stdout.close()
+
+    try:
+        source_globals = json.loads(read_private(globals_file, MAX_GLOBALS))
+        if (not isinstance(source_globals, dict)
+                or source_globals.get("format_version") != 1
+                or source_globals.get("scope") !=
+                "SOURCE_GLOBAL_CATALOG_IN_SAME_SNAPSHOT"
+                or not isinstance(source_globals.get("roles"), list)
+                or not source_globals["roles"]
+                or not isinstance(source_globals.get("memberships"), list)
+                or not isinstance(source_globals.get("parameter_acls"), list)):
+            raise Blocked("RG02_GLOBALS_STRUCTURAL_PROOF_MISSING")
+        roles = source_globals["roles"]
+        if (not all(isinstance(x, dict) and isinstance(x.get("name"), str)
+                    for x in roles)
+                or len({x["name"] for x in roles}) != len(roles)
+                or ROLE not in {x["name"] for x in roles}):
+            raise Blocked("RG02_GLOBALS_ROLE_SET_INVALID")
+        rows = read_private(tuples_file, MAX_TUPLES).splitlines()
+        if len(rows) != expected_rows or not rows:
+            raise Blocked("RG02_TUPLE_COUNT_MISMATCH")
+        kinds = {
+            "ROLE": {"MEMBER", "USAGE", "SET"},
+            "SCHEMA": {"USAGE", "CREATE"},
+            "TABLE": {"SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE",
+                      "REFERENCES", "TRIGGER", "MAINTAIN"},
+            "FUNCTION": {"EXECUTE"},
+            "SEQUENCE": {"USAGE", "SELECT", "UPDATE"},
+            "PARAMETER": {"SET", "ALTER SYSTEM"},
+        }
+        observed = set()
+        for line in rows:
+            row = json.loads(line)
+            if (not isinstance(row, list) or len(row) != 5
+                    or not all(isinstance(row[i], str) and row[i]
+                               and "\x00" not in row[i] for i in (0, 1, 2, 3))
+                    or row[1] not in kinds or row[3] not in kinds[row[1]]
+                    or (type(row[4]) is not bool and row[4] is not None)):
+                raise Blocked("RG02_TUPLE_SHAPE_INVALID")
+            key = tuple(row[:4])
+            if key in observed:
+                raise Blocked("RG02_TUPLE_DUPLICATE")
+            observed.add(key)
+        return {"roles": len(roles), "rows": len(rows)}
+    except (ValueError, UnicodeDecodeError, TypeError, KeyError):
+        raise Blocked("RG02_PRIVATE_WITNESS_PARSE_INVALID") from None
+
+
 def encrypt_json(body, passfile, dest):
     proc = subprocess.Popen([
         "timeout", "30s", "gpg", "--batch", "--yes", "--no-tty",
@@ -359,13 +432,18 @@ def run():
                 ("globals", global_file, MAX_GLOBALS),
                 ("tuples", tuple_file, MAX_TUPLES)):
             verify_decrypt(passfile, file, stats[kind], limit)
+        # Verify structure and uniqueness after decrypt/hash without writing
+        # any private plaintext to disk or printing identifiers.
+        shape = decrypt_and_validate_source(
+            passfile, global_file, tuple_file, stats["tuples"]["rows"])
         # This hash-only manifest binds all 3 bytestrings to a NEW capture,
         # but cannot independently authenticate the commercial source.
         manifest = {
             "format": 1, "scope": "NEW_READ_ONLY_SAME_PREIMAGE_STAGED",
             "capture_id": secrets.token_hex(16),
             "project_ref": PROJECT, "source_role": ROLE,
-            "encrypted_objects": stats, "pg_major": 17,
+            "encrypted_objects": stats,
+            "private_witness_shape": shape, "pg_major": 17,
             "github_source_commit": required("GITHUB_SHA"),
             "github_protected_run_id": required("GITHUB_RUN_ID"),
             "snapshot_import_contract": "1 exporter + pg_dump snapshot + 2 imported PG17 sessions",
