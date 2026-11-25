@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 
 from rg02_compare_runtime import statements, role_name, IDENT
+from rg02_membership_parser import parse_membership as parse_membership_pg17
 
 # PostgreSQL 17 ACL rights, including MAINTAIN on tables.
 RIGHTS = {
@@ -27,10 +28,6 @@ REVOKE = re.compile(
     r'FROM\s+(?P<grantee>' + IDENT + r')'
     r'(?:\s+GRANTED\s+BY\s+' + IDENT + r')?'
     r'(?:\s+(?:RESTRICT|CASCADE))?\s*$', re.I | re.S)
-MEMBERSHIP = re.compile(
-    r'^\s*GRANT\s+(' + IDENT + r')\s+TO\s+(' + IDENT + r')'
-    r'(?:\s+WITH\s+(.+?))?(?:\s+GRANTED\s+BY\s+' + IDENT + r')?\s*$',
-    re.I | re.S)
 WORD = re.compile(r'"(?:[^"]|"")*"|[A-Za-z_][A-Za-z_0-9$]*|[0-9]+|[.(),\[\]]')
 
 
@@ -145,24 +142,12 @@ def inspect_revocations(source_sql, catalog):
 
 
 def parse_membership(stmt):
-    match = MEMBERSHIP.fullmatch(stmt)
-    if match is None:
+    """Retain existing (role, member, explicit_options) interface safely."""
+    parsed = parse_membership_pg17(stmt)
+    if parsed is None:
         return None
-    granted, member, options = match.groups()
-    parsed = {}
-    if options:
-        if options.strip().upper() == 'ADMIN OPTION':
-            parsed['admin_option'] = True
-        else:
-            for part in options.split(','):
-                m = re.fullmatch(r'\s*(ADMIN|INHERIT|SET)\s+(TRUE|FALSE)\s*', part, re.I)
-                if m is None:
-                    return None
-                key = m.group(1).lower() + '_option'
-                if key in parsed:
-                    return None
-                parsed[key] = m.group(2).upper() == 'TRUE'
-    return role_name(granted), role_name(member), parsed
+    role, member, _grantor, options = parsed
+    return role, member, options
 
 
 def inspect_membership_options(source_roles, target_roles):

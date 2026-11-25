@@ -12,39 +12,9 @@ import re
 from pathlib import Path
 from rg02_compare_runtime import IDENT, role_name, statements
 from rg02_local_roles_prepare import HIGH_RISK
+from rg02_membership_parser import parse_membership
 
-MEMBER = re.compile(r'^\s*GRANT\s+(' + IDENT + r')\s+TO\s+(' + IDENT + r')(?P<tail>[\s\S]*)$', re.I)
-GRANTOR = re.compile(r'\s+GRANTED\s+BY\s+(' + IDENT + r')\s*$', re.I|re.S)
-OPTION = re.compile(r'\s*(ADMIN|INHERIT|SET)\s+(TRUE|FALSE)\s*', re.I)
 ALTER = re.compile(r'^\s*ALTER\s+(?:ROLE|USER)\s+(' + IDENT + r')\s+WITH\s+(.+)$', re.I|re.S)
-
-def parse_membership(stmt):
-    m = MEMBER.fullmatch(stmt)
-    if m is None:
-        return None
-    tail = m.group('tail')
-    g = GRANTOR.search(tail)
-    grantor = role_name(g.group(1)) if g else None
-    if g:
-        tail = tail[:g.start()]
-    opts = {}
-    if tail.strip():
-        w = re.fullmatch(r'\s+WITH\s+(.+)', tail, re.I|re.S)
-        if w is None:
-            return None
-        raw = w.group(1).strip()
-        if re.fullmatch(r'ADMIN\s+OPTION', raw, re.I):
-            opts['admin_option'] = True
-        else:
-            for part in raw.split(','):
-                o = OPTION.fullmatch(part)
-                if o is None:
-                    return None
-                name = o.group(1).lower() + '_option'
-                if name in opts:
-                    return None
-                opts[name] = o.group(2).upper() == 'TRUE'
-    return (role_name(m.group(1)),role_name(m.group(2)),grantor,opts)
 
 def acl_provenance(catalog):
     if not isinstance(catalog, dict):
@@ -82,6 +52,12 @@ def global_role_coverage(source,target):
         raise ValueError('SOURCE_PASSWORD')
     if not isinstance(target,dict) or not isinstance(target.get('memberships'),list):
         raise ValueError('CATALOG_MEMBERSHIPS')
+    roles = target.get('roles')
+    if not isinstance(roles, list) or not all(
+            isinstance(row, dict) and isinstance(row.get('name'), str)
+            for row in roles):
+        raise ValueError('CATALOG_ROLES')
+    local_role_names = {row['name'] for row in roles}
     edges = {}
     for edge in target['memberships']:
         if not isinstance(edge,dict) or not all(
@@ -110,6 +86,16 @@ def global_role_coverage(source,target):
         candidates = edges.get((granted,member),[])
         if not candidates:
             c['LOCAL_MEMBERSHIP_MISSING_HOLD'] += 1
+            granted_present = granted in local_role_names
+            member_present = member in local_role_names
+            if granted_present and member_present:
+                c['LOCAL_MEMBERSHIP_EDGE_ABSENT_BOTH_ROLES_PRESENT_HOLD'] += 1
+            elif not granted_present and not member_present:
+                c['LOCAL_MEMBERSHIP_BOTH_ROLES_ABSENT_HOLD'] += 1
+            elif not granted_present:
+                c['LOCAL_MEMBERSHIP_GRANTED_ROLE_ABSENT_HOLD'] += 1
+            else:
+                c['LOCAL_MEMBERSHIP_MEMBER_ROLE_ABSENT_HOLD'] += 1
         elif len(candidates)!=1:
             c['LOCAL_MEMBERSHIP_AMBIGUOUS_HOLD'] += 1
         else:
