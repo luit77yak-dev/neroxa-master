@@ -1,5 +1,30 @@
 # NEROXA — RESTORE-GATE-01: recuperação comercial isolada
 
+> **ATUALIZAÇÃO OPERACIONAL — 25/11/2026**
+>
+> Este README documenta a preparação histórica do RG01. A afirmação antiga
+> abaixo de que o procedimento “ainda não foi executado” **não representa o
+> estado atual do RG02**. As execuções protegidas já restauraram o esquema
+> com owner/ACL em PG17 descartável e sem rede; a última execução
+> [#45620361672](https://github.com/luit77yak-dev/neroxa-master/actions/runs/45620361672)
+> mediu **13.824** provas de privilégios no **destino local**, das quais
+> **4.936** foram concedidas, e validou a matriz de evidências.
+>
+> **O fechamento comercial permanece bloqueado:** `GLOBAL_ROLES=NOT_VERIFIED`,
+> `OWNER_ACL=NOT_VERIFIED`, `COMMERCIAL_GO=NO_GO`. Não há, no material
+> auditado neste repositório, testemunho nativo dos direitos efetivos da
+> origem vinculado à mesma preimagem. Não repetir o RG02 apenas para reproduzir
+> este HOLD. Ver [RG02-SOURCE-WITNESS-CONTRACT.md](RG02-SOURCE-WITNESS-CONTRACT.md)
+> para o gate de proveniência e o procedimento futuro **ainda não autorizado**.
+>
+> O fluxo RG01 de recuperação de conteúdo usa `--no-owner --no-acl`,
+> enquanto o job **RG02 schema/metadata** usa `--schema-only` **com owner/ACL**.
+> Não confundir os escopos nem declarar equivalência por uma restauração
+> que suprima as ACLs.
+
+---
+
+
 Status: **preparado, ainda não autorizado nem executado com o backup comercial**.
 
 Este procedimento NÃO conecta ao Supabase comercial ou LAB, não executa migrações, não altera produção, não publica artefatos nem carrega o dump no GitHub. Usa Cloudflare KV com TTL de 24 horas para o arquivo **já criptografado** no Termux, e um runner GitHub Actions Linux descartável. A extensão `supabase_vault` 0.3.1 foi instalada com sucesso em uma prova sem dados comerciais separada.
