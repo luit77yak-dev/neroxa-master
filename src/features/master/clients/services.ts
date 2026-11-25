@@ -26,13 +26,16 @@ export async function recordNeroxaAudit(input: {
   organizationId?: string | null;
   details?: Record<string, unknown>;
 }) {
-  const { data, error } = await supabase.rpc("record_neroxa_audit" as never, {
-    p_action: input.action,
-    p_resource_type: input.resourceType,
-    p_resource_id: input.resourceId ?? null,
-    p_organization_id: input.organizationId ?? null,
-    p_details: input.details ?? {},
-  } as never);
+  const { data, error } = await supabase.rpc(
+    "record_neroxa_audit" as never,
+    {
+      p_action: input.action,
+      p_resource_type: input.resourceType,
+      p_resource_id: input.resourceId ?? null,
+      p_organization_id: input.organizationId ?? null,
+      p_details: input.details ?? {},
+    } as never,
+  );
   if (error) throw new Error(error.message);
   return String(data);
 }
@@ -106,12 +109,15 @@ export async function createNeroxaClient(input: {
   taxId?: string;
   notes?: string;
 }) {
-  const { data, error } = await supabase.rpc("create_neroxa_client" as never, {
-    p_legal_name: input.legalName || null,
-    p_trade_name: input.tradeName || null,
-    p_tax_id: input.taxId || null,
-    p_notes: input.notes || null,
-  } as never);
+  const { data, error } = await supabase.rpc(
+    "create_neroxa_client" as never,
+    {
+      p_legal_name: input.legalName || null,
+      p_trade_name: input.tradeName || null,
+      p_tax_id: input.taxId || null,
+      p_notes: input.notes || null,
+    } as never,
+  );
 
   if (error) throw new Error(error.message);
   return data as unknown as string;
@@ -124,23 +130,29 @@ export async function updateNeroxaClient(input: {
   taxId?: string;
   notes?: string;
 }) {
-  const { data, error } = await supabase.rpc("update_neroxa_client" as never, {
-    p_client_id: input.clientId,
-    p_legal_name: input.legalName || null,
-    p_trade_name: input.tradeName || null,
-    p_tax_id: input.taxId || null,
-    p_notes: input.notes || null,
-  } as never);
+  const { data, error } = await supabase.rpc(
+    "update_neroxa_client" as never,
+    {
+      p_client_id: input.clientId,
+      p_legal_name: input.legalName || null,
+      p_trade_name: input.tradeName || null,
+      p_tax_id: input.taxId || null,
+      p_notes: input.notes || null,
+    } as never,
+  );
 
   if (error) throw new Error(error.message);
   return Boolean(data);
 }
 
 export async function transitionNeroxaClient(clientId: string, status: ClientStatus) {
-  const { data, error } = await supabase.rpc("transition_neroxa_client_status" as never, {
-    p_client_id: clientId,
-    p_new_status: status,
-  } as never);
+  const { data, error } = await supabase.rpc(
+    "transition_neroxa_client_status" as never,
+    {
+      p_client_id: clientId,
+      p_new_status: status,
+    } as never,
+  );
 
   if (error) throw new Error(error.message);
   return Boolean(data);
@@ -156,21 +168,23 @@ export async function createNeroxaClientContact(input: {
   isPrimary?: boolean;
   notes?: string;
 }) {
-  const { data, error } = await supabase.rpc("create_neroxa_client_contact" as never, {
-    p_client_id: input.clientId,
-    p_name: input.name,
-    p_role_title: input.roleTitle || null,
-    p_email: input.email || null,
-    p_phone: input.phone || null,
-    p_whatsapp: input.whatsapp || null,
-    p_is_primary: Boolean(input.isPrimary),
-    p_notes: input.notes || null,
-  } as never);
+  const { data, error } = await supabase.rpc(
+    "create_neroxa_client_contact" as never,
+    {
+      p_client_id: input.clientId,
+      p_name: input.name,
+      p_role_title: input.roleTitle || null,
+      p_email: input.email || null,
+      p_phone: input.phone || null,
+      p_whatsapp: input.whatsapp || null,
+      p_is_primary: Boolean(input.isPrimary),
+      p_notes: input.notes || null,
+    } as never,
+  );
 
   if (error) throw new Error(error.message);
   return data as unknown as string;
 }
-
 
 export type NeroxaSystemInstance = {
   id: string;
@@ -214,4 +228,3 @@ export async function listNeroxaInstanceDomains(instanceId: string) {
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as NeroxaSystemDomain[];
 }
-

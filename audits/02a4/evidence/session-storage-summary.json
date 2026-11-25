@@ -173,9 +173,7 @@
   "storageContract": {
     "bucket": "product-images",
     "private": true,
-    "MIME": [
-      "image/png"
-    ],
+    "MIME": ["image/png"],
     "maxBytes": 1048576,
     "fixture": "1x1 fictional PNG",
     "publicStorefrontAssets": "NOT RUN; signed/proxied successor needed"

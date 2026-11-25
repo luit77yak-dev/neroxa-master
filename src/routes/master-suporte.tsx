@@ -1,62 +1,477 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertCircle, CheckCircle2, Clock3, MessageSquareText, Plus, RefreshCw, Send, UserRound } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock3,
+  MessageSquareText,
+  Plus,
+  RefreshCw,
+  Send,
+  UserRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { MasterShell } from "@/features/master/shell/MasterShell";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { canPerform } from "@/features/master/permissions";
 import { getNeroxaPlatformAccess } from "@/features/master/clients/services";
-import { addSupportMessage, assignSupportTicket, createSupportTicket, listSupportMessages, listSupportTickets, updateSupportTicket, type SupportMessage, type SupportTicket, type SupportTicketPriority, type SupportTicketStatus } from "@/features/master/support/services";
+import {
+  addSupportMessage,
+  assignSupportTicket,
+  createSupportTicket,
+  listSupportMessages,
+  listSupportTickets,
+  updateSupportTicket,
+  type SupportMessage,
+  type SupportTicket,
+  type SupportTicketPriority,
+  type SupportTicketStatus,
+} from "@/features/master/support/services";
 
 export const Route = createFileRoute("/master-suporte")({ component: MasterSupportPage });
 
-const statusLabel: Record<SupportTicketStatus,string> = { OPEN:"Aberto", IN_PROGRESS:"Em atendimento", WAITING_CLIENT:"Aguardando cliente", RESOLVED:"Resolvido", CLOSED:"Fechado" };
-const priorityLabel: Record<SupportTicketPriority,string> = { LOW:"Baixa", NORMAL:"Normal", HIGH:"Alta", URGENT:"Urgente" };
-const statusTone: Record<SupportTicketStatus,string> = { OPEN:"bg-blue-50 text-blue-700", IN_PROGRESS:"bg-amber-50 text-amber-700", WAITING_CLIENT:"bg-violet-50 text-violet-700", RESOLVED:"bg-success/10 text-success", CLOSED:"bg-muted text-muted-foreground" };
+const statusLabel: Record<SupportTicketStatus, string> = {
+  OPEN: "Aberto",
+  IN_PROGRESS: "Em atendimento",
+  WAITING_CLIENT: "Aguardando cliente",
+  RESOLVED: "Resolvido",
+  CLOSED: "Fechado",
+};
+const priorityLabel: Record<SupportTicketPriority, string> = {
+  LOW: "Baixa",
+  NORMAL: "Normal",
+  HIGH: "Alta",
+  URGENT: "Urgente",
+};
+const statusTone: Record<SupportTicketStatus, string> = {
+  OPEN: "bg-blue-50 text-blue-700",
+  IN_PROGRESS: "bg-amber-50 text-amber-700",
+  WAITING_CLIENT: "bg-violet-50 text-violet-700",
+  RESOLVED: "bg-success/10 text-success",
+  CLOSED: "bg-muted text-muted-foreground",
+};
 
 function MasterSupportPage() {
-  const params=typeof window==="undefined"?null:new URLSearchParams(window.location.search);
-  const contextClientId=params?.get("clientId") ?? null;
-  const contextOrganizationId=params?.get("organizationId") ?? null;
-  const [authorized,setAuthorized]=useState<boolean|null>(null);
-  const [tickets,setTickets]=useState<SupportTicket[]>([]);
-  const [selectedId,setSelectedId]=useState<string|null>(null);
-  const [messages,setMessages]=useState<SupportMessage[]>([]);
-  const [filter,setFilter]=useState<SupportTicketStatus|"ALL">("ALL");
-  const [loading,setLoading]=useState(true), [saving,setSaving]=useState(false);
-  const [error,setError]=useState(""), [showCreate,setShowCreate]=useState(false), [reply,setReply]=useState(""), [internal,setInternal]=useState(false);
-  const [draft,setDraft]=useState({ organizationId:"",subject:"",description:"",category:"GENERAL",priority:"NORMAL" as SupportTicketPriority });
-  const scopedTickets=contextOrganizationId?tickets.filter(t=>t.organization_id===contextOrganizationId):contextClientId?tickets.filter(t=>t.organization_id===contextClientId):tickets;
-  const selected=tickets.find(t=>t.id===selectedId)??null;
-  const counts=useMemo(()=>({open:scopedTickets.filter(t=>t.status==="OPEN").length,active:scopedTickets.filter(t=>t.status==="IN_PROGRESS").length,waiting:scopedTickets.filter(t=>t.status==="WAITING_CLIENT").length,urgent:scopedTickets.filter(t=>t.priority==="URGENT"&&!["RESOLVED","CLOSED"].includes(t.status)).length}),[scopedTickets]);
-  const visible=filter==="ALL"?scopedTickets:scopedTickets.filter(t=>t.status===filter);
+  const params = typeof window === "undefined" ? null : new URLSearchParams(window.location.search);
+  const contextClientId = params?.get("clientId") ?? null;
+  const contextOrganizationId = params?.get("organizationId") ?? null;
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [filter, setFilter] = useState<SupportTicketStatus | "ALL">("ALL");
+  const [loading, setLoading] = useState(true),
+    [saving, setSaving] = useState(false);
+  const [error, setError] = useState(""),
+    [showCreate, setShowCreate] = useState(false),
+    [reply, setReply] = useState(""),
+    [internal, setInternal] = useState(false);
+  const [draft, setDraft] = useState({
+    organizationId: "",
+    subject: "",
+    description: "",
+    category: "GENERAL",
+    priority: "NORMAL" as SupportTicketPriority,
+  });
+  const scopedTickets = contextOrganizationId
+    ? tickets.filter((t) => t.organization_id === contextOrganizationId)
+    : contextClientId
+      ? tickets.filter((t) => t.organization_id === contextClientId)
+      : tickets;
+  const selected = tickets.find((t) => t.id === selectedId) ?? null;
+  const counts = useMemo(
+    () => ({
+      open: scopedTickets.filter((t) => t.status === "OPEN").length,
+      active: scopedTickets.filter((t) => t.status === "IN_PROGRESS").length,
+      waiting: scopedTickets.filter((t) => t.status === "WAITING_CLIENT").length,
+      urgent: scopedTickets.filter(
+        (t) => t.priority === "URGENT" && !["RESOLVED", "CLOSED"].includes(t.status),
+      ).length,
+    }),
+    [scopedTickets],
+  );
+  const visible =
+    filter === "ALL" ? scopedTickets : scopedTickets.filter((t) => t.status === filter);
 
-  async function load(keep=true){setLoading(true);setError("");try{const access=await getNeroxaPlatformAccess();const ok=Boolean(access?.active&&canPerform(access.role,"manageSupport"));setAuthorized(ok);if(!ok)return;const rows=await listSupportTickets();setTickets(rows);const scopedRows=contextOrganizationId?rows.filter(r=>r.organization_id===contextOrganizationId):contextClientId?rows.filter(r=>r.organization_id===contextClientId):rows;if(!keep||!selectedId||!scopedRows.some(r=>r.id===selectedId))setSelectedId(scopedRows[0]?.id??null);}catch(cause){setAuthorized(false);setError(cause instanceof Error?cause.message:"Não foi possível carregar o suporte.");}finally{setLoading(false);}}
-  useEffect(()=>{void load(false)},[]);
-  useEffect(()=>{if(!selectedId){setMessages([]);return;}void listSupportMessages(selectedId).then(setMessages).catch(c=>setError(c instanceof Error?c.message:"Não foi possível carregar as mensagens."))},[selectedId]);
+  async function load(keep = true) {
+    setLoading(true);
+    setError("");
+    try {
+      const access = await getNeroxaPlatformAccess();
+      const ok = Boolean(access?.active && canPerform(access.role, "manageSupport"));
+      setAuthorized(ok);
+      if (!ok) return;
+      const rows = await listSupportTickets();
+      setTickets(rows);
+      const scopedRows = contextOrganizationId
+        ? rows.filter((r) => r.organization_id === contextOrganizationId)
+        : contextClientId
+          ? rows.filter((r) => r.organization_id === contextClientId)
+          : rows;
+      if (!keep || !selectedId || !scopedRows.some((r) => r.id === selectedId))
+        setSelectedId(scopedRows[0]?.id ?? null);
+    } catch (cause) {
+      setAuthorized(false);
+      setError(cause instanceof Error ? cause.message : "Não foi possível carregar o suporte.");
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    void load(false);
+  }, []);
+  useEffect(() => {
+    if (!selectedId) {
+      setMessages([]);
+      return;
+    }
+    void listSupportMessages(selectedId)
+      .then(setMessages)
+      .catch((c) =>
+        setError(c instanceof Error ? c.message : "Não foi possível carregar as mensagens."),
+      );
+  }, [selectedId]);
 
-  async function mutate(action:()=>Promise<void>){setSaving(true);setError("");try{await action();await load();}catch(cause){setError(cause instanceof Error?cause.message:"Não foi possível concluir a operação.");}finally{setSaving(false);}}
-  async function handleCreate(){if(!draft.organizationId||!draft.subject.trim()||!draft.description.trim()){setError("Informe cliente, assunto e descrição.");return;}await mutate(async()=>{const id=await createSupportTicket(draft);setDraft({organizationId:"",subject:"",description:"",category:"GENERAL",priority:"NORMAL"});setShowCreate(false);setSelectedId(id);});}
-  async function handleReply(){if(!selected||!reply.trim())return;await mutate(async()=>{await addSupportMessage({ticketId:selected.id,body:reply,internal});setReply("");setInternal(false);setMessages(await listSupportMessages(selected.id));});}
+  async function mutate(action: () => Promise<void>) {
+    setSaving(true);
+    setError("");
+    try {
+      await action();
+      await load();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Não foi possível concluir a operação.");
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function handleCreate() {
+    if (!draft.organizationId || !draft.subject.trim() || !draft.description.trim()) {
+      setError("Informe cliente, assunto e descrição.");
+      return;
+    }
+    await mutate(async () => {
+      const id = await createSupportTicket(draft);
+      setDraft({
+        organizationId: "",
+        subject: "",
+        description: "",
+        category: "GENERAL",
+        priority: "NORMAL",
+      });
+      setShowCreate(false);
+      setSelectedId(id);
+    });
+  }
+  async function handleReply() {
+    if (!selected || !reply.trim()) return;
+    await mutate(async () => {
+      await addSupportMessage({ ticketId: selected.id, body: reply, internal });
+      setReply("");
+      setInternal(false);
+      setMessages(await listSupportMessages(selected.id));
+    });
+  }
 
-  if(authorized===false)return <MasterLogin />;
-  if(authorized===null||loading)return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100"><Clock3 className="h-7 w-7 animate-pulse"/></main>;
+  if (authorized === false) return <MasterLogin />;
+  if (authorized === null || loading)
+    return (
+      <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100">
+        <Clock3 className="h-7 w-7 animate-pulse" />
+      </main>
+    );
 
-  return <MasterShell><main className="min-h-screen min-w-0 overflow-x-hidden bg-muted/50 p-3 text-foreground sm:p-6 lg:p-8"><div className="mx-auto min-w-0 max-w-[1500px] space-y-5">
-    <header className="master-page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-medium tracking-wide text-muted-foreground/70">Atendimento</p><h1 className="text-2xl font-semibold">Central de suporte</h1><p className="mt-1 text-sm text-muted-foreground">Chamados, acompanhamento e histórico dos clientes.</p></div><div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
-<Button type="button" variant="outline" className="w-full sm:w-auto min-h-10" onClick={()=>void load()} disabled={loading}><RefreshCw className="mr-2 h-4 w-4 shrink-0"/>Atualizar</Button>
-<Button type="button" className="w-full sm:w-auto min-h-10" onClick={()=>setShowCreate(true)}><Plus className="mr-2 h-4 w-4 shrink-0"/>Novo chamado</Button>
-</div></header>
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{[["Abertos",counts.open],["Em atendimento",counts.active],["Aguardando",counts.waiting],["Urgentes",counts.urgent]].map(([label,value])=><Card key={label} className="p-4"><p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-semibold">{value}</p></Card>)}</div>
-    {error&&<div className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"><AlertCircle className="h-4 w-4"/>{error}</div>}
-    <div className="grid min-h-[620px] gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
-      <Card className="overflow-hidden"><div className="flex gap-1 overflow-x-auto border-b p-2">{([["ALL","Todos"],...Object.entries(statusLabel)] as Array<[string,string]>).map(([value,label])=><button key={value} onClick={()=>setFilter(value as SupportTicketStatus|"ALL")} className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium ${filter===value?"bg-slate-900 text-white":"text-muted-foreground hover:bg-muted"}`}>{label}</button>)}</div><div className="divide-y">{visible.map(ticket=><button key={ticket.id} onClick={()=>setSelectedId(ticket.id)} className={`w-full p-4 text-left hover:bg-muted/50 ${selectedId===ticket.id?"bg-muted/50":""}`}><div className="flex items-start justify-between gap-2"><span className="truncate text-sm font-semibold">{ticket.subject}</span><span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${statusTone[ticket.status]}`}>{statusLabel[ticket.status]}</span></div><p className="mt-1 truncate text-xs text-muted-foreground">{ticket.organization?.trade_name||ticket.organization?.legal_name||"Cliente"}</p><p className="mt-2 text-xs text-muted-foreground/70">{priorityLabel[ticket.priority]} · {ticket.category}</p></button>)}{!visible.length&&<div className="p-10 text-center text-sm text-muted-foreground/70">Nenhum chamado nesta fila.</div>}</div></Card>
-      <Card className="flex min-h-[620px] flex-col overflow-hidden">{selected?<><div className="border-b p-5"><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-xs text-muted-foreground/70">{selected.organization?.trade_name||selected.organization?.legal_name||"Cliente"}</p><h2 className="text-lg font-semibold">{selected.subject}</h2><p className="mt-1 text-sm text-muted-foreground">{selected.description}</p></div><div className="flex flex-wrap gap-2"><select value={selected.status} disabled={saving} onChange={e=>void mutate(()=>updateSupportTicket({id:selected.id,status:e.target.value as SupportTicketStatus}))} className="h-9 rounded-lg border bg-card px-2 text-xs">{Object.entries(statusLabel).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><select value={selected.priority} disabled={saving} onChange={e=>void mutate(()=>updateSupportTicket({id:selected.id,priority:e.target.value as SupportTicketPriority}))} className="h-9 rounded-lg border bg-card px-2 text-xs">{Object.entries(priorityLabel).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><Button variant="outline" size="sm" disabled={saving} onClick={()=>void mutate(()=>assignSupportTicket(selected.id))}><UserRound className="mr-1 h-3.5 w-3.5"/>Assumir</Button></div></div></div>
-      <div className="flex-1 space-y-3 overflow-y-auto p-5"><div className="rounded-xl border bg-muted/50 p-4"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">Abertura</p><p className="mt-1 whitespace-pre-wrap text-sm">{selected.description}</p></div>{messages.map(m=><div key={m.id} className={`rounded-xl border p-4 ${m.internal?"border-amber-200 bg-amber-50":"bg-card"}`}><div className="flex items-center gap-2 text-xs text-muted-foreground/70"><MessageSquareText className="h-3.5 w-3.5"/>{m.internal?"Nota interna":"Resposta"} · {new Date(m.created_at).toLocaleString("pt-BR")}</div><p className="mt-2 whitespace-pre-wrap text-sm text-foreground/80">{m.body}</p></div>)}</div>
-      <div className="border-t p-4"><textarea value={reply} onChange={e=>setReply(e.target.value)} placeholder="Escreva uma resposta..." className="min-h-24 w-full resize-none rounded-xl border p-3 text-sm outline-none focus:border-slate-400"/><div className="mt-2 flex flex-wrap items-center justify-between gap-2"><label className="flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={internal} onChange={e=>setInternal(e.target.checked)}/>Nota interna</label><Button disabled={saving||!reply.trim()} onClick={()=>void handleReply()}><Send className="mr-2 h-4 w-4"/>Enviar</Button></div></div></>:<div className="grid flex-1 place-items-center text-center text-sm text-muted-foreground/70"><div><CheckCircle2 className="mx-auto h-9 w-9 text-slate-300"/><p className="mt-3">Selecione um chamado</p></div></div>}</Card>
-    </div>
-  </div>
-  {showCreate&&<div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 p-3 sm:grid sm:place-items-center sm:p-4"><Card className="mx-auto my-3 w-full max-w-lg max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 sm:my-0 sm:max-h-[calc(100dvh-2rem)]"><h2 className="text-lg font-semibold">Novo chamado</h2><p className="mt-1 text-sm text-muted-foreground">Registre uma solicitação para um cliente.</p><div className="mt-4 space-y-3"><input value={draft.organizationId} onChange={e=>setDraft({...draft,organizationId:e.target.value})} placeholder="ID da organização do cliente" className="h-10 w-full rounded-lg border px-3 text-sm"/><input value={draft.subject} onChange={e=>setDraft({...draft,subject:e.target.value})} placeholder="Assunto" className="h-10 w-full rounded-lg border px-3 text-sm"/><input value={draft.category} onChange={e=>setDraft({...draft,category:e.target.value})} placeholder="Categoria" className="h-10 w-full rounded-lg border px-3 text-sm"/><select value={draft.priority} onChange={e=>setDraft({...draft,priority:e.target.value as SupportTicketPriority})} className="h-10 w-full rounded-lg border px-3 text-sm">{Object.entries(priorityLabel).map(([v,l])=><option key={v} value={v}>{l}</option>)}</select><textarea value={draft.description} onChange={e=>setDraft({...draft,description:e.target.value})} placeholder="Descreva o problema ou solicitação" className="min-h-28 w-full rounded-lg border p-3 text-sm"/><div className="grid grid-cols-1 gap-2 sm:flex sm:justify-end"><Button type="button" variant="outline" className="w-full sm:w-auto" onClick={()=>setShowCreate(false)}>Cancelar</Button><Button type="button" className="w-full sm:w-auto" disabled={saving} onClick={()=>void handleCreate()}>Criar chamado</Button></div></div></Card></div>}
-  </main></MasterShell>;
+  return (
+    <MasterShell>
+      <main className="min-h-screen min-w-0 overflow-x-hidden bg-muted/50 p-3 text-foreground sm:p-6 lg:p-8">
+        <div className="mx-auto min-w-0 max-w-[1500px] space-y-5">
+          <header className="master-page-header flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-medium tracking-wide text-muted-foreground/70">
+                Atendimento
+              </p>
+              <h1 className="text-2xl font-semibold">Central de suporte</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Chamados, acompanhamento e histórico dos clientes.
+              </p>
+            </div>
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto min-h-10"
+                onClick={() => void load()}
+                disabled={loading}
+              >
+                <RefreshCw className="mr-2 h-4 w-4 shrink-0" />
+                Atualizar
+              </Button>
+              <Button
+                type="button"
+                className="w-full sm:w-auto min-h-10"
+                onClick={() => setShowCreate(true)}
+              >
+                <Plus className="mr-2 h-4 w-4 shrink-0" />
+                Novo chamado
+              </Button>
+            </div>
+          </header>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+              ["Abertos", counts.open],
+              ["Em atendimento", counts.active],
+              ["Aguardando", counts.waiting],
+              ["Urgentes", counts.urgent],
+            ].map(([label, value]) => (
+              <Card key={label} className="p-4">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+                <p className="mt-1 text-2xl font-semibold">{value}</p>
+              </Card>
+            ))}
+          </div>
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4" />
+              {error}
+            </div>
+          )}
+          <div className="grid min-h-[620px] gap-4 lg:grid-cols-[360px_minmax(0,1fr)]">
+            <Card className="overflow-hidden">
+              <div className="flex gap-1 overflow-x-auto border-b p-2">
+                {(
+                  [["ALL", "Todos"], ...Object.entries(statusLabel)] as Array<[string, string]>
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    onClick={() => setFilter(value as SupportTicketStatus | "ALL")}
+                    className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium ${filter === value ? "bg-slate-900 text-white" : "text-muted-foreground hover:bg-muted"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="divide-y">
+                {visible.map((ticket) => (
+                  <button
+                    key={ticket.id}
+                    onClick={() => setSelectedId(ticket.id)}
+                    className={`w-full p-4 text-left hover:bg-muted/50 ${selectedId === ticket.id ? "bg-muted/50" : ""}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="truncate text-sm font-semibold">{ticket.subject}</span>
+                      <span
+                        className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-semibold ${statusTone[ticket.status]}`}
+                      >
+                        {statusLabel[ticket.status]}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {ticket.organization?.trade_name ||
+                        ticket.organization?.legal_name ||
+                        "Cliente"}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground/70">
+                      {priorityLabel[ticket.priority]} · {ticket.category}
+                    </p>
+                  </button>
+                ))}
+                {!visible.length && (
+                  <div className="p-10 text-center text-sm text-muted-foreground/70">
+                    Nenhum chamado nesta fila.
+                  </div>
+                )}
+              </div>
+            </Card>
+            <Card className="flex min-h-[620px] flex-col overflow-hidden">
+              {selected ? (
+                <>
+                  <div className="border-b p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground/70">
+                          {selected.organization?.trade_name ||
+                            selected.organization?.legal_name ||
+                            "Cliente"}
+                        </p>
+                        <h2 className="text-lg font-semibold">{selected.subject}</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">{selected.description}</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <select
+                          value={selected.status}
+                          disabled={saving}
+                          onChange={(e) =>
+                            void mutate(() =>
+                              updateSupportTicket({
+                                id: selected.id,
+                                status: e.target.value as SupportTicketStatus,
+                              }),
+                            )
+                          }
+                          className="h-9 rounded-lg border bg-card px-2 text-xs"
+                        >
+                          {Object.entries(statusLabel).map(([v, l]) => (
+                            <option key={v} value={v}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={selected.priority}
+                          disabled={saving}
+                          onChange={(e) =>
+                            void mutate(() =>
+                              updateSupportTicket({
+                                id: selected.id,
+                                priority: e.target.value as SupportTicketPriority,
+                              }),
+                            )
+                          }
+                          className="h-9 rounded-lg border bg-card px-2 text-xs"
+                        >
+                          {Object.entries(priorityLabel).map(([v, l]) => (
+                            <option key={v} value={v}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={saving}
+                          onClick={() => void mutate(() => assignSupportTicket(selected.id))}
+                        >
+                          <UserRound className="mr-1 h-3.5 w-3.5" />
+                          Assumir
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-3 overflow-y-auto p-5">
+                    <div className="rounded-xl border bg-muted/50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                        Abertura
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap text-sm">{selected.description}</p>
+                    </div>
+                    {messages.map((m) => (
+                      <div
+                        key={m.id}
+                        className={`rounded-xl border p-4 ${m.internal ? "border-amber-200 bg-amber-50" : "bg-card"}`}
+                      >
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                          <MessageSquareText className="h-3.5 w-3.5" />
+                          {m.internal ? "Nota interna" : "Resposta"} ·{" "}
+                          {new Date(m.created_at).toLocaleString("pt-BR")}
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/80">
+                          {m.body}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t p-4">
+                    <textarea
+                      value={reply}
+                      onChange={(e) => setReply(e.target.value)}
+                      placeholder="Escreva uma resposta..."
+                      className="min-h-24 w-full resize-none rounded-xl border p-3 text-sm outline-none focus:border-slate-400"
+                    />
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={internal}
+                          onChange={(e) => setInternal(e.target.checked)}
+                        />
+                        Nota interna
+                      </label>
+                      <Button disabled={saving || !reply.trim()} onClick={() => void handleReply()}>
+                        <Send className="mr-2 h-4 w-4" />
+                        Enviar
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="grid flex-1 place-items-center text-center text-sm text-muted-foreground/70">
+                  <div>
+                    <CheckCircle2 className="mx-auto h-9 w-9 text-slate-300" />
+                    <p className="mt-3">Selecione um chamado</p>
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+        </div>
+        {showCreate && (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/50 p-3 sm:grid sm:place-items-center sm:p-4">
+            <Card className="mx-auto my-3 w-full max-w-lg max-h-[calc(100dvh-1.5rem)] overflow-y-auto p-5 sm:my-0 sm:max-h-[calc(100dvh-2rem)]">
+              <h2 className="text-lg font-semibold">Novo chamado</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Registre uma solicitação para um cliente.
+              </p>
+              <div className="mt-4 space-y-3">
+                <input
+                  value={draft.organizationId}
+                  onChange={(e) => setDraft({ ...draft, organizationId: e.target.value })}
+                  placeholder="ID da organização do cliente"
+                  className="h-10 w-full rounded-lg border px-3 text-sm"
+                />
+                <input
+                  value={draft.subject}
+                  onChange={(e) => setDraft({ ...draft, subject: e.target.value })}
+                  placeholder="Assunto"
+                  className="h-10 w-full rounded-lg border px-3 text-sm"
+                />
+                <input
+                  value={draft.category}
+                  onChange={(e) => setDraft({ ...draft, category: e.target.value })}
+                  placeholder="Categoria"
+                  className="h-10 w-full rounded-lg border px-3 text-sm"
+                />
+                <select
+                  value={draft.priority}
+                  onChange={(e) =>
+                    setDraft({ ...draft, priority: e.target.value as SupportTicketPriority })
+                  }
+                  className="h-10 w-full rounded-lg border px-3 text-sm"
+                >
+                  {Object.entries(priorityLabel).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+                <textarea
+                  value={draft.description}
+                  onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                  placeholder="Descreva o problema ou solicitação"
+                  className="min-h-28 w-full rounded-lg border p-3 text-sm"
+                />
+                <div className="grid grid-cols-1 gap-2 sm:flex sm:justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => setShowCreate(false)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    className="w-full sm:w-auto"
+                    disabled={saving}
+                    onClick={() => void handleCreate()}
+                  >
+                    Criar chamado
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+      </main>
+    </MasterShell>
+  );
 }

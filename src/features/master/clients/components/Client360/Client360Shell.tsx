@@ -12,14 +12,54 @@ type Section = {
 
 const SECTIONS: Section[] = [
   { key: "client", title: "Dados do cliente", description: "Dados cadastrais, status e contatos" },
-  { key: "commercial", title: "Comercial", description: "Propostas e contratos", href: "/master-comercial" },
-  { key: "subscription", title: "Plano e assinatura", description: "Planos, ciclos e situação", href: "/master-assinaturas" },
-  { key: "systems", title: "Sistemas", description: "Sistemas e instâncias", href: "/master-sistemas" },
-  { key: "domains", title: "Domínios", description: "Endereços e status dos domínios", href: "/master-dominios" },
-  { key: "implementation", title: "Implantação", description: "Jobs e acompanhamento", href: "/master-implantacao" },
-  { key: "finance", title: "Financeiro", description: "Cobranças e situação financeira", href: "/master-financeiro" },
-  { key: "support", title: "Suporte", description: "Chamados e atendimentos", href: "/master-suporte" },
-  { key: "audit", title: "Auditoria", description: "Histórico administrativo", href: "/master-configuracoes" },
+  {
+    key: "commercial",
+    title: "Comercial",
+    description: "Propostas e contratos",
+    href: "/master-comercial",
+  },
+  {
+    key: "subscription",
+    title: "Plano e assinatura",
+    description: "Planos, ciclos e situação",
+    href: "/master-assinaturas",
+  },
+  {
+    key: "systems",
+    title: "Sistemas",
+    description: "Sistemas e instâncias",
+    href: "/master-sistemas",
+  },
+  {
+    key: "domains",
+    title: "Domínios",
+    description: "Endereços e status dos domínios",
+    href: "/master-dominios",
+  },
+  {
+    key: "implementation",
+    title: "Implantação",
+    description: "Jobs e acompanhamento",
+    href: "/master-implantacao",
+  },
+  {
+    key: "finance",
+    title: "Financeiro",
+    description: "Cobranças e situação financeira",
+    href: "/master-financeiro",
+  },
+  {
+    key: "support",
+    title: "Suporte",
+    description: "Chamados e atendimentos",
+    href: "/master-suporte",
+  },
+  {
+    key: "audit",
+    title: "Auditoria",
+    description: "Histórico administrativo",
+    href: "/master-configuracoes",
+  },
 ];
 
 export function Client360Shell({
@@ -90,12 +130,15 @@ export function Client360Shell({
 
       <Card className="border-border bg-card shadow-soft">
         <div className="border-b border-border p-4 sm:p-5">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Visão operacional</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Visão operacional
+          </p>
           <div className="mt-1 flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h2 className="text-base font-semibold text-foreground">{clientName}</h2>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                Resumo rápido para operação. Abra a edição completa quando precisar alterar ou acompanhar detalhes.
+                Resumo rápido para operação. Abra a edição completa quando precisar alterar ou
+                acompanhar detalhes.
               </p>
             </div>
             <span className="hidden shrink-0 rounded-full bg-muted px-2.5 py-1 text-[11px] font-medium text-muted-foreground sm:inline-flex">
@@ -117,10 +160,15 @@ export function Client360Shell({
         >
           <div className="min-w-0">
             <p className="text-sm font-semibold text-foreground">Edição completa</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Toque para abrir os módulos do cliente.</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Toque para abrir os módulos do cliente.
+            </p>
           </div>
           <ChevronDown
-            className={["h-5 w-5 shrink-0 text-muted-foreground/70 transition-transform", expanded ? "rotate-180" : ""].join(" ")}
+            className={[
+              "h-5 w-5 shrink-0 text-muted-foreground/70 transition-transform",
+              expanded ? "rotate-180" : "",
+            ].join(" ")}
           />
         </button>
 
@@ -140,7 +188,9 @@ export function Client360Shell({
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-semibold text-foreground">{section.title}</p>
-                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{section.description}</p>
+                        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                          {section.description}
+                        </p>
                       </div>
                       <ChevronDown
                         className={[
@@ -160,7 +210,9 @@ export function Client360Shell({
                             className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-border bg-card px-4 py-3 transition hover:border-input hover:bg-muted/50"
                           >
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-foreground">Abrir {section.title}</p>
+                              <p className="text-sm font-semibold text-foreground">
+                                Abrir {section.title}
+                              </p>
                               <p className="mt-0.5 text-xs text-muted-foreground">
                                 Continuar esta operação no módulo correspondente.
                               </p>
@@ -184,7 +236,9 @@ export function Client360Shell({
 function SummaryItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-border bg-muted/50 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
       <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
     </div>
   );

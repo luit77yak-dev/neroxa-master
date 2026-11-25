@@ -41,7 +41,6 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -79,10 +78,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Neroxa Master" },
-      { name: "description", content: "Panel interno de la plataforma Neroxa: clientes, comercial, assinaturas y financeiro." },
+      {
+        name: "description",
+        content:
+          "Panel interno de la plataforma Neroxa: clientes, comercial, assinaturas y financeiro.",
+      },
       { name: "author", content: "Neroxa" },
       { property: "og:title", content: "Neroxa Master" },
-      { property: "og:description", content: "Panel interno de la plataforma Neroxa: clientes, comercial, assinaturas y financeiro." },
+      {
+        property: "og:description",
+        content:
+          "Panel interno de la plataforma Neroxa: clientes, comercial, assinaturas y financeiro.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "theme-color", content: "#102a2e" },

@@ -47,8 +47,20 @@ export type Invoice = {
   gateway_payment_id: string | null;
   gateway_status: string | null;
   gateway_event_id: string | null;
-  contract: { id: string; contract_number: string | null; title: string | null; status: string; plan_id: string | null } | null;
-  plan: { id: string; name: string; description: string | null; billing_period: string; commercial_model: string | null } | null;
+  contract: {
+    id: string;
+    contract_number: string | null;
+    title: string | null;
+    status: string;
+    plan_id: string | null;
+  } | null;
+  plan: {
+    id: string;
+    name: string;
+    description: string | null;
+    billing_period: string;
+    commercial_model: string | null;
+  } | null;
   audits: FinanceAudit[];
 };
 
@@ -69,4 +81,8 @@ export type Payment = {
 };
 
 export type FinanceClient = { id: string; legal_name: string | null; trade_name: string | null };
-export type FinanceOverview = { invoices: Invoice[]; payments: Payment[]; clients: FinanceClient[] };
+export type FinanceOverview = {
+  invoices: Invoice[];
+  payments: Payment[];
+  clients: FinanceClient[];
+};

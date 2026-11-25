@@ -82,6 +82,7 @@ NEROXA
 Catálogo de planos comercializáveis.
 
 Campos conceituais:
+
 - id
 - name
 - description
@@ -96,6 +97,7 @@ Campos conceituais:
 Recursos disponíveis em cada plano.
 
 Campos conceituais:
+
 - id
 - plan_id
 - feature_key
@@ -107,6 +109,7 @@ Campos conceituais:
 Contrato recorrente efetivo de uma organização.
 
 Campos conceituais:
+
 - id
 - organization_id
 - plan_id
@@ -126,12 +129,14 @@ O preço contratado fica armazenado na assinatura para preservar o histórico co
 Componentes recorrentes da assinatura.
 
 Exemplos:
+
 - plano base
 - automação WhatsApp
 - domínio personalizado
 - recurso adicional
 
 Campos conceituais:
+
 - id
 - subscription_id
 - item_type
@@ -147,6 +152,7 @@ Campos conceituais:
 Cobranças geradas para uma assinatura ou serviço.
 
 Campos conceituais:
+
 - id
 - organization_id
 - subscription_id
@@ -170,6 +176,7 @@ Isso permite que uma cobrança histórica continue correta mesmo se o plano ou p
 Registro de pagamentos efetivamente recebidos.
 
 Campos conceituais:
+
 - id
 - invoice_id
 - amount
@@ -186,6 +193,7 @@ Integrações externas serão adicionadas posteriormente.
 Serviços avulsos ou cobranças não recorrentes.
 
 Exemplos:
+
 - nova página
 - personalização
 - implantação adicional
@@ -208,6 +216,7 @@ Projeto de implantação associado à organização.
 ### implementation_tasks
 
 Checklist por etapa, por exemplo:
+
 - dados cadastrais
 - identidade visual
 - catálogo
@@ -224,13 +233,14 @@ O Master terá autenticação própria e autorização por função/permissão.
 
 Não será usado `user_metadata` para decisões de autorização.
 
-Tabelas expostas ao Data API deverão ter RLS e grants mínimos necessários. O Supabase recomenda RLS em todas as tabelas expostas e testes explícitos das políticas. 
+Tabelas expostas ao Data API deverão ter RLS e grants mínimos necessários. O Supabase recomenda RLS em todas as tabelas expostas e testes explícitos das políticas.
 
 Chaves administrativas/service role nunca serão usadas no frontend.
 
 ## Auditoria
 
 Ações críticas deverão registrar:
+
 - ator
 - organização afetada, quando aplicável
 - ação
@@ -241,6 +251,7 @@ Ações críticas deverão registrar:
 - timestamp
 
 Exemplos:
+
 - alteração de plano
 - alteração de preço contratado
 - suspensão
@@ -314,6 +325,7 @@ Evitar um painel monolítico ou um único arquivo de rota com toda a lógica.
 ## Ordem de implementação
 
 ### Fase 0 — Fundação
+
 - arquitetura
 - autenticação
 - papéis/permissões
@@ -323,38 +335,45 @@ Evitar um painel monolítico ou um único arquivo de rota com toda a lógica.
 - testes de segurança
 
 ### Fase 1 — Clientes
+
 - organizações
 - contatos
 - status
 - domínios
 
 ### Fase 2 — Catálogo comercial
+
 - planos
 - features
 - add-ons
 - serviços avulsos
 
 ### Fase 3 — Contratos e assinaturas
+
 - contratos
 - assinatura
 - itens recorrentes
 - histórico
 
 ### Fase 4 — Financeiro
+
 - invoices
 - itens
 - pagamentos
 - inadimplência
 
 ### Fase 5 — Implantação
+
 - projetos
 - tarefas
 - publicação
 
 ### Fase 6 — Dashboard
+
 Construído sobre dados reais das fases anteriores.
 
 ### Fase 7 — Automação
+
 - notificações
 - cobrança automática
 - gateway

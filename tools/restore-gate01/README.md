@@ -24,7 +24,6 @@
 
 ---
 
-
 Status: **preparado, ainda não autorizado nem executado com o backup comercial**.
 
 Este procedimento NÃO conecta ao Supabase comercial ou LAB, não executa migrações, não altera produção, não publica artefatos nem carrega o dump no GitHub. Usa Cloudflare KV com TTL de 24 horas para o arquivo **já criptografado** no Termux, e um runner GitHub Actions Linux descartável. A extensão `supabase_vault` 0.3.1 foi instalada com sucesso em uma prova sem dados comerciais separada.

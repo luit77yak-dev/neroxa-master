@@ -38,7 +38,12 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Visão geral", to: "/master", icon: LayoutDashboard },
   { label: "Clientes", to: "/master-clientes", icon: Users },
   { label: "Sistemas", to: "/master-sistemas", icon: Package },
-  { label: "Comercial", to: "/master-comercial", icon: BriefcaseBusiness, active: (pathname) => pathname === "/master-comercial" || pathname === "/master-contratos" },
+  {
+    label: "Comercial",
+    to: "/master-comercial",
+    icon: BriefcaseBusiness,
+    active: (pathname) => pathname === "/master-comercial" || pathname === "/master-contratos",
+  },
   { label: "Planos", to: "/master-planos", icon: Package },
   { label: "Assinaturas", to: "/master-assinaturas", icon: CreditCard },
   { label: "Financeiro", to: "/master-financeiro", icon: BarChart3 },
@@ -53,20 +58,27 @@ const NAV_ITEMS: NavItem[] = [
 export function MasterShell({ children }: MasterShellProps) {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
+  const [role, setRole] = useState<
+    import("@/features/master/clients/services").NeroxaPlatformRole | null
+  >(null);
   const [accessLoading, setAccessLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    void getNeroxaPlatformAccess().then((access) => {
-      if (!mounted) return;
-      setRole(access?.active ? access.role : null);
-    }).catch(() => {
-      if (mounted) setRole(null);
-    }).finally(() => {
-      if (mounted) setAccessLoading(false);
-    });
-    return () => { mounted = false; };
+    void getNeroxaPlatformAccess()
+      .then((access) => {
+        if (!mounted) return;
+        setRole(access?.active ? access.role : null);
+      })
+      .catch(() => {
+        if (mounted) setRole(null);
+      })
+      .finally(() => {
+        if (mounted) setAccessLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const currentModule = moduleForPath(location.pathname);
@@ -84,7 +96,10 @@ export function MasterShell({ children }: MasterShellProps) {
   if (accessLoading) {
     return (
       <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-100">
-        <div className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-white" aria-label="Carregando permissões" />
+        <div
+          className="h-7 w-7 animate-spin rounded-full border-2 border-white/20 border-t-white"
+          aria-label="Carregando permissões"
+        />
       </main>
     );
   }
@@ -124,13 +139,21 @@ export function MasterShell({ children }: MasterShellProps) {
         }`}
       >
         <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4 sm:h-16 sm:px-5">
-          <Link to="/master" onClick={() => setMobileOpen(false)} className="flex items-center gap-3">
+          <Link
+            to="/master"
+            onClick={() => setMobileOpen(false)}
+            className="flex items-center gap-3"
+          >
             <span className="grid h-9 w-9 place-items-center rounded-lg border border-sidebar-primary/60 bg-sidebar-accent font-display text-base font-semibold text-sidebar-primary">
               N
             </span>
             <span className="leading-tight">
-              <span className="block font-display text-[17px] font-semibold tracking-tight text-white">Neroxa</span>
-              <span className="block text-[11px] tracking-wide text-sidebar-foreground/55">Master</span>
+              <span className="block font-display text-[17px] font-semibold tracking-tight text-white">
+                Neroxa
+              </span>
+              <span className="block text-[11px] tracking-wide text-sidebar-foreground/55">
+                Master
+              </span>
             </span>
           </Link>
           <button
@@ -143,9 +166,14 @@ export function MasterShell({ children }: MasterShellProps) {
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4 sm:py-5" aria-label="Navegação do Neroxa Master">
+        <nav
+          className="flex-1 overflow-y-auto px-3 py-4 sm:py-5"
+          aria-label="Navegação do Neroxa Master"
+        >
           {sections.map((section) => {
-            const visible = section.items.filter((item) => canAccessModule(role, moduleForPath(item.to)));
+            const visible = section.items.filter((item) =>
+              canAccessModule(role, moduleForPath(item.to)),
+            );
             if (visible.length === 0) return null;
             return (
               <div key={section.title} className="mb-6 last:mb-0">
@@ -154,7 +182,12 @@ export function MasterShell({ children }: MasterShellProps) {
                 </p>
                 <div className="space-y-0.5">
                   {visible.map((item) => (
-                    <MasterNavItem key={item.to} item={item} active={isActive(item)} onNavigate={() => setMobileOpen(false)} />
+                    <MasterNavItem
+                      key={item.to}
+                      item={item}
+                      active={isActive(item)}
+                      onNavigate={() => setMobileOpen(false)}
+                    />
                   ))}
                 </div>
               </div>
@@ -169,7 +202,9 @@ export function MasterShell({ children }: MasterShellProps) {
             </div>
             <div className="min-w-0">
               <p className="truncate text-[13px] font-medium text-white">Equipe Neroxa</p>
-              <p className="truncate text-[11px] text-sidebar-foreground/55">{role ? ROLE_LABELS[role] : "Acesso interno"}</p>
+              <p className="truncate text-[11px] text-sidebar-foreground/55">
+                {role ? ROLE_LABELS[role] : "Acesso interno"}
+              </p>
             </div>
           </div>
         </div>
@@ -198,7 +233,9 @@ export function MasterShell({ children }: MasterShellProps) {
             <nav aria-label="Localização" className="flex min-w-0 items-center gap-2 text-sm">
               <span className="hidden text-muted-foreground sm:inline">Neroxa Master</span>
               <ChevronRight className="hidden h-3.5 w-3.5 text-muted-foreground/60 sm:inline" />
-              <span className="truncate font-medium text-foreground">{currentItem?.label ?? "Visão geral"}</span>
+              <span className="truncate font-medium text-foreground">
+                {currentItem?.label ?? "Visão geral"}
+              </span>
             </nav>
           </div>
 
@@ -220,7 +257,9 @@ export function MasterShell({ children }: MasterShellProps) {
           </div>
         </header>
 
-        <main className="master-main min-h-[calc(100vh-56px)] min-w-0 sm:min-h-[calc(100vh-64px)]">{children}</main>
+        <main className="master-main min-h-[calc(100vh-56px)] min-w-0 sm:min-h-[calc(100vh-64px)]">
+          {children}
+        </main>
       </div>
     </div>
   );
@@ -239,10 +278,15 @@ function MasterNavItem({
 
   if (item.enabled === false) {
     return (
-      <div className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground/40" title="Módulo em construção">
+      <div
+        className="flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-sidebar-foreground/40"
+        title="Módulo em construção"
+      >
         <Icon className="h-4 w-4 shrink-0" />
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
-        <span className="rounded-full border border-sidebar-border px-2 py-0.5 text-[10px]">Em breve</span>
+        <span className="rounded-full border border-sidebar-border px-2 py-0.5 text-[10px]">
+          Em breve
+        </span>
       </div>
     );
   }
@@ -257,7 +301,9 @@ function MasterNavItem({
           : "text-sidebar-foreground/75 hover:bg-white/5 hover:text-white"
       }`}
     >
-      {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-sidebar-primary" />}
+      {active && (
+        <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-sidebar-primary" />
+      )}
       <Icon className={`h-4 w-4 shrink-0 ${active ? "text-sidebar-primary" : ""}`} />
       <span className="min-w-0 flex-1 truncate">{item.label}</span>
     </Link>

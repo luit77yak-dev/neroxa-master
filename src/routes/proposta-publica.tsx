@@ -32,7 +32,9 @@ export const Route = createFileRoute("/proposta-publica")({
 
 function money(value: number | null) {
   if (value == null) return "—";
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(value));
+  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+    Number(value),
+  );
 }
 
 function PublicProposalPage() {
@@ -49,31 +51,43 @@ function PublicProposalPage() {
       setLoading(false);
       return;
     }
-    const { data, error } = await supabase.rpc("get_neroxa_public_proposal" as never, { p_token: token } as never);
+    const { data, error } = await supabase.rpc(
+      "get_neroxa_public_proposal" as never,
+      { p_token: token } as never,
+    );
     if (error) setMessage(error.message);
     else setProposal((data as PublicProposal | null) ?? null);
     setLoading(false);
   };
 
-  useEffect(() => { void load(); }, [token]);
+  useEffect(() => {
+    void load();
+  }, [token]);
 
   const respond = async (action: "ACCEPTED" | "REJECTED") => {
     if (!token) return;
     setSaving(true);
     setMessage(null);
-    const { data, error } = await supabase.rpc("respond_neroxa_public_proposal" as never, { p_token: token, p_action: action } as never);
+    const { data, error } = await supabase.rpc(
+      "respond_neroxa_public_proposal" as never,
+      { p_token: token, p_action: action } as never,
+    );
     if (error) {
       setMessage(error.message);
     } else {
       const result = data as { status: PublicProposal["status"] };
-      setProposal((current) => current ? { ...current, status: result.status } : current);
+      setProposal((current) => (current ? { ...current, status: result.status } : current));
       setMessage(action === "ACCEPTED" ? "Proposta aceita com sucesso." : "Proposta recusada.");
     }
     setSaving(false);
   };
 
   if (loading) {
-    return <main className="grid min-h-screen place-items-center bg-background"><Loader2 className="h-7 w-7 animate-spin" /></main>;
+    return (
+      <main className="grid min-h-screen place-items-center bg-background">
+        <Loader2 className="h-7 w-7 animate-spin" />
+      </main>
+    );
   }
 
   if (!proposal) {
@@ -82,14 +96,18 @@ function PublicProposalPage() {
         <Card className="w-full max-w-lg p-8 text-center">
           <XCircle className="mx-auto h-10 w-10 text-muted-foreground" />
           <h1 className="mt-4 text-xl font-semibold">Proposta indisponível</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{message ?? "O link pode ter expirado ou não é válido."}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {message ?? "O link pode ter expirado ou não é válido."}
+          </p>
         </Card>
       </main>
     );
   }
 
   const canRespond = proposal.status === "SENT" || proposal.status === "NEGOTIATION";
-  const expired = proposal.valid_until ? new Date(proposal.valid_until + "T23:59:59") < new Date() : false;
+  const expired = proposal.valid_until
+    ? new Date(proposal.valid_until + "T23:59:59") < new Date()
+    : false;
 
   return (
     <main className="min-h-screen bg-background px-4 py-8 sm:px-6">
@@ -109,7 +127,9 @@ function PublicProposalPage() {
 
         <Card className="p-5 sm:p-7">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-lg bg-muted"><FileText className="h-5 w-5" /></div>
+            <div className="grid h-10 w-10 place-items-center rounded-lg bg-muted">
+              <FileText className="h-5 w-5" />
+            </div>
             <div>
               <p className="text-xs text-muted-foreground">Plano</p>
               <p className="font-semibold">{proposal.plan_name ?? "Proposta personalizada"}</p>
@@ -117,28 +137,65 @@ function PublicProposalPage() {
           </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Implantação</p><p className="mt-1 font-semibold">{money(proposal.setup_value)}</p></div>
-            <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">{proposal.commercial_model === "PERMANENT" ? "Manutenção" : "Recorrência"}</p><p className="mt-1 font-semibold">{proposal.commercial_model === "PERMANENT" ? money(proposal.maintenance_value) : money(proposal.recurring_value)}</p></div>
-            <div className="rounded-xl bg-muted/50 p-4"><p className="text-xs text-muted-foreground">Validade</p><p className="mt-1 font-semibold">{proposal.valid_until ? new Date(proposal.valid_until + "T12:00:00").toLocaleDateString("pt-BR") : "Sem prazo"}</p></div>
+            <div className="rounded-xl bg-muted/50 p-4">
+              <p className="text-xs text-muted-foreground">Implantação</p>
+              <p className="mt-1 font-semibold">{money(proposal.setup_value)}</p>
+            </div>
+            <div className="rounded-xl bg-muted/50 p-4">
+              <p className="text-xs text-muted-foreground">
+                {proposal.commercial_model === "PERMANENT" ? "Manutenção" : "Recorrência"}
+              </p>
+              <p className="mt-1 font-semibold">
+                {proposal.commercial_model === "PERMANENT"
+                  ? money(proposal.maintenance_value)
+                  : money(proposal.recurring_value)}
+              </p>
+            </div>
+            <div className="rounded-xl bg-muted/50 p-4">
+              <p className="text-xs text-muted-foreground">Validade</p>
+              <p className="mt-1 font-semibold">
+                {proposal.valid_until
+                  ? new Date(proposal.valid_until + "T12:00:00").toLocaleDateString("pt-BR")
+                  : "Sem prazo"}
+              </p>
+            </div>
           </div>
 
-          {proposal.notes && <div className="mt-6 rounded-xl border border-border p-4"><p className="text-xs font-medium text-muted-foreground">Observações</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{proposal.notes}</p></div>}
+          {proposal.notes && (
+            <div className="mt-6 rounded-xl border border-border p-4">
+              <p className="text-xs font-medium text-muted-foreground">Observações</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6">{proposal.notes}</p>
+            </div>
+          )}
 
           <div className="mt-6 rounded-xl border border-border p-4 text-sm">
-            <span className="font-medium">Status:</span> {proposal.status === "SENT" ? "Enviada" : proposal.status === "NEGOTIATION" ? "Em negociação" : "Aceita"}
+            <span className="font-medium">Status:</span>{" "}
+            {proposal.status === "SENT"
+              ? "Enviada"
+              : proposal.status === "NEGOTIATION"
+                ? "Em negociação"
+                : "Aceita"}
           </div>
 
           {message && <p className="mt-4 text-sm font-medium">{message}</p>}
 
           {canRespond && !expired && (
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
-              <Button variant="outline" onClick={() => void respond("REJECTED")} disabled={saving}><XCircle className="h-4 w-4" />Recusar</Button>
-              <Button onClick={() => void respond("ACCEPTED")} disabled={saving}><CheckCircle2 className="h-4 w-4" />Aceitar proposta</Button>
+              <Button variant="outline" onClick={() => void respond("REJECTED")} disabled={saving}>
+                <XCircle className="h-4 w-4" />
+                Recusar
+              </Button>
+              <Button onClick={() => void respond("ACCEPTED")} disabled={saving}>
+                <CheckCircle2 className="h-4 w-4" />
+                Aceitar proposta
+              </Button>
             </div>
           )}
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground">Proposta comercial da Neroxa · versão {proposal.version}</p>
+        <p className="text-center text-xs text-muted-foreground">
+          Proposta comercial da Neroxa · versão {proposal.version}
+        </p>
       </div>
     </main>
   );

@@ -12,12 +12,12 @@ Foram preparados candidatos SQL em rascunhos separados, com perfis e hashes expl
 
 ## 2. Repositórios, branches e SHAs
 
-| Fonte | Branch | SHA analisado |
-|---|---|---|
+| Fonte                | Branch                                    | SHA analisado                            |
+| -------------------- | ----------------------------------------- | ---------------------------------------- |
 | Delivery PR38, draft | security/delivery-02a-panel-gate-20261014 | b324c1499ff3feda7cb6b56fec3c2ac63bc56052 |
-| Base PR38 | audit/independent-recovery-v1-20261014 | c18d6803b319de442d5dfb2ed1d58fb367df096d |
-| Master candidato | audit/independent-recovery-v1-20261014 | b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db |
-| Master PR37, draft | audit/store-isolation-candidate-20261011 | 229059e5702bdad3ffa96d3373d878061ab90261 |
+| Base PR38            | audit/independent-recovery-v1-20261014    | c18d6803b319de442d5dfb2ed1d58fb367df096d |
+| Master candidato     | audit/independent-recovery-v1-20261014    | b6f70f1e86ef9f4f5ae8fc9a53d71cb024c4e3db |
+| Master PR37, draft   | audit/store-isolation-candidate-20261011  | 229059e5702bdad3ffa96d3373d878061ab90261 |
 
 Delivery: `luit77yak-dev/pizza-perfect-plate`. Master: `luit77yak-dev/neroxa-master`. AGENTS.md de ambos foi lido; hashes estão em evidence/source-shas.json. Master PR37 é ancestral do candidato b6f70f1; este tem apenas documentação depois de 1704dc5, pin do workflow DR anterior. Não se adotou um artifact antigo como prova do estado atual.
 
@@ -34,23 +34,23 @@ Diff PR38/base: cinco arquivos, 191 inserções/uma exclusão: tela de suspensã
 
 Node **22.23.0**, Bun **1.3.14**, lock `bun.lock` congelado. Não utilizamos npm install com resolução livre como substituto da instalação reproduzível.
 
-| Verificação no SHA b324c149 | Resultado | Evidência |
-|---|---|---|
-| bun --no-env-file install --frozen-lockfile --ignore-scripts | PASS, exit 0; lock preservado | install-frozen-clean.log/source-shas.json |
-| node --experimental-strip-types --test tests/*.test.mjs | PASS 105/105, exit 0 | node-tests.log |
-| teste específico legacy-panel-route-gate.test.mjs | PASS 4/4, estático; incluído nos 105 | gate-tests.log |
-| npm run build em Node22 | PASS, exit 0; artefatos locais | build.log |
-| node node_modules/typescript/bin/tsc --noEmit | PASS, exit 0 | tsc-final.log |
-| node node_modules/eslint/bin/eslint.js src/routes/painel.tsx | FAIL, exit 1; 383 erros/2 avisos | lint-head.json |
-| mesma versão/config/deps no painel da base c18d680 | FAIL, exit 1; 382 erros/2 avisos | lint-base.json |
-| comparação por linhas inalteradas (+22 linhas de offset) + regra/severidade | PASS para diagnóstico: novo erro apenas linha 23, prettier | lint-comparison.json |
-| HTTP TanStack local /painel | PASS parcial: 200 e markup de suspensão | gate-ssr.html, gate-probe.html, gate-http-browser.json |
-| Chromium hidratado | FAIL do ensaio por timeout 45 s; aprovação de navegador NOT RUN até concluir ensaio | gate-http-browser.json |
-| Follow-up com quebra de linha | PASS 105/105; lint FAIL herdado 382 erros/2 avisos | followup-node-tests.log/lint-followup.json |
-| Parser pglast 7.14, SQL e corpos SQL/PLpgSQL | PASS de sintaxe: 85 statements Master, oito legado | sql-syntax.json |
-| Manifesto (53 hashes) | PASS de integridade offline, não de banco | manifest-verification.json |
-| Instalação/aplicação/queries SQL, Auth/RLS, Storage, Realtime | BLOCKED ambiente; operações NOT RUN | runner-preflight.json |
-| Provisionamento/restore/rollback em banco | NOT RUN | COMPATIBILIDADE-E-REVERSAO-02A2.md |
+| Verificação no SHA b324c149                                                 | Resultado                                                                           | Evidência                                              |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| bun --no-env-file install --frozen-lockfile --ignore-scripts                | PASS, exit 0; lock preservado                                                       | install-frozen-clean.log/source-shas.json              |
+| node --experimental-strip-types --test tests/*.test.mjs                     | PASS 105/105, exit 0                                                                | node-tests.log                                         |
+| teste específico legacy-panel-route-gate.test.mjs                           | PASS 4/4, estático; incluído nos 105                                                | gate-tests.log                                         |
+| npm run build em Node22                                                     | PASS, exit 0; artefatos locais                                                      | build.log                                              |
+| node node_modules/typescript/bin/tsc --noEmit                               | PASS, exit 0                                                                        | tsc-final.log                                          |
+| node node_modules/eslint/bin/eslint.js src/routes/painel.tsx                | FAIL, exit 1; 383 erros/2 avisos                                                    | lint-head.json                                         |
+| mesma versão/config/deps no painel da base c18d680                          | FAIL, exit 1; 382 erros/2 avisos                                                    | lint-base.json                                         |
+| comparação por linhas inalteradas (+22 linhas de offset) + regra/severidade | PASS para diagnóstico: novo erro apenas linha 23, prettier                          | lint-comparison.json                                   |
+| HTTP TanStack local /painel                                                 | PASS parcial: 200 e markup de suspensão                                             | gate-ssr.html, gate-probe.html, gate-http-browser.json |
+| Chromium hidratado                                                          | FAIL do ensaio por timeout 45 s; aprovação de navegador NOT RUN até concluir ensaio | gate-http-browser.json                                 |
+| Follow-up com quebra de linha                                               | PASS 105/105; lint FAIL herdado 382 erros/2 avisos                                  | followup-node-tests.log/lint-followup.json             |
+| Parser pglast 7.14, SQL e corpos SQL/PLpgSQL                                | PASS de sintaxe: 85 statements Master, oito legado                                  | sql-syntax.json                                        |
+| Manifesto (53 hashes)                                                       | PASS de integridade offline, não de banco                                           | manifest-verification.json                             |
+| Instalação/aplicação/queries SQL, Auth/RLS, Storage, Realtime               | BLOCKED ambiente; operações NOT RUN                                                 | runner-preflight.json                                  |
+| Provisionamento/restore/rollback em banco                                   | NOT RUN                                                                             | COMPATIBILIDADE-E-REVERSAO-02A2.md                     |
 
 Não somar os quatro testes específicos novamente aos 105. Testes de contratos podem confirmar a existência de um caminho perigoso; PASS de contrato não significa sistema seguro. O build/TypeScript do follow-up não foram repetidos: a única alteração TSX é whitespace, e o build/TypeScript acima pertencem ao SHA exato original.
 
@@ -66,14 +66,14 @@ Pacote local contém logs completos, manifests, hashes, inventário de 215 refer
 
 **BLOCKED — nenhuma operação de banco executada nesta missão.** Plano em MATRIZ-POSITIVE.csv e MATRIZ-NEGATIVE.csv; O1 tem A/B, O2 tem C. Sete atores: admin_A/B/C, staff_master_A, staff_master_sem_grant, usuário comum, anon. Os CSVs são expectativas, não resultados aprovados. Seleção pública de catálogo deve ocorrer apenas por projeção pública; tabela privada e endpoint autorizado são caminhos diferentes.
 
-| Área | Positivos previstos | Negativos previstos | Resultado real |
-|---|---|---|---|
-| Pedidos/itens/histórico e PII | admin A e staff com grant A; RPCs pertinentes | A→B/C, usuário comum/anon/staff sem grant; DELETE financeiro | BLOCKED / NOT RUN |
-| Produtos/categorias/opções/complementos | manager da loja, preço servidor | pai/categoria/grupo de outra instância; papel insuficiente; troca de instance/org | BLOCKED / NOT RUN |
-| Settings/horários/zonas/taxas | gravação legítima A independente de B | UPDATE WITH CHECK/upsert/adulteração para B | BLOCKED / NOT RUN |
-| Imagens/Storage | upload/substituir/excluir A | prefixo de B/C, MIME/limites, anon e URL pública usada como escrita | BLOCKED / NOT RUN |
-| RPC legada/definer/views/grants | somente caminhos substitutos autorizados | bypass da UI, ACL herdada/por coluna/PUBLIC, view definer | BLOCKED / NOT RUN |
-| Realtime e revogação | evento A para identidade autorizada | evento B, subscription antiga após revoke/logout/stale JWT | BLOCKED / NOT RUN |
+| Área                                    | Positivos previstos                           | Negativos previstos                                                               | Resultado real    |
+| --------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------- | ----------------- |
+| Pedidos/itens/histórico e PII           | admin A e staff com grant A; RPCs pertinentes | A→B/C, usuário comum/anon/staff sem grant; DELETE financeiro                      | BLOCKED / NOT RUN |
+| Produtos/categorias/opções/complementos | manager da loja, preço servidor               | pai/categoria/grupo de outra instância; papel insuficiente; troca de instance/org | BLOCKED / NOT RUN |
+| Settings/horários/zonas/taxas           | gravação legítima A independente de B         | UPDATE WITH CHECK/upsert/adulteração para B                                       | BLOCKED / NOT RUN |
+| Imagens/Storage                         | upload/substituir/excluir A                   | prefixo de B/C, MIME/limites, anon e URL pública usada como escrita               | BLOCKED / NOT RUN |
+| RPC legada/definer/views/grants         | somente caminhos substitutos autorizados      | bypass da UI, ACL herdada/por coluna/PUBLIC, view definer                         | BLOCKED / NOT RUN |
+| Realtime e revogação                    | evento A para identidade autorizada           | evento B, subscription antiga após revoke/logout/stale JWT                        | BLOCKED / NOT RUN |
 
 Cada operação negativa precisa provar ausência de efeitos diretos e indiretos por contagem/digest antes/depois; HTTP200 vazio pode ser deny de RLS, mas precisa assert de conteúdo. Nenhum acesso cruzado foi reproduzido nesta missão; nenhum foi descartado como possibilidade.
 
@@ -83,18 +83,18 @@ Ver INVENTARIO-E-MIGRACAO-02A2.md. Pontos críticos: update_order_status por org
 
 ## 8. Falhas P0/P1/P2/P3
 
-| ID | Severidade | Estado e implicação |
-|---|---|---|
-| F01 | P0 gate de segurança | contenção de UI implementada; autorização completa por loja NÃO comprovada; SQL/Storage/caminhos diretos ainda bloqueiam encerramento |
-| F01-S | P0 gate de segurança | candidato anterior permite plataforma global em RPC/RLS; diverge de staff sem grant negado; evidência estática, não exploração runtime |
-| F02 | P0 gate de privacidade | tracking/append legados por UUID+telefone e SECURITY DEFINER; consumidores/fallbacks exigem migração coordenada |
-| B01 | P1 ambiental | runner não suporta pico já observado; matriz real/SQL não executados; não confundir com FAIL de isolamento |
-| A01 | P2 | erro novo de formatação no SHA PR38; corrigido somente em follow-up draft |
-| A02 | P2 | 382 erros/2 avisos focais herdados; não reformatados nesta missão |
-| A03 | P2 ensaio | Chromium timeout; SSR passou, hidratação e navegação não homologadas |
-| C01 | P1 funcional | catálogo/preços/imagens/settings/horários/taxas/notificações do painel legado indisponíveis, sem substituto completo validado |
-| E01 | P1 recuperação | restore T1 após perda total e perfil financeiro/comercial integral ainda NOT RUN; rollback não pode reabrir legado |
-| P3 | sem novo achado específico | refinamentos de UX fora do escopo; nenhum reduz gates de segurança |
+| ID    | Severidade                 | Estado e implicação                                                                                                                    |
+| ----- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| F01   | P0 gate de segurança       | contenção de UI implementada; autorização completa por loja NÃO comprovada; SQL/Storage/caminhos diretos ainda bloqueiam encerramento  |
+| F01-S | P0 gate de segurança       | candidato anterior permite plataforma global em RPC/RLS; diverge de staff sem grant negado; evidência estática, não exploração runtime |
+| F02   | P0 gate de privacidade     | tracking/append legados por UUID+telefone e SECURITY DEFINER; consumidores/fallbacks exigem migração coordenada                        |
+| B01   | P1 ambiental               | runner não suporta pico já observado; matriz real/SQL não executados; não confundir com FAIL de isolamento                             |
+| A01   | P2                         | erro novo de formatação no SHA PR38; corrigido somente em follow-up draft                                                              |
+| A02   | P2                         | 382 erros/2 avisos focais herdados; não reformatados nesta missão                                                                      |
+| A03   | P2 ensaio                  | Chromium timeout; SSR passou, hidratação e navegação não homologadas                                                                   |
+| C01   | P1 funcional               | catálogo/preços/imagens/settings/horários/taxas/notificações do painel legado indisponíveis, sem substituto completo validado          |
+| E01   | P1 recuperação             | restore T1 após perda total e perfil financeiro/comercial integral ainda NOT RUN; rollback não pode reabrir legado                     |
+| P3    | sem novo achado específico | refinamentos de UX fora do escopo; nenhum reduz gates de segurança                                                                     |
 
 P0 aqui identifica bloqueio de segurança de código/contrato; não é declaração de vazamento observado. Qualquer acesso indevido positivo no banco será FAIL/P0 com evidência própria.
 
@@ -139,10 +139,10 @@ PRs novas listadas no adendo final desta seção, com branches e SHAs após comm
 
 ## Adendo — PRs criadas em draft
 
-| PR | Branch / base preservada | Commit inicial revisável | Estado verificado |
-|---|---|---|---|
-| [Delivery #39](https://github.com/luit77yak-dev/pizza-perfect-plate/pull/39) — validação/formatação | security/mission-02a2-validation-20261014 → security/delivery-02a-panel-gate-20261014 | 26a544a | OPEN / draft |
-| [Delivery #40](https://github.com/luit77yak-dev/pizza-perfect-plate/pull/40) — SQL de quarentena offline | security/mission-02a2-legacy-quarantine-20261014 → security/delivery-02a-panel-gate-20261014 | 4f1f217 | OPEN / draft |
-| [Master #38](https://github.com/luit77yak-dev/neroxa-master/pull/38) — SQL de escopo explícito | security/mission-02a2-scoped-admin-20261014 → audit/independent-recovery-v1-20261014 | 18a730f | OPEN / draft |
+| PR                                                                                                       | Branch / base preservada                                                                     | Commit inicial revisável | Estado verificado |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ------------------------ | ----------------- |
+| [Delivery #39](https://github.com/luit77yak-dev/pizza-perfect-plate/pull/39) — validação/formatação      | security/mission-02a2-validation-20261014 → security/delivery-02a-panel-gate-20261014        | 26a544a                  | OPEN / draft      |
+| [Delivery #40](https://github.com/luit77yak-dev/pizza-perfect-plate/pull/40) — SQL de quarentena offline | security/mission-02a2-legacy-quarantine-20261014 → security/delivery-02a-panel-gate-20261014 | 4f1f217                  | OPEN / draft      |
+| [Master #38](https://github.com/luit77yak-dev/neroxa-master/pull/38) — SQL de escopo explícito           | security/mission-02a2-scoped-admin-20261014 → audit/independent-recovery-v1-20261014         | 18a730f                  | OPEN / draft      |
 
 Os commits seguintes desta missão acrescentam apenas logs/documentação/verificador offline de manifesto; os SQLs e a correção TSX não mudam. SHAs finais ficam nos metadados pr*-final.json do pacote. PR38 original Delivery continua draft em b324c149, e PR37 Master continua draft em 229059e. Nenhum teste foi disparado alterando a base. Um primeiro push concorrente da branch de quarentena foi recusado genericamente; push sequencial concluiu, sem force-push ou reescrita de histórico.
