@@ -139,7 +139,7 @@ if [[ ! "$snapshot" =~ ^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{8}-[0-9]+$ ]]; then
 fi
 if ! timeout 50s docker exec "$CONTAINER" pg_dump \
     -h /var/run/postgresql -U supabase_admin -d postgres \
-    --format=custom --no-password --snapshot="$snapshot" --file=- \
+    --format=custom --no-password --snapshot="$snapshot" \
     >"$PRIVATE/source.synthetic.dump" 2>"$PRIVATE/dump.stderr"; then
   echo 'RG02_SAME_SNAPSHOT_DUMP=BLOCKED_REDACTED'
   exit 1
