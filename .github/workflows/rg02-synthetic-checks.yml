@@ -1,0 +1,25 @@
+name: RG02 — isolated Python synthetic checks
+
+on:
+  pull_request:
+    paths:
+      - 'tools/restore-gate01/**'
+      - '.github/workflows/rg02-synthetic-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rg02-synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout non-secret source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify Python RG02 ACL diagnostic tests
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_acl_diagnostic.py' -v
+      - name: Verify Python RG02 catalog reconciliation tests
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_catalog_reconcile.py' -v
