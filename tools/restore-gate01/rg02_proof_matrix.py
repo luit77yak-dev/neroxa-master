@@ -13,6 +13,8 @@ import json
 import os
 from pathlib import Path
 
+from rg02_local_effective_rights import KINDS as EFFECTIVE_KINDS, validate as validate_local_rights
+
 REPORTS = {
     'catalog': 'HOLD_CATALOG_DIAGNOSTIC_ONLY',
     'targeted': 'HOLD_TARGETED_SQL_DIFF_OBSERVATION',
@@ -20,6 +22,7 @@ REPORTS = {
     'paths': 'HOLD_MEMBERSHIP_PATH_EVIDENCE',
     'edges': 'HOLD_SOURCE_GRANTS_AND_SYSTEM_ROLE_ENDPOINTS',
     'acl': 'HOLD_DIAGNOSTIC_ONLY',
+    'effective': 'HOLD_LOCAL_EFFECTIVE_RIGHTS_ONLY',
 }
 ROLE_OUTCOMES = (
     'DECLARED_GRANTOR_OPTIONS_OBSERVED',
@@ -84,7 +87,16 @@ def produce(reports):
     grant_acls = section(reports['grantor'], 'acl_counts')
     paths = section(reports['paths'], 'counts')
     edges = section(reports['edges'], 'counts')
+    effective_populations = section(reports['effective'], 'populations')
+    effective_rights = section(reports['effective'], 'rights')
+    validate_local_rights({'scope':'ISOLATED_LOCAL_PG17_ONLY','major':17,
+                           'populations':effective_populations,
+                           'rights':effective_rights})
 
+    # The local effective rights oracle and the role-path auditor must refer
+    # to the same PG17 role population. This is NOT origin equivalence.
+    must_equal(count(effective_populations,'roles'),
+               count(paths,'LOCAL_ROLE_IDENTITIES'))
     memberships = must_equal(
         count(catalog_members,'MEMBERSHIPS_IN_SOURCE'),
         count(grant_members,'SOURCE_MEMBERSHIP_GRANTS'),
@@ -157,6 +169,10 @@ def produce(reports):
     if owner_grantor_observed > acl_rows or direct_consistent > raw_acl or matched > memberships:
         raise ValueError('EVIDENCE_OBSERVATION_OVERCOUNT')
 
+    # Summed checks are *different role/target/privilege probes*, not a
+    # percentage of source equivalence. Never compare these with source ACLs.
+    local_checks = sum(count(effective_rights[k],'checked') for k in EFFECTIVE_KINDS)
+    local_granted = sum(count(effective_rights[k],'granted') for k in EFFECTIVE_KINDS)
     # Numbers overlap across dimensions: deliberately no global summary score.
     return {
         'status':'HOLD_PROOF_MATRIX_NOT_EFFECTIVE_PRIVILEGE_EQUIVALENCE',
@@ -167,6 +183,9 @@ def produce(reports):
             'explicit_set_paths_seen':set_seen,
             'owner_as_grantor_acl_rows_seen':owner_grantor_observed,
             'direct_acl_consistent_after_later_grant_seen':direct_consistent,
+            'local_native_privilege_probes_checked':local_checks,
+            'local_native_privilege_probes_granted':local_granted,
+            'local_pg_has_role_set_true':count(effective_rights['role_set'],'granted'),
         },
         'non_replayed_isolation_policy':{
             'source_edges_missing_in_local_catalog':missing,
@@ -184,6 +203,8 @@ def produce(reports):
             'explicit_inherit_paths_missing':inherit_missing,
             'explicit_set_paths_missing':set_missing,
             'source_effective_object_privileges':'NOT_PROVEN',
+            'source_effective_role_set_privileges':'NOT_PROVEN',
+            'local_effective_privilege_measurements':'LOCAL_ONLY_NOT_SOURCE_COMPARABLE',
             'source_effective_parameter_privileges':'NOT_PROVEN',
             'global_role_equivalence':'NOT_PROVEN',
             'owner_acl_equivalence':'NOT_PROVEN',
