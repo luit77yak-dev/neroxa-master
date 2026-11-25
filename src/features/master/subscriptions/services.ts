@@ -807,13 +807,11 @@ export async function setPlanFeature(input: {
   enabled?: boolean;
 }) {
   await removePlanFeature(input.planId, input.featureKey);
-  const { error } = await supabase
-    .from("neroxa_plan_features" as never)
-    .insert({
-      plan_id: input.planId,
-      feature_key: input.featureKey,
-      enabled: input.enabled ?? true,
-    } as never);
+  const { error } = await supabase.from("neroxa_plan_features" as never).insert({
+    plan_id: input.planId,
+    feature_key: input.featureKey,
+    enabled: input.enabled ?? true,
+  } as never);
   if (error) throw new Error(error.message);
 }
 

@@ -211,16 +211,14 @@ function MasterCatalogo() {
     setSavingTheme(true);
     setError(null);
     try {
-      const { error } = await supabase
-        .from("neroxa_storefront_settings" as never)
-        .upsert(
-          {
-            organization_id: instance.organization_id,
-            storefront_theme: storefrontTheme,
-            updated_at: new Date().toISOString(),
-          } as never,
-          { onConflict: "organization_id" },
-        );
+      const { error } = await supabase.from("neroxa_storefront_settings" as never).upsert(
+        {
+          organization_id: instance.organization_id,
+          storefront_theme: storefrontTheme,
+          updated_at: new Date().toISOString(),
+        } as never,
+        { onConflict: "organization_id" },
+      );
       if (error) throw new Error(error.message);
       await recordNeroxaAudit({
         action: "UPDATE",
