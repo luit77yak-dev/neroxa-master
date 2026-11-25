@@ -251,6 +251,9 @@ jobs:
       - name: RG02 edge syntax and system-role tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_edge_syntax_triage.py' -v
+      - name: RG02 global parameter ACL scope tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_global_grant_scope.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |

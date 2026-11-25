@@ -14,6 +14,7 @@ from pathlib import Path
 
 from rg02_compare_runtime import statements, role_name, IDENT
 from rg02_membership_parser import parse_membership as parse_membership_pg17
+from rg02_global_grant_scope import global_grant_scope
 
 # PostgreSQL 17 ACL rights, including MAINTAIN on tables.
 RIGHTS = {
@@ -158,7 +159,13 @@ def inspect_membership_options(source_roles, target_roles):
         edges.setdefault((e['granted'], e['member']), []).append(e)
     counts = Counter()
     for stmt in statements(source_roles):
-        if not re.match(r'^\s*GRANT\b', stmt, re.I):
+        scope = global_grant_scope(stmt)
+        if scope.startswith('parameter_acl_'):
+            counts['GLOBAL_PARAMETER_PRIVILEGE_GRANTS_HOLD'] += 1
+            if scope == 'parameter_acl_unparsed_hold':
+                counts['GLOBAL_PARAMETER_SYNTAX_UNVERIFIED_HOLD'] += 1
+            continue
+        if scope == 'not_grant':
             continue
         counts['MEMBERSHIPS_IN_SOURCE'] += 1
         parsed = parse_membership(stmt)

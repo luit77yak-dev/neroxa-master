@@ -14,6 +14,7 @@ import re
 
 from rg02_compare_runtime import IDENT, role_name, statements
 from rg02_membership_parser import parse_membership
+from rg02_global_grant_scope import global_grant_scope
 from rg02_role_paths import target_edges
 
 IDENT_LIST = re.compile(r'^' + IDENT + r'(?:\s*,\s*' + IDENT + r')+$', re.I | re.S)
@@ -82,6 +83,13 @@ def analyze(source_sql, target_catalog):
         if not re.match(r'^\s*GRANT\b',stmt,re.I):
             continue
         counts['SOURCE_GRANT_COMMANDS'] += 1
+        scope = global_grant_scope(stmt)
+        if scope.startswith('parameter_acl_'):
+            counts['SOURCE_PARAMETER_PRIVILEGE_GRANTS_HELD'] += 1
+            if scope == 'parameter_acl_unparsed_hold':
+                counts['SOURCE_PARAMETER_SYNTAX_UNVERIFIED_HOLD'] += 1
+            continue
+        counts['SOURCE_ROLE_GRANT_COMMANDS'] += 1
         parsed = parse_membership(stmt)
         if parsed is None:
             counts['SOURCE_GRANT_UNPARSED_HOLD'] += 1
@@ -99,8 +107,12 @@ def analyze(source_sql, target_catalog):
         else:
             parsed_pairs[pair] = (grantor, options)
     counts['SOURCE_PARSED_GRANT_COMMANDS'] = (
-        counts['SOURCE_GRANT_COMMANDS'] -
+        counts['SOURCE_ROLE_GRANT_COMMANDS'] -
         counts['SOURCE_GRANT_UNPARSED_HOLD'])
+    if counts['SOURCE_GRANT_COMMANDS'] != (
+            counts['SOURCE_ROLE_GRANT_COMMANDS'] +
+            counts['SOURCE_PARAMETER_PRIVILEGE_GRANTS_HELD']):
+        raise ValueError('GLOBAL_GRANT_SCOPE_ACCOUNTING_FAILED')
     counts['SOURCE_PAIRED_UNIQUE_GRANTS'] = sum(
         val is not None for val in parsed_pairs.values())
     counts['SYSTEM_ROLE_NAMES_IN_PRIVATE_CATALOG'] = len(system_roles)
