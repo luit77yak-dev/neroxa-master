@@ -121,8 +121,14 @@ def compare(source, target):
     src_keys = a.keys()
     dst_keys = b.keys()
     shared = src_keys & dst_keys
-    mismatched = sum(a[k] != b[k] for k in shared)
-    matched = len(shared) - mismatched
+    # Unknown/NULL on either side is NEVER an equal measured right.
+    unmeasured_shared = sum(a[k] is None or b[k] is None for k in shared)
+    mismatched = sum(a[k] is not None and b[k] is not None and
+                     a[k] != b[k] for k in shared)
+    matched = sum(a[k] is not None and b[k] is not None and
+                  a[k] == b[k] for k in shared)
+    if matched + mismatched + unmeasured_shared != len(shared):
+        raise ValueError('WITNESS_TUPLE_ACCOUNTING_INVALID')
     source_only = len(src_keys - dst_keys)
     target_only = len(dst_keys - src_keys)
     # Do not include user-controlled field names, identifiers or hashes in JSON.
@@ -132,6 +138,7 @@ def compare(source, target):
         'target_rows': len(b),
         'common_tuples_equal_value': matched,
         'common_tuples_different_value_hold': mismatched,
+        'common_tuples_unmeasured_hold': unmeasured_shared,
         'source_only_tuples_hold': source_only,
         'target_only_tuples_hold': target_only,
         'source_unmeasured_values_hold': src_unknown,
@@ -163,7 +170,8 @@ def main():
         json.dump(result, f, indent=2, sort_keys=True)
     print('RG02_TUPLE_WITNESS=HOLD_NOT_PROVENANCE')
     for field in ('source_rows', 'target_rows', 'common_tuples_equal_value',
-                  'common_tuples_different_value_hold', 'source_only_tuples_hold',
+                  'common_tuples_different_value_hold', 'common_tuples_unmeasured_hold',
+                  'source_only_tuples_hold',
                   'target_only_tuples_hold', 'source_unmeasured_values_hold',
                   'target_unmeasured_values_hold'):
         print('TUPLE_' + field.upper() + '=' + str(result[field]))
