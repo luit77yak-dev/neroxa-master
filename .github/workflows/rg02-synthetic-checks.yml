@@ -23,3 +23,5 @@ jobs:
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_acl_diagnostic.py' -v
       - name: Verify Python RG02 catalog reconciliation tests
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_catalog_reconcile.py' -v
+      - name: Verify Python RG02 ordered ACL tests
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_acl_ordered.py' -v
