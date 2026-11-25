@@ -1,0 +1,108 @@
+name: NEROXA RG02 — NEW protected synchronized source preimage (NO-GO)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type RG02_NEW_PREIMAGE_READONLY — new capture, no release
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: neroxa-rg02-source-new-preimage
+  cancel-in-progress: false
+
+jobs:
+  capture-new-preimage:
+    # A workflow_dispatch on main is not consent to bypass Environment review.
+    # The dedicated Environment MUST preexist with mandatory independent review,
+    # prevented self-review, and restricted main deployment branches. If it is
+    # missing, guard vars/secrets are absent and no source connection is opened.
+    if: >-
+      github.repository == 'luit77yak-dev/neroxa-master' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.ref_protected &&
+      github.run_attempt == 1 &&
+      (github.actor == 'luit77yak-dev' || github.actor == 'dev-luizt5') &&
+      inputs.confirmation == 'RG02_NEW_PREIMAGE_READONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: neroxa-rg02-source-capture
+    env:
+      RG02_SOURCE_CONFIRMATION: ${{ inputs.confirmation }}
+      RG02_SOURCE_GATE: ${{ vars.RG02_SOURCE_GATE }}
+      RG02_ESCROW_RECOVERY: ${{ vars.RG02_ESCROW_RECOVERY }}
+      RG02_SOURCE_HOST: ${{ vars.RG02_SOURCE_HOST }}
+      RG02_SOURCE_PG_USER: ${{ vars.RG02_SOURCE_PG_USER }}
+    steps:
+      - name: Checkout only approved main, without persisting credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Check independent approvals and secret presence BEFORE any source access
+        shell: bash
+        env:
+          RG02_SOURCE_PG_PASSWORD: ${{ secrets.RG02_SOURCE_PG_PASSWORD }}
+          RG02_SOURCE_CA_PEM: ${{ secrets.RG02_SOURCE_CA_PEM }}
+          RG02_CAPTURE_PASSPHRASE: ${{ secrets.RG02_CAPTURE_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          if [[ "$RG02_SOURCE_GATE" != OPERATOR_APPROVED_PRIVATE_CAPTURE ||
+                "$RG02_ESCROW_RECOVERY" != EXTERNALLY_RECOVERABLE_KEY_CONFIRMED ||
+                -z "$RG02_SOURCE_PG_PASSWORD" || -z "$RG02_SOURCE_CA_PEM" ||
+                -z "$RG02_CAPTURE_PASSPHRASE" ||
+                "$GITHUB_RUN_ATTEMPT" != 1 ]]; then
+            echo 'RG02_SOURCE_CAPTURE=BLOCKED_PROTECTED_CUSTODY_NOT_CONFIGURED'
+            exit 1
+          fi
+          command -v psql >/dev/null
+          command -v pg_dump >/dev/null
+          command -v gpg >/dev/null
+          command -v python3 >/dev/null
+          echo 'RG02_SOURCE_PROTECTED_CONTEXT=READY_NOT_CAPTURED'
+
+      - name: Capture NEW synchronized preimage, encrypt directly, never print contents
+        shell: bash
+        env:
+          RG02_SOURCE_PG_PASSWORD: ${{ secrets.RG02_SOURCE_PG_PASSWORD }}
+          RG02_SOURCE_CA_PEM: ${{ secrets.RG02_SOURCE_CA_PEM }}
+          RG02_CAPTURE_PASSPHRASE: ${{ secrets.RG02_CAPTURE_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          PRIVATE="$RUNNER_TEMP/neroxa-rg02-capture-private-$GITHUB_RUN_ID"
+          mkdir -m 0700 "$PRIVATE"
+          echo "RG02_PRIVATE_OUTPUT_ROOT=$PRIVATE" >> "$GITHUB_ENV"
+          python3 tools/restore-gate01/rg02_source_same_snapshot_capture.py
+
+      - name: Stage ONLY encrypted ciphertext in protected private artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: rg02-new-preimage-ciphertext-${{ github.run_id }}
+          path: ${{ runner.temp }}/neroxa-rg02-capture-private-${{ github.run_id }}/preimage-${{ github.run_id }}/*.gpg
+          if-no-files-found: error
+          include-hidden-files: false
+          compression-level: 0
+          retention-days: 7
+          overwrite: false
+
+      - name: Remove ALL runner-side temporary capture files
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          PRIVATE="$RUNNER_TEMP/neroxa-rg02-capture-private-$GITHUB_RUN_ID"
+          if [[ -d "$PRIVATE" && ! -L "$PRIVATE" &&
+                "$PRIVATE" == "$RUNNER_TEMP/neroxa-rg02-capture-private-$GITHUB_RUN_ID" ]]; then
+            rm -rf -- "$PRIVATE"
+          fi
+          echo 'RG02_RUNNER_PRIVATE_CAPTURE_CLEANUP=PASS_OR_NOT_CREATED'
+          echo 'SOURCE_PREIMAGE_CUSTODY_READBACK=NOT_VERIFIED; COMMERCIAL_GO=NO_GO'
