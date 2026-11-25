@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode, type Dispatch, type SetStateAction } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Edit3, Loader2, Package, Plus, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -195,7 +195,27 @@ function MasterProdutos() {
   </div></MasterShell>;
 }
 
-function ProductCard({ product, systems, productPlans, expandedProduct, setExpandedProduct, editing, startEdit, remove, role, form, setForm, plans, selectedPlans, setSelectedPlans, saving, reset, save }: any) {
+type ProductCardProps = {
+  product: NeroxaProduct;
+  systems: NeroxaSystem[];
+  productPlans: Record<string, string[]>;
+  expandedProduct: string | null;
+  setExpandedProduct: Dispatch<SetStateAction<string | null>>;
+  editing: string | null;
+  startEdit: (product: NeroxaProduct) => Promise<void>;
+  remove: (product: NeroxaProduct) => Promise<void>;
+  role: NeroxaPlatformRole | null;
+  form: Form;
+  setForm: Dispatch<SetStateAction<Form>>;
+  plans: Plan[];
+  selectedPlans: string[];
+  setSelectedPlans: Dispatch<SetStateAction<string[]>>;
+  saving: boolean;
+  reset: () => void;
+  save: () => Promise<void>;
+};
+
+function ProductCard({ product, systems, productPlans, expandedProduct, setExpandedProduct, editing, startEdit, remove, role, form, setForm, plans, selectedPlans, setSelectedPlans, saving, reset, save }: ProductCardProps) {
   const expanded = expandedProduct === product.id || editing === product.id;
   return <Card className="min-w-0 border-border bg-card p-3 shadow-soft sm:p-5">
     <div className="flex min-w-0 items-start justify-between gap-2 sm:gap-3">
@@ -212,17 +232,22 @@ function ProductCard({ product, systems, productPlans, expandedProduct, setExpan
   </Card>;
 }
 
-function ProductEditor({ form, setForm, systems, plans, selectedPlans, setSelectedPlans, role, saving, reset, save }: any) {
+type ProductEditorProps = Pick<ProductCardProps,
+  "form" | "setForm" | "systems" | "plans" | "selectedPlans" |
+  "setSelectedPlans" | "role" | "saving" | "reset" | "save"
+>;
+
+function ProductEditor({ form, setForm, systems, plans, selectedPlans, setSelectedPlans, role, saving, reset, save }: ProductEditorProps) {
   const availablePlans = plans.filter((plan: Plan) => !form.systemId || !plan.system_id || plan.system_id === form.systemId);
   return <div className="rounded-xl border border-border bg-muted/30 p-4">
     <div className="mb-4 flex flex-wrap items-start justify-between gap-2"><div><p className="text-xs font-medium text-muted-foreground">Editando produto</p><p className="font-semibold">Atualizar catálogo</p></div><Button variant="ghost" size="sm" onClick={reset}>Cancelar</Button></div>
     <div className="space-y-3">
-      <Field label="Nome"><input value={form.name} onChange={(e:any)=>setForm({...form,name:e.target.value})}/></Field><Field label="Slug"><input value={form.slug} onChange={(e:any)=>setForm({...form,slug:e.target.value})}/></Field><Field label="Categoria"><input value={form.category} onChange={(e:any)=>setForm({...form,category:e.target.value})}/></Field>
-      <Field label="Sistema-base / segmento"><select value={form.systemId} onChange={(e:any)=>{const next=e.target.value;setForm({...form,systemId:next});const allowed=new Set(plans.filter((plan:Plan)=>!next||!plan.system_id||plan.system_id===next).map((plan:Plan)=>plan.id));setSelectedPlans((current:string[])=>current.filter(id=>allowed.has(id)));}}><option value="">Produto compartilhável</option>{systems.filter((system:NeroxaSystem)=>system.active).map((system:NeroxaSystem)=><option key={system.id} value={system.id}>{system.name} · {system.version}</option>)}</select></Field>
-      <Field label="Descrição comercial e principais recursos"><textarea value={form.description} onChange={(e:any)=>setForm({...form,description:e.target.value})} rows={3}/></Field>
-      <div className="grid grid-cols-2 gap-3"><Field label="Recorrência"><input type="number" min="0" step="0.01" value={form.priceMonthly} onChange={(e:any)=>setForm({...form,priceMonthly:e.target.value})}/></Field><Field label="Implantação"><input type="number" min="0" step="0.01" value={form.setupPrice} onChange={(e:any)=>setForm({...form,setupPrice:e.target.value})}/></Field></div>
-      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e:any)=>setForm({...form,active:e.target.checked})}/> Disponível para comercialização</label>
-      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Planos que incluem este produto</p><div className="max-h-36 space-y-2 overflow-auto rounded-lg border border-border p-3">{availablePlans.map((plan:Plan)=><label key={plan.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selectedPlans.includes(plan.id)} onChange={(e:any)=>setSelectedPlans((current:string[])=>e.target.checked?[...current,plan.id]:current.filter(id=>id!==plan.id))}/><span className="min-w-0 truncate">{plan.name}</span></label>)}</div></div>
+      <Field label="Nome"><input value={form.name} onChange={(e)=>setForm({...form,name:e.target.value})}/></Field><Field label="Slug"><input value={form.slug} onChange={(e)=>setForm({...form,slug:e.target.value})}/></Field><Field label="Categoria"><input value={form.category} onChange={(e)=>setForm({...form,category:e.target.value})}/></Field>
+      <Field label="Sistema-base / segmento"><select value={form.systemId} onChange={(e)=>{const next=e.target.value;setForm({...form,systemId:next});const allowed=new Set(plans.filter((plan:Plan)=>!next||!plan.system_id||plan.system_id===next).map((plan:Plan)=>plan.id));setSelectedPlans((current:string[])=>current.filter(id=>allowed.has(id)));}}><option value="">Produto compartilhável</option>{systems.filter((system:NeroxaSystem)=>system.active).map((system:NeroxaSystem)=><option key={system.id} value={system.id}>{system.name} · {system.version}</option>)}</select></Field>
+      <Field label="Descrição comercial e principais recursos"><textarea value={form.description} onChange={(e)=>setForm({...form,description:e.target.value})} rows={3}/></Field>
+      <div className="grid grid-cols-2 gap-3"><Field label="Recorrência"><input type="number" min="0" step="0.01" value={form.priceMonthly} onChange={(e)=>setForm({...form,priceMonthly:e.target.value})}/></Field><Field label="Implantação"><input type="number" min="0" step="0.01" value={form.setupPrice} onChange={(e)=>setForm({...form,setupPrice:e.target.value})}/></Field></div>
+      <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.active} onChange={(e)=>setForm({...form,active:e.target.checked})}/> Disponível para comercialização</label>
+      <div><p className="mb-1 text-xs font-medium text-muted-foreground">Planos que incluem este produto</p><div className="max-h-36 space-y-2 overflow-auto rounded-lg border border-border p-3">{availablePlans.map((plan:Plan)=><label key={plan.id} className="flex items-center gap-2 text-sm"><input type="checkbox" checked={selectedPlans.includes(plan.id)} onChange={(e)=>setSelectedPlans((current:string[])=>e.target.checked?[...current,plan.id]:current.filter(id=>id!==plan.id))}/><span className="min-w-0 truncate">{plan.name}</span></label>)}</div></div>
       {canPerform(role,"manageProducts") && <Button className="w-full" onClick={()=>void save()} disabled={saving}>{saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}{saving?"Salvando...":"Salvar alterações"}</Button>}
     </div>
   </div>;

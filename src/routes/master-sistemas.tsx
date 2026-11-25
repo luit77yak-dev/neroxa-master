@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode, type Dispatch, type SetStateAction } from "react";
 import { Edit3, Loader2, Plus, RefreshCw, Save, Trash2, X } from "lucide-react";
 import {
   createNeroxaSystem,
@@ -241,14 +241,17 @@ function MasterSistemas() {
   );
 }
 
-function SystemFormFields({ form, setForm }: any) {
+function SystemFormFields({ form, setForm }: {
+  form: FormState;
+  setForm: Dispatch<SetStateAction<FormState>>;
+}) {
   return (
     <>
-      <Field label="Nome"><input value={form.name} onChange={(e: any) => setForm({ ...form, name: e.target.value })} required className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" placeholder="Neroxa Delivery" /></Field>
-      <Field label="Slug"><input value={form.slug} onChange={(e: any) => setForm({ ...form, slug: e.target.value })} required className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" placeholder="neroxa-delivery" /></Field>
-      <Field label="Tipo"><select value={form.systemType} onChange={(e: any) => setForm({ ...form, systemType: e.target.value as SystemType })} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground">{SYSTEM_TYPES.map((type) => <option key={type} value={type}>{SYSTEM_TYPE_LABELS[type]}</option>)}</select></Field>
-      <Field label="Versão"><input value={form.version} onChange={(e: any) => setForm({ ...form, version: e.target.value })} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" placeholder="1.0.0" /></Field>
-      <Field label="Descrição"><textarea value={form.description} onChange={(e: any) => setForm({ ...form, description: e.target.value })} className="w-full min-h-24 resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" /></Field>
+      <Field label="Nome"><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" placeholder="Neroxa Delivery" /></Field>
+      <Field label="Slug"><input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} required className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" placeholder="neroxa-delivery" /></Field>
+      <Field label="Tipo"><select value={form.systemType} onChange={(e) => setForm({ ...form, systemType: e.target.value as SystemType })} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground">{SYSTEM_TYPES.map((type) => <option key={type} value={type}>{SYSTEM_TYPE_LABELS[type]}</option>)}</select></Field>
+      <Field label="Versão"><input value={form.version} onChange={(e) => setForm({ ...form, version: e.target.value })} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" placeholder="1.0.0" /></Field>
+      <Field label="Descrição"><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full min-h-24 resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none" /></Field>
     </>
   );
 }
