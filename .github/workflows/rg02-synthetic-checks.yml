@@ -27,3 +27,5 @@ jobs:
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_acl_ordered.py' -v
       - name: Verify strictly targeted ACL catalog tests
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_targeted_acl.py' -v
+      - name: Verify RG02 grantor and global-role coverage
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_grantor_global_evidence.py' -v
