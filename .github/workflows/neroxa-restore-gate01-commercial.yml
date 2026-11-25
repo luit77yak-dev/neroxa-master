@@ -257,6 +257,9 @@ jobs:
       - name: RG02 cross-receipt proof matrix tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_proof_matrix.py' -v
+      - name: RG02 local PG17 effective privilege witness tests — no backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_local_effective_rights.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
@@ -373,6 +376,28 @@ jobs:
             echo 'RG02_CATALOG_READONLY=BLOCKED_PRIVATE_SIZE'
             exit 1
           fi
+          # Native effective-rights oracle of the disposable isolated PG17 only.
+          # This DOES NOT measure original-source effective privileges. Do not
+          # run against commercial DB or apply any source role statements.
+          if ! timeout 120s docker exec -i "$CONTAINER" psql -X -qAt -v ON_ERROR_STOP=1 \
+            -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe \
+            < tools/restore-gate01/rg02_local_effective_rights.sql \
+            >"$TMP/rg02-local-effective.raw.private.json" \
+            2>"$TMP/rg02-local-effective.stderr"; then
+            echo 'RG02_LOCAL_EFFECTIVE_SQL=BLOCKED_REDACTED'
+            exit 1
+          fi
+          if ! test -s "$TMP/rg02-local-effective.raw.private.json" || \
+             ! test "$(stat -c %s "$TMP/rg02-local-effective.raw.private.json")" -le 1048576; then
+            echo 'RG02_LOCAL_EFFECTIVE_SQL=BLOCKED_PRIVATE_SIZE'
+            exit 1
+          fi
+          python3 tools/restore-gate01/rg02_local_effective_rights.py \
+            --input "$TMP/rg02-local-effective.raw.private.json" \
+            --out "$TMP/rg02-local-effective.private.json" || {
+              echo 'RG02_LOCAL_EFFECTIVE_WITNESS=BLOCKED_REDACTED'
+              exit 1
+            }
           python3 tools/restore-gate01/rg02_catalog_reconcile.py \
             --source-sql "$TMP/source-schema.sql" \
             --source-roles "$TMP/roles-no-passwords.private.sql" \
@@ -431,6 +456,7 @@ jobs:
             --paths "$TMP/rg02-role-paths.private.json" \
             --edges "$TMP/rg02-edge-syntax-triage.private.json" \
             --acl "$TMP/rg02-acl-diagnostic.private.json" \
+            --effective "$TMP/rg02-local-effective.private.json" \
             --out "$TMP/rg02-proof-matrix.private.json" || { echo 'RG02_PROOF_MATRIX=BLOCKED_REDACTED'; exit 1; }
           python3 tools/restore-gate01/rg02_compare_runtime.py \
             --source-sql "$TMP/source-schema.sql" \
