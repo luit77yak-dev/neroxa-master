@@ -33,3 +33,5 @@ jobs:
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_membership_parser.py' -v
       - name: Verify PG17 role membership path projections (HOLD-only)
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_role_paths.py' -v
+      - name: Verify role GRANT syntax and pg_* catalog endpoint triage
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_edge_syntax_triage.py' -v
