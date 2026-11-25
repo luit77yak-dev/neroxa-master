@@ -115,6 +115,7 @@ def target_edges(target_roles):
     if len(names) > SOURCE_LIMIT:
         raise ValueError('LOCAL_GRAPH_TOO_LARGE')
     rows = {}
+    external_endpoints = 0
     for edge in memberships:
         if not isinstance(edge, dict):
             raise ValueError('LOCAL_EDGE_INVALID')
@@ -123,8 +124,13 @@ def target_edges(target_roles):
         grantor = edge.get('grantor')
         if not isinstance(granted, str) or not isinstance(member, str):
             raise ValueError('LOCAL_EDGE_IDENTITY_INVALID')
-        if granted not in names or member not in names or granted == member:
-            raise ValueError('LOCAL_EDGE_UNRESOLVED')
+        if granted == member:
+            raise ValueError('LOCAL_EDGE_SELF_MEMBERSHIP')
+        # The workflow excludes pg_* roles from the role-attribute snapshot
+        # but does NOT filter those built-in memberships. Those catalog edges
+        # are valid for reachability; hold their missing role metadata only.
+        if granted not in names or member not in names:
+            external_endpoints += 1
         if grantor is not None and not isinstance(grantor, str):
             raise ValueError('LOCAL_EDGE_GRANTOR_INVALID')
         opts = {}
@@ -136,15 +142,16 @@ def target_edges(target_roles):
         if key in rows:
             raise ValueError('LOCAL_EDGE_DUPLICATE')
         rows[key] = (grantor, opts)
-    return rows, names
+    return rows, names, external_endpoints
 
 
 def assess(source_roles, target):
     source, origins, src_counts = source_edges(source_roles)
-    local, identities = target_edges(target)
+    local, identities, external_endpoints = target_edges(target)
     results = Counter(src_counts)
     results['LOCAL_ROLE_IDENTITIES'] = len(identities)
     results['LOCAL_ROLE_EDGES'] = len(local)
+    results['LOCAL_EDGE_ENDPOINT_OUTSIDE_ROLES_SNAPSHOT_HOLD'] = external_endpoints
     results['SOURCE_ROLE_IDENTITIES_ABSENT_LOCAL_HOLD'] = len(origins - identities)
     results['SOURCE_MEMBERSHIP_DIRECT_MISSING_HOLD'] = sum(
         pair not in local for pair in source)
