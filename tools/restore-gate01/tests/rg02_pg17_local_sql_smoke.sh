@@ -118,3 +118,79 @@ print('PG17_LOCAL_EFFECTIVE_SQL_SMOKE=PASS')
 print('SOURCE_EFFECTIVE_PRIVILEGES=NOT_MEASURED')
 print('GLOBAL_ROLES=NOT_VERIFIED; OWNER_ACL=NOT_VERIFIED; COMMERCIAL_GO=NO_GO')
 PY
+
+# RG02 NEW preimage protocol: test the snapshot/export/import choreography
+# with SYNTHETIC DATA ONLY, on the already-running PG17 Docker --network none.
+# The commercial preimage capture workflow is NEVER triggered by this job.
+coproc SOURCE_EXPORTER {
+  docker exec -i "$CONTAINER" psql -X -qAt -v ON_ERROR_STOP=1 \
+    -h /var/run/postgresql -U supabase_admin -d postgres \
+    2>"$PRIVATE/exporter.stderr"
+}
+printf '%s\n' 'BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;' \
+  'SELECT pg_catalog.pg_export_snapshot();' >&${SOURCE_EXPORTER[1]}
+if ! IFS= read -r -t 18 snapshot <&${SOURCE_EXPORTER[0]}; then
+  echo 'RG02_SAME_SNAPSHOT_EXPORT=BLOCKED_REDACTED'
+  exit 1
+fi
+if [[ ! "$snapshot" =~ ^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{8}-[0-9]+$ ]]; then
+  echo 'RG02_SAME_SNAPSHOT_ID=BLOCKED_REDACTED'
+  exit 1
+fi
+if ! timeout 50s docker exec "$CONTAINER" pg_dump \
+    -h /var/run/postgresql -U supabase_admin -d postgres \
+    --format=custom --no-password --snapshot="$snapshot" --file=- \
+    >"$PRIVATE/source.synthetic.dump" 2>"$PRIVATE/dump.stderr"; then
+  echo 'RG02_SAME_SNAPSHOT_DUMP=BLOCKED_REDACTED'
+  exit 1
+fi
+if ! timeout 30s docker exec -i "$CONTAINER" psql -X -qAt \
+    -v ON_ERROR_STOP=1 -v "snap=$snapshot" \
+    -h /var/run/postgresql -U supabase_admin -d postgres \
+    < tools/restore-gate01/rg02_source_globals_same_snapshot.sql \
+    >"$PRIVATE/source.globals.json" 2>"$PRIVATE/globals.stderr"; then
+  echo 'RG02_SAME_SNAPSHOT_GLOBALS=BLOCKED_REDACTED'
+  exit 1
+fi
+if ! timeout 40s docker exec -i "$CONTAINER" psql -X -qAt \
+    -v ON_ERROR_STOP=1 -v "snap=$snapshot" \
+    -h /var/run/postgresql -U supabase_admin -d postgres \
+    < tools/restore-gate01/rg02_source_tuple_same_snapshot.sql \
+    >"$PRIVATE/source.tuples.jsonl" 2>"$PRIVATE/tuples.stderr"; then
+  echo 'RG02_SAME_SNAPSHOT_TUPLES=BLOCKED_REDACTED'
+  exit 1
+fi
+if ! docker exec -i "$CONTAINER" pg_restore --list \
+    <"$PRIVATE/source.synthetic.dump" >"$PRIVATE/restore.list" \
+    2>"$PRIVATE/restore.stderr"; then
+  echo 'RG02_SAME_SNAPSHOT_ARCHIVE_INVALID'
+  exit 1
+fi
+printf 'ROLLBACK;\n' >&${SOURCE_EXPORTER[1]}
+fd=${SOURCE_EXPORTER[1]}
+exec {fd}>&-
+wait "$SOURCE_EXPORTER_PID" || {
+  echo 'RG02_SAME_SNAPSHOT_EXPORTER_CLOSED_UNCLEANLY'
+  exit 1
+}
+python3 - "$PRIVATE/source.globals.json" "$PRIVATE/source.tuples.jsonl" <<'PY'
+import json
+import sys
+from pathlib import Path
+g=json.loads(Path(sys.argv[1]).read_text(encoding='utf-8'))
+if (g.get('scope')!='SOURCE_GLOBAL_CATALOG_IN_SAME_SNAPSHOT'
+        or g.get('format_version')!=1
+        or not isinstance(g.get('roles'),list)
+        or not isinstance(g.get('memberships'),list)
+        or not isinstance(g.get('parameter_acls'),list)):
+    raise SystemExit('RG02_SAME_SNAPSHOT_GLOBALS_SHAPE_BLOCKED')
+rows=[json.loads(s) for s in Path(sys.argv[2]).read_text(encoding='utf-8').splitlines()]
+if not rows or not all(isinstance(x,list) and len(x)==5 and
+                       (isinstance(x[4],bool) or x[4] is None) for x in rows):
+    raise SystemExit('RG02_SAME_SNAPSHOT_TUPLES_SHAPE_BLOCKED')
+if not any(x[0]=='rg02_smoke_nologin' and x[1]=='TABLE' and
+           x[3]=='SELECT' and x[4] is True for x in rows):
+    raise SystemExit('RG02_SAME_SNAPSHOT_PRIVILEGE_OBSERVATION_BLOCKED')
+print('RG02_SAME_SNAPSHOT_SYNTHETIC=PASS')
+print('PRODUCTION_DATABASE_ACCESS=NONE; COMMERCIAL_GO=NO_GO')
+PY
