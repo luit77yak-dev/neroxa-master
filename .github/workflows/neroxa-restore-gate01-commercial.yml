@@ -242,6 +242,9 @@ jobs:
       - name: RG02 grantor/global role synthetic tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_grantor_global_evidence.py' -v
+      - name: RG02 PG17 membership parser tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_membership_parser.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
