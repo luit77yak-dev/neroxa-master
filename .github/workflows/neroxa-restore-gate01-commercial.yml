@@ -248,6 +248,9 @@ jobs:
       - name: RG02 PG17 role paths tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_role_paths.py' -v
+      - name: RG02 edge syntax and system-role tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_edge_syntax_triage.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
@@ -397,6 +400,13 @@ jobs:
             --source-roles "$TMP/roles-no-passwords.private.sql" \
             --target-roles "$TMP/target-roles.json" \
             --out "$TMP/rg02-role-paths.private.json" || { echo 'RG02_ROLE_PATHS=BLOCKED_REDACTED'; exit 1; }
+          # Inspect only aggregate causes for missing role grants, and distinguish
+          # pg_* system-role identities omitted from the filtered roles snapshot.
+          # No source SQL is executed and the original comparator remains HOLD.
+          python3 tools/restore-gate01/rg02_edge_syntax_triage.py \
+            --source-roles "$TMP/roles-no-passwords.private.sql" \
+            --target-roles "$TMP/target-roles.json" \
+            --out "$TMP/rg02-edge-syntax-triage.private.json" || { echo 'RG02_EDGE_SYNTAX_TRIAGE=BLOCKED_REDACTED'; exit 1; }
           # Read-only, redacted triage of SQL representation differences before strict gate.
           # Counts are diagnostics ONLY; they cannot turn a comparison into PASS.
           python3 tools/restore-gate01/rg02_acl_diagnostic.py \
