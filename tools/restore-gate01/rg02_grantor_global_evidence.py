@@ -52,6 +52,12 @@ def global_role_coverage(source,target):
         raise ValueError('SOURCE_PASSWORD')
     if not isinstance(target,dict) or not isinstance(target.get('memberships'),list):
         raise ValueError('CATALOG_MEMBERSHIPS')
+    roles = target.get('roles')
+    if not isinstance(roles, list) or not all(
+            isinstance(row, dict) and isinstance(row.get('name'), str)
+            for row in roles):
+        raise ValueError('CATALOG_ROLES')
+    local_role_names = {row['name'] for row in roles}
     edges = {}
     for edge in target['memberships']:
         if not isinstance(edge,dict) or not all(
@@ -80,6 +86,16 @@ def global_role_coverage(source,target):
         candidates = edges.get((granted,member),[])
         if not candidates:
             c['LOCAL_MEMBERSHIP_MISSING_HOLD'] += 1
+            granted_present = granted in local_role_names
+            member_present = member in local_role_names
+            if granted_present and member_present:
+                c['LOCAL_MEMBERSHIP_EDGE_ABSENT_BOTH_ROLES_PRESENT_HOLD'] += 1
+            elif not granted_present and not member_present:
+                c['LOCAL_MEMBERSHIP_BOTH_ROLES_ABSENT_HOLD'] += 1
+            elif not granted_present:
+                c['LOCAL_MEMBERSHIP_GRANTED_ROLE_ABSENT_HOLD'] += 1
+            else:
+                c['LOCAL_MEMBERSHIP_MEMBER_ROLE_ABSENT_HOLD'] += 1
         elif len(candidates)!=1:
             c['LOCAL_MEMBERSHIP_AMBIGUOUS_HOLD'] += 1
         else:
