@@ -250,17 +250,7 @@ jobs:
           test "$(sha256sum "$TMP/database.dump" | cut -d' ' -f1)" = "$RG02_DUMP_SOURCE_SHA256" || { echo 'RG02_SAME_PREIMAGE_DUMP=BLOCKED'; exit 1; }
           test "$(sha256sum "$TMP/roles-no-passwords.private.sql" | cut -d' ' -f1)" = "$RG02_ROLES_SOURCE_SHA256" || { echo 'RG02_SAME_PREIMAGE_ROLES=BLOCKED'; exit 1; }
           echo 'RG02_AUDITED_SOURCE_SHA256=PASS'
-          # Classification runs BEFORE any metadata replay. The private role SQL is never executed.
-          python3 - "$TMP/roles-no-passwords.private.sql" <<'PY'
-          import re,sys
-          from pathlib import Path
-          src=Path(sys.argv[1]).read_text(encoding='utf-8')
-          roles=re.findall(r'(?im)^\s*CREATE\s+(?:ROLE|USER)\s+((?:"(?:[^"]|"")*"|[A-Za-z_][A-Za-z0-9_$]*))\s*;',src)
-          priv=re.findall(r'(?im)^\s*ALTER\s+(?:ROLE|USER)\s+[^;]*\b(?:SUPERUSER|BYPASSRLS|CREATEROLE|CREATEDB|REPLICATION)\b[^;]*;',src)
-          memberships=re.findall(r'(?im)^\s*GRANT\s+[^;]+\s+TO\s+[^;]+;',src)
-          if not roles: raise SystemExit('ROLE_CLASSIFICATION=BLOCKED_NO_DECLARATIONS')
-          print(f'ROLE_CLASSIFICATION=REVIEW_ONLY; DECLARED={len(roles)}; PRIVILEGED_HOLDS={len(priv)}; MEMBERSHIP_HOLDS={len(memberships)}; ROLE_SQL_EXECUTED=NO')
-          PY
+          # Role classification and minimal unprivileged identity creation occur after PG17 boot, before schema replay.
           timeout 240s docker pull "$PG_IMAGE" >/dev/null
           PASSWORD="$(openssl rand -hex 32)"
           docker run --rm --detach --name "$CONTAINER" --network none --security-opt no-new-privileges --tmpfs /var/lib/postgresql/data:rw,nosuid,nodev,size=1536m --tmpfs /tmp:rw,nosuid,nodev,size=128m -e POSTGRES_PASSWORD="$PASSWORD" "$PG_IMAGE" >/dev/null
@@ -273,6 +263,17 @@ jobs:
           test "$READY" = 1 || { echo 'PG17_BOOT=BLOCKED'; exit 1; }
           VERSION="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d postgres -c 'SHOW server_version;')"
           case "$VERSION" in 17.*) echo 'PG17_VERSION=PASS';; *) echo 'PG17_VERSION=BLOCKED'; exit 1;; esac
+          # Only role *identities* missing from the local PG17 baseline may be created.
+          # No source ALTER ROLE, flags, memberships or privileged roles are replayed.
+          docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d postgres -c "SELECT coalesce(json_agg(rolname ORDER BY rolname),'[]'::json)::text FROM pg_roles;" >"$TMP/pg17-roles.private.json" 2>"$TMP/pg17-roles.stderr" || { echo 'RG02_BASELINE_ROLE_CATALOG=BLOCKED'; exit 1; }
+          python3 tools/restore-gate01/rg02_local_roles_prepare.py \
+            --source-roles "$TMP/roles-no-passwords.private.sql" \
+            --existing-roles "$TMP/pg17-roles.private.json" \
+            --output-sql "$TMP/role-identities.private.sql" || { echo 'RG02_LOCAL_ROLE_CLASSIFICATION=BLOCKED'; exit 1; }
+          if test -s "$TMP/role-identities.private.sql"; then
+            docker exec -i "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d postgres <"$TMP/role-identities.private.sql" >"$TMP/role-identities.stdout" 2>"$TMP/role-identities.stderr" || { echo 'RG02_LOCAL_ROLE_IDENTITY_CREATE=BLOCKED'; exit 1; }
+          fi
+          echo 'RG02_LOCAL_ROLE_IDENTITIES=PREPARED_UNPRIVILEGED; SOURCE_ROLE_FLAGS_APPLIED=NO; SOURCE_ROLE_MEMBERSHIPS_APPLIED=NO'
           docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d postgres -c 'CREATE DATABASE neroxa_rg02_probe;' >"$TMP/database-create.stdout" 2>"$TMP/database-create.stderr" || { echo 'RG02_DATABASE=BLOCKED'; exit 1; }
           docker exec "$CONTAINER" psql -X -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe -c "CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';" >"$TMP/vault.stdout" 2>"$TMP/vault.stderr" || { echo 'RG02_VAULT=BLOCKED'; exit 1; }
           echo 'VAULT_0_3_1=PASS'
@@ -289,6 +290,16 @@ jobs:
             echo 'ISOLATED_SCHEMA_WITH_OWNER_ACL=PASS'
           else
             echo 'ISOLATED_SCHEMA_WITH_OWNER_ACL=BLOCKED_REDACTED'
+            # Only print the *kind* of error, never roles, object names, SQL, or details.
+            if grep -Eq 'role .* does not exist' "$TMP/schema.stderr"; then
+              echo 'RG02_SCHEMA_FAILURE_CATEGORY=MISSING_ROLE'
+            elif grep -Eq 'permission denied|must be (owner|member)|not a member of role' "$TMP/schema.stderr"; then
+              echo 'RG02_SCHEMA_FAILURE_CATEGORY=PERMISSION_OR_OWNER'
+            elif grep -Eq 'already exists|duplicate' "$TMP/schema.stderr"; then
+              echo 'RG02_SCHEMA_FAILURE_CATEGORY=OBJECT_CONFLICT'
+            else
+              echo 'RG02_SCHEMA_FAILURE_CATEGORY=OTHER_REDACTED'
+            fi
             echo 'SCHEMA_DIAGNOSTICS=PRIVATE_NOT_UPLOADED'
             exit 1
           fi
