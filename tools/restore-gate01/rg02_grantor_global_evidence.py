@@ -13,6 +13,7 @@ from pathlib import Path
 from rg02_compare_runtime import IDENT, role_name, statements
 from rg02_local_roles_prepare import HIGH_RISK
 from rg02_membership_parser import parse_membership
+from rg02_global_grant_scope import global_grant_scope
 
 ALTER = re.compile(r'^\s*ALTER\s+(?:ROLE|USER)\s+(' + IDENT + r')\s+WITH\s+(.+)$', re.I|re.S)
 
@@ -75,7 +76,13 @@ def global_role_coverage(source,target):
             elevated.add(role_name(a.group(1)))
         if re.match(r'^\s*REVOKE\b',stmt,re.I):
             c['SOURCE_REVOKE_HOLD'] += 1
-        if not re.match(r'^\s*GRANT\b',stmt,re.I):
+        scope = global_grant_scope(stmt)
+        if scope.startswith('parameter_acl_'):
+            c['SOURCE_PARAMETER_PRIVILEGE_GRANTS_HELD'] += 1
+            if scope == 'parameter_acl_unparsed_hold':
+                c['SOURCE_PARAMETER_PRIVILEGE_SYNTAX_UNVERIFIED_HOLD'] += 1
+            continue
+        if scope == 'not_grant':
             continue
         c['SOURCE_MEMBERSHIP_GRANTS'] += 1
         parsed = parse_membership(stmt)
