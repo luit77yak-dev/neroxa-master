@@ -82,6 +82,39 @@ class CatalogProofTests(unittest.TestCase):
         self.assertFalse(x['is_public'])
         self.assertEqual(x['grantee'],'PUBLIC')
 
+    def test_catalog_format_fails_closed(self):
+        with self.assertRaisesRegex(ValueError, 'CATALOG_FORMAT'):
+            inspect_revocations('REVOKE ALL ON TABLE public.private_t FROM PUBLIC;', {'functions':[], 'relations':None})
+        with self.assertRaisesRegex(ValueError, 'MEMBERSHIP_CATALOG_INCOMPLETE'):
+            inspect_membership_options('GRANT foo TO bar;', {'memberships':[{'granted':'foo', 'member':'bar'}]})
+
+    def test_readonly_report_file_mode_0600_and_no_names_in_stdout(self):
+        import io
+        import json
+        import tempfile
+        from unittest.mock import patch
+        from contextlib import redirect_stdout
+        from rg02_catalog_reconcile import main
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            samples = {
+                'src.sql':'REVOKE ALL ON TABLE public.private_t FROM PUBLIC;',
+                'roles.sql':'CREATE ROLE private_role;',
+                'catalog.json':json.dumps(self.fixture(False)),
+                'roles.json':json.dumps({'roles':[], 'memberships':[]}),
+            }
+            for filename, content in samples.items():
+                (root / filename).write_text(content)
+            argv = ['rg02_catalog_reconcile', '--source-sql', str(root/'src.sql'),
+                    '--source-roles', str(root/'roles.sql'), '--catalog-json', str(root/'catalog.json'),
+                    '--target-roles', str(root/'roles.json'), '--out', str(root/'private-report.json')]
+            with patch.object(sys, 'argv', argv), redirect_stdout(io.StringIO()) as output:
+                main()
+            self.assertEqual((root/'private-report.json').stat().st_mode & 0o777, 0o600)
+            self.assertNotIn('private_t', output.getvalue())
+            self.assertNotIn('private_role', output.getvalue())
+            self.assertIn('NOT_VERIFIED', (root/'private-report.json').read_text())
+
     def test_all_results_no_private_identifiers(self):
         sql='REVOKE ALL ON TABLE public.private_t FROM PUBLIC;'
         x=diagnose(sql,'GRANT private_role TO another WITH ADMIN TRUE;', self.fixture(False), {'memberships': []})
