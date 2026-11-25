@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CheckCircle2, Edit3, Loader2, Package, Plus, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getNeroxaPlatformAccess } from "@/features/master/clients/services";
+import { getNeroxaPlatformAccess, type NeroxaPlatformRole } from "@/features/master/clients/services";
 import { canPerform } from "@/features/master/permissions";
 import { MasterLogin } from "@/features/master/shell/MasterLogin";
 import { MasterShell } from "@/features/master/shell/MasterShell";
@@ -46,7 +46,7 @@ function formatPlanPrice(value: number | string | null | undefined) {
 
 function MasterPlansPage() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [role, setRole] = useState<import("@/features/master/clients/services").NeroxaPlatformRole | null>(null);
+  const [role, setRole] = useState<NeroxaPlatformRole | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
   const [products, setProducts] = useState<NeroxaProduct[]>([]);
@@ -286,7 +286,7 @@ type PlanEditorProps = {
   saving: boolean;
   reset: () => void;
   save: () => Promise<void>;
-  role: import("@/features/master/clients/services").NeroxaPlatformRole | null;
+  role: NeroxaPlatformRole | null;
 };
 
 function PlanEditor({ form, setForm, systems, products, compatibleProducts, selectedProducts, setSelectedProducts, selectedFeatures, setSelectedFeatures, saving, reset, save, role }: PlanEditorProps) {
