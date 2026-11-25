@@ -8,6 +8,20 @@ ROLE_FLAGS = {"SUPERUSER": "superuser", "BYPASSRLS": "bypassrls",
               "REPLICATION": "replication", "LOGIN": "login", "INHERIT": "inherit"}
 IDENT = r'(?:"(?:[^"]|"")*"|[A-Za-z_][A-Za-z_0-9_$]*)'
 
+# Session defaults and role comments are metadata holds, NEVER executed/imported.
+ROLE_SET = re.compile(r'^\s*ALTER\s+(?:ROLE|USER)\s+(' + IDENT +
+                      r')\s+(?:IN\s+DATABASE\s+' + IDENT + r'\s+)?SET\s+\S[\s\S]*$', re.I | re.S)
+ROLE_COMMENT = re.compile(r'^\s*COMMENT\s+ON\s+(?:ROLE|USER)\s+(' + IDENT +
+                          r')\s+IS\s+\S[\s\S]*$', re.I | re.S)
+
+def role_metadata_kind(statement):
+    for kind, pattern in (('role_setting_hold', ROLE_SET), ('role_comment_hold', ROLE_COMMENT)):
+        match = pattern.fullmatch(statement)
+        if match:
+            return kind, role_name(match.group(1))
+    return None
+
+
 def statements(src):
     src = re.sub(r'(?im)^\s*\\(?:restrict|unrestrict)\b[^\n]*$', '', src)
     found, buf, i, state, tag = [], [], 0, 'normal', ''
@@ -71,6 +85,8 @@ def role_name(value):
 
 def compare_roles(text, target):
     seen, created, memberships, unknown = {}, set(), set(), 0
+    metadata_holds = collections.Counter()
+    metadata_targets = set()
     if re.search(r'\bPASSWORD\b|SCRAM-SHA-256\$|\bmd5[a-f0-9]{32}\b', text, re.I):
         raise ValueError('PASSWORD_MATERIAL')
     for stmt in statements(text):
@@ -90,6 +106,11 @@ def compare_roles(text, target):
         m = re.fullmatch(r'\s*GRANT\s+('+IDENT+r')\s+TO\s+('+IDENT+r')(\s+WITH\s+ADMIN\s+OPTION)?(?:\s+GRANTED\s+BY\s+'+IDENT+r')?\s*', stmt, re.I | re.S)
         if m:
             memberships.add((role_name(m.group(1)),role_name(m.group(2)),bool(m.group(3)))); continue
+        held = role_metadata_kind(stmt)
+        if held:
+            metadata_holds[held[0]] += 1
+            metadata_targets.add(held[1])
+            continue
         if re.match(r'^\s*(SET\b|SELECT\s+pg_catalog\.set_config\s*\()', stmt, re.I): continue
         unknown += 1
     remote = {r['name']:r for r in target.get('roles', [])}
@@ -98,12 +119,15 @@ def compare_roles(text, target):
     mismatches = sum(1 for name, attrs in seen.items() for attr, expected in attrs.items()
                      if name in remote and remote[name].get(attr) != expected)
     unverified_flags = sum(1 for name in created if set(seen.get(name,{})) != set(ROLE_FLAGS.values()))
+    unknown += len(metadata_targets - created)
     missing_edges = len(memberships-edges)
     elevated = sum(1 for attrs in seen.values() if any(attrs.get(x) for x in ('superuser','bypassrls','createrole','createdb','replication')))
     return dict(declared=len(created), privileged_role_holds=elevated,
                 membership_holds=len(memberships), missing_roles=missing,
                 role_flag_differences=mismatches, missing_memberships=missing_edges,
-                unknown_role_statements=unknown, incomplete_flag_sets=unverified_flags)
+                unknown_role_statements=unknown, incomplete_flag_sets=unverified_flags,
+                role_setting_holds=metadata_holds['role_setting_hold'],
+                role_comment_holds=metadata_holds['role_comment_hold'])
 
 def main():
     p=argparse.ArgumentParser()
@@ -138,7 +162,9 @@ def main():
           '; ROLE_ATTRIBUTE_DIFF='+str(roles['role_flag_differences'])+
           '; MEMBERSHIP_MISSING='+str(roles['missing_memberships'])+
           '; PRIVILEGED_ROLE_HOLDS='+str(roles['privileged_role_holds'])+
-          '; UNKNOWN_ROLE_STMTS='+str(roles['unknown_role_statements']))
+          '; UNKNOWN_ROLE_STMTS='+str(roles['unknown_role_statements'])+
+          '; ROLE_SETTING_HOLDS='+str(roles['role_setting_holds'])+
+          '; ROLE_COMMENT_HOLDS='+str(roles['role_comment_holds']))
     print('GLOBAL_ROLES=NOT_VERIFIED; OWNER_ACL=NOT_VERIFIED; REMOTE_WRITES=NONE')
     return 0 if status=='MATCHED_EXPECTED_STATEMENTS' else 2
 

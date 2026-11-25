@@ -7,7 +7,7 @@ import re
 import sys
 from pathlib import Path
 
-from rg02_compare_runtime import statements, role_name, IDENT
+from rg02_compare_runtime import statements, role_name, IDENT, role_metadata_kind
 
 MANAGED = {
     'postgres', 'anon', 'authenticated', 'service_role', 'authenticator',
@@ -36,6 +36,8 @@ def prepare(text, existing):
     created = set()
     elevated = set()
     memberships = 0
+    metadata_holds = {'role_setting_hold': 0, 'role_comment_hold': 0}
+    metadata_targets = set()
     unknown = 0
     for stmt in statements(text):
         m = CREATE.fullmatch(stmt)
@@ -57,6 +59,11 @@ def prepare(text, existing):
                    for flag in HIGH_RISK):
                 elevated.add(name)
             continue
+        held = role_metadata_kind(stmt)
+        if held:
+            metadata_holds[held[0]] += 1
+            metadata_targets.add(held[1])
+            continue
         if re.match(r'^\s*(GRANT|REVOKE)\b', stmt, re.I):
             memberships += 1
             continue
@@ -65,6 +72,8 @@ def prepare(text, existing):
         unknown += 1
     if not created or not elevated.issubset(created) or unknown:
         raise ValueError('ROLE_SOURCE_UNCLASSIFIED')
+    if not metadata_targets.issubset(created):
+        raise ValueError('ROLE_METADATA_TARGET_UNDECLARED')
     missing = created - set(existing)
     if any(role_category(name) == 'managed' for name in missing):
         # Missing Supabase-managed roles must not be invented.
@@ -81,6 +90,9 @@ def prepare(text, existing):
         'source_elevated_roles_hold': len(elevated),
         'elevated_identity_shells': len(elevated & missing),
         'memberships_hold': memberships,
+        'role_setting_holds': metadata_holds['role_setting_hold'],
+        'role_comment_holds': metadata_holds['role_comment_hold'],
+        'role_metadata_applied': 0,
         'privileges_applied': 0,
         'memberships_applied': 0,
     }
@@ -110,7 +122,8 @@ if __name__ == '__main__':
         reason = str(exc) if isinstance(exc, ValueError) and str(exc) in {
             'SOURCE_PASSWORD_MATERIAL', 'TARGET_CATALOG_FORMAT',
             'DUPLICATE_SOURCE_ROLE', 'UNSAFE_ROLE_NAME',
-            'ROLE_SOURCE_UNCLASSIFIED', 'MANAGED_ROLE_BASELINE_MISSING'
+            'ROLE_SOURCE_UNCLASSIFIED', 'MANAGED_ROLE_BASELINE_MISSING',
+            'ROLE_METADATA_TARGET_UNDECLARED'
         } else 'PRIVATE_INPUT_INVALID'
         print('RG02_ROLE_PLACEHOLDERS=BLOCKED:' + reason, file=sys.stderr)
         sys.exit(1)
