@@ -37,3 +37,5 @@ jobs:
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_edge_syntax_triage.py' -v
       - name: Verify global parameter ACL GRANT scope remains HOLD
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_global_grant_scope.py' -v
+      - name: Verify cross-receipt proof matrix is HOLD and fail-closed
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_proof_matrix.py' -v

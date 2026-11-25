@@ -254,6 +254,9 @@ jobs:
       - name: RG02 global parameter ACL scope tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_global_grant_scope.py' -v
+      - name: RG02 cross-receipt proof matrix tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_proof_matrix.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
@@ -418,6 +421,17 @@ jobs:
             --source-roles "$TMP/roles-no-passwords.private.sql" \
             --target-roles "$TMP/target-roles.json" \
             --out "$TMP/rg02-acl-diagnostic.private.json" || { echo 'RG02_ACL_DIAGNOSTIC=BLOCKED_REDACTED'; exit 1; }
+          # Cross-check SAME-ATTEMPT private aggregate receipts before strict
+          # comparison. All 3 groups remain HOLD: observed, not replayed,
+          # unproven. No effective privilege equivalence is inferred.
+          python3 tools/restore-gate01/rg02_proof_matrix.py \
+            --catalog "$TMP/rg02-catalog-report.private.json" \
+            --targeted "$TMP/rg02-targeted-acl.private.json" \
+            --grantor "$TMP/rg02-grantor-global.private.json" \
+            --paths "$TMP/rg02-role-paths.private.json" \
+            --edges "$TMP/rg02-edge-syntax-triage.private.json" \
+            --acl "$TMP/rg02-acl-diagnostic.private.json" \
+            --out "$TMP/rg02-proof-matrix.private.json" || { echo 'RG02_PROOF_MATRIX=BLOCKED_REDACTED'; exit 1; }
           python3 tools/restore-gate01/rg02_compare_runtime.py \
             --source-sql "$TMP/source-schema.sql" \
             --target-sql "$TMP/target-schema.sql" \
