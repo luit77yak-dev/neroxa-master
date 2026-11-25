@@ -292,7 +292,16 @@ jobs:
             echo 'SCHEMA_DIAGNOSTICS=PRIVATE_NOT_UPLOADED'
             exit 1
           fi
-          docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe -c "SELECT 'RG02_RESTORED_METADATA_RELATIONS=' || COUNT(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname IN ('public','private') AND c.relkind IN ('r','p');"
-          echo 'OBJECT_METADATA_DIFF=NOT_COMPARED; GLOBAL_ROLES=NOT_VERIFIED; OWNER_ACL=NOT_VERIFIED'
+          # Both catalogs remain in runner-private files and are removed on EXIT.
+          docker exec "$CONTAINER" pg_restore --schema-only --use-list=/tmp/restore.filtered.list /tmp/database.dump >"$TMP/source-schema.sql" 2>"$TMP/source-parse.stderr" || { echo 'RG02_SOURCE_SQL=BLOCKED'; exit 1; }
+          docker exec "$CONTAINER" pg_dump -X -s -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe >"$TMP/target-schema.sql" 2>"$TMP/target-schema.stderr" || { echo 'RG02_TARGET_SQL=BLOCKED'; exit 1; }
+          # Exact role flags and memberships are read from pg_catalog. Never read authentication passwords.
+          docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe -c "SELECT jsonb_build_object('roles',(SELECT coalesce(jsonb_agg(jsonb_build_object('name',rolname,'superuser',rolsuper,'bypassrls',rolbypassrls,'createrole',rolcreaterole,'createdb',rolcreatedb,'replication',rolreplication,'login',rolcanlogin,'inherit',rolinherit)),'[]'::jsonb) FROM pg_roles WHERE rolname !~ '^pg_'),'memberships',(SELECT coalesce(jsonb_agg(jsonb_build_object('granted',r.rolname,'member',m.rolname,'admin_option',a.admin_option)),'[]'::jsonb) FROM pg_auth_members a JOIN pg_roles r ON r.oid=a.roleid JOIN pg_roles m ON m.oid=a.member))::text;" >"$TMP/target-roles.json" 2>"$TMP/target-roles.stderr" || { echo 'RG02_ROLE_CATALOG=BLOCKED'; exit 1; }
+          python3 tools/restore-gate01/rg02_compare_runtime.py \
+            --source-sql "$TMP/source-schema.sql" \
+            --target-sql "$TMP/target-schema.sql" \
+            --source-roles "$TMP/roles-no-passwords.private.sql" \
+            --target-roles "$TMP/target-roles.json" \
+            --out "$TMP/rg02-comparison.private.json" || { echo 'RG02_METADATA_COMPARISON=HOLD_REDACTED'; exit 1; }
           echo 'SCHEMA_ONLY=YES; TABLE_DATA_RESTORED=NO; ROLE_SQL_EXECUTED=NO; NO_REMOTE_WRITES=PASS; CONTAINER_NETWORK=NONE'
           echo 'SQL_RELEASE=NOT_RUN; COMMERCIAL_GO=NO_GO'
