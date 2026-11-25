@@ -54,6 +54,22 @@ Contagens globais `13.824 / 4.936` **não bastam**: distribuições idênticas p
 - A fonte atual consultada posteriormente pode servir a uma **nova linha de base**, nunca comprovar exatamente o estado antigo sem vínculo sincronizado.
 - A aprovação final exige também os demais gates F02/I04, integração e homologação do GO; mesmo um RG02 futuro completo não autoriza GO sozinho.
 
+### 4.1. Pré-validação de testemunhos futuros (sem captura, sempre HOLD)
+
+O script `rg02_tuple_witness_preflight.py` recebe **dois JSON privados futuros**, um com `scope=SOURCE` e outro com `scope=ISOLATED_RESTORE`. Não coleta dados nem conecta a qualquer banco. O formato v1 exige `capture_id` opaco de 32 caracteres hexadecimais, `source_dump_sha256`, `source_globals_sha256`, `declared_probe_kinds` com as 19 categorias já testadas, e `rows` como tuplas:
+
+```text
+[role_canonica, "TABLE", "schema_canonico.objeto_canonico", "SELECT", true]
+[role_canonica, "ROLE", "outra_role_canonica", "SET", false]
+[role_canonica, "PARAMETER", "parametro_canonico", "SET", null]
+```
+
+**Exemplos sintéticos**, nunca incluir identidades ou direitos reais em documentação. O último campo é `true`, `false` ou `null` (não medido). Os nomes e assinaturas permanecem em arquivos privados; stdout/recibo contém somente contagens permitidas e `NO_GO`.
+
+O validador compara **cada chave role+classe+objeto+privilégio**, distinguindo direitos trocados com o mesmo total agregado, tuplas extras, faltantes e não medidas. Recusa duplicatas, escopos trocados e campos não esperados. Porém, igualar campos `capture_id`/SHA256 **não comprova por si só** que vieram do mesmo snapshot: são declarações de um arquivo de entrada, não assinaturas de um mecanismo de captura confiável. A cobertura total das roles, catálogos e objetos tampouco é demonstrada pelo nome das 19 categorias. Por isso **todo resultado é HOLD**, inclusive quando todas as tuplas coincidem.
+
+**Proibição:** não passar à ferramenta recibos da preimagem comercial histórica supondo que ela já foi atestada; não publicar testemunhos reais em PR/issue; não executar a ferramenta como bypass do workflow protegido; não interpretar `common_tuples_equal_value` como certificado de autorização. A próxima fase precisará de produtor de evidência assinado/autenticado, associação transacional comprovada, cobertura por objeto e canal privado sob aprovação explícita antes de qualquer nova captura.
+
 ## 5. Ordem recomendada, sem repetir trabalhos aprovados
 
 1. **Agora**: manter o backup original e os relatórios atuais preservados em seus destinos privados. Nenhuma restauração RG02 idêntica, nenhuma tentativa de replay global, nenhuma alteração no comercial.
