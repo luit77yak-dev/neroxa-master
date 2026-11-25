@@ -239,6 +239,9 @@ jobs:
       - name: RG02 targeted ACL synthetic tests — no private backup
         shell: bash
         run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_targeted_acl.py' -v
+      - name: RG02 grantor/global role synthetic tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_grantor_global_evidence.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
@@ -375,6 +378,13 @@ jobs:
             --target-sql "$TMP/target-schema.sql" \
             --catalog-json "$TMP/rg02-catalog.private.json" \
             --out "$TMP/rg02-targeted-acl.private.json" || { echo 'RG02_TARGETED_ACL=BLOCKED_REDACTED'; exit 1; }
+          # Catalog grantor/owner and source-role membership evidence only;
+          # no replay of global privileges or SQL and never an equivalence PASS.
+          python3 tools/restore-gate01/rg02_grantor_global_evidence.py \
+            --source-roles "$TMP/roles-no-passwords.private.sql" \
+            --target-roles "$TMP/target-roles.json" \
+            --catalog-json "$TMP/rg02-catalog.private.json" \
+            --out "$TMP/rg02-grantor-global.private.json" || { echo 'RG02_GRANTOR_GLOBAL=BLOCKED_REDACTED'; exit 1; }
           # Read-only, redacted triage of SQL representation differences before strict gate.
           # Counts are diagnostics ONLY; they cannot turn a comparison into PASS.
           python3 tools/restore-gate01/rg02_acl_diagnostic.py \
