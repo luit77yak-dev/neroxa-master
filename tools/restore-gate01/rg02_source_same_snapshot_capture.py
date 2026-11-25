@@ -230,6 +230,9 @@ def encrypt_pipeline(command, env, passfile, destination, max_bytes,
         # No symlink, permission or size ambiguity.
         if not destination.is_file() or destination.is_symlink():
             raise Blocked("RG02_ENCRYPTED_OUTPUT_INVALID")
+        # Protected capture already enforces umask 077. Also explicitly
+        # seal 0600 for direct synthetic callers with a different umask.
+        destination.chmod(0o600)
         if destination.stat().st_mode & 0o077:
             raise Blocked("RG02_ENCRYPTED_MODE_INVALID")
         return {"sha256": h.hexdigest(), "plain_bytes": n,
@@ -286,6 +289,7 @@ def encrypt_json(body, passfile, dest):
     proc.communicate(input=plain, timeout=25)
     if proc.returncode != 0 or not dest.is_file():
         raise Blocked("RG02_PRIVATE_MANIFEST_ENCRYPTION_FAILED")
+    dest.chmod(0o600)
     verify_decrypt(passfile, dest,
                    {"plain_bytes": len(plain),
                     "sha256": hashlib.sha256(plain).hexdigest()}, 32 * 1024)
@@ -333,7 +337,7 @@ def run():
         stats["dump"] = encrypt_pipeline(
             ["timeout", "650s", "pg_dump", "--format=custom",
              "--no-password", "--lock-wait-timeout=5000",
-             "--snapshot=" + snapshot, "--dbname=postgres", "--file=-"],
+             "--snapshot=" + snapshot, "--dbname=postgres"],
             db_env, passfile, dump, MAX_DUMP,
         )
         for kind, file, sql, maxsize, count_rows in (
