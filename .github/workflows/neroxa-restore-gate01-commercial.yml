@@ -227,6 +227,9 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      - name: RG02 ACL diagnostic synthetic tests — no private backup
+        shell: bash
+        run: python3 -m unittest discover -s tools/restore-gate01/tests -p 'test_rg02_acl_diagnostic.py' -v
       - name: Restore ONLY schema and metadata to isolated PG17
         shell: bash
         run: |
@@ -333,6 +336,14 @@ jobs:
           docker exec "$CONTAINER" pg_dump -s -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe >"$TMP/target-schema.sql" 2>"$TMP/target-schema.stderr" || { echo 'RG02_TARGET_SQL=BLOCKED'; exit 1; }
           # Exact role flags and memberships are read from pg_catalog. Never read authentication passwords.
           docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe -c "SELECT jsonb_build_object('roles',(SELECT coalesce(jsonb_agg(jsonb_build_object('name',rolname,'superuser',rolsuper,'bypassrls',rolbypassrls,'createrole',rolcreaterole,'createdb',rolcreatedb,'replication',rolreplication,'login',rolcanlogin,'inherit',rolinherit)),'[]'::jsonb) FROM pg_roles WHERE rolname !~ '^pg_'),'memberships',(SELECT coalesce(jsonb_agg(jsonb_build_object('granted',r.rolname,'member',m.rolname,'admin_option',a.admin_option)),'[]'::jsonb) FROM pg_auth_members a JOIN pg_roles r ON r.oid=a.roleid JOIN pg_roles m ON m.oid=a.member))::text;" >"$TMP/target-roles.json" 2>"$TMP/target-roles.stderr" || { echo 'RG02_ROLE_CATALOG=BLOCKED'; exit 1; }
+          # Read-only, redacted triage of SQL representation differences before strict gate.
+          # Counts are diagnostics ONLY; they cannot turn a comparison into PASS.
+          python3 tools/restore-gate01/rg02_acl_diagnostic.py \
+            --source-sql "$TMP/source-schema.sql" \
+            --target-sql "$TMP/target-schema.sql" \
+            --source-roles "$TMP/roles-no-passwords.private.sql" \
+            --target-roles "$TMP/target-roles.json" \
+            --out "$TMP/rg02-acl-diagnostic.private.json" || { echo 'RG02_ACL_DIAGNOSTIC=BLOCKED_REDACTED'; exit 1; }
           python3 tools/restore-gate01/rg02_compare_runtime.py \
             --source-sql "$TMP/source-schema.sql" \
             --target-sql "$TMP/target-schema.sql" \
