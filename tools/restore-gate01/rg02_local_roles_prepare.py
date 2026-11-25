@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from rg02_compare_runtime import statements, role_name, IDENT, role_metadata_kind
+from rg02_global_grant_scope import global_grant_scope
 
 MANAGED = {
     'postgres', 'anon', 'authenticated', 'service_role', 'authenticator',
@@ -36,6 +37,7 @@ def prepare(text, existing):
     created = set()
     elevated = set()
     memberships = 0
+    parameter_privilege_holds = 0
     metadata_holds = {'role_setting_hold': 0, 'role_comment_hold': 0}
     metadata_targets = set()
     unknown = 0
@@ -64,7 +66,15 @@ def prepare(text, existing):
             metadata_holds[held[0]] += 1
             metadata_targets.add(held[1])
             continue
-        if re.match(r'^\s*(GRANT|REVOKE)\b', stmt, re.I):
+        if re.match(r'^\s*GRANT\b', stmt, re.I):
+            scope = global_grant_scope(stmt)
+            if scope.startswith('parameter_acl_'):
+                parameter_privilege_holds += 1
+            else:
+                memberships += 1
+            continue
+        if re.match(r'^\s*REVOKE\b', stmt, re.I):
+            # REVOKE scope remains a hold; never replay it or assume equality.
             memberships += 1
             continue
         if re.match(r'^\s*(SET\b|SELECT\s+pg_catalog\.set_config\s*\()', stmt, re.I):
@@ -94,6 +104,7 @@ def prepare(text, existing):
         'source_elevated_roles_hold': len(elevated),
         'elevated_identity_shells': len(elevated & missing),
         'memberships_hold': memberships,
+        'global_parameter_privilege_holds': parameter_privilege_holds,
         'role_setting_holds': metadata_holds['role_setting_hold'],
         'role_comment_holds': metadata_holds['role_comment_hold'],
         'role_metadata_applied': 0,
