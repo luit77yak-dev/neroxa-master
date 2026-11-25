@@ -32,7 +32,7 @@ class EdgeSyntaxTriageTests(unittest.TestCase):
         x=analyze(SOURCE,cat())
         c=x['counts']
         self.assertEqual(c['SOURCE_DIRECT_EDGE_PRESENT_LOCAL'],1)
-        self.assertEqual(c['SOURCE_DIRECT_EDGE_MISSING_HOLD'],0)
+        self.assertEqual(c.get('SOURCE_DIRECT_EDGE_MISSING_HOLD',0),0)
         self.assertEqual(x['COMMERCIAL_GO'],'NO_GO')
         self.assertEqual(x['GLOBAL_ROLES'],'NOT_VERIFIED')
         self.assertEqual(x['OWNER_ACL'],'NOT_VERIFIED')
@@ -76,7 +76,7 @@ class EdgeSyntaxTriageTests(unittest.TestCase):
         c=analyze(source,cat(edges=[]))['counts']
         self.assertEqual(c['SOURCE_ENDPOINTS_NOT_IN_FULL_LOCAL_CATALOG_HOLD'],1)
         self.assertEqual(c['MISSING_EDGE_GRANTED_IDENTITY_NOT_CATALOG_CONFIRMED_HOLD'],1)
-        self.assertEqual(c['MISSING_EDGE_INVOLVES_CONFIRMED_PG_SYSTEM_ROLE_HOLD'],0)
+        self.assertEqual(c.get('MISSING_EDGE_INVOLVES_CONFIRMED_PG_SYSTEM_ROLE_HOLD',0),0)
 
     def test_non_builtin_edge_outside_filtered_role_names_holds(self):
         c=analyze(SOURCE,cat(edges=[edge(),edge(granted='missing',member='worker')]))['counts']
