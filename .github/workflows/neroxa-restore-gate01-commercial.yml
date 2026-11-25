@@ -304,7 +304,30 @@ jobs:
             exit 1
           fi
           # Both catalogs remain in runner-private files and are removed on EXIT.
-          docker exec "$CONTAINER" pg_restore --schema-only --use-list=/tmp/restore.filtered.list /tmp/database.dump >"$TMP/source-schema.sql" 2>"$TMP/source-parse.stderr" || { echo 'RG02_SOURCE_SQL=BLOCKED'; exit 1; }
+          # PostgreSQL 17 export-to-script mode requires explicit --file (not shell redirection alone).
+          # No DB connection; the source SQL is temporarily kept in the isolated container.
+          if ! docker exec "$CONTAINER" pg_restore --schema-only --use-list=/tmp/restore.filtered.list --file=/tmp/source-schema.sql /tmp/database.dump >"$TMP/source-parse.stdout" 2>"$TMP/source-parse.stderr"; then
+            echo 'RG02_SOURCE_SQL=BLOCKED_EXPLICIT_EXPORT'
+            exit 1
+          fi
+          if ! docker exec "$CONTAINER" test -s /tmp/source-schema.sql; then
+            echo 'RG02_SOURCE_SQL=BLOCKED_EMPTY_CONTAINER_OUTPUT'
+            exit 1
+          fi
+          if ! docker cp "$CONTAINER:/tmp/source-schema.sql" "$TMP/source-schema.sql" >"$TMP/source-copy.stdout" 2>"$TMP/source-copy.stderr"; then
+            echo 'RG02_SOURCE_SQL=BLOCKED_PRIVATE_COPY'
+            exit 1
+          fi
+          if ! test -s "$TMP/source-schema.sql" || ! test "$(stat -c %s "$TMP/source-schema.sql")" -le 100663296; then
+            echo 'RG02_SOURCE_SQL=BLOCKED_PRIVATE_SIZE'
+            exit 1
+          fi
+          if ! test "$(sha256sum "$TMP/source-schema.sql" | cut -d' ' -f1)" = "$(docker exec "$CONTAINER" sha256sum /tmp/source-schema.sql | cut -d' ' -f1)"; then
+            echo 'RG02_SOURCE_SQL=BLOCKED_PRIVATE_HASH'
+            exit 1
+          fi
+          docker exec "$CONTAINER" rm -f /tmp/source-schema.sql >"$TMP/source-remove.stdout" 2>"$TMP/source-remove.stderr" || { echo 'RG02_SOURCE_SQL=BLOCKED_PRIVATE_CLEANUP'; exit 1; }
+          echo 'RG02_SOURCE_SQL_EXPLICIT_FILE=PASS; SOURCE_SQL_INTEGRITY=PASS; SOURCE_SQL_PRIVATE=YES'
           docker exec "$CONTAINER" pg_dump -s -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe >"$TMP/target-schema.sql" 2>"$TMP/target-schema.stderr" || { echo 'RG02_TARGET_SQL=BLOCKED'; exit 1; }
           # Exact role flags and memberships are read from pg_catalog. Never read authentication passwords.
           docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 -h /var/run/postgresql -U supabase_admin -d neroxa_rg02_probe -c "SELECT jsonb_build_object('roles',(SELECT coalesce(jsonb_agg(jsonb_build_object('name',rolname,'superuser',rolsuper,'bypassrls',rolbypassrls,'createrole',rolcreaterole,'createdb',rolcreatedb,'replication',rolreplication,'login',rolcanlogin,'inherit',rolinherit)),'[]'::jsonb) FROM pg_roles WHERE rolname !~ '^pg_'),'memberships',(SELECT coalesce(jsonb_agg(jsonb_build_object('granted',r.rolname,'member',m.rolname,'admin_option',a.admin_option)),'[]'::jsonb) FROM pg_auth_members a JOIN pg_roles r ON r.oid=a.roleid JOIN pg_roles m ON m.oid=a.member))::text;" >"$TMP/target-roles.json" 2>"$TMP/target-roles.stderr" || { echo 'RG02_ROLE_CATALOG=BLOCKED'; exit 1; }
