@@ -58,12 +58,12 @@ vars/segredos explicitamente provisionados **somente nesse Environment**.
 Vars:
 - `RG02_SOURCE_GATE=OPERATOR_APPROVED_PRIVATE_CAPTURE`
 - `RG02_ESCROW_RECOVERY=EXTERNALLY_RECOVERABLE_KEY_CONFIRMED`
-- `RG02_SOURCE_HOST`: host oficial do Session Pooler ou direto
-- `RG02_SOURCE_PG_USER`: a role dedicada, com project ref quando exigido pelo pooler
+- `RG02_SOURCE_HOST=aws-0-us-east-1.pooler.supabase.com`: host Session Pooler aprovado no F02
+- `RG02_SOURCE_PG_USER=neroxa_rg02_snapshot_reader.iefaoaqzltvpfabyeelj`: role de captura dedicada e prefixo do projeto no Session Pooler
 
 Secrets **somente de Environment**, nunca repositório/chat:
 - `RG02_SOURCE_PG_PASSWORD`
-- `RG02_SOURCE_CA_PEM`
+- `RG02_SOURCE_CA_PEM`: bytes exatos da CA previamente aprovada no F02 (`SHA-256=700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7`); CA diferente bloqueia antes de acessar a origem
 - `RG02_CAPTURE_PASSPHRASE`: aleatória, 32+ caracteres, com
   cópia recuperável fora do GitHub aprovada previamente.
 
