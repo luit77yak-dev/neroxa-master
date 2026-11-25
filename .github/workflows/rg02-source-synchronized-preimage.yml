@@ -65,6 +65,8 @@ jobs:
           fi
           command -v psql >/dev/null
           command -v pg_dump >/dev/null
+          psql --version | grep -Eq '^psql \(PostgreSQL\) 17\.'
+          pg_dump --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.'
           command -v gpg >/dev/null
           command -v python3 >/dev/null
           echo 'RG02_SOURCE_PROTECTED_CONTEXT=READY_NOT_CAPTURED'
