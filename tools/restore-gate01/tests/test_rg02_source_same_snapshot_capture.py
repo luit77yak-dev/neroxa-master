@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Synthetic-only tests of PG17 source snapshot capture safety boundaries."""
 import hashlib
+import io
+from contextlib import redirect_stdout
 import json
 import os
 from pathlib import Path
@@ -14,7 +16,7 @@ from rg02_source_same_snapshot_capture import (
     Blocked, CONFIRMATION, ROLE, PROJECT, SESSION_HOST, APPROVED_CA_SHA256,
     check_context, check_conn_config, check_identity, check_snapshot,
     public_subprocess_env, make_db_env, encrypt_pipeline, verify_decrypt,
-    decrypt_and_validate_source,
+    decrypt_and_validate_source, safe_block_reason, PrivateStderr,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,6 +50,26 @@ def fake_identity():
 
 
 class ProtectedSourceCaptureTests(unittest.TestCase):
+    def test_failure_reason_does_not_echo_arbitrary_text(self):
+        self.assertEqual(safe_block_reason(Blocked("RG02_SNAPSHOT_TOKEN_INVALID")),
+                         "RG02_SNAPSHOT_TOKEN_INVALID")
+        for exc in (Blocked("RG02_SECRET_DO_NOT_LEAK"),
+                    ValueError("PRIVATE_TEST_SENTINEL"), Blocked("PRIVATE_TEST_SENTINEL")):
+            self.assertEqual(safe_block_reason(exc), "RG02_UNCLASSIFIED_FAILURE")
+
+    def test_child_diagnostic_only_reports_fixed_categories(self):
+        diagnostic = PrivateStderr(io.BytesIO(
+            b"x" * 4090 + b"permission denied for table PRIVATE_TEST_SENTINEL\n"
+            b"password authentication failed for user PRIVATE_USER\n"))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            diagnostic.report("PRODUCER")
+        self.assertEqual(set(output.getvalue().splitlines()), {
+            "RG02_CHILD_DIAGNOSTIC=PRODUCER:AUTHENTICATION",
+            "RG02_CHILD_DIAGNOSTIC=PRODUCER:PERMISSION_DENIED",
+        })
+        self.assertNotIn("PRIVATE", output.getvalue())
+
     def test_explicit_scope_and_project_are_pinned(self):
         self.assertEqual(PROJECT, "iefaoaqzltvpfabyeelj")
         self.assertEqual(CONFIRMATION, "RG02_NEW_PREIMAGE_READONLY")
