@@ -46,7 +46,10 @@ version="$(docker exec "$CONTAINER" psql -X -At -v ON_ERROR_STOP=1 \
 cat >"$PRIVATE/fixture.sql" <<'SQL'
 CREATE ROLE rg02_smoke_nologin WITH NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
 CREATE SCHEMA rg02_smoke;
+CREATE SCHEMA IF NOT EXISTS vault;
+CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';
 CREATE TABLE rg02_smoke.sample_table (id integer);
+INSERT INTO rg02_smoke.sample_table VALUES (42);
 CREATE FUNCTION rg02_smoke.sample_function() RETURNS integer LANGUAGE sql AS 'SELECT 1';
 -- Distinct overloads share the first 63 bytes of their qualified identity.
 CREATE FUNCTION rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(integer) RETURNS integer LANGUAGE sql AS 'SELECT 1';
@@ -210,4 +213,24 @@ if observed != expected:
 print('RG02_FULL_OVERLOAD_IDENTITY_REGRESSION=PASS')
 print('RG02_SAME_SNAPSHOT_SYNTHETIC=PASS')
 print('PRODUCTION_DATABASE_ACCESS=NONE; COMMERCIAL_GO=NO_GO')
+PY
+
+
+# Exercise the new recovery implementation end-to-end on synthetic bytes,
+# in a SECOND disposable PG17 container. No commercial artifact or secret.
+cp -- "$PRIVATE/source.synthetic.dump" "$PRIVATE/database.dump"
+PYTHONPATH=tools/restore-gate01 python3 - "$PRIVATE" <<'PY'
+import os
+import sys
+from pathlib import Path
+from rg02_restore_new_preimage import parse_globals, parse_tuples, restore, Blocked
+root=Path(sys.argv[1])
+try:
+    restore(root, parse_globals(root/"source.globals.json"),
+            parse_tuples(root/"source.tuples.jsonl"),
+            "rg02-recovery-smoke-"+os.environ["GITHUB_RUN_ID"])
+except Blocked as exc:
+    print("RG02_RESTORE_SYNTHETIC=BLOCKED_"+str(exc))
+    raise SystemExit(1)
+print("RG02_RESTORE_SYNTHETIC=PASS")
 PY

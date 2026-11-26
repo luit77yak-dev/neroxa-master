@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirmation:
-        description: Type RG02_NEW_PREIMAGE_READONLY — new capture, no release
+        description: RG02_NEW_PREIMAGE_READONLY or RG02_RESTORE_CAPTURE_45909419074 (NO-GO)
         required: true
         type: string
 
@@ -125,3 +125,76 @@ jobs:
           fi
           echo 'RG02_RUNNER_PRIVATE_CAPTURE_CLEANUP=PASS_OR_NOT_CREATED'
           echo 'SOURCE_PREIMAGE_CUSTODY_READBACK=NOT_VERIFIED; COMMERCIAL_GO=NO_GO'
+
+  restore-pinned-preimage:
+    # Recover the existing approved ciphertext only. Never open a DB connection
+    # to the source, never inject the source PG password or CA.
+    if: >-
+      github.repository == 'luit77yak-dev/neroxa-master' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      github.ref_protected &&
+      github.run_attempt == 1 &&
+      (github.actor == 'luit77yak-dev' || github.actor == 'dev-luizt5') &&
+      inputs.confirmation == 'RG02_RESTORE_CAPTURE_45909419074'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    environment:
+      name: neroxa-rg02-source-capture
+    steps:
+      - name: Checkout approved main without persisted credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Prepare approved PG17 image before recovery secret is injected
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          timeout 240s docker --host unix:///var/run/docker.sock pull supabase/postgres:17.12.0.002 >/dev/null
+          echo 'RG02_PG17_IMAGE=PASS'
+
+      - name: Download exactly the audited ciphertext ZIP from the same repository
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          umask 077
+          ZIP="$RUNNER_TEMP/rg02-ciphertext-45909419074.zip"
+          test ! -e "$ZIP"
+          curl --fail --silent --show-error --location \
+            --proto '=https' --proto-redir '=https' --max-time 90 --max-filesize 380354 \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --output "$ZIP" \
+            'https://api.github.com/repos/luit77yak-dev/neroxa-master/actions/artifacts/15159168742/zip'
+          test "$(stat -c %s "$ZIP")" = '380354'
+          test "$(sha256sum "$ZIP" | cut -d' ' -f1)" = '3c30394da65911cd69642b3b4bb7f9d0c6a85e4a29660f1597c9d7d0f8786eaf'
+          echo 'RG02_CIPHERTEXT_DOWNLOAD=PASS'
+
+      - name: Restore pinned capture and compare every privilege tuple on isolated PG17
+        shell: bash
+        env:
+          RG02_RESTORE_CONFIRMATION: ${{ inputs.confirmation }}
+          RG02_SOURCE_GATE: ${{ vars.RG02_SOURCE_GATE }}
+          RG02_ESCROW_RECOVERY: ${{ vars.RG02_ESCROW_RECOVERY }}
+          RG02_CAPTURE_PASSPHRASE: ${{ secrets.RG02_CAPTURE_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          python3 tools/restore-gate01/rg02_restore_new_preimage.py "$RUNNER_TEMP/rg02-ciphertext-45909419074.zip"
+
+      - name: Remove only this run's disposable recovery resources
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker --host unix:///var/run/docker.sock rm -f "rg02-recovery-$GITHUB_RUN_ID" >/dev/null 2>&1 || true
+          rm -f -- "$RUNNER_TEMP/rg02-ciphertext-45909419074.zip"
+          echo 'RG02_CIPHERTEXT_CLEANUP=PASS; COMMERCIAL_GO=NO_GO'
