@@ -38,32 +38,34 @@ parameters_checked AS MATERIALIZED (
   UNION
   SELECT parname AS name FROM pg_catalog.pg_parameter_acl
 ),
+-- UNION ALL must resolve object_identity as text, not catalog type name.
+-- Otherwise qualified signatures are silently truncated to 63 bytes.
 probes AS (
   SELECT u.rolname AS role_name, 'ROLE'::text AS object_kind,
-         o.rolname AS object_identity, 'MEMBER'::text AS privilege,
+         o.rolname::text AS object_identity, 'MEMBER'::text AS privilege,
          pg_catalog.pg_has_role(u.oid, o.oid, 'MEMBER') AS allowed
   FROM roles_checked AS u CROSS JOIN roles_checked AS o
   WHERE u.oid <> o.oid
   UNION ALL
   SELECT u.rolname AS role_name, 'ROLE'::text AS object_kind,
-         o.rolname AS object_identity, 'USAGE'::text AS privilege,
+         o.rolname::text AS object_identity, 'USAGE'::text AS privilege,
          pg_catalog.pg_has_role(u.oid, o.oid, 'USAGE') AS allowed
   FROM roles_checked AS u CROSS JOIN roles_checked AS o
   WHERE u.oid <> o.oid
   UNION ALL
   SELECT u.rolname AS role_name, 'ROLE'::text AS object_kind,
-         o.rolname AS object_identity, 'SET'::text AS privilege,
+         o.rolname::text AS object_identity, 'SET'::text AS privilege,
          pg_catalog.pg_has_role(u.oid, o.oid, 'SET') AS allowed
   FROM roles_checked AS u CROSS JOIN roles_checked AS o
   WHERE u.oid <> o.oid
   UNION ALL
   SELECT u.rolname AS role_name, 'SCHEMA'::text AS object_kind,
-         o.nspname AS object_identity, 'USAGE'::text AS privilege,
+         o.nspname::text AS object_identity, 'USAGE'::text AS privilege,
          pg_catalog.has_schema_privilege(u.oid, o.oid, 'USAGE') AS allowed
   FROM roles_checked AS u CROSS JOIN schemas_checked AS o
   UNION ALL
   SELECT u.rolname AS role_name, 'SCHEMA'::text AS object_kind,
-         o.nspname AS object_identity, 'CREATE'::text AS privilege,
+         o.nspname::text AS object_identity, 'CREATE'::text AS privilege,
          pg_catalog.has_schema_privilege(u.oid, o.oid, 'CREATE') AS allowed
   FROM roles_checked AS u CROSS JOIN schemas_checked AS o
   UNION ALL
@@ -128,12 +130,12 @@ probes AS (
   FROM roles_checked AS u CROSS JOIN sequences_checked AS o
   UNION ALL
   SELECT u.rolname AS role_name, 'PARAMETER'::text AS object_kind,
-         o.name AS object_identity, 'SET'::text AS privilege,
+         o.name::text AS object_identity, 'SET'::text AS privilege,
          pg_catalog.has_parameter_privilege(u.oid, o.name, 'SET') AS allowed
   FROM roles_checked AS u CROSS JOIN parameters_checked AS o
   UNION ALL
   SELECT u.rolname AS role_name, 'PARAMETER'::text AS object_kind,
-         o.name AS object_identity, 'ALTER SYSTEM'::text AS privilege,
+         o.name::text AS object_identity, 'ALTER SYSTEM'::text AS privilege,
          pg_catalog.has_parameter_privilege(u.oid, o.name, 'ALTER SYSTEM') AS allowed
   FROM roles_checked AS u CROSS JOIN parameters_checked AS o
 )
