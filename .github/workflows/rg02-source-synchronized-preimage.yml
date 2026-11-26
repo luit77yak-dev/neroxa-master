@@ -46,6 +46,23 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
+      - name: Provision PostgreSQL 17 client before any database secret is injected
+        shell: bash
+        run: |
+          set -euo pipefail
+          KEY="$RUNNER_TEMP/rg02-pgdg.asc"
+          curl --fail --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc --output "$KEY"
+          FINGERPRINT="$(gpg --batch --show-keys --with-colons "$KEY" | awk -F: '$1=="fpr" && !seen++ {print $10}')"
+          [[ "$FINGERPRINT" == B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8 ]]
+          sudo install -m 0644 "$KEY" /usr/share/keyrings/rg02-pgdg.asc
+          echo 'deb [signed-by=/usr/share/keyrings/rg02-pgdg.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main' | sudo tee /etc/apt/sources.list.d/rg02-pgdg.list >/dev/null
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends postgresql-client-17
+          PG17=/usr/lib/postgresql/17/bin
+          "$PG17/psql" --version | grep -Eq '^psql \(PostgreSQL\) 17\.'
+          "$PG17/pg_dump" --version | grep -Eq '^pg_dump \(PostgreSQL\) 17\.'
+          printf '%s\n' "$PG17" >> "$GITHUB_PATH"
+
       - name: Check independent approvals and secret presence BEFORE any source access
         shell: bash
         env:
