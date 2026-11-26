@@ -19,7 +19,7 @@ A implementação candidata está em:
 
 A role exigida `neroxa_rg02_snapshot_reader` deve **já existir** e ter privilégio de leitura suficiente para o dump completo. Não promover `neroxa_f02_preflight`, `postgres` ou `service_role` para contornar a restrição. O script rejeita atributos de escrita, superusuário e CREATE; `BYPASSRLS` de leitura é registrado explicitamente caso tenha sido pré-autorizado. Sem leitura integral do dump, a execução falha, **nunca** muda para `--enable-row-security` ou para `--no-acl`.
 
-O runner transmite stdout de `pg_dump` e das duas consultas **diretamente para GPG AES256**, sem dump/SQL privados em disco. Decripta e reconfere cada digest *dentro do runner*, sem publicar os bytes em logs, e armazena exclusivamente `*.gpg` em artefato privado GitHub de retenção 7 dias. `manifest.json.gpg` liga hashes, novo `capture_id`, commit e run. Credenciais/chave **não** entram no artefato. O upload **não** comprova custódia independente: é obrigatório baixar e verificar a recuperação em canal privado antes de classificar a evidência como durável.
+O runner transmite stdout de `pg_dump` e das duas consultas **diretamente para GPG AES256**, sem dump/SQL privados em disco. Decripta e reconfere cada digest _dentro do runner_, sem publicar os bytes em logs, e armazena exclusivamente `*.gpg` em artefato privado GitHub de retenção 7 dias. `manifest.json.gpg` liga hashes, novo `capture_id`, commit e run. Credenciais/chave **não** entram no artefato. O upload **não** comprova custódia independente: é obrigatório baixar e verificar a recuperação em canal privado antes de classificar a evidência como durável.
 
 ### Configuração protegida necessária antes de executar
 
