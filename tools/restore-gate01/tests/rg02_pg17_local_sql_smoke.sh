@@ -48,6 +48,11 @@ CREATE ROLE rg02_smoke_nologin WITH NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE 
 CREATE SCHEMA rg02_smoke;
 CREATE TABLE rg02_smoke.sample_table (id integer);
 CREATE FUNCTION rg02_smoke.sample_function() RETURNS integer LANGUAGE sql AS 'SELECT 1';
+-- Distinct overloads share the first 63 bytes of their qualified identity.
+CREATE FUNCTION rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(integer) RETURNS integer LANGUAGE sql AS 'SELECT 1';
+CREATE FUNCTION rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(text) RETURNS integer LANGUAGE sql AS 'SELECT 2';
+REVOKE EXECUTE ON FUNCTION rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(integer), rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(integer) TO rg02_smoke_nologin;
 CREATE SEQUENCE rg02_smoke.sample_sequence;
 GRANT USAGE ON SCHEMA rg02_smoke TO rg02_smoke_nologin;
 GRANT SELECT ON TABLE rg02_smoke.sample_table TO rg02_smoke_nologin;
@@ -191,6 +196,18 @@ if not rows or not all(isinstance(x,list) and len(x)==5 and
 if not any(x[0]=='rg02_smoke_nologin' and x[1]=='TABLE' and
            x[3]=='SELECT' and x[4] is True for x in rows):
     raise SystemExit('RG02_SAME_SNAPSHOT_PRIVILEGE_OBSERVATION_BLOCKED')
+keys=[tuple(x[:4]) for x in rows]
+if len(set(keys)) != len(keys):
+    raise SystemExit('RG02_SAME_SNAPSHOT_DUPLICATE_KEYS_BLOCKED')
+expected = {
+    'rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(integer)': True,
+    'rg02_smoke.rg02_collision_function_with_long_shared_identifier_prefix(text)': False,
+}
+observed = {x[2]: x[4] for x in rows if x[0]=='rg02_smoke_nologin'
+            and x[1]=='FUNCTION' and x[3]=='EXECUTE' and x[2] in expected}
+if observed != expected:
+    raise SystemExit('RG02_FULL_OVERLOAD_IDENTITY_REGRESSION_BLOCKED')
+print('RG02_FULL_OVERLOAD_IDENTITY_REGRESSION=PASS')
 print('RG02_SAME_SNAPSHOT_SYNTHETIC=PASS')
 print('PRODUCTION_DATABASE_ACCESS=NONE; COMMERCIAL_GO=NO_GO')
 PY
