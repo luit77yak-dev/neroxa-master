@@ -16,6 +16,7 @@ import secrets
 import shutil
 import subprocess
 import sys
+import threading
 
 PROJECT = "iefaoaqzltvpfabyeelj"
 ROLE = "neroxa_rg02_snapshot_reader"
@@ -33,6 +34,106 @@ ROOT = Path(__file__).resolve().parent
 
 class Blocked(Exception):
     """Only a constant, non-sensitive reason may be emitted."""
+
+
+# Only these audited constants may leave the private runner on failure.
+SAFE_BLOCK_REASONS = frozenset((
+    "RG02_CAPTURE_ALREADY_STARTED",
+    "RG02_CAPTURE_SIZE_BUDGET_EXCEEDED",
+    "RG02_DECRYPT_BUDGET_INVALID",
+    "RG02_DEDICATED_READONLY_ROLE_REQUIRED",
+    "RG02_ENCRYPTED_MODE_INVALID",
+    "RG02_ENCRYPTED_OUTPUT_INVALID",
+    "RG02_ENCRYPTED_REDECRYPT_HASH_MISMATCH",
+    "RG02_EXPORTER_CLOSED_EARLY",
+    "RG02_GLOBALS_ROLE_SET_INVALID",
+    "RG02_GLOBALS_STRUCTURAL_PROOF_MISSING",
+    "RG02_OPERATOR_CUSTODY_APPROVAL_REQUIRED",
+    "RG02_PINNED_CA_MISMATCH",
+    "RG02_PINNED_SOURCE_DESTINATION_INVALID",
+    "RG02_PRIVATE_MANIFEST_ENCRYPTION_FAILED",
+    "RG02_PRIVATE_REQUIREMENTS_MISSING",
+    "RG02_PRIVATE_ROOT_INVALID",
+    "RG02_PRIVATE_STREAM_FAILED",
+    "RG02_PRIVATE_STREAM_UNVERIFIED",
+    "RG02_PRIVATE_WITNESS_DECRYPT_INVALID",
+    "RG02_PRIVATE_WITNESS_PARSE_INVALID",
+    "RG02_PRIVATE_WITNESS_TOO_LARGE",
+    "RG02_PROTECTED_CONTEXT_INVALID",
+    "RG02_READONLY_IDENTITY_NOT_PROVEN",
+    "RG02_SECRET_INPUT_INVALID",
+    "RG02_SNAPSHOT_OWNER_LOST",
+    "RG02_SNAPSHOT_TOKEN_INVALID",
+    "RG02_TUPLE_BUDGET_EXCEEDED",
+    "RG02_TUPLE_COUNT_MISMATCH",
+    "RG02_TUPLE_DUPLICATE",
+    "RG02_TUPLE_SET_EMPTY",
+    "RG02_TUPLE_SHAPE_INVALID",
+))
+
+
+def safe_block_reason(exc):
+    if type(exc) is Blocked and len(exc.args) == 1:
+        reason = exc.args[0]
+        if type(reason) is str and reason in SAFE_BLOCK_REASONS:
+            return reason
+    return "RG02_UNCLASSIFIED_FAILURE"
+
+
+# Never emit stderr, including error text, object names or snapshot tokens.
+# Match fixed phrases in bounded, in-memory chunks and retain only categories.
+STDERR_CATEGORIES = (
+    (b"too many connections", "CONNECTION_LIMIT"),
+    (b"too many clients", "CONNECTION_LIMIT"),
+    (b"password authentication failed", "AUTHENTICATION"),
+    (b"certificate verify failed", "TLS_VERIFICATION"),
+    (b"certificate verification failed", "TLS_VERIFICATION"),
+    (b"could not connect", "CONNECTION_FAILED"),
+    (b"connection to server", "CONNECTION_MESSAGE"),
+    (b"invalid snapshot identifier", "SNAPSHOT_INVALID"),
+    (b"permission denied", "PERMISSION_DENIED"),
+    (b"row-level security", "ROW_SECURITY"),
+    (b"row security", "ROW_SECURITY"),
+    (b"read-only transaction", "READONLY_TRANSACTION"),
+    (b"lock timeout", "LOCK_TIMEOUT"),
+    (b"statement timeout", "STATEMENT_TIMEOUT"),
+    (b"unrecognized configuration parameter", "CONFIG_PARAMETER"),
+    (b"server version mismatch", "VERSION_MISMATCH"),
+)
+
+
+class PrivateStderr:
+    def __init__(self, stream):
+        self.stream = getattr(stream, "buffer", stream)
+        self.categories = set()
+        self.thread = threading.Thread(target=self._drain, daemon=True)
+        self.thread.start()
+
+    def _drain(self):
+        tail = b""
+        try:
+            while True:
+                data = self.stream.read1(4096)
+                if not data:
+                    break
+                window = (tail + data).lower()
+                for pattern, category in STDERR_CATEGORIES:
+                    if pattern in window:
+                        self.categories.add(category)
+                tail = window[-128:]
+        except (OSError, ValueError):
+            self.categories.add("STDERR_READ_FAILED")
+        finally:
+            self.stream.close()
+
+    def report(self, stage):
+        # stage is supplied exclusively by fixed call sites below.
+        self.thread.join(timeout=3)
+        if self.thread.is_alive():
+            print("RG02_CHILD_DIAGNOSTIC=" + stage + ":INCOMPLETE", flush=True)
+            return
+        for category in sorted(self.categories):
+            print("RG02_CHILD_DIAGNOSTIC=" + stage + ":" + category, flush=True)
 
 
 def required(name):
@@ -157,8 +258,9 @@ class Exporter:
             ["timeout", "800s", "psql", "-X", "-qAt",
              "-v", "ON_ERROR_STOP=1"],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL, env=env, text=True, bufsize=1,
+            stderr=subprocess.PIPE, env=env, text=True, bufsize=1,
         )
+        self.diagnostic = PrivateStderr(self.process.stderr)
 
     def start(self):
         # Must hold the exporting transaction open until pg_dump and BOTH
@@ -190,6 +292,10 @@ class Exporter:
                 proc.wait(timeout=5)
         if proc.stdout:
             proc.stdout.close()
+        if proc.returncode != 0:
+            self.diagnostic.report("EXPORTER")
+        else:
+            self.diagnostic.thread.join(timeout=3)
 
 
 def encrypt_pipeline(command, env, passfile, destination, max_bytes,
@@ -197,7 +303,8 @@ def encrypt_pipeline(command, env, passfile, destination, max_bytes,
     # Producer stdout goes straight into GPG; plaintext NEVER hits disk.
     # Producer stderr is never exposed to public CI logs.
     producer = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                stderr=subprocess.DEVNULL, env=env)
+                                stderr=subprocess.PIPE, env=env)
+    diagnostic = PrivateStderr(producer.stderr)
     cipher = subprocess.Popen([
         "timeout", "720s", "gpg", "--batch", "--yes", "--no-tty",
         "--pinentry-mode", "loopback", "--passphrase-file", str(passfile),
@@ -247,6 +354,13 @@ def encrypt_pipeline(command, env, passfile, destination, max_bytes,
             cipher.kill()
         producer.wait()
         cipher.wait()
+        if producer.returncode != 0:
+            print("RG02_PRODUCER_STATUS=NONZERO", flush=True)
+            diagnostic.report("PRODUCER")
+        else:
+            diagnostic.thread.join(timeout=3)
+        if cipher.returncode != 0:
+            print("RG02_GPG_STATUS=NONZERO", flush=True)
         if producer.stdout:
             producer.stdout.close()
         if cipher.stdin and not cipher.stdin.closed:
@@ -370,6 +484,7 @@ def encrypt_json(body, passfile, dest):
 
 def run():
     os.umask(0o077)
+    print("RG02_STAGE=PROTECTED_PREFLIGHT", flush=True)
     check_context(os.environ)
     host = required("RG02_SOURCE_HOST")
     username = required("RG02_SOURCE_PG_USER")
@@ -403,8 +518,10 @@ def run():
     exporter = None
     success = False
     try:
+        print("RG02_STAGE=EXPORTER_IDENTITY", flush=True)
         exporter = Exporter(db_env)
         snapshot, flags = exporter.start()
+        print("RG02_STAGE=PG_DUMP", flush=True)
         # Every consumer imports the SAME exporter snapshot. The exporter
         # lives through the entire dump/global/tuple sequence.
         dump = output / "dump.custom.gpg"
@@ -423,6 +540,7 @@ def run():
             ("tuples", tuple_file, "rg02_source_tuple_same_snapshot.sql",
              MAX_TUPLES, True),
         ):
+            print("RG02_STAGE=" + ("GLOBAL_WITNESS" if kind == "globals" else "TUPLE_WITNESS"), flush=True)
             stats[kind] = encrypt_pipeline(
                 ["timeout", "120s", "psql", "-X", "-qAt",
                  "-v", "ON_ERROR_STOP=1", "-v", "snap=" + snapshot,
@@ -431,6 +549,7 @@ def run():
             )
         if exporter.process.poll() is not None:
             raise Blocked("RG02_SNAPSHOT_OWNER_LOST")
+        print("RG02_STAGE=DECRYPT_HASH_VERIFICATION", flush=True)
         for kind, file, limit in (
                 ("dump", dump, MAX_DUMP),
                 ("globals", global_file, MAX_GLOBALS),
@@ -438,6 +557,7 @@ def run():
             verify_decrypt(passfile, file, stats[kind], limit)
         # Verify structure and uniqueness after decrypt/hash without writing
         # any private plaintext to disk or printing identifiers.
+        print("RG02_STAGE=WITNESS_STRUCTURE", flush=True)
         shape = decrypt_and_validate_source(
             passfile, global_file, tuple_file, stats["tuples"]["rows"])
         # This hash-only manifest binds all 3 bytestrings to a NEW capture,
@@ -459,6 +579,7 @@ def run():
             "OWNER_ACL": "NOT_VERIFIED",
             "COMMERCIAL_GO": "NO_GO",
         }
+        print("RG02_STAGE=MANIFEST_ENCRYPTION", flush=True)
         encrypt_json(manifest, passfile, output / "manifest.json.gpg")
         success = True
     finally:
@@ -478,7 +599,8 @@ def run():
 if __name__ == "__main__":
     try:
         run()
-    except (Blocked, OSError, subprocess.SubprocessError, ValueError, json.JSONDecodeError):
+    except (Blocked, OSError, subprocess.SubprocessError, ValueError, json.JSONDecodeError) as exc:
+        print("RG02_BLOCK_REASON=" + safe_block_reason(exc), flush=True)
         print("RG02_NEW_PREIMAGE_CAPTURE=BLOCKED_REDACTED")
         print("PRODUCTION_WRITES=NONE; SQL_RELEASE=NOT_RUN; COMMERCIAL_GO=NO_GO")
         sys.exit(2)
