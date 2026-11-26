@@ -126,7 +126,6 @@ jobs:
           echo 'RG02_RUNNER_PRIVATE_CAPTURE_CLEANUP=PASS_OR_NOT_CREATED'
           echo 'SOURCE_PREIMAGE_CUSTODY_READBACK=NOT_VERIFIED; COMMERCIAL_GO=NO_GO'
 
-
   restore-pinned-preimage:
     # Recover the existing approved ciphertext only. Never open a DB connection
     # to the source, never inject the source PG password or CA.
