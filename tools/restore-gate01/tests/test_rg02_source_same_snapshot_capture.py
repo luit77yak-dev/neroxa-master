@@ -248,5 +248,87 @@ class ProtectedSourceCaptureTests(unittest.TestCase):
         self.assertIn("COMMERCIAL_GO=NO_GO", workflow)
 
 
+class PinnedRestoreTests(unittest.TestCase):
+    def test_restore_context_has_no_source_password(self):
+        import rg02_restore_new_preimage as recovery
+        e = fake_context()
+        e.update({"RUNNER_ENVIRONMENT": "github-hosted",
+                  "RG02_RESTORE_CONFIRMATION": recovery.CONFIRMATION})
+        with patch.dict(os.environ,e,clear=True):
+            recovery.check_context()
+        for change in ({"RG02_SOURCE_PG_PASSWORD": "synthetic"},
+                       {"PGPASSWORD": "synthetic"},
+                       {"RG02_RESTORE_CONFIRMATION": CONFIRMATION},
+                       {"GITHUB_RUN_ATTEMPT":"2"},
+                       {"GITHUB_REF_PROTECTED":"false"}):
+            with patch.dict(os.environ,{**e,**change},clear=True):
+                with self.assertRaises(recovery.Blocked):
+                    recovery.check_context()
+
+    def test_role_shells_never_replay_elevated_flags(self):
+        import rg02_restore_new_preimage as recovery
+        flags = (True,)*7
+        sql = recovery.role_sql({"postgres": flags, "supabase_admin": flags,
+                                 'mock"role': flags}, ["postgres","supabase_admin"])
+        self.assertEqual(sql, b'CREATE ROLE "mock""role" WITH NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT;\n')
+        with self.assertRaises(recovery.Blocked):
+            recovery.role_sql({"pg_mock":flags}, ["postgres","supabase_admin"])
+
+    def test_tuple_comparison_detects_swapped_privileges_and_unknown(self):
+        import rg02_restore_new_preimage as recovery
+        a = ("mock","FUNCTION","s.f(integer)","EXECUTE")
+        b = ("mock","FUNCTION","s.f(text)","EXECUTE")
+        c = ("mock","TABLE","s.t","SELECT")
+        d = ("mock","TABLE","s.other","SELECT")
+        counts = recovery.compare_tuples({a:True,b:False,c:None},
+                                         {a:False,b:True,c:None,d:False})
+        self.assertEqual(counts["FUNCTION","DIFFERENT"],2)
+        self.assertEqual(counts["TABLE","UNKNOWN"],1)
+        self.assertEqual(counts["TABLE","TARGET_ONLY"],1)
+        self.assertEqual(counts["FUNCTION","EQUAL"],0)
+
+    def test_tuple_reader_rejects_duplicate_and_keeps_full_identity(self):
+        import rg02_restore_new_preimage as recovery
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/"tuples"
+            prefix="synthetic."+("x"*70)
+            rows=[["mock","FUNCTION",prefix+"(integer)","EXECUTE",True],
+                  ["mock","FUNCTION",prefix+"(text)","EXECUTE",False]]
+            line=lambda r: json.dumps(r)+"\n"
+            path.write_text("".join(map(line,rows)))
+            self.assertEqual(len(recovery.parse_tuples(path)),2)
+            path.write_text(line(rows[0])*2)
+            with self.assertRaisesRegex(recovery.Blocked,"TUPLE_DUPLICATE"):
+                recovery.parse_tuples(path)
+
+    def test_target_sql_removes_only_snapshot_import(self):
+        import rg02_restore_new_preimage as recovery
+        for name in ("rg02_source_globals_same_snapshot.sql",
+                     "rg02_source_tuple_same_snapshot.sql"):
+            original=(ROOT/name).read_bytes()
+            self.assertEqual(recovery.target_query(name),
+                             original.replace(b"SET TRANSACTION SNAPSHOT :'snap';\n",b""))
+            self.assertIn(b"READ ONLY;",recovery.target_query(name))
+
+    def test_pinned_zip_rejects_changed_bytes_before_decryption(self):
+        import rg02_restore_new_preimage as recovery
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            bad=root/"bad.zip"
+            bad.write_bytes(b"synthetic altered archive")
+            with self.assertRaisesRegex(recovery.Blocked,"ZIP_INTEGRITY"):
+                recovery.read_archive(bad,b"synthetic-key",root)
+
+    def test_recovery_job_never_injects_source_database_credentials(self):
+        text=(ROOT.parents[1]/".github/workflows/rg02-source-synchronized-preimage.yml").read_text()
+        recovery=text.split("  restore-pinned-preimage:",1)[1]
+        self.assertIn("RG02_RESTORE_CAPTURE_45909419074",recovery)
+        self.assertIn("actions: read",recovery)
+        self.assertIn("secrets.RG02_CAPTURE_PASSPHRASE",recovery)
+        self.assertNotIn("secrets.RG02_SOURCE_PG_PASSWORD",recovery)
+        self.assertNotIn("secrets.RG02_SOURCE_CA_PEM",recovery)
+        self.assertIn("15159168742/zip",recovery)
+
+
 if __name__ == "__main__":
     unittest.main()
