@@ -7,8 +7,6 @@ import {
   isFinalSubscriptionStatus,
 } from "@/features/master/subscriptions/services";
 
-
-
 const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -57,7 +55,6 @@ describe("billing engine pure rules", () => {
   });
 });
 
-
 describe("contract activation flow", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -67,9 +64,7 @@ describe("contract activation flow", () => {
   it("rejects an empty contract id before touching Supabase", async () => {
     const { createSubscription } = await import("@/features/master/subscriptions/services");
 
-    await expect(createSubscription({ contractId: "" })).rejects.toThrow(
-      "Contrato não informado.",
-    );
+    await expect(createSubscription({ contractId: "" })).rejects.toThrow("Contrato não informado.");
     expect(rpc).not.toHaveBeenCalled();
   });
 

@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  isAllowedContractTransition,
-  isAllowedProposalTransition,
-} from "./services";
+import { isAllowedContractTransition, isAllowedProposalTransition } from "./services";
 
 describe("proposal transitions", () => {
   it("allows the documented forward and negotiation transitions", () => {

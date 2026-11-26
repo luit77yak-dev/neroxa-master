@@ -16,9 +16,7 @@
   },
   "http": 200,
   "returnedRows": 1,
-  "changedTables": [
-    "public.neroxa_storefront_availability"
-  ],
+  "changedTables": ["public.neroxa_storefront_availability"],
   "before": {
     "public.neroxa_storefront_availability": "3:b6a177ef79d386cef52f2092783714d6"
   },

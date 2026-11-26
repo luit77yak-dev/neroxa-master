@@ -246,10 +246,7 @@
   ],
   "ssr200": true,
   "backendRequests": [],
-  "blockedExternalOrigins": [
-    "https://fonts.googleapis.com",
-    "https://fonts.googleapis.com"
-  ],
+  "blockedExternalOrigins": ["https://fonts.googleapis.com", "https://fonts.googleapis.com"],
   "consoleErrors": [
     "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector",
     "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"

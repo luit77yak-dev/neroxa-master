@@ -26,14 +26,11 @@ describe("prepareImplementationFromSubscription", () => {
       }),
     ).resolves.toBe("instance-123");
 
-    expect(rpc).toHaveBeenCalledWith(
-      "prepare_neroxa_implementation_from_subscription",
-      {
-        p_subscription_id: "subscription-123",
-        p_name: "Minha Loja",
-        p_slug: "minha-loja",
-      },
-    );
+    expect(rpc).toHaveBeenCalledWith("prepare_neroxa_implementation_from_subscription", {
+      p_subscription_id: "subscription-123",
+      p_name: "Minha Loja",
+      p_slug: "minha-loja",
+    });
   });
 
   it("propagates RPC errors", async () => {

@@ -18,7 +18,8 @@ export const CONTRACT_STATUS_LABELS = {
 
 export type ProposalStatus = keyof typeof PROPOSAL_STATUS_LABELS;
 export type ContractStatus = keyof typeof CONTRACT_STATUS_LABELS;
-export type ContractSignatureStatus = "NOT_SENT" | "PENDING_CUSTOMER" | "PENDING_NEROXA" | "SIGNED" | "DECLINED" | "CANCELLED";
+export type ContractSignatureStatus =
+  "NOT_SENT" | "PENDING_CUSTOMER" | "PENDING_NEROXA" | "SIGNED" | "DECLINED" | "CANCELLED";
 
 export type CommercialProposal = {
   id: string;

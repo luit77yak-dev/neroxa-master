@@ -79,7 +79,13 @@ export async function createSupportTicket(input: {
     .single();
   if (error) throw new Error(error.message);
   const id = (data as { id: string }).id;
-  await recordNeroxaAudit({ action: "SUPPORT_TICKET_CREATED", resourceType: "SUPPORT_TICKET", resourceId: id, organizationId: input.organizationId, details: { priority: input.priority, category: input.category } });
+  await recordNeroxaAudit({
+    action: "SUPPORT_TICKET_CREATED",
+    resourceType: "SUPPORT_TICKET",
+    resourceId: id,
+    organizationId: input.organizationId,
+    details: { priority: input.priority, category: input.category },
+  });
   return id;
 }
 
@@ -94,7 +100,11 @@ export async function updateSupportTicket(input: {
     patch.status = input.status;
     if (input.status === "RESOLVED") patch.resolved_at = new Date().toISOString();
     if (input.status === "CLOSED") patch.closed_at = new Date().toISOString();
-    if (input.status === "OPEN" || input.status === "IN_PROGRESS" || input.status === "WAITING_CLIENT") {
+    if (
+      input.status === "OPEN" ||
+      input.status === "IN_PROGRESS" ||
+      input.status === "WAITING_CLIENT"
+    ) {
       patch.resolved_at = null;
       patch.closed_at = null;
     }
@@ -107,29 +117,51 @@ export async function updateSupportTicket(input: {
     .update(patch as never)
     .eq("id", input.id);
   if (error) throw new Error(error.message);
-  await recordNeroxaAudit({ action: "SUPPORT_TICKET_UPDATED", resourceType: "SUPPORT_TICKET", resourceId: input.id, details: { status: input.status, priority: input.priority, assigneeUserId: input.assigneeUserId } });
+  await recordNeroxaAudit({
+    action: "SUPPORT_TICKET_UPDATED",
+    resourceType: "SUPPORT_TICKET",
+    resourceId: input.id,
+    details: {
+      status: input.status,
+      priority: input.priority,
+      assigneeUserId: input.assigneeUserId,
+    },
+  });
 }
 
-export async function addSupportMessage(input: { ticketId: string; body: string; internal?: boolean }) {
+export async function addSupportMessage(input: {
+  ticketId: string;
+  body: string;
+  internal?: boolean;
+}) {
   const userId = await getCurrentUserId();
   if (!userId) throw new Error("Sessão expirada.");
   const body = input.body.trim();
   if (!body) throw new Error("Digite uma mensagem.");
-  const { error } = await supabase
-    .from("neroxa_support_messages" as never)
-    .insert({
-      ticket_id: input.ticketId,
-      author_user_id: userId,
-      body,
-      internal: Boolean(input.internal),
-    } as never);
+  const { error } = await supabase.from("neroxa_support_messages" as never).insert({
+    ticket_id: input.ticketId,
+    author_user_id: userId,
+    body,
+    internal: Boolean(input.internal),
+  } as never);
   if (error) throw new Error(error.message);
 
-  const ticketPatch: Record<string, unknown> = { last_response_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+  const ticketPatch: Record<string, unknown> = {
+    last_response_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
   if (!input.internal) ticketPatch.status = "IN_PROGRESS";
-  const { error: ticketError } = await supabase.from("neroxa_support_tickets" as never).update(ticketPatch as never).eq("id", input.ticketId);
+  const { error: ticketError } = await supabase
+    .from("neroxa_support_tickets" as never)
+    .update(ticketPatch as never)
+    .eq("id", input.ticketId);
   if (ticketError) throw new Error(ticketError.message);
-  await recordNeroxaAudit({ action: input.internal ? "SUPPORT_INTERNAL_NOTE_ADDED" : "SUPPORT_REPLY_ADDED", resourceType: "SUPPORT_TICKET", resourceId: input.ticketId, details: { internal: Boolean(input.internal) } });
+  await recordNeroxaAudit({
+    action: input.internal ? "SUPPORT_INTERNAL_NOTE_ADDED" : "SUPPORT_REPLY_ADDED",
+    resourceType: "SUPPORT_TICKET",
+    resourceId: input.ticketId,
+    details: { internal: Boolean(input.internal) },
+  });
 }
 
 export async function assignSupportTicket(ticketId: string) {

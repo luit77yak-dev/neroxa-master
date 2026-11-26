@@ -70,9 +70,15 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
   };
 
   const verifyFactor = async (factorId: string) => {
-    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId });
+    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+      factorId,
+    });
     if (challengeError) throw challengeError;
-    const { error: verifyError } = await supabase.auth.mfa.verify({ factorId, challengeId: challenge.id, code: mfaCode.trim() });
+    const { error: verifyError } = await supabase.auth.mfa.verify({
+      factorId,
+      challengeId: challenge.id,
+      code: mfaCode.trim(),
+    });
     if (verifyError) throw verifyError;
     const { error: refreshError } = await supabase.auth.refreshSession();
     if (refreshError) throw refreshError;
@@ -88,7 +94,8 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     const verifiedTotp = factors.totp.find((factor) => factor.status === "verified");
 
     if (verifiedTotp) {
-      const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      const { data: aal, error: aalError } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalError) throw aalError;
 
       if (aal.currentLevel === "aal2") {
@@ -129,7 +136,11 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
         await prepareMfaForSession();
       } catch (cause) {
         if (!active) return;
-        setError(cause instanceof Error ? cause.message : "Não foi possível preparar a autenticação em dois fatores.");
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "Não foi possível preparar a autenticação em dois fatores.",
+        );
       }
     })();
 
@@ -171,7 +182,9 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     });
 
     if (signInError) {
-      setError("A senha foi atualizada, mas não foi possível iniciar sua sessão automaticamente. Entre novamente com a nova senha.");
+      setError(
+        "A senha foi atualizada, mas não foi possível iniciar sua sessão automaticamente. Entre novamente com a nova senha.",
+      );
       setRecoveryMode(false);
       setMode("login");
       setPassword("");
@@ -212,7 +225,11 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     try {
       await prepareMfaForSession();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível preparar a autenticação em dois fatores.");
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Não foi possível preparar a autenticação em dois fatores.",
+      );
       await supabase.auth.signOut();
     } finally {
       setLoading(false);
@@ -240,7 +257,9 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     if (resetError) {
       setError("Não foi possível enviar o link. Confira o e-mail e tente novamente.");
     } else {
-      setMessage("Enviamos um link de redefinição para este e-mail. Verifique também a pasta de spam.");
+      setMessage(
+        "Enviamos um link de redefinição para este e-mail. Verifique também a pasta de spam.",
+      );
     }
 
     setLoading(false);
@@ -263,7 +282,9 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
         if (!authorized) throw new Error("Sua conta não está autorizada no Neroxa Master.");
         finishMfa();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível confirmar o segundo fator.");
+        setError(
+          cause instanceof Error ? cause.message : "Não foi possível confirmar o segundo fator.",
+        );
         setLoading(false);
       }
     };
@@ -271,17 +292,79 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
     return (
       <main className="grid min-h-screen place-items-center bg-slate-950 px-5 py-10 text-slate-100">
         <Card className="w-full max-w-md border-white/10 bg-white/[0.06] p-7 text-white shadow-2xl">
-          <div className="grid h-11 w-11 place-items-center rounded-xl bg-white text-[#102a2e]"><ShieldCheck className="h-5 w-5" /></div>
-          <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">Segurança do Master</p>
-          <h1 className="mt-1 text-2xl font-semibold">{enrolling ? "Configure seu autenticador" : "Confirme seu acesso"}</h1>
-          <p className="mt-2 text-sm leading-6 text-slate-400">{enrolling ? "O Neroxa Master exige autenticação em dois fatores. Escaneie o QR Code com um aplicativo autenticador compatível." : "Abra seu aplicativo autenticador e informe o código atual de 6 dígitos."}</p>
-          {enrolling && enrollQrCode && <div className="mt-5 flex justify-center rounded-xl bg-white p-4"><img src={enrollQrCode} alt="QR Code para configurar o autenticador" className="h-52 w-52" /></div>}
-          {enrolling && enrollSecret && <details className="mt-4 rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-slate-300"><summary className="cursor-pointer font-medium text-white">Não consigo escanear o QR Code</summary><p className="mt-2 break-all font-mono text-[11px] text-slate-400">{enrollSecret}</p></details>}
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-white text-[#102a2e]">
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Segurança do Master
+          </p>
+          <h1 className="mt-1 text-2xl font-semibold">
+            {enrolling ? "Configure seu autenticador" : "Confirme seu acesso"}
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            {enrolling
+              ? "O Neroxa Master exige autenticação em dois fatores. Escaneie o QR Code com um aplicativo autenticador compatível."
+              : "Abra seu aplicativo autenticador e informe o código atual de 6 dígitos."}
+          </p>
+          {enrolling && enrollQrCode && (
+            <div className="mt-5 flex justify-center rounded-xl bg-white p-4">
+              <img
+                src={enrollQrCode}
+                alt="QR Code para configurar o autenticador"
+                className="h-52 w-52"
+              />
+            </div>
+          )}
+          {enrolling && enrollSecret && (
+            <details className="mt-4 rounded-lg border border-white/10 bg-black/20 p-3 text-xs text-slate-300">
+              <summary className="cursor-pointer font-medium text-white">
+                Não consigo escanear o QR Code
+              </summary>
+              <p className="mt-2 break-all font-mono text-[11px] text-slate-400">{enrollSecret}</p>
+            </details>
+          )}
           <form onSubmit={submitMfa} className="mt-5 space-y-4">
-            <label className="block"><span className="mb-1.5 block text-xs font-medium text-slate-300">Código de 6 dígitos</span><input type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={6} pattern="[0-9]{6}" value={mfaCode} onChange={(event) => setMfaCode(event.target.value.replace(/\\D/g, "").slice(0, 6))} required autoFocus className="h-12 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-center font-mono text-lg tracking-[0.35em] text-white outline-none focus:border-white/30" placeholder="000000" /></label>
-            {error && <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">{error}</p>}
-            <Button type="submit" disabled={loading} className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100">{loading ? "Verificando..." : enrolling ? "Ativar autenticação" : "Confirmar acesso"}</Button>
-            <button type="button" onClick={async () => { await supabase.auth.signOut(); window.location.assign("/master"); }} className="flex w-full items-center justify-center gap-2 text-sm text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />Cancelar e sair</button>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-slate-300">
+                Código de 6 dígitos
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                pattern="[0-9]{6}"
+                value={mfaCode}
+                onChange={(event) => setMfaCode(event.target.value.replace(/\\D/g, "").slice(0, 6))}
+                required
+                autoFocus
+                className="h-12 w-full rounded-lg border border-white/10 bg-black/20 px-3 text-center font-mono text-lg tracking-[0.35em] text-white outline-none focus:border-white/30"
+                placeholder="000000"
+              />
+            </label>
+            {error && (
+              <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">
+                {error}
+              </p>
+            )}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100"
+            >
+              {loading ? "Verificando..." : enrolling ? "Ativar autenticação" : "Confirmar acesso"}
+            </Button>
+            <button
+              type="button"
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.assign("/master");
+              }}
+              className="flex w-full items-center justify-center gap-2 text-sm text-slate-400 transition hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Cancelar e sair
+            </button>
           </form>
         </Card>
       </main>
@@ -293,7 +376,11 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
       <Card className="w-full max-w-md border-white/10 bg-white/[0.06] p-7 text-white shadow-2xl">
         <div className="mb-7">
           <div className="grid h-11 w-11 place-items-center rounded-xl bg-white text-[#102a2e]">
-            {mode === "login" ? <ShieldCheck className="h-5 w-5" /> : <KeyRound className="h-5 w-5" />}
+            {mode === "login" ? (
+              <ShieldCheck className="h-5 w-5" />
+            ) : (
+              <KeyRound className="h-5 w-5" />
+            )}
           </div>
           <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
             Acesso interno
@@ -305,8 +392,8 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
             {recoveryMode
               ? "Crie uma nova senha segura para recuperar o acesso ao Neroxa Master."
               : mode === "login"
-              ? "Entre com a conta autorizada da plataforma Neroxa."
-              : "Informe seu e-mail e enviaremos um link seguro para criar uma nova senha."}
+                ? "Entre com a conta autorizada da plataforma Neroxa."
+                : "Informe seu e-mail e enviaremos um link seguro para criar uma nova senha."}
           </p>
         </div>
 
@@ -327,10 +414,22 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
               />
             </label>
 
-            {error && <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">{error}</p>}
-            {message && <p className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">{message}</p>}
+            {error && (
+              <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">
+                {error}
+              </p>
+            )}
+            {message && (
+              <p className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
+                {message}
+              </p>
+            )}
 
-            <Button type="submit" disabled={loading} className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100"
+            >
               {loading ? "Atualizando..." : "Salvar nova senha"}
             </Button>
           </form>
@@ -362,10 +461,22 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
               />
             </label>
 
-            {error && <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">{error}</p>}
-            {message && <p className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">{message}</p>}
+            {error && (
+              <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">
+                {error}
+              </p>
+            )}
+            {message && (
+              <p className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
+                {message}
+              </p>
+            )}
 
-            <Button type="submit" disabled={loading} className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100"
+            >
               {loading ? "Entrando..." : "Entrar no Master"}
             </Button>
 
@@ -397,10 +508,22 @@ export function MasterLogin({ recoveryPage = false }: { recoveryPage?: boolean }
               />
             </label>
 
-            {error && <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">{error}</p>}
-            {message && <p className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">{message}</p>}
+            {error && (
+              <p className="rounded-lg border border-red-400/20 bg-red-400/10 px-3 py-2 text-xs text-red-200">
+                {error}
+              </p>
+            )}
+            {message && (
+              <p className="rounded-lg border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
+                {message}
+              </p>
+            )}
 
-            <Button type="submit" disabled={loading} className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-11 w-full bg-white text-[#102a2e] hover:bg-slate-100"
+            >
               {loading ? "Enviando..." : "Enviar link de redefinição"}
             </Button>
 

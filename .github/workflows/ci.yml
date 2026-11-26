@@ -23,16 +23,21 @@ jobs:
           node-version: "22.x"
 
       - name: Install dependencies
+        id: dependencies
         run: npm install
 
       - name: Format check (non-mutating)
         run: npx prettier --check .
 
       - name: Lint
+        # Report lint even when format fails; never waive the failing format check.
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run lint
 
       - name: Test
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm test
 
       - name: Build
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run build
