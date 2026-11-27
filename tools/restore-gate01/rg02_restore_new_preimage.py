@@ -19,6 +19,7 @@ import zipfile
 from collections import Counter
 
 from rg02_compare_runtime import extract
+from rg02_targeted_acl import analyze as analyze_direct_acl
 from rg02_tuple_witness_preflight import PRIVILEGES
 
 RUN = "45909419074"
@@ -251,8 +252,90 @@ def compare_tuples(a, b):
     return out
 
 
+
+# Fixed labels only. Never print real role/object names, ACLs, or SQL.
+# These buckets describe evidence, NOT authority to waive a difference.
+APP_ROLES = frozenset(("anon", "authenticated", "authenticator", "service_role"))
+PLATFORM_ROLES = frozenset(("postgres", "supabase_admin", "supabase_auth_admin",
+    "supabase_storage_admin", "supabase_realtime_admin", "supabase_replication_admin",
+    "dashboard_user", "pgbouncer"))
+
+
+def role_bucket(name):
+    if name == ROLE:
+        return "TEMP_CAPTURE"
+    if name in APP_ROLES:
+        return "APP_API"
+    if name in PLATFORM_ROLES:
+        return "PLATFORM"
+    if name.startswith("pg_"):
+        return "SYSTEM"
+    return "OTHER_REVIEW"
+
+
+def tuple_delta(src, dst):
+    counts = Counter()
+    for k in src.keys() | dst.keys():
+        if k not in dst:
+            state = "SOURCE_ONLY_" + ("TRUE" if src[k] is True else
+                    "FALSE" if src[k] is False else "UNKNOWN")
+        elif k not in src:
+            state = "TARGET_ONLY_" + ("TRUE" if dst[k] is True else
+                    "FALSE" if dst[k] is False else "UNKNOWN")
+        elif src[k] is None or dst[k] is None:
+            state = "UNKNOWN"
+        elif src[k] is True and dst[k] is False:
+            state = "SOURCE_TRUE_TARGET_FALSE"
+        elif src[k] is False and dst[k] is True:
+            state = "SOURCE_FALSE_TARGET_TRUE"
+        else:
+            continue
+        subject = role_bucket(k[0])
+        # Object being the capture identity is not grounds to dismiss an
+        # application subject's discrepancy, even for ROLE/SET/USAGE.
+        counts[(subject, k[1], state)] += 1
+    return counts
+
+
+def report_access_delta(src, dst, source_globals, target_globals):
+    counts = tuple_delta(src, dst)
+    for (bucket, kind, state), count in sorted(counts.items()):
+        print("RG02_DELTA_"+bucket+"_"+kind+"_"+state+"="+str(count))
+    for bucket in ("TEMP_CAPTURE","APP_API","PLATFORM","SYSTEM","OTHER_REVIEW"):
+        print("RG02_DELTA_"+bucket+"_TOTAL="+str(
+            sum(n for (r, _, _),n in counts.items() if r==bucket)))
+    print("RG02_DELTA_ALL_NONMATCHING="+str(sum(counts.values())))
+    a,b=source_globals["roles"],target_globals["roles"]
+    flags=("LOGIN","SUPERUSER","INHERIT","CREATE_ROLE","CREATE_DB","REPLICATION","BYPASS_RLS")
+    role_counts=Counter()
+    for name in a.keys() | b.keys():
+        bucket=role_bucket(name)
+        if name not in b: role_counts[bucket,"SOURCE_ONLY"]+=1
+        elif name not in a: role_counts[bucket,"TARGET_ONLY"]+=1
+        else:
+            for flag, before, after in zip(flags,a[name],b[name]):
+                if before != after:
+                    role_counts[bucket,flag+("_SOURCE_TRUE" if before else "_TARGET_TRUE")]+=1
+    for (bucket,label),count in sorted(role_counts.items()):
+        print("RG02_GLOBAL_FLAG_"+bucket+"_"+label+"="+str(count))
+    a,b=source_globals["memberships"],target_globals["memberships"]
+    edge_counts=Counter()
+    # Exact capture-only temporary grant, not a broad role-name exemption.
+    for state,edges in (("SOURCE_ONLY",a-b),("TARGET_ONLY",b-a)):
+        for granted,member,grantor,admin,inherit,setopt in edges:
+            if (granted,member,admin,inherit,setopt)==(
+                    "pg_read_all_data",ROLE,False,True,False):
+                edge_counts[state,"EXACT_TEMP_READ_GRANT"]+=1
+            else:
+                edge_counts[state,role_bucket(member)+"_TO_"+role_bucket(granted)]+=1
+    for (state,bucket),count in sorted(edge_counts.items()):
+        print("RG02_GLOBAL_EDGE_"+state+"_"+bucket+"="+str(count))
+    print("RG02_ACCESS_RECONCILIATION=CLASSIFIED_NOT_WAIVED")
+
+
 def report_comparison(src, dst, source_globals, target_globals, source_schema, target_schema):
     counts = compare_tuples(src, dst)
+    report_access_delta(src, dst, source_globals, target_globals)
     print("RG02_SOURCE_TUPLES="+str(len(src)))
     print("RG02_TARGET_TUPLES="+str(len(dst)))
     for kind in sorted(PRIVILEGES):
@@ -353,9 +436,23 @@ def restore(root, source_globals, source_tuples, container):
                     "-U","supabase_admin","-d",DB],"TARGET_SCHEMA_EXPORT",outfile=out)
         for filename in ("source-schema.sql","target-schema.sql"):
             need(0<(root/filename).stat().st_size<=100663296,"SCHEMA_SIZE")
+        source_sql=(root/"source-schema.sql").read_text()
+        target_sql=(root/"target-schema.sql").read_text()
         report_comparison(source_tuples,target_tuples,source_globals,target_globals,
-                          extract((root/"source-schema.sql").read_text()),
-                          extract((root/"target-schema.sql").read_text()))
+                          extract(source_sql),extract(target_sql))
+        # Reuse the existing tested direct-ACL analyzer, but run it against
+        # this exact new preimage and its isolated target, not old receipts.
+        with (root/"target.catalog.json").open("xb") as out:
+            pg((ROOT/"rg02_catalog_snapshot.sql").read_bytes(),DB,
+               "TARGET_DIRECT_ACL_CATALOG",outfile=out,timeout=120)
+        catalog_path=root/"target.catalog.json"
+        need(0<catalog_path.stat().st_size<=64*1024**2,"TARGET_CATALOG_SIZE")
+        acl_report=analyze_direct_acl(source_sql,target_sql,
+                                      strict_json(catalog_path.read_bytes()))
+        print("RG02_DIRECT_ACL_DIAGNOSTIC_TOTAL="+str(acl_report["exact_sql_diff_count"]))
+        for key,value in acl_report["by_class"].items():
+            print("RG02_DIRECT_ACL_"+key+"="+str(value))
+        print("RG02_DIRECT_ACL_DIAGNOSTIC=OBSERVED_NOT_EQUIVALENCE")
     finally:
         if created:
             docker(["rm","-f",container],"CONTAINER_CLEANUP")

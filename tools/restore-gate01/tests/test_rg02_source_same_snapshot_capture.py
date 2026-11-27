@@ -287,6 +287,44 @@ class PinnedRestoreTests(unittest.TestCase):
         self.assertEqual(counts["TABLE","TARGET_ONLY"],1)
         self.assertEqual(counts["FUNCTION","EQUAL"],0)
 
+    def test_delta_keeps_application_differences_and_unknown_roles_visible(self):
+        import rg02_restore_new_preimage as recovery
+        reader=(recovery.ROLE,"TABLE","synthetic.t","SELECT")
+        app=("anon","ROLE",recovery.ROLE,"SET")
+        unknown=("private_synthetic","SCHEMA","synthetic","CREATE")
+        missing=("authenticated","PARAMETER","synthetic","SET")
+        added=("service_role","PARAMETER","other","SET")
+        a={reader:True,app:False,unknown:None,missing:True}
+        b={reader:False,app:True,unknown:None,added:False}
+        counts=recovery.tuple_delta(a,b)
+        self.assertEqual(sum(counts.values()),5)
+        self.assertEqual(counts["TEMP_CAPTURE","TABLE","SOURCE_TRUE_TARGET_FALSE"],1)
+        self.assertEqual(counts["APP_API","ROLE","SOURCE_FALSE_TARGET_TRUE"],1)
+        self.assertEqual(counts["OTHER_REVIEW","SCHEMA","UNKNOWN"],1)
+        self.assertEqual(counts["APP_API","PARAMETER","SOURCE_ONLY_TRUE"],1)
+        self.assertEqual(counts["APP_API","PARAMETER","TARGET_ONLY_FALSE"],1)
+
+    def test_global_delta_does_not_exempt_other_edges_or_print_identities(self):
+        import rg02_restore_new_preimage as recovery
+        base=(False,)*7
+        active=(True,False,False,False,False,False,True)
+        temporary=("pg_read_all_data",recovery.ROLE,"postgres",False,True,False)
+        other=("pg_read_all_data","private_synthetic","postgres",False,True,False)
+        a={"roles":{recovery.ROLE:active,"private_synthetic":active},
+           "memberships":{temporary,other}}
+        b={"roles":{recovery.ROLE:base,"private_synthetic":base},
+           "memberships":set()}
+        out=io.StringIO()
+        with redirect_stdout(out):
+            recovery.report_access_delta({}, {}, a, b)
+        result=out.getvalue()
+        self.assertIn("RG02_GLOBAL_EDGE_SOURCE_ONLY_EXACT_TEMP_READ_GRANT=1",result)
+        self.assertIn("RG02_GLOBAL_EDGE_SOURCE_ONLY_OTHER_REVIEW_TO_SYSTEM=1",result)
+        self.assertIn("RG02_GLOBAL_FLAG_OTHER_REVIEW_LOGIN_SOURCE_TRUE=1",result)
+        self.assertNotIn("private_synthetic",result)
+        self.assertNotIn(recovery.ROLE,result)
+        self.assertIn("CLASSIFIED_NOT_WAIVED",result)
+
     def test_tuple_reader_rejects_duplicate_and_keeps_full_identity(self):
         import rg02_restore_new_preimage as recovery
         with tempfile.TemporaryDirectory() as tmp:
