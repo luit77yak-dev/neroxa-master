@@ -324,10 +324,15 @@ jobs:
               if r['name'] not in baseline:
                 out.write("CREATE ROLE %s WITH NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT;\n" % q(r['name']))
           PY
+          # Apply role shells through stdin so an empty/ephemeral shell file
+          # cannot cause a missing /tmp path failure inside the container.
           if test -s "$ROOT/role-shells.sql"; then
-            docker --host unix:///var/run/docker.sock cp "$ROOT/role-shells.sql" "$CONTAINER:/tmp/role-shells.sql"
-            docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
-              psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -f /tmp/role-shells.sql
+            docker --host unix:///var/run/docker.sock exec -i "$CONTAINER" \
+              psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres < "$ROOT/role-shells.sql"
+            echo 'RG02_ROLE_SHELLS=APPLIED'
+          else
+            : > "$ROOT/role-shells.sql"
+            echo 'RG02_ROLE_SHELLS=EMPTY'
           fi
           docker --host unix:///var/run/docker.sock cp "$ROOT/dump.custom" "$CONTAINER:/tmp/database.dump"
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
