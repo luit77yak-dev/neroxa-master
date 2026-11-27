@@ -234,3 +234,40 @@ except Blocked as exc:
     raise SystemExit(1)
 print("RG02_RESTORE_SYNTHETIC=PASS")
 PY
+
+
+# Exercise the actual focal USAGE experiment and rollback on synthetic PG17.
+# No commercial role, schema or object identity is inferred from this fixture.
+PYTHONPATH=tools/restore-gate01 python3 - "$PRIVATE" "$CONTAINER" <<'PY'
+import subprocess
+import sys
+from pathlib import Path
+from rg02_restore_new_preimage import parse_tuples, target_query
+from rg02_schema_focal import experiment_sql, experiment_result
+
+root, container = Path(sys.argv[1]), sys.argv[2]
+query = target_query("rg02_source_tuple_same_snapshot.sql")
+key = ("anon", "SCHEMA", "rg02_smoke", "USAGE")
+
+def read(label, sql):
+    path = root / (label + ".jsonl")
+    with path.open("wb") as out, (root / (label + ".stderr")).open("wb") as err:
+        p = subprocess.run(["docker","exec","-i",container,"psql","-X","-qAt",
+            "-v","ON_ERROR_STOP=1","-h","/var/run/postgresql",
+            "-U","supabase_admin","-d","postgres"], input=sql,
+            stdout=out, stderr=err, timeout=120)
+    if p.returncode:
+        raise SystemExit("RG02_FOCAL_SQL_SMOKE=BLOCKED_REDACTED")
+    return parse_tuples(path)
+
+before = read("focal-before", query)
+if before.get(key) is not False:
+    raise SystemExit("RG02_FOCAL_SYNTHETIC_BASELINE=BLOCKED")
+trial = read("focal-trial", experiment_sql([key], query.decode()))
+after = read("focal-rollback", query)
+fixed, collateral, exact = experiment_result(before, trial, [key])
+if fixed != 1 or (exact != (collateral == 0)) or before != after:
+    raise SystemExit("RG02_FOCAL_SQL_SMOKE=BLOCKED_ROLLBACK_OR_DELTA")
+print("RG02_FOCAL_SQL_SMOKE=PASS")
+print("RG02_FOCAL_SYNTHETIC_ROLLBACK=PASS")
+PY
