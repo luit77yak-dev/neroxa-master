@@ -363,9 +363,10 @@ jobs:
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
             psql -X -qAt -U supabase_admin -d "$DB" \
             -c "SELECT json_build_object('roles',coalesce((SELECT json_agg(json_build_object('name',rolname,'superuser',rolsuper,'bypassrls',rolbypassrls,'createrole',rolcreaterole,'createdb',rolcreatedb,'replication',rolreplication,'login',rolcanlogin,'inherit',rolinherit)) FROM pg_roles),'[]'::json),'memberships',coalesce((SELECT json_agg(json_build_object('granted',r.rolname,'member',m.rolname,'admin_option',a.admin_option)) FROM pg_auth_members a JOIN pg_roles r ON r.oid=a.roleid JOIN pg_roles m ON m.oid=a.member),'[]'::json))::text" > "$ROOT/target-roles.json"
-          docker --host unix:///var/run/docker.sock cp tools/restore-gate01/rg02_catalog_snapshot.sql "$CONTAINER:/tmp/catalog.sql"
-          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
-            psql -X -qAt -U supabase_admin -d "$DB" -f /tmp/catalog.sql > "$ROOT/target-catalog.json"
+          # Stream catalog SQL over stdin so tmpfs path handling cannot hide the file from psql.
+          docker --host unix:///var/run/docker.sock exec -i "$CONTAINER" \
+            psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$DB" \
+            < tools/restore-gate01/rg02_catalog_snapshot.sql > "$ROOT/target-catalog.json"
           python3 tools/restore-gate01/rg02_compare_runtime.py \
             --source-sql "$ROOT/source-schema.sql" --target-sql "$ROOT/target-schema.sql" \
             --source-roles "$ROOT/source-roles.sql" --target-roles "$ROOT/target-roles.json" \
