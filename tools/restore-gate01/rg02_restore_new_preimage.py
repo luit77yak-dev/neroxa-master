@@ -19,6 +19,7 @@ import zipfile
 from collections import Counter
 
 from rg02_compare_runtime import extract
+from rg02_residual_review import residual_report
 from rg02_targeted_acl import analyze as analyze_direct_acl
 from rg02_tuple_witness_preflight import PRIVILEGES
 from rg02_schema_focal import (SCHEMA_CATALOG_SQL, classify, missing_app_schema,
@@ -402,6 +403,12 @@ def restore(root, source_globals, source_tuples, container):
         pg(b"CREATE DATABASE neroxa_rg02_probe;",code="CREATE_LOCAL_DB")
         pg(b"CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';",
            DB,"VAULT_CREATE")
+        # Capture the exact local baseline after pre-provisioning Vault,
+        # before importing any source objects. No raw schema leaves tmpfs.
+        baseline_sql = docker(["exec",container,"pg_dump","--schema-only",
+            "-h","/var/run/postgresql","-U","supabase_admin","-d",DB],
+            "BASELINE_SCHEMA_EXPORT").decode()
+        need(0<len(baseline_sql.encode())<=100663296,"BASELINE_SCHEMA_SIZE")
         transfer(root/"database.dump","/tmp/database.dump")
         listing = docker(["exec",container,"pg_restore","--list","/tmp/database.dump"],
                          "TOC_READ")
@@ -456,27 +463,12 @@ def restore(root, source_globals, source_tuples, container):
         print("RG02_APP_SCHEMA_FOCAL_COUNT="+str(len(focus)))
         for category, number in sorted(counts.items()):
             print("RG02_APP_SCHEMA_"+category+"="+str(number))
-        # Limit the experiment to the previously measured six discrepancies.
-        # CREATE and any unexpected population are held, never replayed.
-        usage = [k for k in focus if k[3]=="USAGE"]
-        if len(focus)==6 and usage:
-            with (root/"trial.tuples.jsonl").open("xb") as out:
-                pg(experiment_sql(usage, target_query(
-                    "rg02_source_tuple_same_snapshot.sql").decode()),
-                    DB, "SCHEMA_FOCAL_EXPERIMENT", outfile=out, timeout=120)
-            trial = parse_tuples(root/"trial.tuples.jsonl")
-            fixed, unexpected, exact = experiment_result(target_tuples, trial, usage)
-            with (root/"rollback.tuples.jsonl").open("xb") as out:
-                pg(target_query("rg02_source_tuple_same_snapshot.sql"), DB,
-                   "SCHEMA_FOCAL_ROLLBACK", outfile=out, timeout=120)
-            need(parse_tuples(root/"rollback.tuples.jsonl")==target_tuples,
-                 "SCHEMA_FOCAL_ROLLBACK_MISMATCH")
-            print("RG02_APP_SCHEMA_USAGE_FIXED_IN_TRIAL="+str(fixed))
-            print("RG02_APP_SCHEMA_UNEXPECTED_TUPLE_CHANGES="+str(unexpected))
-            print("RG02_APP_SCHEMA_TRIAL="+("EXACT_EXPECTED_DELTA" if exact else "HOLD"))
-            print("RG02_APP_SCHEMA_TRIAL_ROLLBACK=PASS")
-        else:
-            print("RG02_APP_SCHEMA_TRIAL=NOT_RUN_UNEXPECTED_SCOPE_OR_NO_USAGE")
+        # Existing protected run 45943118524 demonstrated the exact six-USAGE
+        # trial and rollback against this pinned capture. Do not rerun GRANTs.
+        # A changed focal population is HOLD, never a reused PASS.
+        need(len(focus)==6 and all(k[3]=="USAGE" for k in focus),
+             "RESIDUAL_FOCAL_SCOPE_CHANGED")
+        print("RG02_APP_SCHEMA_TRIAL=NOT_REPEATED_HISTORICAL_RUN_45943118524")
         print("RG02_APP_SCHEMA_RECONCILIATION=OBSERVED_NOT_AUTHORIZED")
         catalog_path=root/"target.catalog.json"
         need(0<catalog_path.stat().st_size<=64*1024**2,"TARGET_CATALOG_SIZE")
@@ -486,6 +478,14 @@ def restore(root, source_globals, source_tuples, container):
         for key,value in acl_report["by_class"].items():
             print("RG02_DIRECT_ACL_"+key+"="+str(value))
         print("RG02_DIRECT_ACL_DIAGNOSTIC=OBSERVED_NOT_EQUIVALENCE")
+        residual = residual_report(source_sql, target_sql, baseline_sql,
+            source_globals, target_globals, source_tuples, target_tuples,
+            strict_json(catalog_path.read_bytes()))
+        for key, count in sorted(residual.items()):
+            print("RG02_RESIDUAL_"+key+"="+str(count))
+        print("RG02_RESIDUAL_SOURCE_GRANTOR_PROVENANCE=NOT_INDEPENDENTLY_CAPTURED")
+        print("RG02_RESIDUAL_REVIEW=OBSERVATIONS_REQUIRE_APPROVAL")
+
     finally:
         if created:
             docker(["rm","-f",container],"CONTAINER_CLEANUP")
