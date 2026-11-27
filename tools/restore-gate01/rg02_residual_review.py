@@ -89,6 +89,22 @@ def residual_report(source_sql, target_sql, baseline_sql, source, target,
             counts["F02_PREFLIGHT_SOURCE_SET_ROLE"] += 1
         if k[1] == "FUNCTION" and k[3] == "EXECUTE":
             counts["F02_PREFLIGHT_SOURCE_FUNCTION_EXECUTE"] += 1
+    # Fixed schema buckets only; unknown names must stay under review.
+    known_schemas = {"public": "PUBLIC_APP", "auth": "AUTH", "storage": "STORAGE",
+                     "vault": "VAULT", "realtime": "REALTIME",
+                     "extensions": "EXTENSIONS", "graphql": "GRAPHQL",
+                     "graphql_public": "GRAPHQL_PUBLIC",
+                     "supabase_functions": "PLATFORM_FUNCTIONS"}
+    for k in source_tuples.keys() | target_tuples.keys():
+        if (k[0] in APP and k[1] == "SCHEMA" and k[3] == "USAGE" and
+                source_tuples.get(k) is True and target_tuples.get(k) is False):
+            counts["APP_USAGE_" + known_schemas.get(k[2], "OTHER_HOLD")] += 1
+        if k[0] == PREFLIGHT and k[1] != "PARAMETER" and (
+                k not in source_tuples or k not in target_tuples or
+                source_tuples[k] is None or target_tuples[k] is None or
+                source_tuples[k] != target_tuples[k]):
+            counts["F02_PREFLIGHT_NONPARAMETER_TUPLE_DELTA_HOLD"] += 1
+    counts.setdefault("F02_PREFLIGHT_NONPARAMETER_TUPLE_DELTA_HOLD", 0)
     # All measured grantors in destination, and specifically the residual ACL
     # statements. Source ordered SQL is not a direct source grantor catalog.
     counts.update(acl_provenance(catalog))
