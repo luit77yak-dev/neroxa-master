@@ -198,3 +198,189 @@ jobs:
           docker --host unix:///var/run/docker.sock rm -f "rg02-recovery-$GITHUB_RUN_ID" >/dev/null 2>&1 || true
           rm -f -- "$RUNNER_TEMP/rg02-ciphertext-45909419074.zip"
           echo 'RG02_CIPHERTEXT_CLEANUP=PASS; COMMERCIAL_GO=NO_GO'
+
+  metadata-focal:
+    if: >-
+      github.repository == 'luit77yak-dev/neroxa-master' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/audit/rg02-focal-metadata-20261127' &&
+      github.run_attempt == 1 &&
+      (github.actor == 'luit77yak-dev' || github.actor == 'dev-luizt5') &&
+      inputs.confirmation == 'RG02_METADATA_FOCAL_20261127'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    environment:
+      name: neroxa-rg02-source-capture
+    env:
+      RG02_CAPTURE_PASSPHRASE: ${{ secrets.RG02_CAPTURE_PASSPHRASE }}
+      IMAGE: supabase/postgres:17.12.0.002
+
+    steps:
+      - name: Checkout pinned approved source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 1e95cef15895d9b1fd2f884484105d93d8aa899b
+          persist-credentials: false
+
+      - name: Prepare PG17 image
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$RUNNER_ENVIRONMENT" = github-hosted
+          timeout 240s docker --host unix:///var/run/docker.sock pull "$IMAGE" >/dev/null
+          echo 'RG02_PG17_IMAGE=PASS'
+
+      - name: Download and decrypt audited metadata source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          umask 077
+          ROOT="$RUNNER_TEMP/rg02-focal-$GITHUB_RUN_ID"
+          mkdir -m 0700 "$ROOT"
+          ZIP="$RUNNER_TEMP/rg02-ciphertext-45909419074.zip"
+          curl --fail --silent --show-error --location \
+            --proto '=https' --proto-redir '=https' --max-time 90 --max-filesize 380354 \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header 'Accept: application/vnd.github+json' \
+            --output "$ZIP" \
+            'https://api.github.com/repos/luit77yak-dev/neroxa-master/actions/artifacts/15159168742/zip'
+          test "$(stat -c %s "$ZIP")" = 380354
+          test "$(sha256sum "$ZIP" | cut -d' ' -f1)" = 3c30394da65911cd69642b3b4bb7f9d0c6a85e4a29660f1597c9d7d0f8786eaf
+          unzip -q "$ZIP" -d "$ROOT"
+          test "$(find "$ROOT" -maxdepth 1 -type f -name '*.gpg' | wc -l)" = 4
+          for pair in 'manifest.json manifest.json.gpg' 'dump.custom dump.custom.gpg' 'global-catalog.json global-catalog.json.gpg'; do
+            set -- $pair
+            gpg --batch --no-tty --pinentry-mode loopback --passphrase-fd 0 \
+              --no-symkey-cache --decrypt "$ROOT/$2" > "$ROOT/$1" <<<"$RG02_CAPTURE_PASSPHRASE"
+          done
+          unset RG02_CAPTURE_PASSPHRASE
+          python3 - "$ROOT/manifest.json" <<'PY'
+          import json, sys
+          m=json.load(open(sys.argv[1]))
+          assert m.get('format') == 1
+          assert m.get('github_protected_run_id') == '45909419074'
+          assert m.get('github_source_commit') == '3d3f8301666441fa1d9ce54e942d70464d19081a'
+          assert m.get('project_ref') == 'iefaoaqzltvpfabyeelj'
+          assert m.get('COMMERCIAL_GO') == 'NO_GO'
+          PY
+          echo 'RG02_PRIVATE_METADATA_DECRYPT=PASS'
+
+      - name: Schema-only restore and focal comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          ROOT="$RUNNER_TEMP/rg02-focal-$GITHUB_RUN_ID"
+          CONTAINER="rg02-focal-$GITHUB_RUN_ID"
+          DB=neroxa_rg02_probe
+          export POSTGRES_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+          docker --host unix:///var/run/docker.sock run --pull=never --detach \
+            --name "$CONTAINER" --network none --security-opt no-new-privileges \
+            --tmpfs /var/lib/postgresql/data:rw,nosuid,nodev,size=1536m \
+            --tmpfs /tmp:rw,nosuid,nodev,size=128m \
+            -e POSTGRES_PASSWORD "$IMAGE" >/dev/null
+          for i in $(seq 1 90); do
+            docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+              pg_isready -q -h /var/run/postgresql -U supabase_admin -d postgres && break
+            sleep 2
+          done
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres \
+            -c "CREATE DATABASE $DB;"
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$DB" \
+            -c "CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';"
+          python3 - "$ROOT/global-catalog.json" "$ROOT/source-roles.sql" <<'PY'
+          import json,sys
+          doc=json.load(open(sys.argv[1])); q=lambda v:'"'+v.replace('"','""')+'"'
+          with open(sys.argv[2],'w') as out:
+            for r in doc['roles']:
+              out.write(f"CREATE ROLE {q(r['name'])};\n")
+              out.write("ALTER ROLE %s WITH %s %s %s %s %s %s %s;\n" % (q(r['name']),
+                'SUPERUSER' if r['superuser'] else 'NOSUPERUSER',
+                'BYPASSRLS' if r['bypass_rls'] else 'NOBYPASSRLS',
+                'CREATEROLE' if r['create_role'] else 'NOCREATEROLE',
+                'CREATEDB' if r['create_db'] else 'NOCREATEDB',
+                'REPLICATION' if r['replication'] else 'NOREPLICATION',
+                'LOGIN' if r['login'] else 'NOLOGIN',
+                'INHERIT' if r['inherit'] else 'NOINHERIT'))
+            for e in doc.get('memberships',[]):
+              out.write("GRANT %s TO %s%s;\n" % (q(e['role']),q(e['member']),
+                ' WITH ADMIN OPTION' if e.get('admin') else ''))
+          PY
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            psql -X -qAt -U supabase_admin -d postgres -c 'SELECT rolname FROM pg_roles' > "$ROOT/baseline-roles.txt"
+          python3 - "$ROOT/global-catalog.json" "$ROOT/baseline-roles.txt" "$ROOT/role-shells.sql" <<'PY'
+          import json,sys
+          doc=json.load(open(sys.argv[1])); baseline=set(open(sys.argv[2]).read().splitlines())
+          q=lambda v:'"'+v.replace('"','""')+'"'
+          with open(sys.argv[3],'w') as out:
+            for r in doc['roles']:
+              if r['name'] not in baseline:
+                out.write("CREATE ROLE %s WITH NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS NOINHERIT;\n" % q(r['name']))
+          PY
+          if test -s "$ROOT/role-shells.sql"; then
+            docker --host unix:///var/run/docker.sock cp "$ROOT/role-shells.sql" "$CONTAINER:/tmp/role-shells.sql"
+            docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+              psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -f /tmp/role-shells.sql
+          fi
+          docker --host unix:///var/run/docker.sock cp "$ROOT/dump.custom" "$CONTAINER:/tmp/database.dump"
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            pg_restore --schema-only --exit-on-error --single-transaction \
+            --exclude-schema=vault -U supabase_admin -d "$DB" /tmp/database.dump
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            pg_restore --schema-only --file=/tmp/source-schema.sql --exclude-schema=vault /tmp/database.dump
+          docker --host unix:///var/run/docker.sock cp "$CONTAINER:/tmp/source-schema.sql" "$ROOT/source-schema.sql"
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            pg_dump --schema-only -U supabase_admin -d "$DB" > "$ROOT/target-schema.sql"
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            psql -X -qAt -U supabase_admin -d "$DB" \
+            -c "SELECT json_build_object('roles',coalesce((SELECT json_agg(json_build_object('name',rolname,'superuser',rolsuper,'bypassrls',rolbypassrls,'createrole',rolcreaterole,'createdb',rolcreatedb,'replication',rolreplication,'login',rolcanlogin,'inherit',rolinherit)) FROM pg_roles),'[]'::json),'memberships',coalesce((SELECT json_agg(json_build_object('granted',r.rolname,'member',m.rolname,'admin_option',a.admin_option)) FROM pg_auth_members a JOIN pg_roles r ON r.oid=a.roleid JOIN pg_roles m ON m.oid=a.member),'[]'::json))::text" > "$ROOT/target-roles.json"
+          docker --host unix:///var/run/docker.sock cp tools/restore-gate01/rg02_catalog_snapshot.sql "$CONTAINER:/tmp/catalog.sql"
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            psql -X -qAt -U supabase_admin -d "$DB" -f /tmp/catalog.sql > "$ROOT/target-catalog.json"
+          python3 tools/restore-gate01/rg02_compare_runtime.py \
+            --source-sql "$ROOT/source-schema.sql" --target-sql "$ROOT/target-schema.sql" \
+            --source-roles "$ROOT/source-roles.sql" --target-roles "$ROOT/target-roles.json" \
+            --out "$ROOT/object-comparison.json" > "$ROOT/object-comparison.log"
+          python3 tools/restore-gate01/rg02_targeted_acl.py \
+            --source-sql "$ROOT/source-schema.sql" --target-sql "$ROOT/target-schema.sql" \
+            --catalog-json "$ROOT/target-catalog.json" --out "$ROOT/acl-comparison.json" > "$ROOT/acl-comparison.log"
+          python3 - "$ROOT/object-comparison.json" "$ROOT/acl-comparison.json" "$RUNNER_TEMP/rg02-focal-report-$GITHUB_RUN_ID.json" <<'PY'
+          import json,sys
+          obj=json.load(open(sys.argv[1])); acl=json.load(open(sys.argv[2]))
+          json.dump({'RG02_FOCAL_METADATA':'COMPLETED','OBJECT_METADATA_DIFF':obj.get('object_statement_comparison'),
+            'OBJECT_BY_TYPE':obj.get('by_type'),'ROLE_COMPARISON':obj.get('role_comparison'),
+            'TARGETED_ACL_STATUS':acl.get('status'),'TARGETED_ACL_COUNT':acl.get('exact_sql_diff_count'),
+            'TARGETED_ACL_CLASSES':acl.get('by_class'),'GLOBAL_ROLES':'NOT_VERIFIED','OWNER_ACL':'NOT_VERIFIED',
+            'SOURCE_INDEPENDENT_ATTESTATION':'NOT_VERIFIED','VAULT_SECRET_READBACK':'NOT_RUN',
+            'REMOTE_WRITES':'NONE','SQL_RELEASE':'NOT_ADMITTED','COMMERCIAL_GO':'NO_GO'},
+            open(sys.argv[3],'w'),indent=2,sort_keys=True)
+          PY
+          echo 'RG02_FOCAL_METADATA=COMPLETED'
+
+      - name: Upload sanitized evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: rg02-focal-metadata-${{ github.run_id }}
+          path: ${{ runner.temp }}/rg02-focal-report-${{ github.run_id }}.json
+          if-no-files-found: warn
+          retention-days: 7
+          include-hidden-files: false
+          compression-level: 0
+
+      - name: Cleanup disposable resources
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker --host unix:///var/run/docker.sock rm -f "rg02-focal-$GITHUB_RUN_ID" >/dev/null 2>&1 || true
+          rm -rf -- "$RUNNER_TEMP/rg02-focal-$GITHUB_RUN_ID" "$RUNNER_TEMP/rg02-ciphertext-45909419074.zip"
+          echo 'RG02_FOCAL_CLEANUP=PASS'
+
