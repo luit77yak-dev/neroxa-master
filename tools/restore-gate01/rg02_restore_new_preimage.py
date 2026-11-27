@@ -21,6 +21,8 @@ from collections import Counter
 from rg02_compare_runtime import extract
 from rg02_targeted_acl import analyze as analyze_direct_acl
 from rg02_tuple_witness_preflight import PRIVILEGES
+from rg02_schema_focal import (SCHEMA_CATALOG_SQL, classify, missing_app_schema,
+                               experiment_sql, experiment_result)
 
 RUN = "45909419074"
 COMMIT = "3d3f8301666441fa1d9ce54e942d70464d19081a"
@@ -445,6 +447,37 @@ def restore(root, source_globals, source_tuples, container):
         with (root/"target.catalog.json").open("xb") as out:
             pg((ROOT/"rg02_catalog_snapshot.sql").read_bytes(),DB,
                "TARGET_DIRECT_ACL_CATALOG",outfile=out,timeout=120)
+        # Same pinned preimage and same restored instance, no source connection.
+        # All raw witnesses remain private in tmpfs.
+        schema_catalog = strict_json(pg(SCHEMA_CATALOG_SQL, DB, "SCHEMA_FOCAL_CATALOG"))
+        focus = missing_app_schema(source_tuples, target_tuples)
+        counts = classify(source_tuples, target_tuples, source_globals,
+                          target_globals, schema_catalog)
+        print("RG02_APP_SCHEMA_FOCAL_COUNT="+str(len(focus)))
+        for category, number in sorted(counts.items()):
+            print("RG02_APP_SCHEMA_"+category+"="+str(number))
+        # Limit the experiment to the previously measured six discrepancies.
+        # CREATE and any unexpected population are held, never replayed.
+        usage = [k for k in focus if k[3]=="USAGE"]
+        if len(focus)==6 and usage:
+            with (root/"trial.tuples.jsonl").open("xb") as out:
+                pg(experiment_sql(usage, target_query(
+                    "rg02_source_tuple_same_snapshot.sql").decode()),
+                    DB, "SCHEMA_FOCAL_EXPERIMENT", outfile=out, timeout=120)
+            trial = parse_tuples(root/"trial.tuples.jsonl")
+            fixed, unexpected, exact = experiment_result(target_tuples, trial, usage)
+            with (root/"rollback.tuples.jsonl").open("xb") as out:
+                pg(target_query("rg02_source_tuple_same_snapshot.sql"), DB,
+                   "SCHEMA_FOCAL_ROLLBACK", outfile=out, timeout=120)
+            need(parse_tuples(root/"rollback.tuples.jsonl")==target_tuples,
+                 "SCHEMA_FOCAL_ROLLBACK_MISMATCH")
+            print("RG02_APP_SCHEMA_USAGE_FIXED_IN_TRIAL="+str(fixed))
+            print("RG02_APP_SCHEMA_UNEXPECTED_TUPLE_CHANGES="+str(unexpected))
+            print("RG02_APP_SCHEMA_TRIAL="+("EXACT_EXPECTED_DELTA" if exact else "HOLD"))
+            print("RG02_APP_SCHEMA_TRIAL_ROLLBACK=PASS")
+        else:
+            print("RG02_APP_SCHEMA_TRIAL=NOT_RUN_UNEXPECTED_SCOPE_OR_NO_USAGE")
+        print("RG02_APP_SCHEMA_RECONCILIATION=OBSERVED_NOT_AUTHORIZED")
         catalog_path=root/"target.catalog.json"
         need(0<catalog_path.stat().st_size<=64*1024**2,"TARGET_CATALOG_SIZE")
         acl_report=analyze_direct_acl(source_sql,target_sql,
