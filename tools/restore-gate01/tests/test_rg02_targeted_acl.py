@@ -135,5 +135,67 @@ class TargetedAclTests(unittest.TestCase):
             self.assertEqual(json.loads((root/'private.json').read_text())['COMMERCIAL_GO'],'NO_GO')
             self.assertEqual(json.loads((root/'private.json').read_text())['GLOBAL_ROLES'],'NOT_VERIFIED')
 
+
+class FocalSchemaTests(unittest.TestCase):
+    def setUp(self):
+        from rg02_schema_focal import APP
+        self.a = ('authenticated','SCHEMA','synthetic_schema','USAGE')
+        self.b = ('anon','SCHEMA','synthetic_schema','CREATE')
+        self.other = ('synthetic_role','SCHEMA','synthetic_schema','USAGE')
+        self.source = {self.a:True,self.b:True,self.other:True}
+        self.target = {self.a:False,self.b:False,self.other:False}
+        self.roles = {name:(False,)*7 for name in APP | {'synthetic_role','pg_read_all_data'}}
+        self.srcg = {'roles':self.roles,'memberships':{
+            ('synthetic_role','authenticated','synthetic_role',False,True,False)}}
+        self.dstg = {'roles':self.roles,'memberships':set()}
+        self.catalog = [{'name':'synthetic_schema','owner':'synthetic_role','acl':[
+            {'grantee':'synthetic_role','public':False,'privilege':'USAGE'}]}]
+    def test_only_app_source_true_target_false(self):
+        from rg02_schema_focal import missing_app_schema
+        self.assertEqual(set(missing_app_schema(self.source,self.target)),{self.a,self.b})
+    def test_path_projection_is_not_acl_provenance(self):
+        from rg02_schema_focal import classify
+        counts=classify(self.source,self.target,self.srcg,self.dstg,self.catalog)
+        self.assertEqual(counts['SOURCE_PATH_CONSISTENT_INHERITED_ACL'],1)
+        self.assertEqual(counts['SOURCE_ACL_OR_PROVIDER_DIFFERENCE_HOLD'],1)
+        self.assertEqual(counts['PRIVILEGE_CREATE'],1)
+        self.assertEqual(counts['PRIVILEGE_USAGE'],1)
+        self.assertNotIn('synthetic_schema',str(counts))
+    def test_no_inherit_edge_does_not_explain_usage(self):
+        from rg02_schema_focal import projected_right
+        self.srcg['memberships']={('synthetic_role','authenticated','synthetic_role',True,False,True)}
+        self.assertEqual(projected_right('authenticated','USAGE',self.catalog[0],self.srcg),(False,'NO_PATH'))
+    def test_builtin_role_projection(self):
+        from rg02_schema_focal import projected_right
+        self.srcg['memberships'].add(('pg_read_all_data','authenticated','synthetic_role',False,True,False))
+        self.assertEqual(projected_right('authenticated','USAGE',self.catalog[0],self.srcg),(True,'BUILTIN_DATA_ROLE'))
+        self.assertEqual(projected_right('authenticated','CREATE',self.catalog[0],self.srcg),(False,'NO_PATH'))
+    def test_trial_sql_quotes_and_rollback(self):
+        from rg02_schema_focal import experiment_sql
+        witness="BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;\nSELECT 1;\nROLLBACK;\n"
+        k=('authenticated','SCHEMA','x"; SELECT 1; --','USAGE')
+        trial=experiment_sql([k],witness).decode()
+        self.assertTrue(trial.startswith('BEGIN;\nGRANT USAGE ON SCHEMA "x""; SELECT 1; --" TO "authenticated";\n'))
+        self.assertTrue(trial.endswith('\nROLLBACK;\n'))
+        with self.assertRaises(ValueError):
+            experiment_sql([self.b],witness)
+        with self.assertRaises(ValueError):
+            experiment_sql([self.other],witness)
+        with self.assertRaises(ValueError):
+            experiment_sql([self.a],"SELECT 1;")
+    def test_trial_detects_collateral_changes(self):
+        from rg02_schema_focal import experiment_result
+        after=dict(self.target)
+        after[self.a]=True
+        self.assertEqual(experiment_result(self.target,after,[self.a]),(1,0,True))
+        after[self.other]=True
+        self.assertEqual(experiment_result(self.target,after,[self.a]),(1,1,False))
+        del after[self.other]
+        self.assertEqual(experiment_result(self.target,after,[self.a]),(1,1,False))
+    def test_duplicate_catalog_rejected(self):
+        from rg02_schema_focal import classify
+        with self.assertRaises(ValueError):
+            classify(self.source,self.target,self.srcg,self.dstg,self.catalog*2)
+
 if __name__=='__main__':
     unittest.main()
