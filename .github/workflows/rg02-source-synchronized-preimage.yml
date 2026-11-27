@@ -292,9 +292,8 @@ jobs:
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
             psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres \
             -c "CREATE DATABASE $DB;"
-          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
-            psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$DB" \
-            -c "CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1';"
+          # Restore first; creating supabase_vault before pg_restore causes
+          # a duplicate CREATE SCHEMA vault failure in the audited dump.
           python3 - "$ROOT/global-catalog.json" "$ROOT/source-roles.sql" <<'PY'
           import json,sys
           doc=json.load(open(sys.argv[1])); q=lambda v:'"'+v.replace('"','""')+'"'
@@ -354,6 +353,9 @@ jobs:
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
             pg_restore --schema-only --exclude-schema=vault \
             /tmp/rg02-dump.custom > "$ROOT/source-schema.sql"
+          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+            psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$DB" \
+            -c "CREATE EXTENSION IF NOT EXISTS supabase_vault WITH VERSION '0.3.1' SCHEMA vault;"
           test -s "$ROOT/source-schema.sql"
           echo "RG02_DUMP_FILE=PASS; BYTES=$DUMP_BYTES"
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
