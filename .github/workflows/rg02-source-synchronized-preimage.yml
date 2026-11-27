@@ -363,6 +363,9 @@ jobs:
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
             psql -X -qAt -U supabase_admin -d "$DB" \
             -c "SELECT json_build_object('roles',coalesce((SELECT json_agg(json_build_object('name',rolname,'superuser',rolsuper,'bypassrls',rolbypassrls,'createrole',rolcreaterole,'createdb',rolcreatedb,'replication',rolreplication,'login',rolcanlogin,'inherit',rolinherit)) FROM pg_roles),'[]'::json),'memberships',coalesce((SELECT json_agg(json_build_object('granted',r.rolname,'member',m.rolname,'admin_option',a.admin_option)) FROM pg_auth_members a JOIN pg_roles r ON r.oid=a.roleid JOIN pg_roles m ON m.oid=a.member),'[]'::json))::text" > "$ROOT/target-roles.json"
+          docker --host unix:///var/run/docker.sock exec -i "$CONTAINER" \
+            psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$DB" \
+            < tools/restore-gate01/rg02_local_effective_rights.sql > "$ROOT/target-effective.json"
           # Stream catalog SQL over stdin so tmpfs path handling cannot hide the file from psql.
           docker --host unix:///var/run/docker.sock exec -i "$CONTAINER" \
             psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$DB" \
@@ -386,6 +389,54 @@ jobs:
             open(sys.argv[3],'w'),indent=2,sort_keys=True)
           PY
           echo 'RG02_FOCAL_METADATA=COMPLETED'
+
+      - name: Source read-only effective privilege witness
+        shell: bash
+        env:
+          RG02_SOURCE_HOST: ${{ vars.RG02_SOURCE_HOST }}
+          RG02_SOURCE_PG_USER: ${{ vars.RG02_SOURCE_PG_USER }}
+          RG02_SOURCE_PG_PASSWORD: ${{ secrets.RG02_SOURCE_PG_PASSWORD }}
+          RG02_SOURCE_CA_PEM: ${{ secrets.RG02_SOURCE_CA_PEM }}
+        run: |
+          set -euo pipefail
+          umask 077
+          ROOT="$RUNNER_TEMP/rg02-focal-$GITHUB_RUN_ID"
+          test -s "$ROOT/target-effective.json"
+          test -n "$RG02_SOURCE_HOST"
+          test -n "$RG02_SOURCE_PG_USER"
+          test -n "$RG02_SOURCE_PG_PASSWORD"
+          test -n "$RG02_SOURCE_CA_PEM"
+          printf '%s\n' "$RG02_SOURCE_CA_PEM" > "$ROOT/source-ca.pem"
+          chmod 600 "$ROOT/source-ca.pem"
+          printf '%s' "$RG02_SOURCE_PG_PASSWORD" > "$ROOT/source-password"
+          chmod 600 "$ROOT/source-password"
+          docker --host unix:///var/run/docker.sock run --rm --network host \
+            --mount type=bind,src="$ROOT/source-ca.pem",dst=/tmp/rg02-source-ca.pem,readonly \
+            --mount type=bind,src="$ROOT/source-password",dst=/tmp/rg02-source-password,readonly \
+            -e PGPASSWORD_FILE=/tmp/rg02-source-password \
+            -e RG02_SOURCE_HOST -e RG02_SOURCE_PG_USER \
+            "$IMAGE" sh -c 'PGPASSWORD="$(cat "$PGPASSWORD_FILE")" psql -X -qAt -v ON_ERROR_STOP=1 \
+              "host=$RG02_SOURCE_HOST port=5432 user=$RG02_SOURCE_PG_USER dbname=postgres sslmode=verify-full sslrootcert=/tmp/rg02-source-ca.pem connect_timeout=15" \
+              -f -' < tools/restore-gate01/rg02_local_effective_rights.sql > "$ROOT/source-effective.json"
+          unset RG02_SOURCE_PG_PASSWORD RG02_SOURCE_CA_PEM
+          rm -f -- "$ROOT/source-password" "$ROOT/source-ca.pem"
+          python3 - "$ROOT/source-effective.json" "$ROOT/target-effective.json" "$RUNNER_TEMP/rg02-focal-report-$GITHUB_RUN_ID.json" <<'PY'
+          import json, sys
+          from pathlib import Path
+          source=json.loads(Path(sys.argv[1]).read_text())
+          target=json.loads(Path(sys.argv[2]).read_text())
+          report=json.loads(Path(sys.argv[3]).read_text())
+          if source.get('scope') != 'ISOLATED_LOCAL_PG17_ONLY' or target.get('scope') != 'ISOLATED_LOCAL_PG17_ONLY':
+              raise SystemExit('EFFECTIVE_WITNESS_SCOPE_INVALID')
+          report['SOURCE_EFFECTIVE_WITNESS']='PASS'
+          report['SOURCE_TARGET_EFFECTIVE_AGGREGATE_MATCH']=(source.get('populations') == target.get('populations') and source.get('rights') == target.get('rights'))
+          report['SOURCE_EFFECTIVE_WITNESS_LIMITATION']='Aggregate read-only witness; not per-object source equivalence'
+          report['SOURCE_INDEPENDENT_ATTESTATION']='NOT_VERIFIED'
+          Path(sys.argv[3]).write_text(json.dumps(report,indent=2,sort_keys=True)+'\n')
+          PY
+          echo 'RG02_SOURCE_EFFECTIVE_WITNESS=PASS'
+          echo 'SOURCE_TARGET_EFFECTIVE_AGGREGATE_MATCH=RECORDED'
+          echo 'SOURCE_INDEPENDENT_ATTESTATION=NOT_VERIFIED'
 
       - name: Upload sanitized evidence only
         if: always()
