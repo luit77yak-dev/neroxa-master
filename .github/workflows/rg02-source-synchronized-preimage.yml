@@ -351,7 +351,7 @@ jobs:
             pg_restore --schema-only --exit-on-error --single-transaction \
             --exclude-schema=vault -U supabase_admin -d "$DB" /tmp/rg02-dump.custom
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
-            pg_restore --schema-only --exclude-schema=vault \
+            pg_restore --schema-only --exclude-schema=vault -f - \
             /tmp/rg02-dump.custom > "$ROOT/source-schema.sql"
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
             psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$DB" \
