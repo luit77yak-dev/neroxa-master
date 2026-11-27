@@ -334,13 +334,19 @@ jobs:
             : > "$ROOT/role-shells.sql"
             echo 'RG02_ROLE_SHELLS=EMPTY'
           fi
-          docker --host unix:///var/run/docker.sock cp "$ROOT/dump.custom" "$CONTAINER:/tmp/database.dump"
-          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
+          # Stream the audited custom archive over stdin. This avoids relying on
+          # container /tmp visibility and fails closed if the decrypted dump is absent.
+          test -s "$ROOT/dump.custom"
+          DUMP_BYTES="$(stat -c %s "$ROOT/dump.custom")"
+          test "$DUMP_BYTES" -gt 0
+          docker --host unix:///var/run/docker.sock exec -i "$CONTAINER" \
             pg_restore --schema-only --exit-on-error --single-transaction \
-            --exclude-schema=vault -U supabase_admin -d "$DB" /tmp/database.dump
-          docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
-            pg_restore --schema-only --file=/tmp/source-schema.sql --exclude-schema=vault /tmp/database.dump
-          docker --host unix:///var/run/docker.sock cp "$CONTAINER:/tmp/source-schema.sql" "$ROOT/source-schema.sql"
+            --exclude-schema=vault -U supabase_admin -d "$DB" - < "$ROOT/dump.custom"
+          docker --host unix:///var/run/docker.sock exec -i "$CONTAINER" \
+            pg_restore --schema-only --exclude-schema=vault - < "$ROOT/dump.custom" \
+            > "$ROOT/source-schema.sql"
+          test -s "$ROOT/source-schema.sql"
+          echo "RG02_DUMP_STREAM=PASS; BYTES=$DUMP_BYTES"
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
             pg_dump --schema-only -U supabase_admin -d "$DB" > "$ROOT/target-schema.sql"
           docker --host unix:///var/run/docker.sock exec "$CONTAINER" \
