@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Check,
@@ -146,6 +146,8 @@ function MasterCatalogo() {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [storefrontTheme, setStorefrontTheme] = useState("neroxa-classic");
   const [savingTheme, setSavingTheme] = useState(false);
+  const catalogRequest = useRef(0);
+  const loadedCatalog = useRef<string | null>(null);
 
   const loadInstances = async () => {
     const { data, error } = await supabase
@@ -161,12 +163,17 @@ function MasterCatalogo() {
 
   const loadCatalog = async (id: string) => {
     if (!id) return;
+    const request = ++catalogRequest.current;
+    loadedCatalog.current = null;
+    setCategories([]);
+    setProducts([]);
     setLoading(true);
     setError(null);
     try {
       const [
         { data: categoryData, error: categoryError },
         { data: productData, error: productError },
+        { data: themeData, error: themeError },
       ] = await Promise.all([
         supabase
           .from("neroxa_storefront_categories" as never)
@@ -180,15 +187,21 @@ function MasterCatalogo() {
           .eq("instance_id", id)
           .order("sort_order")
           .order("name"),
+        supabase.from("neroxa_storefront_settings" as never).select("storefront_theme").eq("instance_id", id).maybeSingle(),
       ]);
+      if (request !== catalogRequest.current) return;
       if (categoryError) throw new Error(categoryError.message);
       if (productError) throw new Error(productError.message);
+      if (themeError) throw new Error(themeError.message);
+      const theme = (themeData as { storefront_theme?: string } | null)?.storefront_theme;
+      setStorefrontTheme(STOREFRONT_THEMES.some((t) => t.id === theme) ? theme! : "neroxa-classic");
       setCategories((categoryData ?? []) as unknown as Category[]);
       setProducts((productData ?? []) as unknown as Product[]);
+      loadedCatalog.current = id;
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Não foi possível carregar o catálogo.");
+      if (request === catalogRequest.current) setError(cause instanceof Error ? cause.message : "Não foi possível carregar o catálogo.");
     } finally {
-      setLoading(false);
+      if (request === catalogRequest.current) setLoading(false);
     }
   };
 
@@ -207,23 +220,24 @@ function MasterCatalogo() {
   }, [instanceId]);
 
   const saveStorefrontTheme = async () => {
-    if (!canPerform(role, "manageCatalog") || !instance) return;
+    if (!canPerform(role, "manageCatalog") || !instance || loading || loadedCatalog.current !== instance.id) return;
     setSavingTheme(true);
     setError(null);
     try {
       const { error } = await supabase.from("neroxa_storefront_settings" as never).upsert(
         {
+          instance_id: instance.id,
           organization_id: instance.organization_id,
           storefront_theme: storefrontTheme,
           updated_at: new Date().toISOString(),
         } as never,
-        { onConflict: "organization_id" },
+        { onConflict: "instance_id" },
       );
       if (error) throw new Error(error.message);
       await recordNeroxaAudit({
         action: "UPDATE",
         resourceType: "STOREFRONT_SETTINGS",
-        resourceId: instance.organization_id,
+        resourceId: instance.id,
         details: { instance_id: instance.id, storefront_theme: storefrontTheme },
       });
     } catch (cause) {
@@ -251,7 +265,7 @@ function MasterCatalogo() {
   };
 
   const saveCategory = async () => {
-    if (!canPerform(role, "manageCatalog") || !instanceId) return;
+    if (!canPerform(role, "manageCatalog") || !instanceId || loading || loadedCatalog.current !== instanceId) return;
     if (!categoryName.trim()) return setError("Informe o nome da categoria.");
     setSaving(true);
     setError(null);
@@ -270,7 +284,9 @@ function MasterCatalogo() {
         const { error } = await supabase
           .from("neroxa_storefront_categories" as never)
           .update(payload as never)
-          .eq("id", editingCategory);
+          .eq("id", editingCategory)
+          .eq("instance_id", instanceId)
+          .select("id").single();
         if (error) throw new Error(error.message);
         await recordNeroxaAudit({
           action: "UPDATE",
@@ -302,6 +318,7 @@ function MasterCatalogo() {
   };
 
   const editCategory = (category: Category) => {
+    if (loading || loadedCatalog.current !== instanceId || category.instance_id !== instanceId) return;
     setEditingCategory(category.id);
     setCategoryName(category.name);
     setCategorySlug(category.slug);
@@ -313,16 +330,20 @@ function MasterCatalogo() {
 
   const removeCategory = async (category: Category) => {
     if (
+      loading || saving || savingTheme || loadedCatalog.current !== instanceId || category.instance_id !== instanceId ||
       !canPerform(role, "manageCatalog") ||
       !window.confirm(`Excluir a categoria "${category.name}"? Os produtos ficarão sem categoria.`)
     )
       return;
+    setSaving(true);
     setError(null);
     try {
       const { error } = await supabase
         .from("neroxa_storefront_categories" as never)
         .delete()
-        .eq("id", category.id);
+        .eq("id", category.id)
+        .eq("instance_id", instanceId)
+        .select("id").single();
       if (error) throw new Error(error.message);
       await recordNeroxaAudit({
         action: "DELETE",
@@ -334,6 +355,8 @@ function MasterCatalogo() {
       await loadCatalog(instanceId);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível excluir a categoria.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -343,7 +366,7 @@ function MasterCatalogo() {
   };
 
   const saveProduct = async () => {
-    if (!canPerform(role, "manageCatalog") || !instanceId) return;
+    if (!canPerform(role, "manageCatalog") || !instanceId || loading || loadedCatalog.current !== instanceId) return;
     if (!productForm.name.trim()) return setError("Informe o nome do produto.");
     const price = Number(productForm.price);
     if (!Number.isFinite(price) || price < 0) return setError("Informe um preço válido.");
@@ -373,7 +396,9 @@ function MasterCatalogo() {
         const { error } = await supabase
           .from("neroxa_storefront_products" as never)
           .update(payload as never)
-          .eq("id", editingProduct);
+          .eq("id", editingProduct)
+          .eq("instance_id", instanceId)
+          .select("id").single();
         if (error) throw new Error(error.message);
         await recordNeroxaAudit({
           action: "UPDATE",
@@ -405,6 +430,7 @@ function MasterCatalogo() {
   };
 
   const editProduct = (product: Product) => {
+    if (loading || loadedCatalog.current !== instanceId || product.instance_id !== instanceId) return;
     const meta = product.metadata ?? {};
     setEditingProduct(product.id);
     setProductForm({
@@ -425,16 +451,20 @@ function MasterCatalogo() {
 
   const removeProduct = async (product: Product) => {
     if (
+      loading || saving || savingTheme || loadedCatalog.current !== instanceId || product.instance_id !== instanceId ||
       !canPerform(role, "manageCatalog") ||
       !window.confirm(`Excluir o produto "${product.name}"?`)
     )
       return;
+    setSaving(true);
     setError(null);
     try {
       const { error } = await supabase
         .from("neroxa_storefront_products" as never)
         .delete()
-        .eq("id", product.id);
+        .eq("id", product.id)
+        .eq("instance_id", instanceId)
+        .select("id").single();
       if (error) throw new Error(error.message);
       await recordNeroxaAudit({
         action: "DELETE",
@@ -446,6 +476,8 @@ function MasterCatalogo() {
       await loadCatalog(instanceId);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Não foi possível excluir o produto.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -482,7 +514,13 @@ function MasterCatalogo() {
             </div>
             <select
               value={instanceId}
+              disabled={saving || savingTheme || loading}
               onChange={(e) => {
+                ++catalogRequest.current;
+                loadedCatalog.current = null;
+                setCategories([]);
+                setProducts([]);
+                setLoading(true);
                 resetCategory();
                 resetProduct();
                 setInstanceId(e.target.value);
