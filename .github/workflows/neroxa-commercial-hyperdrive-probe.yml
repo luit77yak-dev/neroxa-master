@@ -1,0 +1,116 @@
+name: NEROXA commercial Hyperdrive focal read-only
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_pr:
+        description: "PR merged into main and independently approved at its exact head"
+        required: true
+        type: string
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: neroxa-commercial-hyperdrive-focal
+  cancel-in-progress: false
+jobs:
+  probe:
+    if: github.actor == 'dev-luizt5' && github.triggering_actor == 'dev-luizt5' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Independent review gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REVIEW_PR: ${{ inputs.reviewed_pr }}
+        run: |
+          set -euo pipefail
+          [[ "$REVIEW_PR" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/pulls/$REVIEW_PR" > "$RUNNER_TEMP/neroxa-pr.json"
+          jq -e --arg sha "$GITHUB_SHA" '.merged == true and .base.ref == "main" and .merge_commit_sha == $sha and .user.login == "luit77yak-dev"' "$RUNNER_TEMP/neroxa-pr.json" >/dev/null
+          head_sha=$(jq -r .head.sha "$RUNNER_TEMP/neroxa-pr.json")
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/pulls/$REVIEW_PR/reviews" |
+            jq -e --arg sha "$head_sha" 'flatten | map(select(.user.login == "dev-luizt5" and (.state == "APPROVED" or .state == "CHANGES_REQUESTED" or .state == "DISMISSED"))) | sort_by(.submitted_at) | last | .state == "APPROVED" and .commit_id == $sha' >/dev/null
+          echo INDEPENDENT_REVIEW=PASS
+      - name: Prepare exact private probe package
+        env:
+          PROBE_ZIP_B64: ${{ secrets.NEROXA_HYPERDRIVE_PROBE_B64 }}
+        run: |
+          set -euo pipefail
+          umask 077
+          test -n "$PROBE_ZIP_B64" || { echo HOLD_PACKAGE_SECRET_MISSING; exit 1; }
+          mkdir "$RUNNER_TEMP/neroxa-probe"
+          cd "$RUNNER_TEMP/neroxa-probe"
+          printf '%s' "$PROBE_ZIP_B64" | base64 -d > "$RUNNER_TEMP/neroxa-probe.zip"
+          unset PROBE_ZIP_B64
+          printf '%s  %s\n' a2198e5d0f493e86699d0fccca83ba0ef1df8625c0ac17100a1ee17170f822b6 "$RUNNER_TEMP/neroxa-probe.zip" | sha256sum --status -c
+          unzip -q "$RUNNER_TEMP/neroxa-probe.zip"
+          rm -f "$RUNNER_TEMP/neroxa-probe.zip"
+          sha256sum --status -c SHA256SUMS.txt
+          echo PACKAGE_INTEGRITY=PASS
+      - name: Install dependencies without Cloudflare credentials
+        run: |
+          set -euo pipefail
+          umask 077
+          cd "$RUNNER_TEMP/neroxa-probe"
+          node_bin=$(printf '%s\n' "$RUNNER_TOOL_CACHE"/node/22.*/x64/bin | sort -V | tail -1)
+          test -x "$node_bin/node"
+          export PATH="$node_bin:$PATH"
+          echo "$node_bin" >> "$GITHUB_PATH"
+          node --version
+          npm install --no-audit --no-fund > "$RUNNER_TEMP/neroxa-install.log" 2>&1 || { echo HOLD_NPM_INSTALL; exit 1; }
+          echo PREPARATION=PASS
+      - name: Real remote preview only
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.NEROXA_HYPERDRIVE_PROBE_TOKEN }}
+          WRANGLER_SEND_METRICS: "false"
+          CI: "true"
+        run: |
+          set -euo pipefail
+          umask 077
+          cd "$RUNNER_TEMP/neroxa-probe"
+          test -n "$CLOUDFLARE_API_TOKEN" || { echo HOLD_TOKEN_MISSING; exit 1; }
+          pid=""
+          cleanup() {
+            if [[ -n "$pid" ]]; then
+              kill -TERM -- "-$pid" 2>/dev/null || true
+              sleep 2
+              kill -KILL -- "-$pid" 2>/dev/null || true
+              wait "$pid" 2>/dev/null || true
+              if kill -0 -- "-$pid" 2>/dev/null; then
+                echo HOLD_PROCESS_CLEANUP
+                return 1
+              fi
+            fi
+            rm -f .dev.vars preview.log
+            unset CLOUDFLARE_API_TOKEN
+            echo LOCAL_PREVIEW_PROCESS_STOPPED=YES
+            echo REMOTE_SESSION_REVOCATION=NOT_INDEPENDENTLY_VERIFIED
+          }
+          trap cleanup EXIT
+          trap 'exit 130' INT TERM
+          python3 prepare.py
+          setsid ./node_modules/.bin/wrangler dev --remote --ip 127.0.0.1 --port 8787 > preview.log 2>&1 &
+          pid=$!
+          ready=0
+          for attempt in $(seq 1 60); do
+            if ! kill -0 "$pid" 2>/dev/null; then break; fi
+            status=$(curl -s --max-time 2 -o /dev/null -w '%{http_code}' http://127.0.0.1:8787/ || true)
+            if [[ "$status" == "404" ]] && grep -qi 'Ready on' preview.log; then ready=1; break; fi
+            sleep 2
+          done
+          if [[ "$ready" != 1 ]]; then
+            echo HOLD_REMOTE_PREVIEW
+            if grep -qi 'could not create remote preview session' preview.log; then echo PREVIEW_SESSION_CREATION=FAIL; fi
+            if grep -qiE 'authentication error|code: 10000|code: 9109|403 Forbidden' preview.log; then echo PREVIEW_PERMISSION_SUSPECTED=YES; fi
+            if grep -qiE 'tcmalloc|MmapAligned' preview.log; then echo LOCAL_MEMORY_MAPPING=FAIL; fi
+            exit 1
+          fi
+          python3 invoke.py
+      - name: Cleanup local probe files
+        if: always()
+        run: |
+          rm -rf "$RUNNER_TEMP/neroxa-probe" "$RUNNER_TEMP/neroxa-pr.json" "$RUNNER_TEMP/neroxa-probe.zip" "$RUNNER_TEMP/neroxa-install.log"
+          echo RUNNER_FILES_REMOVED=YES
