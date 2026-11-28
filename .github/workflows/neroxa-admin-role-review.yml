@@ -1,0 +1,37 @@
+name: Administrative role review (isolated PG17)
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "audits/runtime-review/**"
+      - ".github/workflows/neroxa-admin-role-review.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  isolated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    services:
+      pg:
+        image: postgres:17
+        env:
+          POSTGRES_USER: fixture_root
+          POSTGRES_PASSWORD: synthetic-test-only
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd "pg_isready -U fixture_root -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Validate restricted NOLOGIN role in disposable service
+        env:
+          FIXTURE_CONTAINER: ${{ job.services.pg.id }}
+        run: bash audits/runtime-review/test-admin-bootstrap.sh "$FIXTURE_CONTAINER"

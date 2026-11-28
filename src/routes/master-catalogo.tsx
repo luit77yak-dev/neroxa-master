@@ -187,7 +187,11 @@ function MasterCatalogo() {
           .eq("instance_id", id)
           .order("sort_order")
           .order("name"),
-        supabase.from("neroxa_storefront_settings" as never).select("storefront_theme").eq("instance_id", id).maybeSingle(),
+        supabase
+          .from("neroxa_storefront_settings" as never)
+          .select("storefront_theme")
+          .eq("instance_id", id)
+          .maybeSingle(),
       ]);
       if (request !== catalogRequest.current) return;
       if (categoryError) throw new Error(categoryError.message);
@@ -199,7 +203,8 @@ function MasterCatalogo() {
       setProducts((productData ?? []) as unknown as Product[]);
       loadedCatalog.current = id;
     } catch (cause) {
-      if (request === catalogRequest.current) setError(cause instanceof Error ? cause.message : "Não foi possível carregar o catálogo.");
+      if (request === catalogRequest.current)
+        setError(cause instanceof Error ? cause.message : "Não foi possível carregar o catálogo.");
     } finally {
       if (request === catalogRequest.current) setLoading(false);
     }
@@ -220,7 +225,13 @@ function MasterCatalogo() {
   }, [instanceId]);
 
   const saveStorefrontTheme = async () => {
-    if (!canPerform(role, "manageCatalog") || !instance || loading || loadedCatalog.current !== instance.id) return;
+    if (
+      !canPerform(role, "manageCatalog") ||
+      !instance ||
+      loading ||
+      loadedCatalog.current !== instance.id
+    )
+      return;
     setSavingTheme(true);
     setError(null);
     try {
@@ -265,7 +276,13 @@ function MasterCatalogo() {
   };
 
   const saveCategory = async () => {
-    if (!canPerform(role, "manageCatalog") || !instanceId || loading || loadedCatalog.current !== instanceId) return;
+    if (
+      !canPerform(role, "manageCatalog") ||
+      !instanceId ||
+      loading ||
+      loadedCatalog.current !== instanceId
+    )
+      return;
     if (!categoryName.trim()) return setError("Informe o nome da categoria.");
     setSaving(true);
     setError(null);
@@ -286,7 +303,8 @@ function MasterCatalogo() {
           .update(payload as never)
           .eq("id", editingCategory)
           .eq("instance_id", instanceId)
-          .select("id").single();
+          .select("id")
+          .single();
         if (error) throw new Error(error.message);
         await recordNeroxaAudit({
           action: "UPDATE",
@@ -318,7 +336,8 @@ function MasterCatalogo() {
   };
 
   const editCategory = (category: Category) => {
-    if (loading || loadedCatalog.current !== instanceId || category.instance_id !== instanceId) return;
+    if (loading || loadedCatalog.current !== instanceId || category.instance_id !== instanceId)
+      return;
     setEditingCategory(category.id);
     setCategoryName(category.name);
     setCategorySlug(category.slug);
@@ -330,7 +349,11 @@ function MasterCatalogo() {
 
   const removeCategory = async (category: Category) => {
     if (
-      loading || saving || savingTheme || loadedCatalog.current !== instanceId || category.instance_id !== instanceId ||
+      loading ||
+      saving ||
+      savingTheme ||
+      loadedCatalog.current !== instanceId ||
+      category.instance_id !== instanceId ||
       !canPerform(role, "manageCatalog") ||
       !window.confirm(`Excluir a categoria "${category.name}"? Os produtos ficarão sem categoria.`)
     )
@@ -343,7 +366,8 @@ function MasterCatalogo() {
         .delete()
         .eq("id", category.id)
         .eq("instance_id", instanceId)
-        .select("id").single();
+        .select("id")
+        .single();
       if (error) throw new Error(error.message);
       await recordNeroxaAudit({
         action: "DELETE",
@@ -366,7 +390,13 @@ function MasterCatalogo() {
   };
 
   const saveProduct = async () => {
-    if (!canPerform(role, "manageCatalog") || !instanceId || loading || loadedCatalog.current !== instanceId) return;
+    if (
+      !canPerform(role, "manageCatalog") ||
+      !instanceId ||
+      loading ||
+      loadedCatalog.current !== instanceId
+    )
+      return;
     if (!productForm.name.trim()) return setError("Informe o nome do produto.");
     const price = Number(productForm.price);
     if (!Number.isFinite(price) || price < 0) return setError("Informe um preço válido.");
@@ -398,7 +428,8 @@ function MasterCatalogo() {
           .update(payload as never)
           .eq("id", editingProduct)
           .eq("instance_id", instanceId)
-          .select("id").single();
+          .select("id")
+          .single();
         if (error) throw new Error(error.message);
         await recordNeroxaAudit({
           action: "UPDATE",
@@ -430,7 +461,8 @@ function MasterCatalogo() {
   };
 
   const editProduct = (product: Product) => {
-    if (loading || loadedCatalog.current !== instanceId || product.instance_id !== instanceId) return;
+    if (loading || loadedCatalog.current !== instanceId || product.instance_id !== instanceId)
+      return;
     const meta = product.metadata ?? {};
     setEditingProduct(product.id);
     setProductForm({
@@ -451,7 +483,11 @@ function MasterCatalogo() {
 
   const removeProduct = async (product: Product) => {
     if (
-      loading || saving || savingTheme || loadedCatalog.current !== instanceId || product.instance_id !== instanceId ||
+      loading ||
+      saving ||
+      savingTheme ||
+      loadedCatalog.current !== instanceId ||
+      product.instance_id !== instanceId ||
       !canPerform(role, "manageCatalog") ||
       !window.confirm(`Excluir o produto "${product.name}"?`)
     )
@@ -464,7 +500,8 @@ function MasterCatalogo() {
         .delete()
         .eq("id", product.id)
         .eq("instance_id", instanceId)
-        .select("id").single();
+        .select("id")
+        .single();
       if (error) throw new Error(error.message);
       await recordNeroxaAudit({
         action: "DELETE",
